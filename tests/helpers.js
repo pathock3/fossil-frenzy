@@ -28,7 +28,7 @@ function game(o = {}) {
   return Engine.createGame({
     players: o.players || 2,
     system: o.system === undefined ? true : o.system,
-    rng: o.rng || rolls(o.rolls || [1, 2, 3, 4, 5, 6].slice(0, o.players || 2)),
+    rng: o.rng || rolls(o.rolls || [6, 5, 4, 3, 2, 1].slice(0, o.players || 2)),
     layout: layout(o.layout || {}),
     data: o.data,
   });
