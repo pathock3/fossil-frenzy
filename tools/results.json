@@ -31,17 +31,26 @@
      "0.25": {
       "games": 766,
       "share": 0.766,
-      "winRate": 0.34595300261096606
+      "winRate": 0.34595300261096606,
+      "anyGames": 779,
+      "anyShare": 0.779,
+      "tieAwareWinRate": 0.3433889602053915
      },
      "0.5": {
       "games": 933,
       "share": 0.933,
-      "winRate": 0.4565916398713826
+      "winRate": 0.4565916398713826,
+      "anyGames": 1000,
+      "anyShare": 1,
+      "tieAwareWinRate": 0.4488333333333333
      },
      "0.75": {
       "games": 946,
       "share": 0.946,
-      "winRate": 0.5761099365750528
+      "winRate": 0.5761099365750528,
+      "anyGames": 1000,
+      "anyShare": 1,
+      "tieAwareWinRate": 0.5641666666666667
      }
     },
     "seatOrderWinShare": [
@@ -84,17 +93,26 @@
       "0.25": {
        "games": 945,
        "share": 0.945,
-       "winRate": 0.5693121693121693
+       "winRate": 0.5693121693121693,
+       "anyGames": 965,
+       "anyShare": 0.965,
+       "tieAwareWinRate": 0.5678756476683938
       },
       "0.5": {
        "games": 960,
        "share": 0.96,
-       "winRate": 0.6510416666666666
+       "winRate": 0.6510416666666666,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.645
       },
       "0.75": {
        "games": 973,
        "share": 0.973,
-       "winRate": 0.7841726618705036
+       "winRate": 0.7841726618705036,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.7765
       }
      },
      "seatOrderWinShare": [
@@ -134,17 +152,26 @@
       "0.25": {
        "games": 873,
        "share": 0.873,
-       "winRate": 0.41122565864833904
+       "winRate": 0.41122565864833904,
+       "anyGames": 887,
+       "anyShare": 0.887,
+       "tieAwareWinRate": 0.41037204058624577
       },
       "0.5": {
        "games": 957,
        "share": 0.957,
-       "winRate": 0.542319749216301
+       "winRate": 0.542319749216301,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.5343333333333332
       },
       "0.75": {
        "games": 950,
        "share": 0.95,
-       "winRate": 0.6821052631578948
+       "winRate": 0.6821052631578948,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.6683333333333332
       }
      },
      "seatOrderWinShare": [
@@ -185,17 +212,26 @@
       "0.25": {
        "games": 766,
        "share": 0.766,
-       "winRate": 0.34595300261096606
+       "winRate": 0.34595300261096606,
+       "anyGames": 779,
+       "anyShare": 0.779,
+       "tieAwareWinRate": 0.3433889602053915
       },
       "0.5": {
        "games": 933,
        "share": 0.933,
-       "winRate": 0.4565916398713826
+       "winRate": 0.4565916398713826,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.4488333333333333
       },
       "0.75": {
        "games": 946,
        "share": 0.946,
-       "winRate": 0.5761099365750528
+       "winRate": 0.5761099365750528,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.5641666666666667
       }
      },
      "seatOrderWinShare": [
@@ -237,17 +273,26 @@
       "0.25": {
        "games": 730,
        "share": 0.73,
-       "winRate": 0.2821917808219178
+       "winRate": 0.2821917808219178,
+       "anyGames": 739,
+       "anyShare": 0.739,
+       "tieAwareWinRate": 0.2814614343707713
       },
       "0.5": {
        "games": 943,
        "share": 0.943,
-       "winRate": 0.4093319194061506
+       "winRate": 0.4093319194061506,
+       "anyGames": 999,
+       "anyShare": 0.999,
+       "tieAwareWinRate": 0.4014014014014014
       },
       "0.75": {
        "games": 926,
        "share": 0.926,
-       "winRate": 0.541036717062635
+       "winRate": 0.541036717062635,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.5245
       }
      },
      "seatOrderWinShare": [
@@ -290,17 +335,26 @@
       "0.25": {
        "games": 546,
        "share": 0.546,
-       "winRate": 0.2692307692307692
+       "winRate": 0.2692307692307692,
+       "anyGames": 553,
+       "anyShare": 0.553,
+       "tieAwareWinRate": 0.2694394213381555
       },
       "0.5": {
        "games": 952,
        "share": 0.952,
-       "winRate": 0.35714285714285715
+       "winRate": 0.35714285714285715,
+       "anyGames": 997,
+       "anyShare": 0.997,
+       "tieAwareWinRate": 0.35255767301905716
       },
       "0.75": {
        "games": 936,
        "share": 0.936,
-       "winRate": 0.49893162393162394
+       "winRate": 0.49893162393162394,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.4835
       }
      },
      "seatOrderWinShare": [
@@ -384,17 +438,26 @@
       "0.25": {
        "games": 737,
        "share": 0.737,
-       "winRate": 0.37449118046132973
+       "winRate": 0.37449118046132973,
+       "anyGames": 755,
+       "anyShare": 0.755,
+       "tieAwareWinRate": 0.3748344370860927
       },
       "0.5": {
        "games": 962,
        "share": 0.962,
-       "winRate": 0.524948024948025
+       "winRate": 0.524948024948025,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.518
       },
       "0.75": {
        "games": 929,
        "share": 0.929,
-       "winRate": 0.6835306781485468
+       "winRate": 0.6835306781485468,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.661
       }
      },
      "seatOrderWinShare": [
@@ -476,17 +539,26 @@
       "0.25": {
        "games": 761,
        "share": 0.761,
-       "winRate": 0.35611038107752957
+       "winRate": 0.35611038107752957,
+       "anyGames": 775,
+       "anyShare": 0.775,
+       "tieAwareWinRate": 0.3567741935483871
       },
       "0.5": {
        "games": 936,
        "share": 0.936,
-       "winRate": 0.42628205128205127
+       "winRate": 0.42628205128205127,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.41883333333333334
       },
       "0.75": {
        "games": 940,
        "share": 0.94,
-       "winRate": 0.5840425531914893
+       "winRate": 0.5840425531914893,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.57
       }
      },
      "seatOrderWinShare": [
@@ -562,17 +634,26 @@
       "0.25": {
        "games": 789,
        "share": 0.789,
-       "winRate": 0.32192648922686945
+       "winRate": 0.32192648922686945,
+       "anyGames": 801,
+       "anyShare": 0.801,
+       "tieAwareWinRate": 0.32147315855181025
       },
       "0.5": {
        "games": 936,
        "share": 0.936,
-       "winRate": 0.4155982905982906
+       "winRate": 0.4155982905982906,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.4098333333333334
       },
       "0.75": {
        "games": 933,
        "share": 0.933,
-       "winRate": 0.602357984994641
+       "winRate": 0.602357984994641,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.5825
       }
      },
      "seatOrderWinShare": [
@@ -614,17 +695,26 @@
       "0.25": {
        "games": 726,
        "share": 0.726,
-       "winRate": 0.3691460055096419
+       "winRate": 0.3691460055096419,
+       "anyGames": 739,
+       "anyShare": 0.739,
+       "tieAwareWinRate": 0.36671177266576455
       },
       "0.5": {
        "games": 942,
        "share": 0.942,
-       "winRate": 0.46231422505307856
+       "winRate": 0.46231422505307856,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.4525
       },
       "0.75": {
        "games": 946,
        "share": 0.946,
-       "winRate": 0.5909090909090909
+       "winRate": 0.5909090909090909,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.579
       }
      },
      "seatOrderWinShare": [
@@ -666,17 +756,26 @@
       "0.25": {
        "games": 745,
        "share": 0.745,
-       "winRate": 0.3402684563758389
+       "winRate": 0.3402684563758389,
+       "anyGames": 758,
+       "anyShare": 0.758,
+       "tieAwareWinRate": 0.3403693931398417
       },
       "0.5": {
        "games": 949,
        "share": 0.949,
-       "winRate": 0.4262381454162276
+       "winRate": 0.4262381454162276,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.421
       },
       "0.75": {
        "games": 930,
        "share": 0.93,
-       "winRate": 0.5924731182795699
+       "winRate": 0.5924731182795699,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.5761666666666667
       }
      },
      "seatOrderWinShare": [
@@ -718,17 +817,26 @@
       "0.25": {
        "games": 766,
        "share": 0.766,
-       "winRate": 0.34595300261096606
+       "winRate": 0.34595300261096606,
+       "anyGames": 779,
+       "anyShare": 0.779,
+       "tieAwareWinRate": 0.3433889602053915
       },
       "0.5": {
        "games": 933,
        "share": 0.933,
-       "winRate": 0.4565916398713826
+       "winRate": 0.4565916398713826,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.4488333333333333
       },
       "0.75": {
        "games": 946,
        "share": 0.946,
-       "winRate": 0.5761099365750528
+       "winRate": 0.5761099365750528,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.5641666666666667
       }
      },
      "seatOrderWinShare": [
@@ -773,17 +881,26 @@
      "0.25": {
       "games": 20,
       "share": 0.02,
-      "winRate": 0.8
+      "winRate": 0.8,
+      "anyGames": 20,
+      "anyShare": 0.02,
+      "tieAwareWinRate": 0.8
      },
      "0.5": {
       "games": 524,
       "share": 0.524,
-      "winRate": 0.5944656488549618
+      "winRate": 0.5944656488549618,
+      "anyGames": 983,
+      "anyShare": 0.983,
+      "tieAwareWinRate": 0.48940318752119316
      },
      "0.75": {
       "games": 493,
       "share": 0.493,
-      "winRate": 0.6578769438810007
+      "winRate": 0.6578769438810007,
+      "anyGames": 1000,
+      "anyShare": 1,
+      "tieAwareWinRate": 0.4777499999999986
      }
     },
     "seatOrderWinShare": [
@@ -826,17 +943,26 @@
       "0.25": {
        "games": 491,
        "share": 0.491,
-       "winRate": 0.6639511201629328
+       "winRate": 0.6639511201629328,
+       "anyGames": 502,
+       "anyShare": 0.502,
+       "tieAwareWinRate": 0.6603585657370518
       },
       "0.5": {
        "games": 582,
        "share": 0.582,
-       "winRate": 0.7560137457044673
+       "winRate": 0.7560137457044673,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.649
       },
       "0.75": {
        "games": 634,
        "share": 0.634,
-       "winRate": 0.8517350157728707
+       "winRate": 0.8517350157728707,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.723
       }
      },
      "seatOrderWinShare": [
@@ -876,17 +1002,26 @@
       "0.25": {
        "games": 97,
        "share": 0.097,
-       "winRate": 0.5670103092783505
+       "winRate": 0.5670103092783505,
+       "anyGames": 97,
+       "anyShare": 0.097,
+       "tieAwareWinRate": 0.5670103092783505
       },
       "0.5": {
        "games": 384,
        "share": 0.384,
-       "winRate": 0.6796875
+       "winRate": 0.6796875,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.506333333333332
       },
       "0.75": {
        "games": 770,
        "share": 0.77,
-       "winRate": 0.7837662337662338
+       "winRate": 0.7837662337662338,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.6950000000000006
       }
      },
      "seatOrderWinShare": [
@@ -927,17 +1062,26 @@
       "0.25": {
        "games": 20,
        "share": 0.02,
-       "winRate": 0.8
+       "winRate": 0.8,
+       "anyGames": 20,
+       "anyShare": 0.02,
+       "tieAwareWinRate": 0.8
       },
       "0.5": {
        "games": 524,
        "share": 0.524,
-       "winRate": 0.5944656488549618
+       "winRate": 0.5944656488549618,
+       "anyGames": 983,
+       "anyShare": 0.983,
+       "tieAwareWinRate": 0.48940318752119316
       },
       "0.75": {
        "games": 493,
        "share": 0.493,
-       "winRate": 0.6578769438810007
+       "winRate": 0.6578769438810007,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.4777499999999986
       }
      },
      "seatOrderWinShare": [
@@ -979,17 +1123,26 @@
       "0.25": {
        "games": 0,
        "share": 0,
-       "winRate": null
+       "winRate": null,
+       "anyGames": 0,
+       "anyShare": 0,
+       "tieAwareWinRate": null
       },
       "0.5": {
        "games": 648,
        "share": 0.648,
-       "winRate": 0.48611111111111105
+       "winRate": 0.48611111111111105,
+       "anyGames": 838,
+       "anyShare": 0.838,
+       "tieAwareWinRate": 0.4508750994431183
       },
       "0.75": {
        "games": 398,
        "share": 0.398,
-       "winRate": 0.6543132328308208
+       "winRate": 0.6543132328308208,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.44504444444444313
       }
      },
      "seatOrderWinShare": [
@@ -1032,17 +1185,26 @@
       "0.25": {
        "games": 0,
        "share": 0,
-       "winRate": null
+       "winRate": null,
+       "anyGames": 0,
+       "anyShare": 0,
+       "tieAwareWinRate": null
       },
       "0.5": {
        "games": 458,
        "share": 0.458,
-       "winRate": 0.504184861717613
+       "winRate": 0.504184861717613,
+       "anyGames": 539,
+       "anyShare": 0.539,
+       "tieAwareWinRate": 0.48051948051948074
       },
       "0.75": {
        "games": 383,
        "share": 0.383,
-       "winRate": 0.690165361183638
+       "winRate": 0.690165361183638,
+       "anyGames": 999,
+       "anyShare": 0.999,
+       "tieAwareWinRate": 0.4347347347347337
       }
      },
      "seatOrderWinShare": [
@@ -1126,17 +1288,26 @@
       "0.25": {
        "games": 49,
        "share": 0.049,
-       "winRate": 0.6122448979591837
+       "winRate": 0.6122448979591837,
+       "anyGames": 49,
+       "anyShare": 0.049,
+       "tieAwareWinRate": 0.6122448979591837
       },
       "0.5": {
        "games": 496,
        "share": 0.496,
-       "winRate": 0.6743951612903226
+       "winRate": 0.6743951612903226,
+       "anyGames": 993,
+       "anyShare": 0.993,
+       "tieAwareWinRate": 0.5414568647197042
       },
       "0.75": {
        "games": 610,
        "share": 0.61,
-       "winRate": 0.7579234972677595
+       "winRate": 0.7579234972677595,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.59475
       }
      },
      "seatOrderWinShare": [
@@ -1218,17 +1389,26 @@
       "0.25": {
        "games": 18,
        "share": 0.018,
-       "winRate": 0.6388888888888888
+       "winRate": 0.6388888888888888,
+       "anyGames": 18,
+       "anyShare": 0.018,
+       "tieAwareWinRate": 0.6388888888888888
       },
       "0.5": {
        "games": 529,
        "share": 0.529,
-       "winRate": 0.5775047258979206
+       "winRate": 0.5775047258979206,
+       "anyGames": 987,
+       "anyShare": 0.987,
+       "tieAwareWinRate": 0.47703478554542345
       },
       "0.75": {
        "games": 481,
        "share": 0.481,
-       "winRate": 0.6774081774081775
+       "winRate": 0.6774081774081775,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.4805833333333319
       }
      },
      "seatOrderWinShare": [
@@ -1304,17 +1484,26 @@
       "0.25": {
        "games": 21,
        "share": 0.021,
-       "winRate": 0.6190476190476191
+       "winRate": 0.6190476190476191,
+       "anyGames": 21,
+       "anyShare": 0.021,
+       "tieAwareWinRate": 0.6190476190476191
       },
       "0.5": {
        "games": 535,
        "share": 0.535,
-       "winRate": 0.6018691588785047
+       "winRate": 0.6018691588785047,
+       "anyGames": 987,
+       "anyShare": 0.987,
+       "tieAwareWinRate": 0.491641337386018
       },
       "0.75": {
        "games": 494,
        "share": 0.494,
-       "winRate": 0.6497975708502024
+       "winRate": 0.6497975708502024,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.4693333333333324
       }
      },
      "seatOrderWinShare": [
@@ -1356,17 +1545,26 @@
       "0.25": {
        "games": 57,
        "share": 0.057,
-       "winRate": 0.6140350877192983
+       "winRate": 0.6140350877192983,
+       "anyGames": 57,
+       "anyShare": 0.057,
+       "tieAwareWinRate": 0.6140350877192983
       },
       "0.5": {
        "games": 545,
        "share": 0.545,
-       "winRate": 0.636697247706422
+       "winRate": 0.636697247706422,
+       "anyGames": 971,
+       "anyShare": 0.971,
+       "tieAwareWinRate": 0.5214555441125981
       },
       "0.75": {
        "games": 534,
        "share": 0.534,
-       "winRate": 0.7312734082397003
+       "winRate": 0.7312734082397003,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.5384999999999986
       }
      },
      "seatOrderWinShare": [
@@ -1408,17 +1606,26 @@
       "0.25": {
        "games": 40,
        "share": 0.04,
-       "winRate": 0.6
+       "winRate": 0.6,
+       "anyGames": 40,
+       "anyShare": 0.04,
+       "tieAwareWinRate": 0.6
       },
       "0.5": {
        "games": 529,
        "share": 0.529,
-       "winRate": 0.5913673597983616
+       "winRate": 0.5913673597983616,
+       "anyGames": 984,
+       "anyShare": 0.984,
+       "tieAwareWinRate": 0.4949186991869914
       },
       "0.75": {
        "games": 513,
        "share": 0.513,
-       "winRate": 0.6780376868096166
+       "winRate": 0.6780376868096166,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.5013333333333317
       }
      },
      "seatOrderWinShare": [
@@ -1460,17 +1667,26 @@
       "0.25": {
        "games": 20,
        "share": 0.02,
-       "winRate": 0.8
+       "winRate": 0.8,
+       "anyGames": 20,
+       "anyShare": 0.02,
+       "tieAwareWinRate": 0.8
       },
       "0.5": {
        "games": 524,
        "share": 0.524,
-       "winRate": 0.5944656488549618
+       "winRate": 0.5944656488549618,
+       "anyGames": 983,
+       "anyShare": 0.983,
+       "tieAwareWinRate": 0.48940318752119316
       },
       "0.75": {
        "games": 493,
        "share": 0.493,
-       "winRate": 0.6578769438810007
+       "winRate": 0.6578769438810007,
+       "anyGames": 1000,
+       "anyShare": 1,
+       "tieAwareWinRate": 0.4777499999999986
       }
      },
      "seatOrderWinShare": [
@@ -1487,5 +1703,5 @@
    }
   }
  },
- "seconds": 43.438
+ "seconds": 43.58
 }

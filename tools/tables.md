@@ -15,12 +15,15 @@
 | games with a tie on score | 4.9% | 35.2% |
 | games with a shared win (all tie-breaks tied) | 0.1% | 5.6% |
 | unbanked/undelivered points lost at the end (mean) | 20.0 | 2.5 |
-| early leader at 25% of the game: has a unique leader | 76.6% | 2.0% |
-| early leader at 25% of the game: goes on to win | 34.6% ±3.4% | 80.0% ±17.5% |
-| early leader at 50% of the game: has a unique leader | 93.3% | 52.4% |
-| early leader at 50% of the game: goes on to win | 45.7% ±3.2% | 59.4% ±4.2% |
-| early leader at 75% of the game: has a unique leader | 94.6% | 49.3% |
-| early leader at 75% of the game: goes on to win | 57.6% ±3.1% | 65.8% ±4.2% |
+| leader at 25% of the game: someone has scored / a sole leader exists | 77.9% / 76.6% | 2.0% / 2.0% |
+| leader at 25%: sole leader goes on to win | 34.6% ±3.4% | 80.0% ±17.5% |
+| leader at 25%: win rate counting tied leaders (credit shared) | 34.3% ±3.3% | 80.0% ±17.5% |
+| leader at 50% of the game: someone has scored / a sole leader exists | 100.0% / 93.3% | 98.3% / 52.4% |
+| leader at 50%: sole leader goes on to win | 45.7% ±3.2% | 59.4% ±4.2% |
+| leader at 50%: win rate counting tied leaders (credit shared) | 44.9% ±3.1% | 48.9% ±3.1% |
+| leader at 75% of the game: someone has scored / a sole leader exists | 100.0% / 94.6% | 100.0% / 49.3% |
+| leader at 75%: sole leader goes on to win | 57.6% ±3.1% | 65.8% ±4.2% |
+| leader at 75%: win rate counting tied leaders (credit shared) | 56.4% ±3.1% | 47.8% ±3.1% |
 | win share by turn order (1st / 2nd / 3rd / 4th) | 26.7% / 25.9% / 24.8% / 22.7% | 30.0% / 22.4% / 27.4% / 20.2% |
 
 Fair win share with 4 players is 25.0%; 95% half-width of a win share over 1000 games is about ±2.7%.
@@ -35,15 +38,15 @@ Fair win share with 4 players is 25.0%; 95% half-width of a win share over 1000 
 | 5 | 43.1 | 8.6 | 37.1 | 7.4 |
 | 6 | 42.5 | 7.1 | 37.3 | 6.2 |
 
-## Table 3 — does the early leader win? by player count (leader at 50% of the game)
+## Table 3 — does the early leader win? by player count (leader at 50% of the game, tied leaders share credit)
 
 | players | ON | OFF | fair share |
 |---|---|---|---|
-| 2 | 65.1% | 75.6% | 50.0% |
-| 3 | 54.2% | 68.0% | 33.3% |
-| 4 | 45.7% | 59.4% | 25.0% |
-| 5 | 40.9% | 48.6% | 20.0% |
-| 6 | 35.7% | 50.4% | 16.7% |
+| 2 | 64.5% | 64.9% | 50.0% |
+| 3 | 53.4% | 50.6% | 33.3% |
+| 4 | 44.9% | 48.9% | 25.0% |
+| 5 | 40.1% | 45.1% | 20.0% |
+| 6 | 35.3% | 48.1% | 16.7% |
 
 ## Table 4 — mixed memory (0.30 / 0.55 / 0.80 / 1.00), 4 players, random seats
 
@@ -81,7 +84,7 @@ Spearman correlation between a seat's memory and its final score (per game, aver
 
 | memory | ON turns | OFF turns | ON early leader (50%) wins | OFF early leader (50%) wins |
 |---|---|---|---|---|
-| 1 | 42.8 | 36.1 | 41.6% | 60.2% |
-| 0.5 | 48.3 | 41.7 | 46.2% | 63.7% |
-| 0.7 | 45.2 | 38.6 | 42.6% | 59.1% |
-| 0.9 | 43.3 | 36.7 | 45.7% | 59.4% |
+| 1 | 42.8 | 36.1 | 41.0% | 49.2% |
+| 0.5 | 48.3 | 41.7 | 45.3% | 52.1% |
+| 0.7 | 45.2 | 38.6 | 42.1% | 49.5% |
+| 0.9 | 43.3 | 36.7 | 44.9% | 48.9% |
