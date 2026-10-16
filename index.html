@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fossil Frenzy">
+<meta name="theme-color" content="#1b130e">
+<title>Fossil Frenzy</title>
+<!--@@STYLE@@-->
+</head>
+<body>
+<div id="app"></div>
+
+<!-- =====================================================================
+     DATA BLOCK — every rule, point value and board-setup number lives here.
+     The logic below (engine / bots / ui) reads this object and nothing else.
+     ===================================================================== -->
+<script id="data">
+const GAME_DATA = {
+  // ---- MASTER TOGGLE -------------------------------------------------
+  // true  = original rulebook (rulebook.md): pieces, movement, delivery to corner sites.
+  // false = Patrick's redesign (docs/design-summary.md): no pieces, no movement,
+  //         no delivery; every turn is "peek and flip" or "bank".
+  movementDeliverySystem: true,
+
+  players: { min: 2, max: 6 },
+  die: { sides: 6 },
+
+  // ---- BOARD ---------------------------------------------------------
+  // Hexagonal board of hex spaces in axial (q, r) coordinates; radius 3 = 37 spaces.
+  // The six corner spaces are research sites (die faces 1..6, clockwise from top-left).
+  // Without the system they are removed, leaving 31 spaces: one tile per space.
+  board: {
+    shape: 'hex',
+    radius: 3,
+    corners: [[0, -3], [3, -3], [3, 0], [0, 3], [-3, 3], [-3, 0]],
+  },
+
+  // ---- TILES (31, "the original set") -----------------------------------
+  tokens: [
+    { value: 2,  count: 6 },
+    { value: 3,  count: 6 },
+    { value: 5,  count: 4 },
+    { value: 6,  count: 4 },
+    { value: 7,  count: 4 },
+    { value: 10, count: 2 },
+    { value: 11, count: 2 },
+    { value: 16, count: 3, gem: true },   // gems: worth 16, matched as a set of three
+  ],
+  matching: { pairSize: 2, gemSetSize: 3 },
+
+  // ---- RULE VARIANTS (picked by the toggle above) -----------------------
+  variants: {
+    // Toggle ON — rulebook.md
+    delivery: {
+      sites: true,                  // corner spaces exist and are delivery sites
+      movement: { maxSteps: 3, allowPush: true },
+      peekMustBeStandingOn: true,   // you may only peek at the tile you stand on
+      peekCommitsTurn: true,        // "If you peek, you must also flip one other fossil"
+      gemOrder: 'second-first',     // flip a 2nd tile, then the one you stand on
+      initialAssignment: 'startCorner', // your setup roll is also your first delivery assignment
+      scoring: {
+        type: 'delivery',           // matched sets are worth 0 until delivered
+        keptPerSet: 1,              // delivery flips ONE tile of the set face down; the match(es) go back in the box
+      },
+      tiebreaks: ['score', 'fossils', 'highestFossil'],
+    },
+    // Toggle OFF — Patrick's redesign
+    redesign: {
+      sites: false,
+      movement: null,
+      peekMustBeStandingOn: false,  // peek any tile
+      peekCommitsTurn: false,       // after peeking you may still bank instead
+      gemOrder: 'own-first',        // reveal the peeked gem, then flip a third tile
+      initialAssignment: null,
+      scoring: {
+        type: 'bank',               // a turn may be "bank": each held set = 1 point...
+        pointsPerSet: 1,
+        bonusDieSides: 6,           // ...then roll a d6: every 6 scores +1 and rolls again
+        bonusFace: 6,
+        bonusPoints: 1,
+      },
+      tiebreaks: ['score', 'sets', 'finalPair'],
+    },
+  },
+
+  // ---- BOT PRESETS (memory = chance a bot retains each revealed tile) -------
+  bots: {
+    defaultMemory: 0.9,
+    presets: [
+      { name: 'Beginner',    memory: 0.80 },
+      { name: 'Novice',      memory: 0.85 },
+      { name: 'Normal',      memory: 0.90 },
+      { name: 'Challenging', memory: 0.965 },
+      { name: 'Master',      memory: 0.99 },
+    ],
+  },
+};
+</script>
+
+<!-- =====================================================================
+     ENGINE — pure rules, no DOM.  Reads GAME_DATA (or a copy passed in).
+     ===================================================================== -->
+<script id="engine">
+const Engine = (() => {
+  const DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+  const clone = o => JSON.parse(JSON.stringify(o));
+
+  function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  const rint = (s, n) => Math.floor(s.rng() * n);
+  const rollDie = (s, sides) => 1 + rint(s, sides || s.data.die.sides);
+  const cur = s => s.players[s.current];
+  const fail = msg => { throw new Error('Illegal: ' + msg); };
+  const emit = (s, ev) => { for (const o of s.observers) o.onEvent(ev, s); };
+
+  // ---------------- board ----------------
+  function buildBoard(data, sites) {
+    const R = data.board.radius, cells = [], byKey = {};
+    const cornerKeys = data.board.corners.map(c => c.join(','));
+    for (let r = -R; r <= R; r++) {
+      for (let q = -R; q <= R; q++) {
+        if (Math.abs(q + r) > R) continue;
+        const corner = cornerKeys.indexOf(q + ',' + r);
+        if (corner >= 0 && !sites) continue;
+        const c = { id: cells.length, q, r, site: corner >= 0 ? corner + 1 : 0, nbrs: [] };
+        cells.push(c); byKey[q + ',' + r] = c.id;
+      }
+    }
+    for (const c of cells) {
+      for (const [dq, dr] of DIRS) {
+        const id = byKey[(c.q + dq) + ',' + (c.r + dr)];
+        if (id !== undefined) c.nbrs.push(id);
+      }
+    }
+    return cells;
+  }
+
+  function hexDist(a, b) {
+    const dq = a.q - b.q, dr = a.r - b.r;
+    return Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr));
+  }
+
+  // ---------------- creation ----------------
+  function createGame(opts = {}) {
+    const data = clone(opts.data || GAME_DATA);
+    const system = opts.system === undefined ? !!data.movementDeliverySystem : !!opts.system;
+    const variant = system ? data.variants.delivery : data.variants.redesign;
+    const n = opts.players || 2;
+    if (n < data.players.min || n > data.players.max) fail('player count ' + n);
+    const rng = opts.rng || (opts.seed !== undefined ? mulberry32(opts.seed) : Math.random);
+    const s = { data, system, variant, rng, n, observers: [], over: false, result: null,
+                matchedCount: 0, turnNo: 0, lastPopper: -1, box: 0, lastBank: null };
+
+    s.cells = buildBoard(data, variant.sites);
+    s.siteCell = {};
+    for (const c of s.cells) if (c.site) s.siteCell[c.site] = c.id;
+    const tileCells = s.cells.filter(c => !c.site).map(c => c.id);
+
+    // tiles
+    let values = [];
+    for (const t of data.tokens) {
+      const size = t.gem ? data.matching.gemSetSize : data.matching.pairSize;
+      if (t.count % size) fail('token count of ' + t.value + ' is not a multiple of its set size');
+      for (let i = 0; i < t.count; i++) values.push({ value: t.value, gem: !!t.gem });
+    }
+    if (values.length !== tileCells.length) fail(values.length + ' tiles for ' + tileCells.length + ' spaces');
+    if (opts.layout) {           // deterministic layout for tests: values in cell order
+      const pool = values.slice();
+      values = opts.layout.map(v => {
+        const i = pool.findIndex(p => p.value === v.value && p.gem === !!v.gem);
+        if (i < 0) fail('layout does not match tile set');
+        return pool.splice(i, 1)[0];
+      });
+    } else {
+      for (let i = values.length - 1; i > 0; i--) {
+        const j = rint(s, i + 1); [values[i], values[j]] = [values[j], values[i]];
+      }
+    }
+    s.tokens = values.map((v, i) => ({ id: i, value: v.value, gem: v.gem, cell: tileCells[i], matched: false }));
+    s.tokenAt = new Array(s.cells.length).fill(-1);
+    for (const t of s.tokens) s.tokenAt[t.cell] = t.id;
+
+    // players
+    s.players = [];
+    for (let i = 0; i < n; i++) s.players.push({ idx: i, pos: null, assign: null, roll: 0, sets: [], stash: [], points: 0, poppedSets: 0 });
+
+    // setup: everyone rolls; a duplicate roll is re-rolled by whoever rolled it second
+    const used = new Set();
+    for (const p of s.players) {
+      let r, guard = 0;
+      do { r = rollDie(s); } while (used.has(r) && ++guard < 1000);
+      used.add(r); p.roll = r;
+      if (system) {
+        p.pos = s.siteCell[r];
+        p.assign = variant.initialAssignment === 'startCorner' ? r : rollDie(s);
+      }
+    }
+    s.firstPlayer = s.players.reduce((b, p) => (p.roll > s.players[b].roll ? p.idx : b), 0);
+    s.current = s.firstPlayer;
+    beginTurn(s);
+    return s;
+  }
+
+  function beginTurn(s) {
+    s.turn = { T: null, F: null, F2: null, revealed: [], peeked: null, delivered: false };
+    s.phase = s.variant.movement ? 'move' : 'action';
+    emit(s, { type: 'turn', actor: s.current });
+  }
+
+  // ---------------- movement ----------------
+  function availableMoves(s) {
+    if (s.phase !== 'move') return null;
+    const mv = s.variant.movement, p = cur(s);
+    const occ = new Map();
+    for (const q of s.players) if (q.idx !== p.idx) occ.set(q.pos, q.idx);
+    const dist = new Map([[p.pos, 0]]);
+    const queue = [p.pos];
+    while (queue.length) {
+      const c = queue.shift(), d = dist.get(c);
+      if (d >= mv.maxSteps) continue;
+      for (const nb of s.cells[c].nbrs) {
+        if (occ.has(nb) || dist.has(nb)) continue;
+        dist.set(nb, d + 1); queue.push(nb);
+      }
+    }
+    const steps = {};
+    for (const [c, d] of dist) steps[c] = d;
+    const pushes = {};
+    if (mv.allowPush) {
+      const approach = new Map();        // victim cell -> cells you could push from (reached with a step to spare)
+      for (const [c, d] of dist) {
+        if (d > mv.maxSteps - 1) continue;
+        for (const nb of s.cells[c].nbrs) if (occ.has(nb)) {
+          if (!approach.has(nb)) approach.set(nb, []);
+          approach.get(nb).push(c);
+        }
+      }
+      for (const [x, from] of approach) {
+        // victim moves one space in any direction onto an empty space (never into another player,
+        // never onto the pusher, who is standing on the cell the push starts from)
+        const options = s.cells[x].nbrs.filter(y => !occ.has(y) && from.some(a => a !== y));
+        if (options.length) pushes[x] = { victim: occ.get(x), options };
+      }
+    }
+    return { stay: p.pos, steps, pushes };
+  }
+
+  function move(s, choice) {
+    if (s.phase !== 'move') fail('not the movement phase');
+    const m = availableMoves(s), p = cur(s), to = choice.to;
+    if (to === p.pos) { /* stay: 0 spaces */ }
+    else if (m.steps[to] !== undefined) p.pos = to;
+    else if (m.pushes[to]) {
+      const push = m.pushes[to];
+      if (!push.options.includes(choice.victimTo)) fail('push destination');
+      s.players[push.victim].pos = choice.victimTo;
+      p.pos = to;
+      emit(s, { type: 'push', actor: p.idx, victim: push.victim, to: choice.victimTo });
+    } else fail('cannot move to ' + to);
+    s.phase = 'action';
+    emit(s, { type: 'move', actor: p.idx, to: p.pos });
+  }
+
+  // ---------------- peek / flip / match ----------------
+  const unmatched = (s, id) => id >= 0 && id < s.tokens.length && !s.tokens[id].matched;
+
+  function reveal(s, tid, step) {
+    const t = s.tokens[tid];
+    s.turn.revealed.push(tid);
+    emit(s, { type: 'reveal', actor: s.current, tid, cell: t.cell, value: t.value, gem: t.gem, step });
+  }
+
+  function peekable(s) {
+    if (s.phase !== 'action') return [];
+    if (s.variant.peekMustBeStandingOn) {
+      const tid = s.tokenAt[cur(s).pos];
+      return tid >= 0 ? [tid] : [];
+    }
+    return s.tokens.filter(t => !t.matched).map(t => t.id);
+  }
+
+  function peek(s, tid) {
+    const ok = peekable(s);
+    if (tid === undefined && ok.length === 1) tid = ok[0];
+    if (!ok.includes(tid)) fail('cannot peek at ' + tid);
+    s.turn.T = tid; s.turn.peeked = tid; s.phase = 'peeked';
+    const t = s.tokens[tid];
+    emit(s, { type: 'peek', actor: s.current, tid, cell: t.cell, value: t.value, gem: t.gem });
+    return t.value;
+  }
+
+  const hiddenOthers = s => s.tokens.filter(t => !t.matched && !s.turn.revealed.includes(t.id) && t.id !== s.turn.T);
+
+  function flipOther(s, tid) {
+    if (s.phase !== 'peeked') fail('flip only after peeking');
+    if (tid === s.turn.T || !unmatched(s, tid)) fail('cannot flip ' + tid);
+    s.turn.F = tid; reveal(s, tid, 'other');
+    s.phase = 'flipped';
+  }
+
+  function popSet(s, tids) {
+    const p = cur(s), toks = tids.map(i => s.tokens[i]);
+    for (const t of toks) { t.matched = true; s.tokenAt[t.cell] = -1; }
+    p.sets.push({ value: toks[0].value, gem: toks[0].gem, size: toks.length, ids: tids.slice() });
+    p.poppedSets++; s.lastPopper = p.idx; s.matchedCount += toks.length;
+    s.turn.matched = tids.slice();
+    emit(s, { type: 'match', actor: p.idx, tids: tids.slice(), value: toks[0].value, gem: toks[0].gem });
+    s.phase = 'resolved';
+    if (s.matchedCount === s.tokens.length) finish(s);
+  }
+
+  function canFlipSecond(s) {
+    const gemOrder = s.variant.gemOrder;
+    const phaseOk = gemOrder === 'second-first' ? s.phase === 'flipped' : s.phase === 'gemThird';
+    return phaseOk && s.tokens[s.turn.F].gem && hiddenOthers(s).length > 0;
+  }
+
+  function flipSecond(s, tid) {
+    if (!canFlipSecond(s)) fail('no second flip available');
+    if (!hiddenOthers(s).some(t => t.id === tid)) fail('cannot flip ' + tid);
+    s.turn.F2 = tid; reveal(s, tid, 'second');
+    if (s.variant.gemOrder === 'second-first') { s.phase = 'flipped2'; return; }
+    // own-first: T is already public; all three gems -> match, otherwise everything flips back
+    if (s.tokens[tid].gem) popSet(s, [s.turn.T, s.turn.F, tid]); else s.phase = 'resolved';
+  }
+
+  function canFlipOwn(s) {
+    return s.phase === 'flipped' || (s.phase === 'flipped2' && s.variant.gemOrder === 'second-first');
+  }
+
+  function flipOwn(s) {
+    if (!canFlipOwn(s)) fail('cannot flip the peeked tile now');
+    const T = s.tokens[s.turn.T], F = s.tokens[s.turn.F], F2 = s.turn.F2 === null ? null : s.tokens[s.turn.F2];
+    reveal(s, T.id, 'own');
+    const pair = !T.gem && !F.gem && T.value === F.value;
+    if (s.variant.gemOrder === 'second-first') {
+      if (F2 === null && pair) return popSet(s, [T.id, F.id]);
+      if (F2 !== null && T.gem && F.gem && F2.gem) return popSet(s, [T.id, F.id, F2.id]);
+      s.phase = 'resolved';
+    } else {
+      if (pair) return popSet(s, [T.id, F.id]);
+      if (T.gem && F.gem && hiddenOthers(s).length > 0) { s.phase = 'gemThird'; return; }
+      s.phase = 'resolved';
+    }
+  }
+
+  // ---------------- banking (redesign) ----------------
+  function canBank(s) {
+    return s.variant.scoring.type === 'bank' && (s.phase === 'action' || s.phase === 'peeked') && cur(s).sets.length > 0;
+  }
+
+  function bank(s) {
+    if (!canBank(s)) fail('cannot bank');
+    const sc = s.variant.scoring, p = cur(s);
+    const base = p.sets.length * sc.pointsPerSet;
+    const rolls = []; let bonus = 0, r;
+    do { r = rollDie(s, sc.bonusDieSides); rolls.push(r); if (r === sc.bonusFace) bonus += sc.bonusPoints; } while (r === sc.bonusFace);
+    s.lastBank = { player: p.idx, sets: p.sets.length, base, rolls, bonus, total: base + bonus };
+    p.points += base + bonus; p.sets = [];
+    s.turn.T = null; s.turn.peeked = null; s.turn.banked = true;
+    s.phase = 'resolved';
+    emit(s, { type: 'bank', actor: p.idx, info: s.lastBank });
+  }
+
+  // ---------------- delivery (rulebook) ----------------
+  function canDeliver(s) {
+    if (s.variant.scoring.type !== 'delivery') return false;
+    if (s.phase !== 'action' && s.phase !== 'delivering') return false;
+    const p = cur(s);
+    return p.sets.length > 0 && s.cells[p.pos].site === p.assign;
+  }
+
+  function deliver(s, setIndex) {
+    if (!canDeliver(s)) fail('cannot deliver');
+    const p = cur(s), set = p.sets[setIndex];
+    if (!set) fail('no such set');
+    const kept = s.variant.scoring.keptPerSet;
+    p.sets.splice(setIndex, 1);
+    for (let i = 0; i < kept; i++) p.stash.push(set.value);
+    s.box += set.size - kept;
+    const newAssign = rollDie(s);
+    const site = s.cells[p.pos].site;
+    p.assign = newAssign;
+    s.turn.delivered = true; s.phase = 'delivering';
+    emit(s, { type: 'deliver', actor: p.idx, value: set.value, roll: newAssign, again: newAssign === site && p.sets.length > 0 });
+  }
+
+  // ---------------- turn end / game end ----------------
+  function endTurn(s) {
+    if (s.over) return;
+    if (s.phase === 'move') fail('must move (or stay) first');
+    if (s.phase === 'peeked' && s.variant.peekCommitsTurn) fail('a peek must be followed by a flip');
+    s.turn.revealed = [];
+    s.turnNo++;
+    s.current = (s.current + 1) % s.n;
+    beginTurn(s);
+  }
+
+  function standings(s) {
+    return s.players.map(p => {
+      const stash = p.stash;
+      return {
+        idx: p.idx,
+        score: s.variant.scoring.type === 'delivery' ? stash.reduce((a, b) => a + b, 0) : p.points,
+        fossils: stash.length,
+        highestFossil: stash.length ? Math.max(...stash) : 0,
+        sets: p.poppedSets,
+        finalPair: s.lastPopper === p.idx ? 1 : 0,
+        stranded: p.sets.length,
+      };
+    });
+  }
+
+  function computeResult(s) {
+    const keys = s.variant.tiebreaks, st = standings(s);
+    const cmp = (a, b) => { for (const k of keys) if (a[k] !== b[k]) return b[k] - a[k]; return 0; };
+    const ranking = st.slice().sort(cmp);
+    const winners = ranking.filter(r => cmp(r, ranking[0]) === 0).map(r => r.idx);
+    return { ranking, winners, standings: st };
+  }
+
+  function finish(s) {
+    s.over = true; s.phase = 'over';
+    s.result = computeResult(s);
+    emit(s, { type: 'over', result: s.result });
+  }
+
+  // ---------------- views / dispatch ----------------
+  function status(s) {
+    const p = cur(s);
+    return {
+      phase: s.phase,
+      canPeek: peekable(s).length > 0,
+      peekable: peekable(s),
+      canBank: canBank(s),
+      canDeliver: canDeliver(s),
+      canFlipSecond: s.phase === 'flipped' || s.phase === 'gemThird' ? canFlipSecond(s) : false,
+      canFlipOwn: canFlipOwn(s),
+      mustFlip: s.phase === 'peeked',
+      canEnd: !s.over && s.phase !== 'move' && !(s.phase === 'peeked' && s.variant.peekCommitsTurn),
+      onSite: s.variant.movement ? s.cells[p.pos].site : 0,
+    };
+  }
+
+  // What a player at the table may legitimately know: no face-down tile values.
+  function publicView(s, idx) {
+    const seen = new Map();
+    for (const tid of s.turn.revealed) seen.set(tid, s.tokens[tid].value);
+    return {
+      n: s.n, me: idx, current: s.current, phase: s.phase, system: s.system, over: s.over,
+      variant: s.variant, die: s.data.die, turnNo: s.turnNo,
+      cells: s.cells,
+      tokens: s.tokens.map(t => ({ id: t.id, cell: t.cell, matched: t.matched })),
+      tokensLeft: s.tokens.length - s.matchedCount,
+      revealed: s.turn.revealed.map(tid => ({ tid, value: seen.get(tid), gem: s.tokens[tid].gem })),
+      T: s.turn.T,
+      F: s.turn.F,
+      peeked: idx === s.current && s.turn.peeked !== null ? { tid: s.turn.peeked, value: s.tokens[s.turn.peeked].value, gem: s.tokens[s.turn.peeked].gem } : null,
+      players: s.players.map(p => ({
+        idx: p.idx, pos: p.pos, assign: p.assign,
+        sets: p.sets.map(x => ({ value: x.value, gem: x.gem, size: x.size })),
+        stashCount: p.stash.length, points: p.points,
+      })),
+      myStash: s.players[idx].stash.slice(),
+      moves: idx === s.current ? availableMoves(s) : null,
+      status: idx === s.current ? status(s) : null,
+    };
+  }
+
+  function apply(s, a) {
+    switch (a.type) {
+      case 'move': return move(s, a);
+      case 'peek': return peek(s, a.tid);
+      case 'flipOther': return flipOther(s, a.tid);
+      case 'flipSecond': return flipSecond(s, a.tid);
+      case 'flipOwn': return flipOwn(s);
+      case 'bank': return bank(s);
+      case 'deliver': return deliver(s, a.set);
+      case 'endTurn': return endTurn(s);
+      default: fail('unknown action ' + a.type);
+    }
+  }
+
+  return { createGame, availableMoves, move, peek, peekable, flipOther, flipSecond, flipOwn, canFlipSecond, canFlipOwn,
+           bank, canBank, deliver, canDeliver, endTurn, status, standings, computeResult, publicView, apply,
+           hexDist, mulberry32, DIRS };
+})();
+</script>
+
+<script id="bots"></script>
+<script id="ui"></script>
+</body>
+</html>
