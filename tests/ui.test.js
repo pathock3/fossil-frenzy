@@ -110,3 +110,17 @@ test('UI: setup screen, help panel and page lock', { skip: !chromium && 'Playwri
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
+
+test('UI: your delivered pile is private — it opens on your tap and shows your total', { skip: !chromium && 'Playwright/Chromium not available' }, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await setup(page, { n: 2, system: true });
+    await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI; ui.st.players[ui.st.current].stash.push(7, 16); render(); });
+    assert.match(await page.locator('.pile').innerText(), /Delivered ×2/);
+    await page.tap('.pile');
+    assert.match(await page.locator('.pile').innerText(), /7.*💎.*= 23/);
+    await page.tap('.pile');
+    assert.match(await page.locator('.pile').innerText(), /Delivered ×2/);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
