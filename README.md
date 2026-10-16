@@ -2,7 +2,9 @@
 
 A fast, family memory game for 2–6 players, played hot-seat on one screen (built for an iPad in Safari). Match fossils from memory, deliver them to your research site, and out-score your friends. Bots with adjustable memory can fill any seat.
 
-**Play:** open `index.html` in a browser — it is one self-contained file, no install, works offline. To share it with friends, host the repo with GitHub Pages (Settings → Pages → *Deploy from a branch* → `main` / root) and send them the link; on an iPad use Share → *Add to Home Screen* for a full-screen app.
+**Play:** open `index.html` in a browser — it is one self-contained file, no install, works offline.
+
+**Deployment:** every push to `main` that passes the tests is published automatically to GitHub Pages by `.github/workflows/ci.yml`, at `https://<owner>.github.io/fossil-frenzy/` (the same link every time). One-time setup: repo Settings → Pages → Source: **GitHub Actions** (Pages on a private repo needs a paid GitHub plan; otherwise make the repo public). On an iPad, Safari → Share → *Add to Home Screen* gives a full-screen app.
 
 ## Two rule sets (one toggle)
 `GAME_DATA.movementDeliverySystem` in the data block at the top of `index.html` (also switchable on the setup screen):
