@@ -1,0 +1,7 @@
+{
+  // Cloudflare Workers Builds: publish the static game. `npm run build` creates _site/ (just index.html).
+  // "name" must match the project's name in the Cloudflare dashboard.
+  "name": "fossil-frenzy",
+  "compatibility_date": "2025-10-01",
+  "assets": { "directory": "./_site" }
+}
