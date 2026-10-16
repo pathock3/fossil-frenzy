@@ -56,12 +56,11 @@ function runGame({ system, memories, seed }) {
   };
 }
 
-function leaderAt(g, frac) {
+// Everyone holding the top score after `frac` of the game's turns (empty while nobody has scored).
+function leadersAt(g, frac) {
   const k = Math.min(g.snaps.length - 1, Math.floor(frac * g.turns));
   const sc = g.snaps[k], top = Math.max(...sc);
-  if (top <= 0) return null;
-  const who = sc.flatMap((v, i) => (v === top ? [i] : []));
-  return who.length === 1 ? who[0] : null;
+  return top <= 0 ? [] : sc.flatMap((v, i) => (v === top ? [i] : []));
 }
 const winCredit = (g, seat) => (g.winners.includes(seat) ? 1 / g.winners.length : 0);
 
@@ -86,13 +85,15 @@ function summary(games) {
   const cv = games.map(g => { const m = mean(g.scores); return m > 0 ? sd(g.scores) / m : 0; });
   const early = {};
   for (const f of [0.25, 0.5, 0.75]) {
-    let led = 0, wins = 0;
+    let uniq = 0, uniqWins = 0, any = 0, anyCredit = 0;
     for (const g of games) {
-      const L = leaderAt(g, f);
-      if (L === null) continue;
-      led++; wins += winCredit(g, L);
+      const L = leadersAt(g, f);
+      if (!L.length) continue;
+      any++; anyCredit += mean(L.map(l => winCredit(g, l)));      // a tied lead shares its credit
+      if (L.length === 1) { uniq++; uniqWins += winCredit(g, L[0]); }
     }
-    early[f] = { games: led, share: led / games.length, winRate: led ? wins / led : NaN };
+    early[f] = { games: uniq, share: uniq / games.length, winRate: uniq ? uniqWins / uniq : NaN,
+                 anyGames: any, anyShare: any / games.length, tieAwareWinRate: any ? anyCredit / any : NaN };
   }
   const bySeatOrder = Array(n).fill(0);
   for (const g of games) for (const w of g.winners) bySeatOrder[(w - g.firstPlayer + n) % n] += 1 / g.winners.length;
@@ -193,8 +194,10 @@ lines.push(row('games with a tie on score', P(a.scoreTiePct), P(b.scoreTiePct)))
 lines.push(row('games with a shared win (all tie-breaks tied)', P(a.sharedWinPct), P(b.sharedWinPct)));
 lines.push(row('unbanked/undelivered points lost at the end (mean)', f1(a.stranded.mean), f1(b.stranded.mean)));
 for (const fr of [0.25, 0.5, 0.75]) {
-  lines.push(row(`early leader at ${fr * 100}% of the game: has a unique leader`, P(a.early[fr].share), P(b.early[fr].share)));
-  lines.push(row(`early leader at ${fr * 100}% of the game: goes on to win`, `${P(a.early[fr].winRate)} ±${P(ci(a.early[fr].winRate, a.early[fr].games))}`, `${P(b.early[fr].winRate)} ±${P(ci(b.early[fr].winRate, b.early[fr].games))}`));
+  const A = a.early[fr], B = b.early[fr];
+  lines.push(row(`leader at ${fr * 100}% of the game: someone has scored / a sole leader exists`, `${P(A.anyShare)} / ${P(A.share)}`, `${P(B.anyShare)} / ${P(B.share)}`));
+  lines.push(row(`leader at ${fr * 100}%: sole leader goes on to win`, `${P(A.winRate)} ±${P(ci(A.winRate, A.games))}`, `${P(B.winRate)} ±${P(ci(B.winRate, B.games))}`));
+  lines.push(row(`leader at ${fr * 100}%: win rate counting tied leaders (credit shared)`, `${P(A.tieAwareWinRate)} ±${P(ci(A.tieAwareWinRate, A.anyGames))}`, `${P(B.tieAwareWinRate)} ±${P(ci(B.tieAwareWinRate, B.anyGames))}`));
 }
 lines.push(row('win share by turn order (1st / 2nd / 3rd / 4th)', a.seatOrderWinShare.map(P).join(' / '), b.seatOrderWinShare.map(P).join(' / ')));
 lines.push('', `Fair win share with 4 players is 25.0%; 95% half-width of a win share over ${GAMES} games is about ±2.7%.`, '');
@@ -203,8 +206,8 @@ lines.push('## Table 2 — game length by player count (equal memory 0.90)', '',
 for (let n = 2; n <= 6; n++) lines.push(`| ${n} | ${f1(ON.byPlayers[n].turns.mean)} | ${f1(ON.byPlayers[n].rounds)} | ${f1(OFF.byPlayers[n].turns.mean)} | ${f1(OFF.byPlayers[n].rounds)} |`);
 lines.push('');
 
-lines.push('## Table 3 — does the early leader win? by player count (leader at 50% of the game)', '', '| players | ON | OFF | fair share |', '|---|---|---|---|');
-for (let n = 2; n <= 6; n++) lines.push(`| ${n} | ${P(ON.byPlayers[n].early[0.5].winRate)} | ${P(OFF.byPlayers[n].early[0.5].winRate)} | ${P(1 / n)} |`);
+lines.push('## Table 3 — does the early leader win? by player count (leader at 50% of the game, tied leaders share credit)', '', '| players | ON | OFF | fair share |', '|---|---|---|---|');
+for (let n = 2; n <= 6; n++) lines.push(`| ${n} | ${P(ON.byPlayers[n].early[0.5].tieAwareWinRate)} | ${P(OFF.byPlayers[n].early[0.5].tieAwareWinRate)} | ${P(1 / n)} |`);
 lines.push('');
 
 for (const [key, title] of [['mixedWide', 'Table 4 — mixed memory (0.30 / 0.55 / 0.80 / 1.00), 4 players, random seats'], ['mixedTiers', 'Table 5 — mixed memory at the design-doc tier levels (0.80 / 0.90 / 0.965 / 0.99), 4 players, random seats']]) {
@@ -221,7 +224,7 @@ ON.curve.forEach((x, i) => { const y = OFF.curve[i]; lines.push(`| ${x.memory} |
 lines.push('');
 
 lines.push('## Table 7 — everyone has the same memory (4 players)', '', '| memory | ON turns | OFF turns | ON early leader (50%) wins | OFF early leader (50%) wins |', '|---|---|---|---|---|');
-for (const m of Object.keys(ON.equalMemory)) lines.push(`| ${m} | ${f1(ON.equalMemory[m].turns.mean)} | ${f1(OFF.equalMemory[m].turns.mean)} | ${P(ON.equalMemory[m].early[0.5].winRate)} | ${P(OFF.equalMemory[m].early[0.5].winRate)} |`);
+for (const m of Object.keys(ON.equalMemory)) lines.push(`| ${m} | ${f1(ON.equalMemory[m].turns.mean)} | ${f1(OFF.equalMemory[m].turns.mean)} | ${P(ON.equalMemory[m].early[0.5].tieAwareWinRate)} | ${P(OFF.equalMemory[m].early[0.5].tieAwareWinRate)} |`);
 lines.push('');
 const md = lines.join('\n');
 fs.writeFileSync(path.join(path.dirname(OUT), 'tables.md'), md);

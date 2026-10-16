@@ -33,6 +33,11 @@ const setup = async (page, { n, system, bots = [] }) => {
   await page.tap('[data-act=begin]');
 };
 
+const fingerprint = () => {
+  const st = window.FossilFrenzyUI.ui.st;
+  return JSON.stringify([st.phase, st.turnNo, st.matchedCount, st.turn.revealed, st.players.map(p => [p.pos, p.assign, p.sets.length, p.stash.length, p.points])]);
+};
+
 // Plays the whole game with taps only. A hidden helper bot (perfect memory) chooses what a human would tap.
 async function playByTaps(page, humanSeats) {
   await page.evaluate(seats => {
@@ -57,10 +62,10 @@ async function playByTaps(page, humanSeats) {
       }
     });
     if (plan.done) return step;
-    const before = await page.evaluate(() => JSON.stringify([window.FossilFrenzyUI.ui.st.phase, window.FossilFrenzyUI.ui.st.turnNo, window.FossilFrenzyUI.ui.st.matchedCount, window.FossilFrenzyUI.ui.st.players.map(p => p.pos)]));
+    const before = await page.evaluate(fingerprint);
     await page.tap(plan.sel);
     if (plan.then) { const pushing = await page.evaluate(() => window.FossilFrenzyUI.ui.pushing !== null); if (pushing) await page.tap(plan.then); }
-    const after = await page.evaluate(() => JSON.stringify([window.FossilFrenzyUI.ui.st.phase, window.FossilFrenzyUI.ui.st.turnNo, window.FossilFrenzyUI.ui.st.matchedCount, window.FossilFrenzyUI.ui.st.players.map(p => p.pos)]));
+    const after = await page.evaluate(fingerprint);
     assert.notEqual(after, before, 'tap had no effect: ' + plan.sel + ' in ' + before);
   }
   throw new Error('game did not finish');
