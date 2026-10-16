@@ -9,7 +9,101 @@
 <meta name="apple-mobile-web-app-title" content="Fossil Frenzy">
 <meta name="theme-color" content="#1b130e">
 <title>Fossil Frenzy</title>
-<!--@@STYLE@@-->
+<style>
+:root {
+  --bg: #1b130e; --panel: #271a12; --panel2: #32231a; --line: #4a3524;
+  --umber: #4a2e1c; --umber-d: #2f1c10; --bone: #f6e7b8; --ink: #2b1b10;
+  --text: #f1e6d2; --dim: #a8957a; --accent: #f5a524; --good: #3ecf8e;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+html, body { margin: 0; height: 100%; width: 100%; position: fixed; inset: 0; overflow: hidden; overscroll-behavior: none; background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Segoe UI, Roboto, sans-serif; touch-action: manipulation; }
+#app { position: absolute; inset: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
+
+/* ---------- game layout ---------- */
+.game { height: 100%; display: grid; grid-template-rows: auto auto 1fr; gap: 6px; padding: 8px 10px 10px; }
+.bar { display: flex; gap: 8px; align-items: stretch; }
+.chips { display: flex; gap: 6px; flex: 1; min-width: 0; }
+.chip { flex: 1 1 0; min-width: 0; background: var(--panel); border: 2px solid transparent; border-radius: 12px; padding: 6px 9px; display: flex; flex-direction: column; gap: 1px; }
+.chip.cur { border-color: var(--c); background: var(--panel2); }
+.chip .nm { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--c); flex: none; }
+.chip .die { margin-left: auto; font-size: 13px; font-weight: 800; background: var(--bg); color: var(--c); border-radius: 6px; padding: 0 6px; }
+.chip .sub { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sys { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+.q { width: 34px; height: 34px; border-radius: 50%; background: var(--panel); color: var(--dim); font-weight: 700; font-size: 16px; }
+.legend { display: flex; gap: 14px; align-items: center; font-size: 12px; color: var(--dim); padding: 0 4px; min-height: 18px; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
+.legend .hint { margin-left: auto; color: var(--text); font-size: 14px; text-align: right; }
+.main { min-height: 0; display: grid; gap: 8px; grid-template-columns: 1fr 260px; }
+@media (max-aspect-ratio: 1/1) { .main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; } }
+.boardwrap { min-height: 0; min-width: 0; display: flex; }
+svg.board { width: 100%; height: 100%; touch-action: manipulation; }
+
+/* ---------- board ---------- */
+.cell .bg { fill: #2a1d14; stroke: #3d2b1d; stroke-width: 1.5; }
+.cell.site .bg { fill: #1e2a2a; stroke: #3e5c5c; stroke-dasharray: 5 3; }
+.cell.reach .bg { fill: #3a2c18; stroke: var(--accent); stroke-width: 2; }
+.cell.push .bg { stroke: #ff8a5c; stroke-width: 2.5; stroke-dasharray: 4 3; }
+.cell.stay .bg { stroke: var(--accent); stroke-width: 2; }
+.cell.mine .bg { fill: #3d3320; }
+.sitenum { fill: #8fb5b5; font-weight: 800; font-size: 22px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.tile .face { fill: var(--umber); stroke: var(--umber-d); stroke-width: 2.5; }
+.tile .spiral { fill: none; stroke: #6d4a30; stroke-width: 2; pointer-events: none; }
+.tile.up .face { fill: var(--bone); stroke: #c9ae6a; }
+.tile.peek .face { fill: #ead9a8; stroke-dasharray: 5 3; stroke: #8a6d38; }
+.tile .num { fill: var(--ink); font-weight: 800; font-size: 25px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.tile .gem { font-size: 24px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.ring { fill: none; stroke-width: 4.5; pointer-events: none; }
+.piece circle { stroke: #0d0805; stroke-width: 2; }
+.piece text { fill: #101010; font-weight: 800; font-size: 13px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.piece.cur circle { stroke: #fff; stroke-width: 2.5; }
+.flipin { animation: flip .32s ease-out; transform-box: fill-box; transform-origin: center; }
+@keyframes flip { 0% { transform: scaleX(.05); } 100% { transform: scaleX(1); } }
+.pop { animation: pop .4s ease-out; }
+@keyframes pop { 0% { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
+
+/* ---------- tray ---------- */
+.tray { background: var(--panel); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow: hidden; border: 2px solid var(--c); }
+@media (max-aspect-ratio: 1/1) { .tray { flex-direction: row; flex-wrap: wrap; align-items: center; } }
+.tray .who { font-weight: 800; font-size: 16px; color: var(--c); }
+.tray .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.tray .lab { font-size: 12px; color: var(--dim); width: 100%; }
+.setcard { display: inline-flex; gap: 3px; padding: 5px 6px; background: var(--panel2); border-radius: 10px; border: 2px solid var(--line); }
+.setcard.act { border-color: var(--good); box-shadow: 0 0 0 3px rgba(62,207,142,.25); }
+.mini { min-width: 30px; height: 30px; border-radius: 7px; background: var(--bone); color: var(--ink); font-weight: 800; display: grid; place-items: center; font-size: 15px; padding: 0 3px; }
+.pile { padding: 6px 10px; border-radius: 10px; background: var(--umber); border: 2px solid var(--umber-d); font-weight: 700; font-size: 14px; }
+.pile.open { background: var(--bone); color: var(--ink); }
+.end { margin-top: auto; background: var(--panel2); border: 2px solid var(--line); border-radius: 12px; padding: 12px 16px; font-weight: 700; font-size: 16px; }
+.end.go { border-color: var(--accent); background: #4a3418; }
+.end[disabled] { opacity: .35; }
+.note { font-size: 13px; color: var(--accent); min-height: 17px; }
+@media (max-aspect-ratio: 1/1) { .end { margin-top: 0; margin-left: auto; } }
+
+/* ---------- screens / overlays ---------- */
+.screen { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 22px 18px 30px; background: radial-gradient(ellipse at 50% 0%, #3a2616, var(--bg) 70%); }
+.sheet { max-width: 640px; margin: 0 auto; }
+h1 { margin: 0 0 4px; font-size: 38px; letter-spacing: .5px; }
+h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--dim); }
+.sub { color: var(--dim); margin: 0 0 14px; }
+.seg { display: inline-flex; background: var(--panel); border-radius: 12px; padding: 3px; gap: 3px; flex-wrap: wrap; }
+.seg button { padding: 10px 16px; border-radius: 9px; font-weight: 700; color: var(--dim); }
+.seg button.on { background: var(--accent); color: #2b1b10; }
+.seatrow { display: flex; gap: 10px; align-items: center; margin: 8px 0; flex-wrap: wrap; }
+.seatrow .dot { width: 18px; height: 18px; border-radius: 50%; flex: none; }
+.seatrow input { flex: 1 1 130px; min-width: 0; font-size: 16px; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--panel); color: var(--text); user-select: text; -webkit-user-select: text; }
+.seatrow .seg button { padding: 8px 11px; font-size: 14px; }
+.big { display: block; width: 100%; margin-top: 22px; padding: 16px; border-radius: 14px; background: var(--accent); color: #2b1b10; font-weight: 800; font-size: 20px; }
+.ghost { margin-top: 10px; padding: 12px 16px; border-radius: 12px; background: var(--panel); font-weight: 700; }
+.help p, .help li { line-height: 1.45; font-size: 15px; }
+.help li { margin: 4px 0; }
+.help h3 { margin: 18px 0 4px; color: var(--accent); font-size: 16px; }
+.table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+.table td, .table th { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); font-size: 16px; }
+.winner td { color: var(--good); font-weight: 800; }
+.dim { color: var(--dim); font-size: 13px; }
+</style>
 </head>
 <body>
 <div id="app"></div>
@@ -691,6 +785,388 @@ const Bots = (() => {
   return { create, attach, step, playGame };
 })();
 </script>
-<script id="ui"></script>
+<script id="ui">
+/* =====================================================================
+   UI — hot-seat table for touch.  The table is the UI: tap tiles, pieces, sets and piles.
+   Nothing advances on a timer; bot results stay on the board until the next player taps.
+   ===================================================================== */
+(() => {
+  'use strict';
+  const D = GAME_DATA;
+  const COLORS = ['#4f8cff', '#ff5a5f', '#3ecf8e', '#f5a524', '#b26bff', '#2ec4b6'];
+  const KEY = 'fossil-frenzy-setup-v1';
+  const root = document.getElementById('app');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // ---------------- setup config (remembered between visits, if storage allows) ----------------
+  function defaultCfg() {
+    return { n: 2, system: !!D.movementDeliverySystem, seats: Array.from({ length: D.players.max }, (_, i) => ({ name: 'Player ' + (i + 1), bot: false, mem: 2 })) };
+  }
+  function loadCfg() {
+    const cfg = defaultCfg();
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (s && s.n >= D.players.min && s.n <= D.players.max) {
+        cfg.n = s.n; cfg.system = !!s.system;
+        (s.seats || []).forEach((x, i) => { if (cfg.seats[i]) Object.assign(cfg.seats[i], { name: String(x.name || cfg.seats[i].name).slice(0, 14), bot: !!x.bot, mem: Math.min(D.bots.presets.length - 1, Math.max(0, x.mem | 0)) }); });
+      }
+    } catch (e) { /* storage unavailable: fine */ }
+    return cfg;
+  }
+  function saveCfg() { try { localStorage.setItem(KEY, JSON.stringify(ui.cfg)); } catch (e) { /* ignore */ } }
+
+  const ui = { screen: 'setup', cfg: loadCfg(), st: null, bots: [], pushing: null, showPeek: true, showStash: false,
+               note: '', help: false, prevUp: new Set(), popTurn: -1, botWaiting: false };
+
+  const memOf = idx => D.bots.presets[idx];
+  const seatName = i => ui.cfg.seats[i].name || 'Player ' + (i + 1);
+  const isBot = i => !!ui.bots[i];
+
+  // ---------------- game flow ----------------
+  function startGame() {
+    const cfg = ui.cfg, seed = Math.floor(Math.random() * 2147483647);
+    ui.st = Engine.createGame({ players: cfg.n, system: cfg.system, seed });
+    ui.bots = Bots.attach(ui.st, cfg.seats.slice(0, cfg.n).map(s => (s.bot ? { memory: memOf(s.mem).memory } : null)), seed);
+    Object.assign(ui, { screen: 'roll', pushing: null, showPeek: true, showStash: false, note: '', prevUp: new Set(), popTurn: -1, botWaiting: false });
+  }
+
+  function beginPlay() { ui.screen = 'play'; nextTurnStarts(); }
+
+  // Called whenever a turn begins: bots play their whole turn at once and wait for a tap.
+  function nextTurnStarts() {
+    const st = ui.st;
+    Object.assign(ui, { pushing: null, showPeek: true, showStash: false, note: '', botWaiting: false });
+    const bot = ui.bots[st.current];
+    if (!bot) return;
+    for (let guard = 0; guard < 200 && !st.over; guard++) {
+      const a = bot.decide(Engine.publicView(st, bot.seat));
+      if (!a || a.type === 'endTurn') break;
+      Engine.apply(st, a);
+    }
+    ui.botWaiting = !st.over;
+    ui.note = describeBotTurn();
+  }
+
+  function describeBotTurn() {
+    const st = ui.st;
+    if (st.turn.banked && st.lastBank) return botBankText();
+    if (st.turn.delivered) return 'Delivered a fossil.';
+    if (st.turn.matched) return 'Found a match!';
+    return '';
+  }
+  const botBankText = () => { const b = ui.st.lastBank; return `Banked ${b.sets} set${b.sets === 1 ? '' : 's'}: +${b.total}`; };
+
+  function endTurn() {
+    const st = ui.st;
+    if (st.over) return;
+    Engine.endTurn(st);
+    nextTurnStarts();
+  }
+
+  // ---------------- taps ----------------
+  function cellTap(id) {
+    const st = ui.st;
+    if (st.over || ui.botWaiting || isBot(st.current)) return;
+    const tid = st.tokenAt[id];
+    const cur = st.players[st.current];
+    try {
+      if (st.phase === 'move') {
+        const m = Engine.availableMoves(st);
+        if (ui.pushing) {
+          const p = ui.pushing; ui.pushing = null;
+          if (m.pushes[p].options.includes(id)) Engine.move(st, { to: p, victimTo: id });
+        } else if (id === m.stay || m.steps[id] !== undefined) Engine.move(st, { to: id });
+        else if (m.pushes[id]) {
+          if (m.pushes[id].options.length === 1) Engine.move(st, { to: id, victimTo: m.pushes[id].options[0] });
+          else ui.pushing = id;
+        }
+      } else if (st.phase === 'action') {
+        if (tid >= 0 && Engine.peekable(st).includes(tid)) { Engine.peek(st, tid); ui.showPeek = true; }
+      } else if (st.phase === 'peeked') {
+        if (tid === st.turn.T) ui.showPeek = !ui.showPeek;
+        else if (tid >= 0) {
+          Engine.flipOther(st, tid);
+          const T = st.tokens[st.turn.T], F = st.tokens[st.turn.F];
+          if (!T.gem && !F.gem && T.value === F.value) Engine.flipOwn(st);       // a pair: you always take it
+        }
+      } else if (st.phase === 'flipped') {
+        if (st.variant.gemOrder === 'second-first') {
+          if (tid >= 0 && tid !== st.turn.T && Engine.canFlipSecond(st)) {
+            Engine.flipSecond(st, tid);
+            const g = i => st.tokens[i].gem;
+            if (g(st.turn.T) && g(st.turn.F) && g(st.turn.F2)) Engine.flipOwn(st);   // all three gems: take them
+          } else if (tid === st.turn.T) ui.showPeek = !ui.showPeek;
+        } else if (tid === st.turn.T && st.tokens[st.turn.F].gem) Engine.flipOwn(st);   // reveal my gem
+        else if (tid === st.turn.T) ui.showPeek = !ui.showPeek;
+      } else if (st.phase === 'gemThird') {
+        if (tid >= 0 && tid !== st.turn.T && tid !== st.turn.F) Engine.flipSecond(st, tid);
+      } else if (st.phase === 'flipped2' || st.phase === 'resolved') {
+        if (tid === st.turn.T) ui.showPeek = !ui.showPeek;
+      }
+    } catch (e) { console.warn(e.message); }
+    render();
+  }
+
+  function setTap(i) {
+    const st = ui.st;
+    if (st.over || ui.botWaiting || isBot(st.current)) return;
+    try {
+      if (Engine.canDeliver(st)) {
+        const v = st.players[st.current].sets[i].value;
+        Engine.deliver(st, i);
+        const p = st.players[st.current];
+        ui.note = `Delivered a ${v === 16 ? 'gem' : v}. Next site: ${p.assign}.` + (Engine.canDeliver(st) ? ' Same site — deliver again?' : '');
+      } else if (Engine.canBank(st)) {
+        Engine.bank(st);
+        const b = st.lastBank;
+        ui.note = `Banked ${b.sets} set${b.sets === 1 ? '' : 's'}: +${b.base}` + (b.bonus ? ` and +${b.bonus} bonus (rolled ${b.rolls.join(', ')})` : ` (rolled ${b.rolls[0]})`);
+      }
+    } catch (e) { console.warn(e.message); }
+    render();
+  }
+
+  function onClick(e) {
+    const el = e.target.closest('[data-act]');
+    if (!el) return;
+    const d = el.dataset, st = ui.st;
+    switch (d.act) {
+      case 'n': ui.cfg.n = +d.v; saveCfg(); break;
+      case 'sys': ui.cfg.system = d.v === 'on'; saveCfg(); break;
+      case 'bot': {
+        const s = ui.cfg.seats[+d.i]; s.bot = d.v === 'bot';
+        if (s.bot && /^Player \d$/.test(s.name)) s.name = 'Bot ' + (+d.i + 1);
+        if (!s.bot && /^Bot \d$/.test(s.name)) s.name = 'Player ' + (+d.i + 1);
+        saveCfg(); break;
+      }
+      case 'mem': ui.cfg.seats[+d.i].mem = +d.v; saveCfg(); break;
+      case 'start': startGame(); break;
+      case 'begin': beginPlay(); break;
+      case 'cell': return cellTap(+d.id);
+      case 'set': return setTap(+d.i);
+      case 'stash': ui.showStash = !ui.showStash; break;
+      case 'end': if (st.over) break; if (ui.botWaiting) { endTurn(); break; } if (Engine.status(st).canEnd) endTurn(); break;
+      case 'help': ui.help = true; break;
+      case 'closehelp': ui.help = false; break;
+      case 'newgame':
+        if (ui.screen === 'play' && st && !st.over && typeof confirm === 'function' && !confirm('Start a new game? The current game will be lost.')) return;
+        ui.screen = 'setup'; ui.help = false; break;
+      case 'again': startGame(); break;
+      default: return;
+    }
+    render();
+  }
+  root.addEventListener('click', onClick);
+  root.addEventListener('input', e => {
+    const el = e.target;
+    if (el.dataset && el.dataset.act === 'name') { ui.cfg.seats[+el.dataset.i].name = el.value.slice(0, 14); saveCfg(); }
+  });
+
+  // ---------------- rendering ----------------
+  const hexPts = (cx, cy, r) => Array.from({ length: 6 }, (_, i) => { const a = (Math.PI / 180) * (60 * i - 30); return (cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1); }).join(' ');
+
+  function boardSVG() {
+    const st = ui.st, S = 34, W = Math.sqrt(3) * S, color = COLORS[st.current];
+    const pos = c => ({ x: W * (c.q + c.r / 2), y: 1.5 * S * c.r });
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for (const c of st.cells) { const p = pos(c); x0 = Math.min(x0, p.x - W / 2); x1 = Math.max(x1, p.x + W / 2); y0 = Math.min(y0, p.y - S); y1 = Math.max(y1, p.y + S); }
+    const human = !isBot(st.current) && !ui.botWaiting;
+    const moves = human && st.phase === 'move' ? Engine.availableMoves(st) : null;
+    const revealed = new Set(st.turn.revealed);
+    const peekTid = st.turn.peeked;
+    const peekShown = peekTid !== null && human && ui.showPeek;
+    const nowUp = new Set([...revealed, ...(peekShown ? [peekTid] : [])]);
+    const flipped = tid => nowUp.has(tid) !== ui.prevUp.has(tid);
+    const pushOpts = ui.pushing !== null && moves ? moves.pushes[ui.pushing].options : [];
+    let out = '';
+    for (const c of st.cells) {
+      const { x, y } = pos(c), tid = st.tokenAt[c.id];
+      const cls = ['cell'];
+      if (c.site) cls.push('site');
+      if (moves) {
+        if (ui.pushing !== null) { if (pushOpts.includes(c.id)) cls.push('reach'); }
+        else if (c.id === moves.stay) cls.push('stay');
+        else if (moves.steps[c.id] !== undefined) cls.push('reach');
+        else if (moves.pushes[c.id]) cls.push('push');
+      }
+      let g = `<g class="${cls.join(' ')}" data-act="cell" data-id="${c.id}"><polygon class="bg" points="${hexPts(x, y, S)}"/>`;
+      if (c.site) {
+        g += `<text class="sitenum" x="${x}" y="${y}">${c.site}</text>`;
+        const mine = st.players[st.current].assign === c.site && st.system;
+        if (mine) g += `<polygon class="ring" style="stroke:${color}" points="${hexPts(x, y, S - 3)}"/>`;
+      }
+      if (tid >= 0) {
+        const t = st.tokens[tid], up = revealed.has(tid), peeking = peekShown && tid === peekTid;
+        const shown = up || peeking;
+        g += `<g class="tile${up ? ' up' : ''}${peeking ? ' peek' : ''}${flipped(tid) ? ' flipin' : ''}">`;
+        g += `<polygon class="face" points="${hexPts(x, y, S * 0.8)}"/>`;
+        if (shown) g += t.gem ? `<text class="gem" x="${x}" y="${y + 1}">💎</text>` : `<text class="num" x="${x}" y="${y + 1}">${t.value}</text>`;
+        else g += `<circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.3}"/><circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.13}"/>`;
+        g += '</g>';
+        if (up || tid === peekTid) g += `<polygon class="ring" style="stroke:${color}" points="${hexPts(x, y, S * 0.9)}"/>`;
+      }
+      for (const p of st.players) if (p.pos === c.id) {
+        g += `<g class="piece${p.idx === st.current ? ' cur' : ''}"><circle cx="${x}" cy="${y + S * 0.56}" r="${S * 0.34}" fill="${COLORS[p.idx]}"/><text x="${x}" y="${y + S * 0.58}">${p.idx + 1}</text></g>`;
+      }
+      out += g + '</g>';
+    }
+    ui.prevUp = nowUp;
+    const pad = 4;
+    return `<svg class="board" viewBox="${(x0 - pad).toFixed(1)} ${(y0 - pad).toFixed(1)} ${(x1 - x0 + 2 * pad).toFixed(1)} ${(y1 - y0 + 2 * pad).toFixed(1)}" preserveAspectRatio="xMidYMid meet">${out}</svg>`;
+  }
+
+  const setLabel = s => (s.gem ? '💎' : s.value);
+
+  function chipsHTML() {
+    const st = ui.st;
+    return st.players.map(p => {
+      const sets = p.sets.length ? p.sets.map(setLabel).join(' ') : '–';
+      const sub = st.system ? `sets ${sets} · delivered ${p.stash.length}` : `${p.points} pt${p.points === 1 ? '' : 's'} · sets ${sets}`;
+      return `<div class="chip${p.idx === st.current ? ' cur' : ''}" style="--c:${COLORS[p.idx]}"><div class="nm"><span class="dot"></span>${esc(seatName(p.idx))}${isBot(p.idx) ? ' 🤖' : ''}${st.system ? `<span class="die">${p.assign}</span>` : ''}</div><div class="sub">${esc(sub)}</div></div>`;
+    }).join('');
+  }
+
+  function hint() {
+    const st = ui.st;
+    if (st.over) return '';
+    if (ui.botWaiting) return 'Its turn is on the board. Tap to continue.';
+    const s = Engine.status(st);
+    switch (st.phase) {
+      case 'move': return ui.pushing !== null ? 'Tap where to push them.' : 'Move up to 3 spaces — tap a space, or your own piece to stay.';
+      case 'action':
+        if (st.system) return s.canDeliver ? 'At your site — tap a set to deliver it.' : s.canPeek ? 'Tap your fossil to peek — or end your turn.' : 'Nothing to do here — end your turn.';
+        return s.canBank ? 'Tap a fossil to peek — or tap your sets to bank.' : 'Tap a fossil to peek.';
+      case 'peeked': return st.system ? 'Now tap another fossil to flip it for everyone.' : 'Tap another fossil to flip it — or bank instead.';
+      case 'flipped': {
+        const F = st.tokens[st.turn.F];
+        if (F.gem) return st.variant.gemOrder === 'second-first' ? 'A gem! Flip a second fossil to try for all three — or end your turn.' : 'A gem! If yours is one too, tap it to reveal it — or end your turn.';
+        return 'No match — end your turn to flip them back.';
+      }
+      case 'flipped2': return 'No match — end your turn to flip them back.';
+      case 'gemThird': return 'Flip a third fossil.';
+      case 'resolved': return st.turn.matched ? 'Match! Your set is in front of you.' : 'End your turn to flip them back.';
+      case 'delivering': return '';
+      default: return '';
+    }
+  }
+
+  function trayHTML() {
+    const st = ui.st, cur = st.players[st.current], color = COLORS[st.current];
+    const human = !isBot(st.current) && !ui.botWaiting;
+    const s = Engine.status(st);
+    const actable = human && (s.canDeliver || s.canBank);
+    const sets = cur.sets.map((x, i) => `<button class="setcard${actable ? ' act' : ''}${ui.popTurn !== st.turnNo && st.turn.matched && i === cur.sets.length - 1 ? ' pop' : ''}" data-act="set" data-i="${i}">${Array.from({ length: x.size }, () => `<span class="mini">${setLabel(x)}</span>`).join('')}</button>`).join('');
+    let stash = '';
+    if (st.system) {
+      const open = ui.showStash && human;
+      stash = `<button class="pile${open ? ' open' : ''}" data-act="stash">${open ? (cur.stash.length ? cur.stash.map(v => (v === 16 ? '💎' : v)).join(' · ') + ' = ' + cur.stash.reduce((a, b) => a + b, 0) : 'empty') : `Delivered ×${cur.stash.length}`}</button>`;
+    }
+    const endLabel = ui.botWaiting ? 'Continue' : 'End turn';
+    const canEnd = ui.botWaiting || s.canEnd;
+    const primary = ui.botWaiting || ['flipped', 'flipped2', 'resolved', 'delivering'].includes(st.phase);
+    if (ui.popTurn !== st.turnNo && st.turn.matched) ui.popTurn = st.turnNo;
+    return `<div class="tray" style="--c:${color}">
+      <div class="who">${esc(seatName(st.current))}${isBot(st.current) ? ' 🤖' : ''}${st.system ? ` · site ${cur.assign}` : ''}</div>
+      <div class="row"><span class="lab">${st.system ? 'Face up, in front of you' : 'Held sets'}</span>${sets || '<span class="dim">none yet</span>'}</div>
+      ${stash ? `<div class="row">${stash}</div>` : ''}
+      <div class="note">${esc(ui.note)}</div>
+      <button class="end${primary ? ' go' : ''}" data-act="end"${canEnd ? '' : ' disabled'}>${endLabel}</button>
+    </div>`;
+  }
+
+  function gameHTML() {
+    const st = ui.st;
+    return `<div class="game">
+      <div class="bar"><div class="chips">${chipsHTML()}</div><div class="sys"><button class="q" data-act="help" aria-label="How to play">?</button><button class="q" data-act="newgame" aria-label="New game">↺</button></div></div>
+      <div class="legend"><span><i style="background:var(--umber)"></i>concealed</span><span><i style="background:var(--bone)"></i>public</span><span class="hint">${esc(hint())}</span></div>
+      <div class="main"><div class="boardwrap">${boardSVG()}</div>${trayHTML()}</div>
+    </div>${st.over ? overHTML() : ''}`;
+  }
+
+  function setupHTML() {
+    const cfg = ui.cfg;
+    const seats = Array.from({ length: cfg.n }, (_, i) => {
+      const s = cfg.seats[i];
+      return `<div class="seatrow"><span class="dot" style="background:${COLORS[i]}"></span>
+        <input value="${esc(s.name)}" maxlength="14" data-act="name" data-i="${i}" aria-label="Name of seat ${i + 1}">
+        <span class="seg"><button class="${s.bot ? '' : 'on'}" data-act="bot" data-i="${i}" data-v="human">Human</button><button class="${s.bot ? 'on' : ''}" data-act="bot" data-i="${i}" data-v="bot">Bot</button></span>
+        ${s.bot ? `<span class="seg">${D.bots.presets.map((p, k) => `<button class="${s.mem === k ? 'on' : ''}" data-act="mem" data-i="${i}" data-v="${k}">${p.name}<br><small>${Math.round(p.memory * 1000) / 10}%</small></button>`).join('')}</span>` : ''}</div>`;
+    }).join('');
+    return `<div class="screen"><div class="sheet">
+      <h1>🦖 Fossil Frenzy</h1><p class="sub">A memory game of matching, delivering and outwitting. Pass the device around the table.</p>
+      <h2>Players</h2><span class="seg">${Array.from({ length: D.players.max - D.players.min + 1 }, (_, k) => k + D.players.min).map(n => `<button class="${cfg.n === n ? 'on' : ''}" data-act="n" data-v="${n}">${n}</button>`).join('')}</span>
+      ${seats}
+      <h2>Movement &amp; delivery</h2><span class="seg"><button class="${cfg.system ? 'on' : ''}" data-act="sys" data-v="on">On — original rules</button><button class="${cfg.system ? '' : 'on'}" data-act="sys" data-v="off">Off — peek, flip, bank</button></span>
+      <button class="big" data-act="start">Deal the fossils</button>
+      <button class="ghost" data-act="help">How to play</button>
+    </div></div>`;
+  }
+
+  function rollHTML() {
+    const st = ui.st;
+    const rows = st.players.map(p => `<tr><td><span class="dot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${COLORS[p.idx]};margin-right:8px"></span>${esc(seatName(p.idx))}${isBot(p.idx) ? ' 🤖' : ''}</td><td>🎲 ${p.roll}</td><td>${st.system ? 'corner ' + p.roll : ''}</td><td>${p.idx === st.firstPlayer ? '← goes first' : ''}</td></tr>`).join('');
+    return `<div class="screen"><div class="sheet"><h1>Roll for corners</h1>
+      <p class="sub">${st.system ? 'Everyone rolled their die. You start in the matching corner — and that corner is your first delivery site.' : 'Everyone rolled their die to see who starts.'} Highest roll goes first; play continues clockwise.</p>
+      <table class="table">${rows}</table>
+      <button class="big" data-act="begin">${esc(seatName(st.firstPlayer))} starts</button></div></div>`;
+  }
+
+  const WHY = { score: 'highest score', fossils: 'most fossils', highestFossil: 'highest scoring fossil', sets: 'most sets popped', finalPair: 'popped the final pair' };
+  function overHTML() {
+    const st = ui.st, r = st.result, keys = st.variant.tiebreaks;
+    let why = '';
+    if (r.winners.length > 1) why = r.winners.length === st.n ? 'Dead heat.' : 'Shared win — every tie-break is level.';
+    else if (r.ranking.length > 1) { const a = r.ranking[0], b = r.ranking[1]; const k = keys.find(k => a[k] !== b[k]); why = k === 'score' ? '' : `Tied on score — won on ${WHY[k]}.`; }
+    const rows = r.ranking.map(x => {
+      const p = st.players[x.idx], win = r.winners.includes(x.idx);
+      const detail = st.system ? `${x.fossils} fossil${x.fossils === 1 ? '' : 's'}: ${p.stash.length ? p.stash.slice().sort((a, b) => b - a).map(v => (v === 16 ? '💎' : v)).join(' ') : '–'}` : `${x.sets} sets popped`;
+      const lost = x.stranded ? ` · ${x.stranded} undelivered set${x.stranded === 1 ? '' : 's'} (worth 0)` : '';
+      return `<tr class="${win ? 'winner' : ''}"><td>${win ? '🏆 ' : ''}${esc(seatName(x.idx))}</td><td>${x.score}</td><td class="dim">${esc(detail + lost)}</td></tr>`;
+    }).join('');
+    return `<div class="screen"><div class="sheet"><h1>${r.winners.length > 1 ? 'Shared win!' : esc(seatName(r.winners[0])) + ' wins!'}</h1>
+      <p class="sub">${esc(why)}</p><table class="table"><tr><th>Player</th><th>Score</th><th></th></tr>${rows}</table>
+      <button class="big" data-act="again">Play again</button><button class="ghost" data-act="newgame">Change players</button></div></div>`;
+  }
+
+  const JUDGMENTS = [
+    'The board is a hexagon of 37 spaces: 31 for fossils and the six corners as research sites (die faces 1–6, clockwise). Without movement/delivery the corners are removed.',
+    'Fossils that do not match are flipped back face down at the end of the turn that revealed them.',
+    'Matches are pairs (a set of three for the gems). Only the fossil you peeked can be matched, against the one you flipped.',
+    'Your setup roll is both your starting corner and your first delivery assignment.',
+    'Pieces cannot share a space or pass through each other; a push can only go onto an empty space (never onto the pusher), and pushing uses one of your three steps and ends your move.',
+    'Delivery happens after moving: move to your site (or stay if you are there), tap a set, and its die roll follows automatically. You cannot also peek that turn (corners hold no fossil).',
+    'Peeking and delivered fossils are private by honour: the board shows the value of your peek on screen — hold the device toward yourself.',
+    'Off mode follows the design summary: a peek does not use your turn, bank scores 1 point per held set plus a d6 chain of +1s, ties go to most sets popped then whoever popped the final pair.',
+    'Bots remember each revealed fossil with a fixed probability; Beginner–Master use the memory levels from the design summary.',
+  ];
+  function helpHTML() {
+    const on = ui.cfg.system;
+    return `<div class="screen help" style="z-index:5"><div class="sheet"><h1>How to play</h1>
+      <p>Match fossils from memory, ${on ? 'deliver them to your research site, ' : 'bank them, '}and finish with the most points.</p>
+      <h3>Your turn</h3><ul>
+        ${on ? '<li><b>Move</b> 0–3 spaces (tap a highlighted space; tap your own piece to stay). Tap a player in your way to push them one space.</li>' : ''}
+        <li><b>Peek</b> at ${on ? 'the fossil you stand on' : 'any one fossil'} — tap it. Only you should look.</li>
+        <li><b>Flip</b> another fossil — tap it. Everyone sees it. ${on ? 'After a peek you must flip.' : ''}</li>
+        <li>If your peek and the flipped fossil match, they are yours. Otherwise tap <b>End turn</b> to flip them back — remember them!</li>
+        <li><b>Gems</b> (💎, worth 16) match as a set of three: ${on ? 'when you flip a gem, tap a second fossil, then yours is flipped for you.' : 'peek a gem, flip a gem, tap your peeked gem to reveal it, then flip a third.'}</li>
+        ${on ? '<li><b>Deliver</b>: matched fossils score nothing until you stand on your assigned corner (the number on your die) and tap a set. One fossil of the set is kept face down (private) at face value; the match goes back in the box. Then your die is rolled for the next site.</li>' : '<li><b>Bank</b> instead of peeking: tap your held sets — each scores 1 point, then a d6 chain: every 6 adds +1 and rolls again.</li>'}
+      </ul>
+      <h3>End</h3><p>The game ends the moment every fossil is matched. ${on ? 'Fossils still face up in front of you are worth 0.' : 'Sets you have not banked are lost.'} Highest score wins${on ? '; ties go to the most fossils, then the highest scoring fossil' : '; ties go to the most sets popped, then whoever popped the final pair'}.</p>
+      <h3>Judgment calls (where the rules were unclear)</h3><ul>${JUDGMENTS.map(j => `<li>${esc(j)}</li>`).join('')}</ul>
+      <p class="dim">The full list is in DECISIONS.md.</p>
+      <button class="big" data-act="closehelp">Close</button></div></div>`;
+  }
+
+  function render() {
+    let html;
+    if (ui.screen === 'setup') html = setupHTML();
+    else if (ui.screen === 'roll') html = rollHTML();
+    else html = gameHTML();
+    root.innerHTML = html + (ui.help ? helpHTML() : '');
+  }
+
+  window.FossilFrenzyUI = { ui, render, onClick };
+  render();
+})();
+</script>
 </body>
 </html>
