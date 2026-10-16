@@ -4,7 +4,7 @@ A fast, family memory game for 2–6 players, played hot-seat on one screen (bui
 
 **Play:** open `index.html` in a browser — it is one self-contained file, no install, works offline.
 
-**Deployment:** hosted on Cloudflare Pages, connected to this repo. `main` is the live game (one stable link that updates on every merge); every other branch gets its own preview link, so a change can be tried on an iPad before it goes live. Build settings: build command `npm run build`, output directory `_site`, production branch `main`. (`.github/workflows/ci.yml` runs the tests on every push; its GitHub Pages deploy job is a stopgap to remove once Cloudflare is live.) On an iPad, Safari → Share → *Add to Home Screen* gives a full-screen app.
+**Deployment:** hosted on Cloudflare (Workers Builds, static assets), connected to this repo. `main` is the live game — one stable link that updates on every merge. Other branches build previews so a change can be tried on an iPad before it goes live. Build command `npm run build` (copies `index.html` to `_site/`), deploy command `npx wrangler deploy`, config in `wrangler.jsonc`. `.github/workflows/ci.yml` only runs the tests. On an iPad, Safari → Share → *Add to Home Screen* gives a full-screen app.
 
 ## Two rule sets (one toggle)
 `GAME_DATA.movementDeliverySystem` in the data block at the top of `index.html` (also switchable on the setup screen):
