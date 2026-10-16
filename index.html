@@ -462,6 +462,7 @@ const Engine = (() => {
     return {
       n: s.n, me: idx, current: s.current, phase: s.phase, system: s.system, over: s.over,
       variant: s.variant, die: s.data.die, turnNo: s.turnNo,
+      setPair: s.data.matching.pairSize, setGem: s.data.matching.gemSetSize,
       cells: s.cells,
       tokens: s.tokens.map(t => ({ id: t.id, cell: t.cell, matched: t.matched })),
       tokensLeft: s.tokens.length - s.matchedCount,
@@ -500,7 +501,196 @@ const Engine = (() => {
 })();
 </script>
 
-<script id="bots"></script>
+<script id="bots">
+/* =====================================================================
+   BOTS — adjustable memory.  A bot remembers each revealed tile (a public flip by
+   anybody, or its own peek) with probability `memory`, independently per tile, and
+   never forgets it afterwards.  A bot never sees a hidden tile: it decides from
+   Engine.publicView() plus what it remembers.
+   ===================================================================== */
+const Bots = (() => {
+  const DISC = 0.7;            // a goal loses 30% of its worth per extra turn of walking
+  const EXPLORE = 2.5;         // worth of walking to a tile it knows nothing about
+  const MATCH_FACTOR = 0.7;    // a located pair is worth less than face value (it still needs delivering)
+  const DELIVER_FACTOR = 1.2;  // a delivery banks points for sure
+
+  function create(opts) {
+    const bot = {
+      seat: opts.seat,
+      memory: opts.memory === undefined ? 0.9 : opts.memory,
+      rng: opts.rng || Math.random,
+      bankAt: opts.bankAt === undefined ? 2 : opts.bankAt,                      // redesign: bank at this many held sets...
+      endgameTiles: opts.endgameTiles === undefined ? 6 : opts.endgameTiles,   // ...or when this few tiles remain
+      mem: new Map(),          // tid -> {value, gem}: long-term memory
+      turnKnown: new Map(),    // tid -> {value, gem}: what it saw this turn (always exact)
+    };
+    const pick = arr => arr[Math.floor(bot.rng() * arr.length)];
+    const remember = (tid, value, gem) => { if (bot.rng() < bot.memory) bot.mem.set(tid, { value, gem }); };
+
+    bot.onEvent = ev => {
+      if (ev.type === 'turn') {
+        if (ev.actor === bot.seat) bot.turnKnown.clear();
+      } else if (ev.type === 'reveal') {            // public flip by anybody
+        remember(ev.tid, ev.value, ev.gem);
+        if (ev.actor === bot.seat) bot.turnKnown.set(ev.tid, { value: ev.value, gem: ev.gem });
+      } else if (ev.type === 'peek') {
+        if (ev.actor !== bot.seat) return;           // other players' peeks are private
+        bot.turnKnown.set(ev.tid, { value: ev.value, gem: ev.gem });
+        remember(ev.tid, ev.value, ev.gem);
+      } else if (ev.type === 'match') {
+        for (const t of ev.tids) { bot.mem.delete(t); bot.turnKnown.delete(t); }
+      }
+    };
+
+    const known = tid => bot.turnKnown.get(tid) || bot.mem.get(tid) || null;
+
+    // known, unmatched tiles equal to (value, gem), other than `except`
+    function twins(v, value, gem, except) {
+      const out = [];
+      for (const t of v.tokens) {
+        if (t.matched || t.id === except) continue;
+        const k = known(t.id);
+        if (k && k.value === value && k.gem === gem) out.push(t.id);
+      }
+      return out;
+    }
+    const others = (v, gem) => (gem ? v.setGem : v.setPair) - 1;      // how many partners a tile needs
+    const located = (v, tid) => { const k = known(tid); return !!k && twins(v, k.value, k.gem, tid).length >= others(v, k.gem); };
+    const unknownTiles = (v, except) => v.tokens.filter(t => !t.matched && !known(t.id) && !except.includes(t.id)).map(t => t.id);
+    const anyTiles = (v, except) => v.tokens.filter(t => !t.matched && !except.includes(t.id)).map(t => t.id);
+    const revealed = (v, tid) => v.revealed.find(r => r.tid === tid);
+    const bestSet = me => { let b = 0; me.sets.forEach((x, i) => { if (x.value > me.sets[b].value) b = i; }); return b; };
+
+    // ---- rulebook mode: where to walk ----
+    function chooseMove(v) {
+      const me = v.players[v.me], mv = v.moves, cells = v.cells, maxSteps = v.variant.movement.maxSteps;
+      const goals = [];
+      if (me.sets.length) {
+        const site = cells.find(c => c.site === me.assign).id;
+        goals.push({ cell: site, value: Math.max(...me.sets.map(x => x.value)) * DELIVER_FACTOR });
+      }
+      for (const t of v.tokens) {
+        if (t.matched) continue;
+        const k = known(t.id);
+        if (!k) goals.push({ cell: t.cell, value: EXPLORE });
+        else if (located(v, t.id)) goals.push({ cell: t.cell, value: k.value * MATCH_FACTOR });
+      }
+      const dist = (a, b) => { const x = cells[a], y = cells[b], dq = x.q - y.q, dr = x.r - y.r; return Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr)); };
+      const score = cell => {
+        let best = 0;
+        for (const g of goals) best = Math.max(best, g.value * Math.pow(DISC, Math.ceil(dist(cell, g.cell) / maxSteps)));
+        return best;
+      };
+      const cands = [{ to: mv.stay, s: score(mv.stay) }];
+      for (const c of Object.keys(mv.steps)) if (Number(c) !== mv.stay) cands.push({ to: Number(c), s: score(Number(c)) });
+      for (const c of Object.keys(mv.pushes)) cands.push({ to: Number(c), s: score(Number(c)) - 0.05, victimTo: pick(mv.pushes[c].options) });
+      const top = Math.max(...cands.map(c => c.s));
+      const best = pick(cands.filter(c => c.s >= top - 1e-9));
+      return { type: 'move', to: best.to, victimTo: best.victimTo };
+    }
+
+    function chooseAction(v) {
+      const st = v.status, me = v.players[v.me];
+      if (st.canDeliver) return { type: 'deliver', set: bestSet(me) };
+      if (v.variant.scoring.type === 'bank') {           // redesign: bank, or peek any tile
+        if (st.canBank && (me.sets.length >= bot.bankAt || v.tokensLeft <= bot.endgameTiles)) return { type: 'bank' };
+        const sure = v.tokens.find(t => !t.matched && located(v, t.id));
+        if (sure) return { type: 'peek', tid: sure.id };
+        const unk = unknownTiles(v, []);
+        if (unk.length) return { type: 'peek', tid: pick(unk) };
+        const any = anyTiles(v, []);
+        return any.length ? { type: 'peek', tid: pick(any) } : { type: 'endTurn' };
+      }
+      if (st.canPeek) {                                   // rulebook: only the tile underfoot
+        const tid = st.peekable[0];
+        if (!known(tid) || located(v, tid)) return { type: 'peek', tid };
+      }
+      return { type: 'endTurn' };
+    }
+
+    function chooseFlip(v) {                              // after a peek: the forced public flip
+      const T = v.peeked, tw = twins(v, T.value, T.gem, T.tid);
+      if (tw.length) return { type: 'flipOther', tid: tw[0] };
+      const unk = unknownTiles(v, [T.tid]);
+      return { type: 'flipOther', tid: pick(unk.length ? unk : anyTiles(v, [T.tid])) };
+    }
+
+    const thirdGem = v => twins(v, v.peeked.value, true, v.peeked.tid).filter(t => t !== v.F);
+
+    function afterFlip(v) {
+      const T = v.peeked, F = revealed(v, v.F);
+      if (!T.gem && !F.gem && T.value === F.value) return { type: 'flipOwn' };
+      if (T.gem && F.gem) {
+        const third = thirdGem(v);
+        if (v.variant.gemOrder === 'second-first') {      // rulebook: flip a second tile first, my own gem last
+          if (!v.status.canFlipSecond) return { type: 'endTurn' };
+          const cand = third.length ? third : unknownTiles(v, [T.tid, v.F]);
+          return cand.length ? { type: 'flipSecond', tid: third.length ? third[0] : pick(cand) } : { type: 'endTurn' };
+        }
+        // redesign: reveal my gem only if the third is located — or in the endgame, when gambling is all that is left
+        if (third.length || v.tokensLeft <= bot.endgameTiles) return { type: 'flipOwn' };
+      }
+      return { type: 'endTurn' };
+    }
+
+    function afterSecond(v) {
+      const T = v.peeked, F = revealed(v, v.F);
+      const F2 = v.revealed.find(r => r.tid !== v.F && r.tid !== T.tid);
+      return T.gem && F.gem && F2 && F2.gem ? { type: 'flipOwn' } : { type: 'endTurn' };
+    }
+
+    function chooseThird(v) {
+      const third = thirdGem(v);
+      const cand = third.length ? third : unknownTiles(v, [v.peeked.tid, v.F]);
+      return cand.length ? { type: 'flipSecond', tid: third.length ? third[0] : pick(cand) } : { type: 'endTurn' };
+    }
+
+    bot.decide = v => {
+      switch (v.phase) {
+        case 'move': return chooseMove(v);
+        case 'action': return chooseAction(v);
+        case 'peeked': return chooseFlip(v);
+        case 'flipped': return afterFlip(v);
+        case 'flipped2': return afterSecond(v);
+        case 'gemThird': return chooseThird(v);
+        case 'resolved': case 'delivering':
+          return v.status.canDeliver ? { type: 'deliver', set: bestSet(v.players[v.me]) } : { type: 'endTurn' };
+        default: return null;
+      }
+    };
+    return bot;
+  }
+
+  // One bot per seat spec ({memory, bankAt?, endgameTiles?}); null = human seat. Subscribes them to the game.
+  function attach(state, specs, seed) {
+    const rng0 = Engine.mulberry32((seed || 1) * 7919 + 13);
+    return specs.map((sp, seat) => {
+      if (!sp) return null;
+      const b = create({ seat, memory: sp.memory, bankAt: sp.bankAt, endgameTiles: sp.endgameTiles,
+                         rng: Engine.mulberry32(Math.floor(rng0() * 4294967296)) });
+      state.observers.push(b);
+      return b;
+    });
+  }
+
+  function step(state, bot) {
+    const a = bot.decide(Engine.publicView(state, bot.seat));
+    if (a) Engine.apply(state, a);
+    return a;
+  }
+
+  // Play a bot-only game to the end; false if the safety cap was hit.
+  function playGame(state, bots, maxActions = 200000) {
+    for (let n = 0; !state.over; n++) {
+      if (n > maxActions) return false;
+      step(state, bots[state.current]);
+    }
+    return true;
+  }
+
+  return { create, attach, step, playGame };
+})();
+</script>
 <script id="ui"></script>
 </body>
 </html>
