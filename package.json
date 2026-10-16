@@ -2,9 +2,10 @@
   "name": "fossil-frenzy",
   "version": "0.1.0",
   "private": true,
-  "description": "Fossil Frenzy — single-file hot-seat browser game with bots and simulations",
+  "description": "Fossil Frenzy \u2014 single-file hot-seat browser game with bots and simulations",
   "scripts": {
     "test": "node --test \"tests/*.test.js\"",
-    "simulate": "node tools/simulate.js"
+    "simulate": "node tools/simulate.js",
+    "build": "rm -rf _site && mkdir _site && cp index.html _site/index.html"
   }
 }

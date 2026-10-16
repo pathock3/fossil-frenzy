@@ -4,8 +4,9 @@
 1. **Single HTML file** (`index.html`), playable by touch on an iPad in Safari. No build step, no runtime dependencies, no network needed. Plain JavaScript.
 2. **All rules, point values, and board setup live in one data block** (`<script id="data">`, the `GAME_DATA` object) — separate from the logic (`engine`, `bots`, `ui` scripts). Logic must not hard-code a rule number that belongs in the data block.
 3. **Automated tests for every rule**, in `tests/`. Run `npm test` after every change and fix failures before committing.
-4. **Deployment is automatic**: pushing `main` runs `.github/workflows/ci.yml` (tests, then GitHub Pages deploy of `index.html`). Don't break the single-file deploy.
-5. **Commit after each working change** with a short message. Work is committed straight to `main` (owner's instruction).
+4. **`main` is the live game** (friends play it). Work on a branch (`claude/peaceful-bardeen-fvc0jn` or a feature branch), push it, and the owner tests that branch's preview link on an iPad. Merge to `main` only when the owner says so.
+5. **Deployment is automatic**: Cloudflare Pages builds with `npm run build` (copies `index.html` to `_site/`); `main` is production, every other branch gets a preview URL. `.github/workflows/ci.yml` runs the tests on every push. Don't break the single-file build.
+6. **Commit after each working change** with a short message.
 
 ## Source of truth
 - `rulebook.md` — the original game (movement/delivery system **ON**).
