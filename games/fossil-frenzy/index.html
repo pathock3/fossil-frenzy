@@ -27,20 +27,40 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .game { height: 100%; display: grid; grid-template-rows: auto auto 1fr; gap: 6px; padding: 8px 10px 10px; }
 .bar { display: flex; gap: 8px; align-items: stretch; }
 .chips { display: flex; gap: 6px; flex: 1; min-width: 0; }
-.chip { flex: 1 1 0; min-width: 0; background: var(--panel); border: 2px solid transparent; border-radius: 12px; padding: 6px 9px; display: flex; flex-direction: column; gap: 1px; }
-.chip.cur { border-color: var(--c); background: var(--panel2); }
+/* the score is the most important thing outside the board: big, always in view, the current player's lit up */
+.chip { flex: 1 1 0; min-width: 0; background: var(--panel); border: 3px solid transparent; border-radius: 14px; padding: 6px 10px 7px; display: flex; flex-direction: column; gap: 0; position: relative; }
+.chip.cur { border-color: var(--c); background: var(--panel2); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 30%, transparent); }
 .chip .nm { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.chip .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--c); flex: none; }
+.chip .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--c); flex: none; }
+.chip .pts { font-size: clamp(34px, 7vw, 54px); font-weight: 800; line-height: 1.02; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+.chip.cur .pts { color: #fff; }
+.chip .pts.bump { animation: bump .55s ease-out; }
+@keyframes bump { 0% { transform: scale(1); } 35% { transform: scale(1.35); color: var(--accent); } 100% { transform: scale(1); } }
 .chip .sub { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sys { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
-.q { width: 34px; height: 34px; border-radius: 50%; background: var(--panel); color: var(--dim); font-weight: 700; font-size: 16px; }
+.q { width: 44px; height: 44px; border-radius: 12px; background: var(--panel); color: var(--dim); font-weight: 700; font-size: 22px; }
 .legend { display: flex; gap: 14px; align-items: center; font-size: 12px; color: var(--dim); padding: 0 4px; min-height: 18px; }
 .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
 .legend .hint { margin-left: auto; color: var(--text); font-size: 14px; text-align: right; }
-.main { min-height: 0; display: grid; gap: 8px; grid-template-columns: 1fr 260px; }
+.main { min-height: 0; display: grid; gap: 8px; grid-template-columns: 1fr 260px; position: relative; }
 @media (max-aspect-ratio: 1/1) { .main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; } }
 .boardwrap { min-height: 0; min-width: 0; display: flex; }
 svg.board { width: 100%; height: 100%; touch-action: manipulation; }
+
+/* whose turn it is: shown before they start tapping (a tap anywhere on it starts the turn) */
+.turncard { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 20px;
+  border-radius: 16px; background: rgba(27,19,14,.94); border: 4px solid var(--c); }
+.turncard .tc-who { font-size: clamp(34px, 8vw, 60px); font-weight: 800; color: var(--c); line-height: 1.05; }
+.turncard .tc-last { font-size: 17px; color: var(--accent); max-width: 30em; }
+.turncard .tc-tap { margin-top: 6px; padding: 12px 26px; border-radius: 14px; background: var(--c); color: #14100c; font-weight: 800; font-size: 20px; }
+
+/* menu (system chrome: small and quiet) */
+.backdrop { position: absolute; inset: 0; z-index: 4; background: rgba(0,0,0,.45); }
+.menu { position: absolute; z-index: 5; top: calc(env(safe-area-inset-top) + 146px); right: max(12px, env(safe-area-inset-right)); width: min(300px, calc(100% - 24px)); background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 10px;
+  display: flex; flex-direction: column; gap: 6px; box-shadow: 0 12px 30px rgba(0,0,0,.55); }
+.menu button { padding: 14px 16px; border-radius: 12px; background: var(--panel2); text-align: left; font-weight: 700; font-size: 17px; }
+.menu button.danger { background: #5a2a1e; }
+.menu .mq { margin: 4px 6px 6px; line-height: 1.4; }
 
 /* ---------- board ---------- */
 .cell .bg { fill: #2a1d14; stroke: #3d2b1d; stroke-width: 1.5; }
@@ -53,6 +73,14 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .ring { fill: none; stroke-width: 4.5; pointer-events: none; }
 .ring.peekring { stroke-dasharray: 9 6; }
 .flipin { animation: flip .32s ease-out; transform-box: fill-box; transform-origin: center; }
+/* an opponent peeks: the fossil lifts and tilts as if a corner were being peeked under; the number stays hidden */
+.tile.lift { animation: lift 1s ease-in-out; transform-box: fill-box; transform-origin: center; }
+@keyframes lift { 0% { transform: none; } 20% { transform: translateY(-5px) rotate(-7deg) scale(1.12); } 45% { transform: translateY(-5px) rotate(7deg) scale(1.12); } 70% { transform: translateY(-5px) rotate(-4deg) scale(1.12); } 100% { transform: none; } }
+.ring.pulse { animation: pulse 1s ease-in-out; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 30%, 70% { opacity: .25; } }
+.eye { font-size: 20px; text-anchor: middle; dominant-baseline: central; pointer-events: none; animation: eye 1s ease-in-out forwards; }
+@keyframes eye { 0% { opacity: 0; } 20%, 70% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .tile.lift, .ring.pulse, .eye, .chip .pts.bump { animation: none; } }
 @keyframes flip { 0% { transform: scaleX(.05); } 100% { transform: scaleX(1); } }
 .pop { animation: pop .4s ease-out; }
 @keyframes pop { 0% { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
@@ -184,6 +212,11 @@ const GAME_DATA = {
   // Bot behaviour shared by every opponent: with this few fossils left (and always when only gems remain) a bot
   // will gamble on a third gem even if it has not seen one.
   bots: { gambleTiles: 6 },
+
+  // ---- PACING (presentation only, in milliseconds) ---------------------------------------------------------
+  // An opponent's turn is shown one move at a time. `shown` is how long each move stays on screen before the next
+  // appears; a tap on the board skips ahead. Nothing else on screen advances by itself.
+  pace: { start: 450, afterYourBank: 1600, peek: 1150, flip: 900, bank: 1200 },
 };
 </script>
 
@@ -702,8 +735,9 @@ const Campaign = (() => {
   }
 
   const ui = { screen: 'home', mode: 'pass', pass: loadPass(), beaten: loadBeaten(), levelIdx: 0, names: [], st: null, bots: [],
-               showPeek: true, note: '', help: false, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '',
-               countedOver: false, outcome: null };
+               showPeek: true, note: '', help: false, menu: null, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '',
+               countedOver: false, outcome: null, turnCard: false, lastEvent: '',
+               steps: null, stage: 0, base: null, animTimer: null, liftKey: '', prevPts: null };
   ui.hints = ['auto', 'on', 'off'].includes(pref.get(HINTS_KEY)) ? pref.get(HINTS_KEY) : 'auto';
   // Prompts above the board: shown until this device has finished one game, then quiet. Help panel: Auto / On / Off.
   const hintsVisible = () => ui.hints === 'on' || (ui.hints === 'auto' && !(+pref.get(DONE_KEY) > 0));
@@ -712,29 +746,57 @@ const Campaign = (() => {
   const unlocked = i => UNLOCK_ALL || Campaign.isUnlocked(i, ui.beaten);
 
   // ---------------- game flow ----------------
+  // Who goes first is simply decided at random (the engine's opening roll) — no screen for it. The turn card says whose turn it is.
   function startGame() {
+    clearAnim();
     const seed = Math.floor(Math.random() * 2147483647), campaign = ui.mode === 'campaign';
     const n = campaign ? 2 : ui.pass.n;
     ui.st = Engine.createGame({ players: n, seed });
     ui.bots = Bots.attach(ui.st, campaign ? [null, Campaign.botSpec(LV[ui.levelIdx])] : Array(n).fill(null), seed);
     ui.names = campaign ? ['You', LV[ui.levelIdx].name] : ui.pass.names.slice(0, n);
-    Object.assign(ui, { screen: 'roll', showPeek: true, note: '', prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '', countedOver: false, outcome: null });
+    Object.assign(ui, { screen: 'play', showPeek: true, note: '', prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '', countedOver: false, outcome: null,
+                        menu: null, help: false, lastEvent: '', prevPts: null, liftKey: '' });
+    nextTurnStarts(true);
   }
-  function beginPlay() { ui.screen = 'play'; nextTurnStarts(); }
+  function beginTurn() {
+    ui.turnCard = false;
+    if (animating()) startAnim();
+  }
 
-  // Called whenever a turn begins: an opponent plays its whole turn at once and waits for a tap.
-  function nextTurnStarts() {
+  // Is an opponent's turn still being shown one move at a time?
+  const animating = () => !!ui.steps && ui.stage < ui.steps.length;
+  const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function clearAnim() { if (ui.animTimer) clearTimeout(ui.animTimer); ui.animTimer = null; }
+  function stepMs(a) { const P = D.pace; return a.type === 'peek' ? P.peek : a.type === 'bank' ? P.bank : P.flip; }
+  function startAnim() {
+    clearAnim();
+    if (!animating()) return;
+    if (reducedMotion()) { finishAnim(false); return; }
+    const wait = ui.stage === 0 ? (ui.lastEvent ? D.pace.afterYourBank : D.pace.start) : stepMs(ui.steps[ui.stage - 1].a);
+    ui.animTimer = setTimeout(() => { ui.animTimer = null; ui.stage++; ui.lastEvent = ''; render(); startAnim(); }, wait);
+  }
+  function finishAnim(redraw = true) { clearAnim(); if (ui.steps) ui.stage = ui.steps.length; ui.lastEvent = ''; if (redraw) render(); }
+
+  // Called whenever a turn begins. An opponent decides its whole turn at once, but it is SHOWN one move at a time
+  // (peek, then flip, ...), and then waits for a tap.
+  function nextTurnStarts(first = false) {
     const st = ui.st;
-    Object.assign(ui, { showPeek: true, note: '', botWaiting: false });
+    clearAnim();
+    Object.assign(ui, { showPeek: true, note: '', botWaiting: false, steps: null, stage: 0, base: null });
     const bot = ui.bots[st.current];
+    ui.turnCard = first || (!bot && ui.mode === 'pass');          // pass & play: say whose turn it is before they tap
     if (!bot) return;
+    const seat = st.current, snap = () => ({ points: st.players[seat].points, sets: st.players[seat].sets.map(x => ({ ...x })) });
+    ui.base = snap(); ui.steps = [];
     for (let guard = 0; guard < 200 && !st.over; guard++) {
       const a = bot.decide(Engine.publicView(st, bot.seat));
       if (!a || a.type === 'endTurn') break;
       Engine.apply(st, a);
+      ui.steps.push({ a, snap: snap() });
     }
     ui.botWaiting = !st.over;
     ui.note = st.turn.banked && st.lastBank ? bankText(st.lastBank) : st.turn.matched ? 'Found a match!' : '';
+    if (!ui.turnCard) startAnim();
   }
   const bankText = b => `Banked ${b.gem ? 'a gem' : 'a ' + b.value}: +${b.base}` + (b.rolls.length ? (b.bonus ? `, +${b.bonus} bonus (rolled ${b.rolls.join(', ')})` : `, no bonus (rolled ${b.rolls[0]})`) : '');
 
@@ -759,9 +821,9 @@ const Campaign = (() => {
   // ---------------- save / resume: a game in progress survives a reload (or iPad Safari discarding the tab) ----------------
   function saveGame() {
     try {
-      if (!ui.st || ui.screen === 'home' || ui.screen === 'pass' || ui.screen === 'campaign' || ui.st.over) { pref.del(SAVE_KEY); return; }
+      if (!ui.st || ui.screen !== 'play' || ui.st.over) { pref.del(SAVE_KEY); return; }
       localStorage.setItem(SAVE_KEY, JSON.stringify({
-        schema: 2, build: BUILD, screen: ui.screen, botWaiting: ui.botWaiting, note: ui.note, mode: ui.mode, levelIdx: ui.levelIdx, names: ui.names,
+        schema: 2, build: BUILD, screen: ui.screen, turnCard: ui.turnCard, botWaiting: ui.botWaiting, note: ui.note, mode: ui.mode, levelIdx: ui.levelIdx, names: ui.names,
         game: Engine.serialize(ui.st), bots: ui.bots.map(b => (b ? b.save() : null)),
       }));
     } catch (e) { /* storage unavailable or full: the game still plays, it just cannot be resumed */ }
@@ -773,8 +835,8 @@ const Campaign = (() => {
       const st = Engine.restore(sv.game);
       if (sv.mode === 'campaign' && !LV[sv.levelIdx]) throw new Error('unknown level');
       ui.st = st; ui.bots = Bots.restore(st, sv.bots); ui.names = sv.names; ui.mode = sv.mode === 'campaign' ? 'campaign' : 'pass'; ui.levelIdx = sv.levelIdx | 0;
-      Object.assign(ui, { screen: sv.screen === 'roll' ? 'roll' : 'play', botWaiting: !!sv.botWaiting, note: sv.note || '',
-                          showPeek: true, prevUp: new Set(), popTurn: st.turn.matched ? st.turnNo : -1 });
+      Object.assign(ui, { screen: 'play', turnCard: !!sv.turnCard || sv.screen === 'roll', botWaiting: !!sv.botWaiting, note: sv.note || '',
+                          showPeek: true, prevUp: new Set(), popTurn: st.turn.matched ? st.turnNo : -1, steps: null, stage: 0, base: null, lastEvent: '', menu: null });
     } catch (e) {
       pref.del(SAVE_KEY);
       ui.notice = /rules changed/.test(e.message) ? 'A new version changed the rules, so your saved game was cleared.' : 'Your saved game could not be resumed, so it was cleared.';
@@ -784,7 +846,8 @@ const Campaign = (() => {
   // ---------------- taps ----------------
   function cellTap(id) {
     const st = ui.st;
-    if (st.over || ui.botWaiting || isBot(st.current)) return;
+    if (animating()) { finishAnim(); return; }                                      // a tap skips ahead through an opponent's moves
+    if (st.over || ui.turnCard || ui.botWaiting || isBot(st.current)) return;
     const tid = st.tokenAt[id];
     try {
       if (st.phase === 'action') {
@@ -797,8 +860,12 @@ const Campaign = (() => {
           if (!T.gem && !F.gem && T.value === F.value) Engine.flipOwn(st);          // a pair: you always take it
         }
       } else if (st.phase === 'flipped') {
-        if (tid === st.turn.T && st.tokens[st.turn.F].gem) Engine.flipOwn(st);      // reveal my gem to try for a third
-        else if (tid === st.turn.T) ui.showPeek = !ui.showPeek;
+        const T = st.tokens[st.turn.T], F = st.tokens[st.turn.F];
+        if (tid === st.turn.T) ui.showPeek = !ui.showPeek;
+        else if (tid >= 0 && tid !== st.turn.F && T.gem && F.gem) {                 // two gems: tapping a third IS the consent to reveal mine
+          Engine.flipOwn(st);
+          if (Engine.canFlipSecond(st)) Engine.flipSecond(st, tid);
+        }
       } else if (st.phase === 'gemThird') {
         if (tid >= 0 && tid !== st.turn.T && tid !== st.turn.F) Engine.flipSecond(st, tid);
       } else if (st.phase === 'resolved') {
@@ -808,10 +875,14 @@ const Campaign = (() => {
     render();
   }
 
+  // Tapping a held set banks it — and banking is the whole turn, so the turn ends at once.
   function setTap(i) {
     const st = ui.st;
-    if (st.over || ui.botWaiting || isBot(st.current)) return;
-    try { if (Engine.canBank(st)) { Engine.bank(st, i); ui.note = bankText(st.lastBank); } } catch (e) { console.warn(e.message); }
+    if (animating()) { finishAnim(); return; }
+    if (st.over || ui.turnCard || ui.botWaiting || isBot(st.current)) return;
+    try {
+      if (Engine.canBank(st)) { Engine.bank(st, i); ui.lastEvent = `${seatName(st.current)}: ${bankText(st.lastBank)}`; endTurn(); }
+    } catch (e) { console.warn(e.message); }
     render();
   }
 
@@ -826,16 +897,23 @@ const Campaign = (() => {
       case 'deal': ui.mode = 'pass'; startGame(); break;
       case 'level': if (unlocked(+d.i)) { ui.mode = 'campaign'; ui.levelIdx = +d.i; startGame(); } break;
       case 'next': ui.levelIdx = Math.min(ui.levelIdx + 1, LV.length - 1); startGame(); break;
-      case 'begin': beginPlay(); break;
+      case 'begin': beginTurn(); break;
       case 'cell': return cellTap(+d.id);
       case 'set': return setTap(+d.i);
-      case 'end': if (st.over) break; if (ui.botWaiting || Engine.status(st).canEnd) endTurn(); break;
+      case 'end':
+        if (animating()) { finishAnim(); return; }
+        if (st.over || ui.turnCard) break;
+        if (ui.botWaiting || Engine.status(st).canEnd) endTurn();
+        break;
       case 'hints': ui.hints = d.v; pref.set(HINTS_KEY, d.v); break;
-      case 'help': ui.help = true; break;
+      case 'help': ui.help = true; ui.menu = null; break;
       case 'closehelp': ui.help = false; break;
-      case 'newgame':
-        if (ui.screen === 'play' && st && !st.over && typeof confirm === 'function' && !confirm('Start over? The current game will be lost.')) return;
-        ui.screen = 'home'; ui.help = false; break;
+      // the in-game menu: rules, retry, back to the start. Retry and quit ask first; retry deals a fresh game at once, same setup.
+      case 'menu': ui.menu = ui.menu ? null : 'open'; break;
+      case 'menu-close': ui.menu = null; break;
+      case 'menu-ask': ui.menu = d.v; break;
+      case 'retry': startGame(); break;
+      case 'quit': clearAnim(); ui.menu = null; ui.help = false; ui.screen = 'home'; break;
       case 'again': startGame(); break;
       default: return;
     }
@@ -857,8 +935,19 @@ const Campaign = (() => {
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
     for (const c of st.cells) { const p = pos(c); x0 = Math.min(x0, p.x - W / 2); x1 = Math.max(x1, p.x + W / 2); y0 = Math.min(y0, p.y - S); y1 = Math.max(y1, p.y + S); }
     const human = !isBot(st.current) && !ui.botWaiting;
-    const revealed = new Set(st.turn.revealed);
-    const peekTid = st.turn.peeked;
+    let revealed = new Set(st.turn.revealed), peekTid = st.turn.peeked, lift = false;
+    if (animating()) {                       // an opponent's turn, shown one move at a time: rebuild what is on the table so far
+      revealed = new Set(); peekTid = null;
+      for (let k = 0; k < ui.stage; k++) {
+        const a = ui.steps[k].a;
+        if (a.type === 'peek') peekTid = a.tid;
+        else if (a.type === 'flipOwn') revealed.add(peekTid);
+        else if (a.type === 'flipOther' || a.type === 'flipSecond') revealed.add(a.tid);
+      }
+      const key = st.turnNo + ':' + ui.stage;
+      lift = ui.stage > 0 && ui.steps[ui.stage - 1].a.type === 'peek' && ui.liftKey !== key;
+      ui.liftKey = key;
+    }
     const peekShown = peekTid !== null && human && ui.showPeek;
     const nowUp = new Set([...revealed, ...(peekShown ? [peekTid] : [])]);
     const flipped = tid => nowUp.has(tid) !== ui.prevUp.has(tid);
@@ -871,13 +960,14 @@ const Campaign = (() => {
       if (tid >= 0) {
         const t = st.tokens[tid], up = revealed.has(tid), peeking = peekShown && tid === peekTid;
         const shown = up || peeking;
-        g += `<g class="tile${up ? ' up' : ''}${peeking ? ' peek' : ''}${flipped(tid) ? ' flipin' : ''}">`;
+        const lifting = lift && tid === peekTid;
+        g += `<g class="tile${up ? ' up' : ''}${peeking ? ' peek' : ''}${flipped(tid) ? ' flipin' : ''}${lifting ? ' lift' : ''}">`;
         g += `<polygon class="face" points="${hexPts(x, y, S * 0.8)}"/>`;
         if (shown) g += t.gem ? `<text class="gem" x="${x}" y="${y + 1}">💎</text>` : `<text class="num" x="${x}" y="${y + 1}">${t.value}</text>`;
         else g += `<circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.3}"/><circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.13}"/>`;
         g += '</g>';
         if (up) g += `<polygon class="ring" style="stroke:${color}" points="${hexPts(x, y, S * 0.9)}"/>`;
-        else if (tid === peekTid) g += `<polygon class="ring peekring" style="stroke:${color}" points="${hexPts(x, y, S * 0.9)}"/>`;   // peeked: dashed, number hidden
+        else if (tid === peekTid) g += `<polygon class="ring peekring${lifting ? ' pulse' : ''}" style="stroke:${color}" points="${hexPts(x, y, S * 0.9)}"/>` + (lifting ? `<text class="eye" x="${x}" y="${y - S * 0.95}">👁</text>` : '');   // peeked: dashed, number hidden
       }
       out += g + '</g>';
     }
@@ -886,28 +976,41 @@ const Campaign = (() => {
     return `<svg class="board" viewBox="${(x0 - pad).toFixed(1)} ${(y0 - pad).toFixed(1)} ${(x1 - x0 + 2 * pad).toFixed(1)} ${(y1 - y0 + 2 * pad).toFixed(1)}" preserveAspectRatio="xMidYMid meet">${out}</svg>`;
   }
 
+  // What a player has so far. While an opponent's turn is being shown move by move, its points and sets lag behind the engine.
+  const shownOf = p => (animating() && p.idx === ui.st.current ? (ui.stage > 0 ? ui.steps[ui.stage - 1].snap : ui.base) : p);
+
   function chipsHTML() {
-    const st = ui.st;
-    return st.players.map(p => {
-      const sets = p.sets.length ? p.sets.map(setLabel).join(' ') : '–';
-      return `<div class="chip${p.idx === st.current ? ' cur' : ''}" style="--c:${COLORS[p.idx]}"><div class="nm"><span class="dot"></span>${esc(seatName(p.idx))}${isBot(p.idx) ? ' 🤖' : ''}</div><div class="sub">${esc(`${p.points} pt${p.points === 1 ? '' : 's'} · sets ${sets}`)}</div></div>`;
+    const st = ui.st, was = ui.prevPts, now = {};
+    const html = st.players.map(p => {
+      const v = shownOf(p), sets = v.sets.length ? 'holds ' + v.sets.map(setLabel).join(' ') : 'no sets held';
+      now[p.idx] = v.points;
+      const bump = was && was[p.idx] !== undefined && was[p.idx] !== v.points;
+      return `<div class="chip${p.idx === st.current ? ' cur' : ''}" style="--c:${COLORS[p.idx]}"><div class="nm"><span class="dot"></span>${esc(seatName(p.idx))}${isBot(p.idx) ? ' 🤖' : ''}</div><div class="pts${bump ? ' bump' : ''}" aria-label="${v.points} points">${v.points}</div><div class="sub">${esc(sets)}</div></div>`;
     }).join('');
+    ui.prevPts = now;
+    return html;
   }
 
   function hint() {
     const st = ui.st;
-    if (st.over) return '';
+    if (st.over && !animating()) return '';
+    if (animating()) {
+      const name = seatName(st.current), k = ui.stage > 0 ? ui.steps[ui.stage - 1].a.type : null;
+      return { null: `${name} is thinking…`, peek: `${name} peeks at a fossil (the number stays hidden).`, flipOther: `${name} flips another fossil.`,
+               flipOwn: `${name} flips the fossil it peeked at.`, flipSecond: `${name} flips a third fossil.`, bank: `${name} banks a set.` }[k] || '';
+    }
     if (ui.botWaiting) {
       const t = st.turn;
       if (t.banked) return 'It banked a set. Tap to continue.';
       if (t.peeked !== null) return t.matched ? 'It peeked at the dashed ring, flipped the other, and matched them. Tap to continue.' : 'It peeked at the dashed ring (number hidden) and flipped the other. Tap to continue.';
       return 'Its turn is on the board. Tap to continue.';
     }
+    if (ui.turnCard) return '';
     const s = Engine.status(st);
     switch (st.phase) {
-      case 'action': return s.canBank ? 'Tap a fossil to peek — or tap one of your sets to bank it.' : 'Tap a fossil to peek.';
+      case 'action': return s.canBank ? 'Tap a fossil to peek — or tap one of your sets to bank it (that ends your turn).' : 'Tap a fossil to peek.';
       case 'peeked': return 'Tap another fossil to flip it — or tap a set to bank it instead.';
-      case 'flipped': return st.tokens[st.turn.F].gem ? 'A gem! If yours is one too, tap it to reveal it — or end your turn.' : 'No match — end your turn to flip them back.';
+      case 'flipped': return st.tokens[st.turn.F].gem ? 'A gem! If yours is one too, tap a third fossil to go for the set — or end your turn.' : 'No match — end your turn to flip them back.';
       case 'gemThird': return 'Flip a third fossil.';
       case 'resolved': return st.turn.matched ? 'Match! Your set is in front of you.' : 'End your turn to flip them back.';
       default: return '';
@@ -919,13 +1022,16 @@ const Campaign = (() => {
     const human = !isBot(st.current) && !ui.botWaiting;
     const s = Engine.status(st);
     const actable = human && s.canBank;
-    const sets = cur.sets.map((x, i) => `<button class="setcard${actable ? ' act' : ''}${ui.popTurn !== st.turnNo && st.turn.matched && i === cur.sets.length - 1 ? ' pop' : ''}" data-act="set" data-i="${i}">${Array.from({ length: x.size }, () => `<span class="mini">${setLabel(x)}</span>`).join('')}</button>`).join('');
+    const v = shownOf(cur);
+    const matchedShown = !!st.turn.matched && (!animating() || v.sets.length > ui.base.sets.length);
+    const sets = v.sets.map((x, i) => `<button class="setcard${actable ? ' act' : ''}${ui.popTurn !== st.turnNo && matchedShown && i === v.sets.length - 1 ? ' pop' : ''}" data-act="set" data-i="${i}">${Array.from({ length: x.size }, () => `<span class="mini">${setLabel(x)}</span>`).join('')}</button>`).join('');
     const primary = ui.botWaiting || ['flipped', 'resolved'].includes(st.phase);
-    if (ui.popTurn !== st.turnNo && st.turn.matched) ui.popTurn = st.turnNo;
+    if (ui.popTurn !== st.turnNo && matchedShown) ui.popTurn = st.turnNo;
+    const note = animating() ? (ui.stage === 0 ? ui.lastEvent : '') : ui.note;
     return `<div class="tray" style="--c:${color}">
       <div class="who">${esc(seatName(st.current))}${isBot(st.current) ? ' 🤖' : ''}</div>
       <div class="row"><span class="lab">Held sets</span>${sets || '<span class="dim">none yet</span>'}</div>
-      <div class="note">${esc(ui.note)}</div>
+      <div class="note">${esc(note)}</div>
       <button class="end${primary ? ' go' : ''}" data-act="end">${ui.botWaiting ? 'Continue' : 'End turn'}</button>
     </div>`;
   }
@@ -933,10 +1039,26 @@ const Campaign = (() => {
   function gameHTML() {
     const st = ui.st;
     return `<div class="game">
-      <div class="bar"><div class="chips">${chipsHTML()}</div><div class="sys"><button class="q" data-act="help" aria-label="How to play">?</button><button class="q" data-act="newgame" aria-label="Start over">↺</button></div></div>
+      <div class="bar"><div class="chips">${chipsHTML()}</div><div class="sys"><button class="q" data-act="menu" aria-label="Menu">☰</button></div></div>
       <div class="legend"><span><i style="background:var(--umber)"></i>concealed</span><span><i style="background:var(--bone)"></i>public</span><span class="hint">${esc(hintsVisible() ? hint() : '')}</span></div>
-      <div class="main"><div class="boardwrap">${boardSVG()}</div>${trayHTML()}</div>
-    </div>${st.over ? overHTML() : ''}`;
+      <div class="main"><div class="boardwrap">${boardSVG()}</div>${trayHTML()}${ui.turnCard && !st.over ? turnCardHTML() : ''}</div>
+    </div>${st.over && !animating() ? overHTML() : ''}${ui.menu ? menuHTML() : ''}`;
+  }
+
+  // Whose turn it is, said before they start tapping. (In pass & play it also stands in for handing the device over.)
+  function turnCardHTML() {
+    const st = ui.st, i = st.current, name = seatName(i), you = name === 'You';
+    const title = st.turnNo === 0 ? `${name} ${you ? 'go' : 'goes'} first` : you ? 'Your turn' : `${name}'s turn`;
+    return `<button class="turncard" data-act="begin" style="--c:${COLORS[i]}"><span class="tc-who">${esc(title)}</span>
+      ${ui.lastEvent ? `<span class="tc-last">${esc(ui.lastEvent)}</span>` : ''}<span class="tc-tap">${isBot(i) ? 'Tap to watch' : 'Tap to start'}</span></button>`;
+  }
+
+  function menuHTML() {
+    const m = ui.menu, sure = (q, yes, act) => `<p class="mq">${q}</p><button class="danger" data-act="${act}">${yes}</button><button data-act="menu-close">No, keep playing</button>`;
+    const body = m === 'retry' ? sure('Start this game over with a fresh deal? The current game will be lost.', 'Yes, start over', 'retry')
+      : m === 'quit' ? sure('Leave this game and go back to the start? The current game will be lost.', 'Yes, leave', 'quit')
+      : `<button data-act="help">How to play</button><button data-act="menu-ask" data-v="retry">Retry</button><button data-act="menu-ask" data-v="quit">Back to the start</button><button data-act="menu-close">Resume</button>`;
+    return `<div class="backdrop" data-act="menu-close"></div><div class="menu" role="menu">${body}</div>`;
   }
 
   const libraryLink = () => (D.library && /^https?:$/.test(location.protocol) ? `<a class="back" href="${esc(D.library.href)}">‹ ${esc(D.library.name)}</a>` : '');
@@ -981,15 +1103,6 @@ const Campaign = (() => {
     </div></div>`;
   }
 
-  function rollHTML() {
-    const st = ui.st;
-    const rows = st.players.map(p => `<tr><td><span class="dot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${COLORS[p.idx]};margin-right:8px"></span>${esc(seatName(p.idx))}${isBot(p.idx) ? ' 🤖' : ''}</td><td>🎲 ${p.roll}</td><td>${p.idx === st.firstPlayer ? '← goes first' : ''}</td></tr>`).join('');
-    return `<div class="screen"><div class="sheet"><h1>Who goes first?</h1>
-      <p class="sub">Everyone rolled a die. Highest roll goes first; play continues clockwise.</p>
-      <table class="table">${rows}</table>
-      <button class="big" data-act="begin">${esc(seatName(st.firstPlayer))} ${seatName(st.firstPlayer) === 'You' ? 'start' : 'starts'}</button></div></div>`;
-  }
-
   const WHY = { score: 'highest score', sets: 'most sets popped', finalPair: 'popped the final pair' };
   function overHTML() {
     const st = ui.st, r = st.result, keys = st.rules.tiebreaks, campaign = ui.mode === 'campaign', o = ui.outcome;
@@ -1024,6 +1137,10 @@ const Campaign = (() => {
     'A peek does not use up your turn: you may bank instead of flipping.',
     'Matches are pairs (a set of three for the gems). Only the fossil you peeked can be matched, against the one you flipped.',
     'Banking takes one set of your choice, worth the number on its fossil (a gem is 16), then a d6 chain adds +1 for every 6. Sets you never bank are worth nothing.',
+    'Banking is your whole turn, so it ends the moment you tap the set — there is no End turn tap afterwards.',
+    'Who goes first is decided at random, without a screen for it; a card names whose turn it is before they tap (in Pass & Play, every turn).',
+    'After you peek a gem and flip a gem, tapping a third fossil is your consent to reveal your peeked gem too.',
+    'An opponent\'s turn is shown one move at a time: a peek (the fossil lifts, the number stays hidden), then the flip. A tap skips ahead.',
     'Ties go to the most sets popped, then whoever popped the final pair.',
     'Campaign: you beat a level by winning outright (a shared win does not count). Opponents differ in how well they remember fossils and how carefully they plan their banking.',
   ];
@@ -1034,8 +1151,9 @@ const Campaign = (() => {
         <li><b>Peek</b> at any fossil — tap it. Only you should look.</li>
         <li><b>Flip</b> another fossil — tap it. Everyone sees it.</li>
         <li>If your peek and the flipped fossil match, they are yours. Otherwise tap <b>End turn</b> to flip them back — remember them!</li>
-        <li><b>Gems</b> (💎, worth 16) match as a set of three: peek a gem, flip a gem, tap your peeked gem to reveal it, then flip a third.</li>
-        <li><b>Bank</b> instead of flipping: tap ONE of your held sets. It scores the number on its fossil (a gem is 16), then a d6 chain: every 6 adds +1 and rolls again. Banking takes the whole turn.</li>
+        <li>The scores are at the top, and whose turn it is is lit up. Who goes first is decided at random.</li>
+        <li><b>Gems</b> (💎, worth 16) match as a set of three: peek a gem, flip a gem, then tap a third fossil — that reveals your peeked gem too, and if the third is a gem, the set is yours.</li>
+        <li><b>Bank</b> instead of flipping: tap ONE of your held sets. It scores the number on its fossil (a gem is 16), then a d6 chain: every 6 adds +1 and rolls again. Banking takes the whole turn, so your turn ends the moment you bank.</li>
       </ul>
       <h3>End</h3><p>The game ends the moment every fossil is matched. Sets you have not banked are lost. Highest score wins; ties go to the most sets popped, then whoever popped the final pair.</p>
       <h3>Judgment calls (where the rules were unclear)</h3><ul>${JUDGMENTS.map(j => `<li>${esc(j)}</li>`).join('')}</ul>
@@ -1046,7 +1164,7 @@ const Campaign = (() => {
 
   function render() {
     if (ui.st && ui.st.over && !ui.countedOver) gameFinished();     // count the game (and record a campaign result) before drawing the end screen
-    const html = { home: homeHTML, pass: passHTML, campaign: campaignHTML, roll: rollHTML, play: gameHTML }[ui.screen]();
+    const html = { home: homeHTML, pass: passHTML, campaign: campaignHTML, play: gameHTML }[ui.screen]();
     root.innerHTML = html + (ui.help ? helpHTML() : '');
     saveGame();
   }

@@ -62,9 +62,10 @@ Gaps closed (this is now the template for the next game):
 - ✅ Prompts above the board were instructional narration: now shown only until a device has finished one game; Auto / On / Off in the help panel.
 - ✅ The end screen was a stats table: now each player's banked fossils laid out with their score, the winner marked.
 - ✅ Ring colour is not an accessibility gap (only the current player's flips are shown). A peek is a dashed ring, a flip a solid one.
+- ✅ **Playtest round 2** (owner): no who-goes-first screen (random order + a turn card); big scores; the opponent's turn animated move by move (peek, then flip); a third tap after two gems is consent; banking ends the turn; a ☰ menu with rules, retry and back-to-start (see DECISIONS 33–38).
 - ✅ **One rule set** (owner decision, 2026-10-18): the original movement/delivery mode and the toggle were removed; Pass & Play (2–4) and a five-level Campaign were added.
 
-Still to consider (not started): take-backs before anything is revealed; a short guided first turn; a "pass the device" screen for games where hidden information needs it; more Campaign content beyond the five levels (the owner will flesh it out); a gentler first rung of the ladder (see `games/fossil-frenzy/REPORT.md`).
+Still to consider (not started): take-backs before anything is revealed; a short guided first turn; (the turn card now doubles as a pass-the-device moment in Pass & Play); more Campaign content beyond the five levels (the owner will flesh it out); a gentler first rung of the ladder (see `games/fossil-frenzy/REPORT.md`).
 
 ## 5. Order of work
 1. ✅ Cloudflare live + preview links; tests gate deploys; build stamp; changelog.
