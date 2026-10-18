@@ -3,5 +3,7 @@
   // "name" must match the project's name in the Cloudflare dashboard.
   "name": "fossil-frenzy",
   "compatibility_date": "2025-10-01",
-  "assets": { "directory": "./_site" }
+  "assets": { "directory": "./_site" },
+  // Branch previews (`wrangler preview`) require this block, even empty.
+  "previews": {}
 }
