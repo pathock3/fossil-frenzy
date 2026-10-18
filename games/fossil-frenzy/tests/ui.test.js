@@ -207,3 +207,77 @@ test('UI (redesign): a bot\'s peek shows as a dashed ring on a face-down space, 
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
+
+// ---------- save / resume ----------
+const gameState = page => page.evaluate(() => { const s = window.FossilFrenzyUI.ui.st; return s ? JSON.stringify([s.phase, s.current, s.turnNo, s.matchedCount, s.turn, s.players.map(p => [p.pos, p.assign, p.sets, p.stash, p.points])]) : null; });
+const screenOf = page => page.evaluate(() => window.FossilFrenzyUI.ui.screen);
+const SKIP = { skip: !chromium && 'Playwright/Chromium not available', timeout: 90000 };
+
+test('save: reloading the page mid-turn resumes the same game, same phase, and play continues', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await setup(page, { n: 2, system: false });
+    await rig(page, { 0: 7, 1: 5, 2: 7 });
+    await page.tap(await tile(page, 0));                                  // peek
+    await page.tap(await tile(page, 1));                                  // flip a miss
+    const before = await gameState(page);
+    await page.reload();
+    assert.equal(await screenOf(page), 'play');
+    assert.equal(await gameState(page), before, 'identical game state after the reload');
+    assert.equal(await page.locator('.ring.peekring').count(), 1, 'the peeked space is still marked');
+    await page.tap('[data-act=end]');                                     // carry on: end the turn…
+    await page.tap(await tile(page, 2)); await page.tap(await tile(page, 0));   // …then the next player peeks and flips
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.turnNo), 1);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('save: a bot\'s turn left on the board survives a reload and Continue still works', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await setup(page, { n: 2, system: false, bots: [0, 1] });
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.botWaiting), true);
+    const before = await gameState(page);
+    await page.reload();
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.botWaiting), true);
+    assert.equal(await gameState(page), before);
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.bots.filter(Boolean).length), 2);
+    await page.tap('[data-act=end]');
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.turnNo), 1);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('save: starting a new game clears the save, and a finished game is not resumed', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    page.on('dialog', d => d.accept());
+    await setup(page, { n: 2, system: false });
+    await page.tap('[data-act=newgame]');
+    await page.reload();
+    assert.equal(await screenOf(page), 'setup');
+    await setup(page, { n: 2, system: false, bots: [0, 1] });
+    for (let i = 0; i < 400 && !(await page.evaluate(() => window.FossilFrenzyUI.ui.st.over)); i++) await page.tap('[data-act=end]');
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.over), true);
+    await page.reload();
+    assert.equal(await screenOf(page), 'setup');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('save: a save from other rules, or a damaged one, is cleared with a quiet note — never a crash', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await setup(page, { n: 2, system: false });
+    await page.evaluate(() => { const k = 'fossil-frenzy-save-v1', sv = JSON.parse(localStorage.getItem(k)); sv.game.fingerprint = 'other'; localStorage.setItem(k, JSON.stringify(sv)); });
+    await page.reload();
+    assert.equal(await screenOf(page), 'setup');
+    assert.match(await page.locator('.sheet').innerText(), /changed the rules, so your saved game was cleared/);
+    assert.equal(await page.evaluate(() => localStorage.getItem('fossil-frenzy-save-v1')), null);
+    await page.evaluate(() => localStorage.setItem('fossil-frenzy-save-v1', '{not json'));
+    await page.reload();
+    assert.equal(await screenOf(page), 'setup');
+    assert.match(await page.locator('.sheet').innerText(), /could not be resumed/);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
