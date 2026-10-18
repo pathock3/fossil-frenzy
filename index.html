@@ -7,6 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Fossil Frenzy">
+<meta name="build" content="__BUILD__">
 <meta name="theme-color" content="#1b130e">
 <title>Fossil Frenzy</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A6%96%3C/text%3E%3C/svg%3E">
@@ -797,6 +798,8 @@ const Bots = (() => {
   const COLORS = ['#4f8cff', '#ff5a5f', '#3ecf8e', '#f5a524', '#b26bff', '#2ec4b6'];
   const KEY = 'fossil-frenzy-setup-v1';
   const root = document.getElementById('app');
+  // Which build is this? tools/build.js stamps the commit/branch; an unbuilt file says so.
+  const BUILD = (() => { const m = document.querySelector('meta[name=build]'); const v = m ? m.content : ''; return !v || v.startsWith('__') ? 'local file' : v; })();
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   // ---------------- setup config (remembered between visits, if storage allows) ----------------
@@ -1099,6 +1102,7 @@ const Bots = (() => {
       <h2>Movement &amp; delivery</h2><span class="seg"><button class="${cfg.system ? 'on' : ''}" data-act="sys" data-v="on">On — original rules</button><button class="${cfg.system ? '' : 'on'}" data-act="sys" data-v="off">Off — peek, flip, bank</button></span>
       <button class="big" data-act="start">Deal the fossils</button>
       <button class="ghost" data-act="help">How to play</button>
+      <p class="dim" style="margin-top:18px">Version ${esc(BUILD)}</p>
     </div></div>`;
   }
 
@@ -1153,7 +1157,7 @@ const Bots = (() => {
       </ul>
       <h3>End</h3><p>The game ends the moment every fossil is matched. ${on ? 'Fossils still face up in front of you are worth 0.' : 'Sets you have not banked are lost.'} Highest score wins${on ? '; ties go to the most fossils, then the highest scoring fossil' : '; ties go to the most sets popped, then whoever popped the final pair'}.</p>
       <h3>Judgment calls (where the rules were unclear)</h3><ul>${JUDGMENTS.map(j => `<li>${esc(j)}</li>`).join('')}</ul>
-      <p class="dim">The full list is in DECISIONS.md.</p>
+      <p class="dim">The full list is in DECISIONS.md. Version ${esc(BUILD)}.</p>
       <button class="big" data-act="closehelp">Close</button></div></div>`;
   }
 
