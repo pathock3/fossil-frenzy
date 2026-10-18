@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Builds the deployable site: _site/index.html, stamped with the commit and branch it came from.
-//   node tools/build.js [outDir]
+// Builds the deployable site into _site/: the library's index.html plus games/<id>/index.html for every game,
+// each stamped with the commit, date and branch it came from.   node tools/build.js [outDir]
 // `npm run build` runs the tests first, so a failing test stops a deploy.
 const fs = require('fs');
 const path = require('path');
@@ -17,9 +17,15 @@ if (branch === 'HEAD') branch = '';
 const date = new Date().toISOString().slice(0, 10);
 const label = [sha, date, branch && branch !== 'main' ? 'preview: ' + branch : ''].filter(Boolean).join(' · ');
 
-const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-if (!html.includes('content="__BUILD__"')) throw new Error('index.html is missing the <meta name="build" content="__BUILD__"> placeholder');
+const gamesDir = path.join(root, 'games');
+const games = fs.existsSync(gamesDir) ? fs.readdirSync(gamesDir).filter(d => fs.existsSync(path.join(gamesDir, d, 'index.html'))).sort() : [];
+const pages = ['index.html', ...games.map(g => path.join('games', g, 'index.html'))];
+
 fs.rmSync(out, { recursive: true, force: true });
-fs.mkdirSync(out, { recursive: true });
-fs.writeFileSync(path.join(out, 'index.html'), html.replace('content="__BUILD__"', 'content="' + label.replace(/"/g, '') + '"'));
-console.log('built', path.relative(root, out) + '/index.html', '—', label);
+for (const rel of pages) {
+  const html = fs.readFileSync(path.join(root, rel), 'utf8');
+  if (!html.includes('content="__BUILD__"')) throw new Error(rel + ' is missing the <meta name="build" content="__BUILD__"> placeholder');
+  fs.mkdirSync(path.dirname(path.join(out, rel)), { recursive: true });
+  fs.writeFileSync(path.join(out, rel), html.replace('content="__BUILD__"', 'content="' + label.replace(/"/g, '') + '"'));
+}
+console.log('built', pages.length, 'pages into', path.relative(root, out) || '.', '—', label);

@@ -4,11 +4,11 @@ The working plan for turning Patrick's tabletop designs into a collection of bro
 
 ## 1. The collection (inspired by UFO 50)
 
-- **One site, one repo.** The front page is a *cabinet*: a grid of game cards. Each game lives in its own folder (`/fossil-frenzy/`, …) and plays as its own single self-contained HTML file. ⬜
-- **Dig Dig Boom is separate** — the flagship gets its own repo, Cloudflare project and release cadence, free of the single-file rule. The cabinet links out to it. ⬜
-- **What to borrow from UFO 50:** one shared visual and control language with a distinct identity per game; per-game saves; two goals per game — one for beating it, one for mastering it (the design summary's AI tier ladder fits the second); a cabinet that remembers what you've played. ⬜
-- **Unlisted games:** a flag keeps a prototype off the cabinet while its link still works for testers (not secret — just not listed). ⬜
-- Open decisions (owner): the collection's name; which game comes second.
+- **One site, one repo, called the Tabletop Library.** The front page (`index.html`) is a shelf of game boxes — tap a box to open the game. Each game lives in `games/<id>/` and plays as its own single self-contained HTML file; the catalogue is a data block in the library page, and a test fails if the folders and the catalogue disagree. ✅
+- **Dig Dig Boom is separate** — the flagship gets its own repo, Cloudflare project and release cadence, free of the single-file rule. The library has a placeholder entry (off the shelf) ready to link out to it by `url`. 🔜 needs its web address
+- **What to borrow from UFO 50:** one shared visual and control language with a distinct identity per game; per-game saves; two goals per game — one for beating it, one for mastering it (the design summary's AI tier ladder fits the second); a library that remembers what you've played (a quiet "Played" tag is in; saves come with save/resume). ◐
+- **Unlisted games:** `listed: false` keeps a prototype off the shelf while its link still works for testers (not secret — just not listed). ✅
+- Decided: the collection is the **Tabletop Library** (working name — easy to change in one place). Open: which game comes second; Dig Dig Boom's web address.
 
 ## 2. How it's coded
 
@@ -22,7 +22,7 @@ Extract only what has clearly repeated: dice/randomness, board geometry, the sea
 | | | |
 |---|---|---|
 | History | git; every change is a commit | ✅ |
-| Live site | `main` → `fossil-frenzy.patrickhockberger.workers.dev` (friends) | ✅ |
+| Live site | `main` → `fossil-frenzy.patrickhockberger.workers.dev` = the library; games under `/games/<id>/` (friends) | ✅ |
 | Dev site | every other branch → its own Cloudflare preview link (owner's iPad) | ✅ |
 | Release gate | Claude merges to `main` only when the owner says so | ✅ |
 | Tests gate deploys | `npm run build` runs `npm test` first; a failing test fails the Cloudflare build and the old version stays live | ✅ |
@@ -66,6 +66,6 @@ Gaps to close before it becomes the template for every game:
 ## 5. Order of work
 1. ✅ Cloudflare live + preview links; tests gate deploys; build stamp; changelog.
 2. 🔜 Save and resume in Fossil Frenzy.
-3. 🔜 Close the three Tabletop-Test gaps above.
-4. ⬜ Move Fossil Frenzy into the collection layout and build the cabinet.
+3. 🔜 Close the remaining Tabletop-Test gaps above.
+4. ✅ Fossil Frenzy moved into `games/fossil-frenzy/`; the Tabletop Library front page is built.
 5. ⬜ Game two; after game three, extract shared code.

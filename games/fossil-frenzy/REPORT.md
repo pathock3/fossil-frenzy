@@ -1,6 +1,6 @@
 # REPORT — delivery ON vs. OFF, 1,000 bot games per configuration
 
-Reproduce: `node tools/simulate.js --games 1000` (about 45 s; deterministic — seeds are fixed). Raw numbers: `tools/results.json`; the tables below are `tools/tables.md` verbatim.
+Reproduce: `npm run simulate -- --games 1000` (from the repo root; runs `games/fossil-frenzy/tools/simulate.js`) (about 45 s; deterministic — seeds are fixed). Raw numbers: `tools/results.json`; the tables below are `tools/tables.md` verbatim.
 
 **ON** = the original rulebook (pieces, movement, delivery to corner sites, one set delivered at a time, scored at the number on its fossil). **OFF** = Patrick's redesign (no pieces; each turn is peek-and-flip *or* bank; banking takes **one** held set and scores **the number on its fossil**, gem 16, then a d6 chain adding +1 per 6). Every table is 1,000 games per mode per row; ± values are 95% confidence half-widths. Bots differ only in `memory` (the chance each revealed fossil is remembered, permanently). See DECISIONS.md #21–26 and #31–32 for the bot and metric definitions.
 

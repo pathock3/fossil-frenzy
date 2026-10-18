@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Bot simulations: movement/delivery ON (rulebook) vs OFF (redesign).
-//   node tools/simulate.js [--games 1000] [--seed 1] [--out tools/results.json]
+//   npm run simulate -- [--games 1000] [--seed 1] [--out path/results.json]   (from the repo root)
 // Prints markdown tables and writes the raw numbers to the --out JSON file.
 const fs = require('fs');
 const path = require('path');
