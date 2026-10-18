@@ -28,7 +28,7 @@ Extract only what has clearly repeated: dice/randomness, board geometry, the sea
 | Tests gate deploys | `npm run build` runs `npm test` first; a failing test fails the Cloudflare build and the old version stays live | ✅ |
 | Which build am I on? | the build stamps commit · date · branch; shown on the setup screen and in How to play | ✅ |
 | Rollback | Cloudflare keeps previous versions (Deployments → rollout history); or `git revert` | ✅ |
-| Release notes | `CHANGELOG.md`; tags like `fossil-frenzy-v0.1.0` | ✅ |
+| Release notes | `CHANGELOG.md`, each release with its commit (cloud sessions can't push git tags; the owner can add GitHub Releases if wanted) | ✅ |
 
 ### Not interrupting players mid-game 🔜
 A deploy never changes a page already open. The danger is a reload — or iPad Safari silently reloading a backgrounded tab — which today loses the game. Plan: save the game after every action; resume on load; stamp saves with a version so an update either migrates an old save or offers to finish the game in progress. Later: an installable offline version that holds an update until the current game ends.
