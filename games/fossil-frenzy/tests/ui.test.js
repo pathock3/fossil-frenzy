@@ -51,6 +51,7 @@ const cellOf = (page, tid) => page.evaluate(i => window.FossilFrenzyUI.ui.st.tok
 // Selectors for two fossils still on the board (the second differs from the one being peeked).
 const firstFree = page => page.evaluate(() => `[data-act=cell][data-id="${window.FossilFrenzyUI.ui.st.tokens.find(t => !t.matched).cell}"]`);
 const otherFree = page => page.evaluate(() => { const st = window.FossilFrenzyUI.ui.st; return `[data-act=cell][data-id="${st.tokens.find(t => !t.matched && t.id !== st.turn.T).cell}"]`; });
+const openSettings = async page => { if (await page.locator('[data-act=menu]').count()) await page.tap('[data-act=menu]'); await page.tap('[data-act=settings]'); };
 const openRules = async page => { if (await page.locator('[data-act=menu]').count()) await page.tap('[data-act=menu]'); await page.tap('[data-act=help]'); };
 const quitToStart = async page => { await page.tap('[data-act=menu]'); await page.tap('[data-act=menu-ask][data-v=quit]'); await page.tap('[data-act=quit]'); };
 const takeATurn = async page => { await page.tap(await firstFree(page)); await page.tap(await otherFree(page)); await page.tap('[data-act=end]'); };
@@ -443,12 +444,12 @@ test('prompts: shown to a new player, quiet after the first finished game, switc
     await forceFinish(page, [3, 1]);
     await page.tap('[data-act=again]'); await page.tap('[data-act=begin]');
     assert.equal((await page.locator('.hint').innerText()).trim(), '', 'quiet once a game has been finished');
-    await openRules(page); await page.tap('[data-act=hints][data-v=on]'); await page.tap('[data-act=closehelp]');
+    await openSettings(page); await page.tap('[data-act=hints][data-v=on]'); await page.tap('[data-act=closesettings]');
     assert.notEqual((await page.locator('.hint').innerText()).trim(), '');
-    await openRules(page); await page.tap('[data-act=hints][data-v=off]'); await page.tap('[data-act=closehelp]');
+    await openSettings(page); await page.tap('[data-act=hints][data-v=off]'); await page.tap('[data-act=closesettings]');
     assert.equal((await page.locator('.hint').innerText()).trim(), '');
     await page.reload();                                                  // the choice is remembered
-    await openRules(page);
+    await openSettings(page);
     assert.equal(await page.locator('[data-act=hints].on').innerText(), 'Off');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -677,7 +678,7 @@ test('menu: a ☰ button opens rules, retry and back-to-start; retry and leaving
     assert.equal(await page.locator('[data-act=menu]').count(), 1);
     assert.equal(await page.locator('.q').count(), 1, 'one small system button, nothing else competing for attention');
     await page.tap('[data-act=menu]');
-    assert.deepEqual(await page.locator('.menu button').allInnerTexts(), ['How to play', 'Retry', 'Back to the start', 'Resume']);
+    assert.deepEqual(await page.locator('.menu button').allInnerTexts(), ['How to play', 'Settings', 'Retry', 'Back to the start', 'Resume']);
     await page.tap('[data-act=menu-close]', { force: true });               // Resume
     assert.equal(await page.locator('.menu').count(), 0);
     await page.tap('[data-act=menu]'); await page.tap('[data-act=help]');   // rules from the menu
@@ -954,6 +955,62 @@ test('end screen: each player\'s fossils are two labelled rows — Banked, and M
     assert.deepEqual(await first.locator('.tiles.lostrow .mini').allInnerTexts(), ['5', '💎']);
     assert.doesNotMatch(await page.locator('.results').innerText(), /\+/);
     assert.deepEqual(await page.locator('.place').nth(1).locator('.dim').allInnerTexts(), ['none', 'none']);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+// ---------- settings: unlock everything ----------
+test('settings: reachable from the main menu and from the in-game menu; holds the prompts choice', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await page.tap('[data-act=settings]');
+    assert.match(await page.locator('.settings').innerText(), /Settings/);
+    assert.equal(await page.locator('.settings [data-act=hints]').count(), 3);
+    await page.tap('[data-act=closesettings]');
+    assert.equal(await page.locator('.settings').count(), 0);
+    await passAndPlay(page, 2);
+    await page.tap('[data-act=menu]'); await page.tap('[data-act=settings]');
+    assert.equal(await page.locator('.settings').count(), 1);
+    await page.tap('[data-act=closesettings]');
+    assert.equal(await screenOf(page), 'play');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('settings: "Unlock everything" warns first (recommended: play the campaign), then opens every level — and it sticks', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await page.tap('[data-act=mode][data-v=campaign]');
+    assert.equal(await page.locator('.lvl.locked').count(), 4);
+    await page.tap('[data-act=home]');
+    await page.tap('[data-act=settings]');
+    await page.tap('[data-act=unlock-ask]');
+    const warning = await page.locator('.settings .warn').innerText();
+    assert.match(warning, /recommend/i);
+    assert.match(warning, /whole campaign/i);
+    assert.match(warning, /welcome to unlock everything/i);
+    await page.tap('[data-act=unlock-no]');                               // "Never mind" changes nothing
+    await page.tap('[data-act=closesettings]');
+    await page.tap('[data-act=mode][data-v=campaign]');
+    assert.equal(await page.locator('.lvl.locked').count(), 4, 'still locked after "Never mind"');
+    await page.tap('[data-act=home]');
+    await page.tap('[data-act=settings]'); await page.tap('[data-act=unlock-ask]'); await page.tap('[data-act=unlock-yes]');
+    assert.match(await page.locator('.settings').innerText(), /Everything is unlocked/);
+    await page.tap('[data-act=closesettings]');
+    await page.tap('[data-act=mode][data-v=campaign]');
+    assert.equal(await page.locator('.lvl.locked').count(), 0, 'every level is open');
+    await page.tap('[data-act=level][data-i="4"]'); await page.tap('[data-act=begin]');
+    assert.deepEqual(await page.evaluate(() => window.FossilFrenzyUI.ui.names), ['You', 'Master']);
+    assert.equal(await page.evaluate(() => localStorage.getItem('tabletop-library-fossil-frenzy-campaign')), null, 'unlocking is not the same as winning: no progress is recorded');
+    await quitToStart(page);
+    await page.reload();                                                   // it stays unlocked
+    await page.tap('[data-act=mode][data-v=campaign]');
+    assert.equal(await page.locator('.lvl.locked').count(), 0);
+    assert.equal(await page.locator('.lvl.done').count(), 0, 'and nothing is marked beaten');
+    // and it can be switched back
+    await page.tap('[data-act=home]'); await page.tap('[data-act=settings]'); await page.tap('[data-act=relock]');
+    await page.tap('[data-act=closesettings]'); await page.tap('[data-act=mode][data-v=campaign]');
+    assert.equal(await page.locator('.lvl.locked').count(), 4);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

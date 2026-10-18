@@ -149,7 +149,8 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 @keyframes logoin { 0% { transform: translateY(14px); opacity: 0; } 100% { transform: none; opacity: 1; } }
 .hero-menu .sub { font-size: clamp(14px, 2.2vh, 17px); margin-bottom: 0; }
 .hero-menu .mode { margin-top: clamp(8px, 1.6vh, 14px); padding: clamp(10px, 2vh, 18px) 20px; }
-.hero-menu .ghost { margin-top: clamp(6px, 1.2vh, 10px); }
+.hero-menu .ghostrow { display: flex; gap: 10px; margin-top: clamp(6px, 1.2vh, 10px); }
+.hero-menu .ghostrow .ghost { flex: 1; margin-top: 0; }
 .hero-menu .ver { margin: clamp(4px, 1vh, 12px) 0 0; font-size: 12px; }
 .hero-menu .back { margin: 0 0 4px; padding: 2px 0; }
 .mode.primary { background: linear-gradient(180deg, #f7b13a, #d9791a); border-color: #ffd37e; color: #2b1b10; box-shadow: 0 6px 0 #8a4a0e, 0 14px 24px rgba(0,0,0,.4); }
@@ -174,6 +175,9 @@ h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spac
 .seatrow .dot { width: 18px; height: 18px; border-radius: 50%; flex: none; }
 .seatrow input { flex: 1 1 130px; min-width: 0; font-size: 16px; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--panel); color: var(--text); user-select: text; -webkit-user-select: text; }
 .big { display: block; width: 100%; margin-top: 22px; padding: 16px; border-radius: 14px; background: var(--accent); color: #2b1b10; font-weight: 800; font-size: 20px; }
+.settings .warn { background: var(--panel); border: 2px solid var(--accent); border-radius: 16px; padding: 4px 16px 16px; }
+.settings .warn p { line-height: 1.45; font-size: 16px; }
+.settings .ok { color: var(--good); font-weight: 700; }
 .big.alt { background: var(--panel2); color: var(--text); border: 2px solid var(--line); margin-top: 12px; }
 .ghost { margin-top: 10px; padding: 12px 16px; border-radius: 12px; background: var(--panel); font-weight: 700; }
 .mode { display: flex; flex-direction: column; gap: 4px; width: 100%; margin-top: 14px; padding: 18px 20px; text-align: left; border-radius: 16px; background: var(--panel); border: 2px solid var(--line); box-shadow: 0 5px 0 rgba(0,0,0,.35); }
@@ -785,7 +789,7 @@ const Campaign = (() => {
   // Everything this game stores lives under the Tabletop Library's name, then the game's.
   const NS = 'tabletop-library-fossil-frenzy-';
   const PASS_KEY = NS + 'passplay', CAMPAIGN_KEY = NS + 'campaign', SAVE_KEY = NS + 'save';
-  const HINTS_KEY = NS + 'hints', DONE_KEY = NS + 'games-finished';
+  const HINTS_KEY = NS + 'hints', DONE_KEY = NS + 'games-finished', UNLOCKALL_KEY = NS + 'unlock-everything';
   const LEGACY_KEYS = ['fossil-frenzy-setup-v1', 'fossil-frenzy-passplay-v2', 'fossil-frenzy-campaign-v1', 'fossil-frenzy-save-v1', 'fossil-frenzy-save-v2', 'fossil-frenzy-hints', 'fossil-frenzy-games-finished'];
   const pref = {
     get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -814,12 +818,14 @@ const Campaign = (() => {
                showPeek: true, help: false, menu: null, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '',
                countedOver: false, outcome: null, turnCard: false, lastEvent: '',
                steps: null, stage: 0, base: null, animTimer: null, liftKey: '', prevPts: null };
+  ui.settings = null;                                   // null | 'open' | 'unlock' (the warning before unlocking everything)
+  ui.unlockAll = pref.get(UNLOCKALL_KEY) === '1';       // Settings → Unlock everything (kept on this device)
   ui.hints = ['auto', 'on', 'off'].includes(pref.get(HINTS_KEY)) ? pref.get(HINTS_KEY) : 'auto';
   // Prompts above the board: shown until this device has finished one game, then quiet. Help panel: Auto / On / Off.
   const hintsVisible = () => ui.hints === 'on' || (ui.hints === 'auto' && !(+pref.get(DONE_KEY) > 0));
   const seatName = i => ui.names[i] || 'Player ' + (i + 1);
   const isBot = i => !!ui.bots[i];
-  const unlocked = i => UNLOCK_ALL || Campaign.isUnlocked(i, ui.beaten);
+  const unlocked = i => UNLOCK_ALL || ui.unlockAll || Campaign.isUnlocked(i, ui.beaten);
 
   // ---------------- game flow ----------------
   // Who goes first is simply decided at random (the engine's opening roll) — no screen for it. The turn card says whose turn it is.
@@ -998,13 +1004,19 @@ const Campaign = (() => {
         break;
       case 'hints': ui.hints = d.v; pref.set(HINTS_KEY, d.v); break;
       case 'help': ui.help = true; ui.menu = null; break;
+      case 'settings': ui.settings = 'open'; ui.menu = null; break;
+      case 'closesettings': ui.settings = null; break;
+      case 'unlock-ask': ui.settings = 'unlock'; break;
+      case 'unlock-no': ui.settings = 'open'; break;
+      case 'unlock-yes': ui.unlockAll = true; pref.set(UNLOCKALL_KEY, '1'); ui.settings = 'open'; break;
+      case 'relock': ui.unlockAll = false; pref.del(UNLOCKALL_KEY); break;
       case 'closehelp': ui.help = false; break;
       // the in-game menu: rules, retry, back to the start. Retry and quit ask first; retry deals a fresh game at once, same setup.
       case 'menu': ui.menu = ui.menu ? null : 'open'; break;
       case 'menu-close': ui.menu = null; break;
       case 'menu-ask': ui.menu = d.v; break;
       case 'retry': startGame(); break;
-      case 'quit': clearAnim(); ui.menu = null; ui.help = false; ui.screen = 'home'; break;
+      case 'quit': clearAnim(); ui.menu = null; ui.help = false; ui.settings = null; ui.screen = 'home'; break;
       case 'again': startGame(); break;
       default: return;
     }
@@ -1160,7 +1172,7 @@ const Campaign = (() => {
     const m = ui.menu, sure = (q, yes, act) => `<p class="mq">${q}</p><button class="danger" data-act="${act}">${yes}</button><button data-act="menu-close">No, keep playing</button>`;
     const body = m === 'retry' ? sure('Start this game over with a fresh deal? The current game will be lost.', 'Yes, start over', 'retry')
       : m === 'quit' ? sure('Leave this game and go back to the start? The current game will be lost.', 'Yes, leave', 'quit')
-      : `<button data-act="help">How to play</button><button data-act="menu-ask" data-v="retry">Retry</button><button data-act="menu-ask" data-v="quit">Back to the start</button><button data-act="menu-close">Resume</button>`;
+      : `<button data-act="help">How to play</button><button data-act="settings">Settings</button><button data-act="menu-ask" data-v="retry">Retry</button><button data-act="menu-ask" data-v="quit">Back to the start</button><button data-act="menu-close">Resume</button>`;
     return `<div class="backdrop" data-act="menu-close"></div><div class="menu" role="menu">${body}</div>`;
   }
 
@@ -1285,7 +1297,7 @@ const Campaign = (() => {
         <p class="sub">Peek. Flip. Match. Bank. A memory game of fossils and rivals.</p>
         <button class="mode primary" data-act="mode" data-v="campaign"><b>Campaign</b><span>${LV.length} opponents, easiest to hardest</span><span class="pips" aria-label="${beaten} of ${LV.length} beaten">${pips}</span></button>
         <button class="mode" data-act="mode" data-v="pass"><b>Pass &amp; Play</b><span>${D.players.min}–${D.players.max} people, one device</span></button>
-        <button class="ghost" data-act="help">How to play</button>
+        <div class="ghostrow"><button class="ghost" data-act="help">How to play</button><button class="ghost" data-act="settings">Settings</button></div>
         ${ui.notice ? `<p class="dim" style="margin:8px 0 0">${esc(ui.notice)}</p>` : ''}<p class="dim ver">Version ${esc(BUILD)}</p>
       </div>
     </div></div>`;
@@ -1386,15 +1398,29 @@ const Campaign = (() => {
       </ul>
       <h3>End</h3><p>The game ends the moment every fossil is matched. Sets you have not banked are lost. Highest score wins; ties go to the most sets popped, then whoever popped the final pair.</p>
       <h3>Judgment calls (where the rules were unclear)</h3><ul>${JUDGMENTS.map(j => `<li>${esc(j)}</li>`).join('')}</ul>
-      <p class="dim">The full list is in DECISIONS.md. Version ${esc(BUILD)}.</p>
-      <h3>Prompts above the board</h3><p><span class="seg">${['auto', 'on', 'off'].map(v => `<button class="${ui.hints === v ? 'on' : ''}" data-act="hints" data-v="${v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</span></p><p class="dim">Auto shows them until you have finished one game on this device.</p>
+      <p class="dim">The full list is in DECISIONS.md. Version ${esc(BUILD)}. Prompts and unlocking are in Settings.</p>
       <button class="big" data-act="closehelp">Close</button></div></div>`;
+  }
+
+  // Settings: prompts above the board, and (for playtesting, or if you just want everything) unlock every level.
+  function settingsHTML() {
+    const seg = `<span class="seg">${['auto', 'on', 'off'].map(v => `<button class="${ui.hints === v ? 'on' : ''}" data-act="hints" data-v="${v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</span>`;
+    const unlock = ui.settings === 'unlock'
+      ? `<div class="warn"><p>Just so you know, the way we recommend playing is to work through the whole campaign, beating each opponent to unlock the next.</p>
+           <p>But you're very welcome to unlock everything the game has to offer.</p>
+           <button class="big" data-act="unlock-yes">Unlock everything</button><button class="big alt" data-act="unlock-no">Never mind</button></div>`
+      : ui.unlockAll ? `<p class="ok">✓ Everything is unlocked.</p><button class="ghost" data-act="relock">Go back to unlocking by winning</button>`
+      : `<button class="ghost" data-act="unlock-ask">Unlock everything…</button>`;
+    return `<div class="screen help settings" style="z-index:6"><div class="sheet"><h1>Settings</h1>
+      <h3>Prompts above the board</h3><p>${seg}</p><p class="dim">Auto shows them until you have finished one game on this device.</p>
+      <h3>Campaign</h3>${unlock}
+      ${ui.settings === 'unlock' ? '' : '<button class="big" data-act="closesettings">Done</button>'}</div></div>`;
   }
 
   function render() {
     if (ui.st && ui.st.over && !ui.countedOver) gameFinished();     // count the game (and record a campaign result) before drawing the end screen
     const html = { home: homeHTML, pass: passHTML, campaign: campaignHTML, play: gameHTML }[ui.screen]();
-    root.innerHTML = html + (ui.help ? helpHTML() : '');
+    root.innerHTML = html + (ui.help ? helpHTML() : '') + (ui.settings ? settingsHTML() : '');
     if (ui.screen === 'home') startDemo(); else stopDemo();
     saveGame();
   }
