@@ -201,8 +201,19 @@ h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spac
 .place .pn .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
 .place .score { font-size: 44px; font-weight: 800; line-height: 1; }
 .place .tiles { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-.place .bonus { font-size: 13px; font-weight: 800; color: var(--accent); padding: 0 4px; }
-.mini.lost { opacity: .35; text-decoration: line-through; }
+.mini.lost { opacity: .5; }
+.rowlab { font-size: 12px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--dim); margin-top: 2px; }
+.place .tiles { min-height: 30px; }
+/* celebration: a big card when a level is unlocked (or the campaign is finished), with confetti */
+.unlock { display: flex; align-items: center; gap: 16px; margin: 10px 0 16px; padding: 16px 20px; border-radius: 18px; background: linear-gradient(180deg, #f7b13a, #d9791a); color: #2b1b10; box-shadow: 0 6px 0 #8a4a0e, 0 14px 30px rgba(0,0,0,.45); animation: unlockin .6s cubic-bezier(.2,1.4,.4,1); }
+.unlock .ul-icon { font-size: 52px; line-height: 1; }
+.unlock .ul-big { font-size: clamp(26px, 5vw, 36px); font-weight: 900; line-height: 1.05; }
+.unlock .ul-sub { font-size: 16px; font-weight: 600; opacity: .8; margin-top: 2px; }
+@keyframes unlockin { 0% { transform: scale(.5) rotate(-4deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 6; }
+.confetti i { position: absolute; top: -16px; width: 10px; height: 16px; border-radius: 2px; opacity: 0; animation: fall linear forwards; }
+@keyframes fall { 0% { transform: translateY(0) translateX(0) rotate(0); opacity: 1; } 100% { transform: translateY(105vh) translateX(var(--dx)) rotate(540deg); opacity: .9; } }
+@media (prefers-reduced-motion: reduce) { .unlock { animation: none; } .confetti { display: none; } }
 .dim { color: var(--dim); font-size: 13px; }
 </style>
 </head>
@@ -1316,24 +1327,36 @@ const Campaign = (() => {
     else if (r.ranking.length > 1) { const a = r.ranking[0], b = r.ranking[1]; const k = keys.find(k => a[k] !== b[k]); why = k === 'score' ? '' : `Tied on score — won on ${WHY[k]}.`; }
     let title = r.winners.length > 1 ? 'Shared win!' : esc(seatName(r.winners[0])) + ' wins!';
     if (campaign && o) title = o.won ? `You beat ${esc(LV[ui.levelIdx].name)}!` : r.winners.length > 1 ? 'A draw — not a win.' : `${esc(LV[ui.levelIdx].name)} wins`;
-    const extra = campaign && o ? (o.completed ? '🏆 Campaign complete — every opponent beaten!' : o.newlyUnlocked ? `🔓 ${esc(o.newlyUnlocked)} unlocked.` : o.won ? '' : 'Win outright to unlock the next level.') : '';
+    const extra = campaign && o && !o.won ? 'Win outright to unlock the next level.' : '';
     const tileHTML = (v, cls = '') => `<span class="mini ${cls}">${v === 16 ? '💎' : v}</span>`;
     const places = r.ranking.map(x => {
       const p = st.players[x.idx], win = r.winners.includes(x.idx);
-      const bonus = p.banked.reduce((n, b) => n + b.bonus, 0);
       return `<div class="place${win ? ' win' : ''}" style="--c:${COLORS[x.idx]}">
         <div class="pn"><span class="dot"></span>${win ? '🏆 ' : ''}${esc(seatName(x.idx))}</div>
         <div class="score">${x.score}</div>
-        <div class="tiles">${p.banked.map(b => tileHTML(b.value)).join('') || '<span class="dim">nothing banked</span>'}${bonus ? `<span class="bonus">+${bonus}</span>` : ''}</div>
-        ${p.sets.length ? `<div class="tiles lostrow" title="not banked">${p.sets.map(s => tileHTML(s.value, 'lost')).join('')}</div>` : ''}
+        <div class="rowlab">Banked</div>
+        <div class="tiles">${p.banked.map(b => tileHTML(b.value)).join('') || '<span class="dim">none</span>'}</div>
+        <div class="rowlab">Matched, not banked</div>
+        <div class="tiles lostrow">${p.sets.map(s => tileHTML(s.value, 'lost')).join('') || '<span class="dim">none</span>'}</div>
       </div>`;
     }).join('');
+    // Celebrate a win in the campaign where you can't miss it: a big card (and confetti) above the results.
+    const celebrate = campaign && o && (o.completed || o.newlyUnlocked)
+      ? `<div class="unlock"><span class="ul-icon">${o.completed ? '🏆' : '🔓'}</span><div><div class="ul-big">${o.completed ? 'Campaign complete!' : `${esc(o.newlyUnlocked)} unlocked!`}</div><div class="ul-sub">${o.completed ? 'Every opponent beaten.' : 'A tougher opponent is waiting.'}</div></div></div>${confettiHTML()}` : '';
+    // The choices: after a win, on to the next level; after a loss (or a pass & play game), play again — and always the main menu.
     const nextBtn = campaign && o && o.won && ui.levelIdx + 1 < LV.length && unlocked(ui.levelIdx + 1);
+    const won = campaign && o && o.won;
+    const main = nextBtn ? `<button class="big" data-act="next">Next: ${esc(LV[ui.levelIdx + 1].name)}</button>`
+               : won ? '' : `<button class="big" data-act="again">${campaign ? 'Try again' : 'Play again'}</button>`;
     return `<div class="screen"><div class="sheet"><h1>${title}</h1>
-      <p class="sub">${[why, extra].filter(Boolean).join(' ')}</p><div class="results">${places}</div>
-      ${nextBtn ? `<button class="big" data-act="next">Next: ${esc(LV[ui.levelIdx + 1].name)}</button><button class="big alt" data-act="again">Play ${esc(LV[ui.levelIdx].name)} again</button>`
-                : `<button class="big" data-act="again">${campaign ? 'Try again' : 'Play again'}</button>`}
-      <button class="big alt" data-act="home">Main menu</button></div></div>`;
+      ${[why, extra].filter(Boolean).length ? `<p class="sub">${[why, extra].filter(Boolean).join(' ')}</p>` : ''}${celebrate}<div class="results">${places}</div>
+      ${main}<button class="big${main ? ' alt' : ''}" data-act="home">Main menu</button></div></div>`;
+  }
+
+  // A burst of confetti for a campaign win: pieces fall from the top and fade. Decoration only; never blocks a tap.
+  function confettiHTML() {
+    const cols = ['#f5a524', '#3ecf8e', '#4f8cff', '#ff5a5f', '#f6e7b8'];
+    return `<div class="confetti" aria-hidden="true">${Array.from({ length: 36 }, (_, i) => `<i style="left:${(i * 37) % 100}%;background:${cols[i % cols.length]};animation-delay:${((i * 53) % 90) / 100}s;animation-duration:${2.2 + (i % 5) * 0.35}s;--dx:${((i * 29) % 80) - 40}px"></i>`).join('')}</div>`;
   }
 
   const JUDGMENTS = [

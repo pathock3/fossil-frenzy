@@ -250,7 +250,7 @@ test('Campaign: winning outright unlocks the next level, remembers it, and offer
     await campaign(page, 0);
     await forceFinish(page, [30, 10]);
     assert.match(await page.locator('h1').first().innerText(), /You beat Beginner!/);
-    assert.match(await page.locator('.sheet > .sub').innerText(), /Novice unlocked/);
+    assert.match(await page.locator('.unlock').innerText(), /Novice unlocked/);
     assert.match(await page.locator('[data-act=next]').innerText(), /Novice/);
     await page.tap('[data-act=home]'); await page.tap('[data-act=mode][data-v=campaign]');
     assert.equal(await page.locator('.lvl.locked').count(), 3);
@@ -298,7 +298,7 @@ test('Campaign: beating Master completes the campaign', SKIP, async () => {
     await page.reload();
     await campaign(page, 4);
     await forceFinish(page, [40, 1]);
-    assert.match(await page.locator('.sheet > .sub').innerText(), /Campaign complete/);
+    assert.match(await page.locator('.unlock').innerText(), /Campaign complete/);
     assert.equal(await page.locator('[data-act=next]').count(), 0);
     await page.tap('[data-act=home]'); await page.tap('[data-act=mode][data-v=campaign]');
     assert.equal(await page.locator('.lvl.done').count(), 5);
@@ -915,7 +915,45 @@ test('end of game: the choices are plain buttons — play again (or the next lev
     assert.equal(await screenOf(page), 'home');
     await campaign(page, 0);
     await forceFinish(page, [30, 10]);
-    assert.deepEqual((await page.locator('.sheet > button').allInnerTexts()).map(t => t.replace(/:.*/, '')), ['Next', 'Play Beginner again', 'Main menu']);
+    assert.deepEqual((await page.locator('.sheet > button').allInnerTexts()).map(t => t.replace(/:.*/, '')), ['Next', 'Main menu'], 'after a win: on to the next level, or the main menu — no replay');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('end screen: a win in the campaign celebrates the unlock big, with no replay button; a loss offers Try again', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await campaign(page, 0);
+    await forceFinish(page, [30, 10]);
+    assert.match(await page.locator('.unlock').innerText(), /Novice unlocked!/);
+    assert.ok(await page.evaluate(() => document.querySelector('.unlock').getBoundingClientRect().top < innerHeight / 2), 'in the top half of the screen, not tucked away');
+    assert.ok(await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.unlock .ul-big')).fontSize) >= 26), 'big type');
+    assert.equal(await page.locator('[data-act=again]').count(), 0, 'no "play the same level again" after a win');
+    assert.ok(await page.locator('.confetti').count());
+    await page.tap('[data-act=home]'); await page.tap('[data-act=mode][data-v=campaign]'); await page.tap('[data-act=level][data-i="0"]'); await page.tap('[data-act=begin]');
+    await forceFinish(page, [5, 20]);
+    assert.deepEqual(await page.locator('.sheet > button').allInnerTexts(), ['Try again', 'Main menu']);
+    assert.equal(await page.locator('.unlock, .confetti').count(), 0);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('end screen: each player\'s fossils are two labelled rows — Banked, and Matched, not banked — with no "+" anywhere', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await passAndPlay(page, 2);
+    await page.evaluate(() => {
+      const { ui } = window.FossilFrenzyUI, st = ui.st;
+      st.players[0].banked = [{ value: 7, gem: false, base: 7, bonus: 1 }, { value: 3, gem: false, base: 3, bonus: 0 }]; st.players[0].sets = [{ value: 5, gem: false, size: 2, ids: [] }, { value: 16, gem: true, size: 3, ids: [] }];
+      st.players[1].banked = []; st.players[1].sets = [];
+    });
+    await forceFinish(page, [11, 0]);
+    const first = page.locator('.place').first();
+    assert.deepEqual(await first.locator('.rowlab').evaluateAll(els => els.map(e => e.textContent)), ['Banked', 'Matched, not banked']);
+    assert.deepEqual(await first.locator('.tiles:not(.lostrow) .mini').allInnerTexts(), ['7', '3']);
+    assert.deepEqual(await first.locator('.tiles.lostrow .mini').allInnerTexts(), ['5', '💎']);
+    assert.doesNotMatch(await page.locator('.results').innerText(), /\+/);
+    assert.deepEqual(await page.locator('.place').nth(1).locator('.dim').allInnerTexts(), ['none', 'none']);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
