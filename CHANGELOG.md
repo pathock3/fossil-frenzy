@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **The app is the Tabletop Library** (renamed; Fossil Frenzy remains the name of the game inside it): package and config comments updated; `docs/PLAN.md` lists every place the name lives. The web address changes when the Cloudflare project is renamed (owner step — see the plan).
 - **Fossil Frenzy is now one rule set** (owner decision). The original rulebook mode — movement, pieces, corner delivery sites — and the "movement & delivery" toggle are gone. A turn is: first tap a private peek, second tap a public flip; or bank one set.
 - **Pass & Play for 2–4 people** (humans only) **or Campaign**: five opponents — Beginner, Novice, Normal, Challenging, Master — shown by name only (no percentages). Only Beginner is open at first; the others are greyed out with a lock. Win outright to unlock the next; progress is remembered on the device. `?unlock` on the address opens every level for testing.
 - The game's address and saved games: a game saved by an earlier version is cleared with a quiet note (the rules changed); campaign progress starts fresh.

@@ -73,3 +73,18 @@ Still to consider (not started): take-backs before anything is revealed; a short
 4. ✅ Fossil Frenzy moved into `games/fossil-frenzy/`; the Tabletop Library front page is built.
 4b. ✅ Fossil Frenzy reduced to one rule set; Pass & Play and the Campaign ladder added.
 5. ⬜ Game two; after game three, extract shared code.
+
+## 6. Where the name lives
+The app is the **Tabletop Library**; each game keeps its own name inside it (Fossil Frenzy is a game, not the app). Renaming the app touches:
+
+| Where | What it controls | Who changes it |
+|---|---|---|
+| Library page `index.html` (`LIBRARY.name`, `<title>`, Home Screen title) | what people see | repo — done: "Tabletop Library" |
+| `package.json` `name` / `description` | tooling only | repo — done |
+| `wrangler.jsonc` `name` | **the web address** (`<name>.<account>.workers.dev`, and every preview address) | repo — **must match the Cloudflare Worker's name** |
+| Cloudflare Worker / project name | the web address friends use | **owner**, in the Cloudflare dashboard (a Worker cannot be renamed — create a new one) |
+| GitHub repository name | the code's address; redirects from the old name | **owner**, GitHub → Settings → General |
+| `README.md`, this file: the live and dev links | documentation | repo — update after the Cloudflare switch |
+| iPad Home Screen icons and bookmarks | the old address | **owner**, per device |
+| The game's own title (`games/<id>/index.html`) | stays the game's name | — |
+

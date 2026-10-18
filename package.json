@@ -1,8 +1,8 @@
 {
-  "name": "fossil-frenzy",
+  "name": "tabletop-library",
   "version": "0.1.0",
   "private": true,
-  "description": "Fossil Frenzy \u2014 single-file hot-seat browser game with bots and simulations",
+  "description": "Tabletop Library — Patrick Blim-Hockberger's tabletop games as single-file browser games",
   "scripts": {
     "test": "node --test \"tests/*.test.js\" \"games/*/tests/*.test.js\"",
     "build": "npm test && node tools/build.js",
