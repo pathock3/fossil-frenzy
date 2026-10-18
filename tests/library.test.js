@@ -81,7 +81,7 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     await page.goto(base + '/index.html');
     await page.tap('a.box');
     await page.waitForURL('**/games/fossil-frenzy/index.html');
-    assert.match(await page.locator('h1').first().innerText(), /Fossil Frenzy/);
+    assert.match(await page.locator('h1').first().innerText(), /Fossil\s+Frenzy/);
     await page.tap('a.back');
     await page.waitForURL(base + '/index.html');
     assert.equal(await page.title(), 'Tabletop Library');

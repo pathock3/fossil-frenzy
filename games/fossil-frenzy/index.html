@@ -38,15 +38,19 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .chip.cur .pts { color: #fff; }
 .chip .pts.bump { animation: bump .55s ease-out; }
 @keyframes bump { 0% { transform: scale(1); } 35% { transform: scale(1.35); color: var(--accent); } 100% { transform: scale(1); } }
-.chip .sub { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip .sets { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; min-height: 38px; margin-top: 5px; }
+.chip .none { font-size: 13px; color: var(--dim); }
+.setbtn { min-width: 38px; height: 38px; padding: 0 5px; border-radius: 9px; background: var(--bone); color: var(--ink); font-weight: 800; font-size: 17px; display: grid; place-items: center; border: 0; }
+.setbtn.act { box-shadow: 0 0 0 3px var(--good); cursor: pointer; }
+.setbtn.act:active { transform: scale(.94); }
 .sys { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
 .q { width: 44px; height: 44px; border-radius: 12px; background: var(--panel); color: var(--dim); font-weight: 700; font-size: 22px; }
 .legend { display: flex; gap: 14px; align-items: center; font-size: 12px; color: var(--dim); padding: 0 4px; min-height: 18px; }
 .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
 .legend .hint { margin-left: auto; color: var(--text); font-size: 14px; text-align: right; }
-.main { min-height: 0; display: grid; gap: 8px; grid-template-columns: 1fr 260px; position: relative; }
-@media (max-aspect-ratio: 1/1) { .main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; } }
-.boardwrap { min-height: 0; min-width: 0; display: flex; }
+.main { min-height: 0; display: flex; position: relative; }
+.boardwrap { min-height: 0; min-width: 0; display: flex; flex: 1; }
+.legend .event { color: var(--accent); font-size: 14px; font-weight: 700; }
 svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 
 /* whose turn it is: shown before they start tapping (a tap anywhere on it starts the turn) */
@@ -76,33 +80,69 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .ring.peekring { stroke-dasharray: 9 6; }
 .flipin { animation: flip .32s ease-out; transform-box: fill-box; transform-origin: center; }
 /* an opponent peeks: the fossil lifts and tilts as if a corner were being peeked under; the number stays hidden */
-.tile.lift { animation: lift 1s ease-in-out; transform-box: fill-box; transform-origin: center; }
+.tile.lift { animation: lift .6s ease-in-out; transform-box: fill-box; transform-origin: center; }
 @keyframes lift { 0% { transform: none; } 20% { transform: translateY(-5px) rotate(-7deg) scale(1.12); } 45% { transform: translateY(-5px) rotate(7deg) scale(1.12); } 70% { transform: translateY(-5px) rotate(-4deg) scale(1.12); } 100% { transform: none; } }
-.ring.pulse { animation: pulse 1s ease-in-out; }
+.ring.pulse { animation: pulse .6s ease-in-out; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 30%, 70% { opacity: .25; } }
-.eye { font-size: 20px; text-anchor: middle; dominant-baseline: central; pointer-events: none; animation: eye 1s ease-in-out forwards; }
+.eye { font-size: 20px; text-anchor: middle; dominant-baseline: central; pointer-events: none; animation: eye .65s ease-in-out forwards; }
 @keyframes eye { 0% { opacity: 0; } 20%, 70% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .tile.lift, .ring.pulse, .eye, .chip .pts.bump { animation: none; } }
 @keyframes flip { 0% { transform: scaleX(.05); } 100% { transform: scaleX(1); } }
 .pop { animation: pop .4s ease-out; }
 @keyframes pop { 0% { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
 
-/* ---------- tray ---------- */
-.tray { background: var(--panel); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow: hidden; border: 2px solid var(--c); }
-@media (max-aspect-ratio: 1/1) { .tray { flex-direction: row; flex-wrap: wrap; align-items: center; } }
-.tray .who { font-weight: 800; font-size: 16px; color: var(--c); }
-.tray .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.tray .lab { font-size: 12px; color: var(--dim); width: 100%; }
-.setcard { display: inline-flex; gap: 3px; padding: 5px 6px; background: var(--panel2); border-radius: 10px; border: 2px solid var(--line); }
-.setcard.act { border-color: var(--good); box-shadow: 0 0 0 3px rgba(62,207,142,.25); }
+/* small fossil chips (end screen) */
 .mini { min-width: 30px; height: 30px; border-radius: 7px; background: var(--bone); color: var(--ink); font-weight: 800; display: grid; place-items: center; font-size: 15px; padding: 0 3px; }
-.end { margin-top: auto; background: var(--panel2); border: 2px solid var(--line); border-radius: 12px; padding: 12px 16px; font-weight: 700; font-size: 16px; }
-.end.go { border-color: var(--accent); background: #4a3418; }
-.end[disabled] { opacity: .35; }
-.note { font-size: 13px; color: var(--accent); min-height: 17px; }
-@media (max-aspect-ratio: 1/1) { .end { margin-top: 0; margin-left: auto; } }
+
+/* ---------- the one button on the table, and the opponent's bank banner ---------- */
+.end { position: absolute; right: 6px; bottom: 6px; z-index: 2; background: var(--panel2); border: 2px solid var(--line); border-radius: 14px; padding: 14px 22px; font-weight: 800; font-size: 18px; opacity: .8; }
+.end.go { border-color: var(--accent); background: #4a3418; opacity: 1; box-shadow: 0 0 0 4px rgba(245,165,36,.2); }
+.bankcard { position: absolute; z-index: 2; left: 50%; top: 42%; transform: translate(-50%, -50%); pointer-events: none; text-align: center; padding: 18px 30px; border-radius: 20px;
+  background: rgba(27,19,14,.92); border: 4px solid var(--c); box-shadow: 0 12px 34px rgba(0,0,0,.6); animation: bankin .35s ease-out; max-width: 92%; }
+@keyframes bankin { 0% { transform: translate(-50%, -50%) scale(.6); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+.bankcard .bk-who { font-size: clamp(18px, 3.6vw, 26px); font-weight: 800; color: var(--c); }
+.bankcard .bk-pts { font-size: clamp(54px, 11vw, 92px); font-weight: 900; line-height: 1; color: #fff; }
+.bankcard .bk-sub { font-size: 16px; color: var(--dim); margin-top: 2px; }
+.bankcard .bk-score { font-size: 22px; font-weight: 800; margin-top: 8px; color: var(--accent); }
 
 /* ---------- screens / overlays ---------- */
+/* ---------- home screen ---------- */
+.screen.home { background: radial-gradient(ellipse at 30% 25%, #5b3518 0%, #2d1a0d 42%, var(--bg) 78%); overflow-x: hidden; }
+.sheet.hero { max-width: 1040px; display: grid; gap: 14px; align-items: center; grid-template-columns: 1fr; }
+@media (min-aspect-ratio: 5/4) { .sheet.hero { grid-template-columns: 1.15fr 1fr; gap: 28px; min-height: calc(100vh - 56px); } }
+.hero-art { position: relative; display: flex; justify-content: center; }
+.hero-art::before { content: ""; position: absolute; inset: 8% 6%; background: radial-gradient(circle, rgba(245,165,36,.42), rgba(245,165,36,0) 68%); filter: blur(24px); }
+.hero-board { position: relative; width: 100%; max-width: 560px; max-height: 46vh; height: auto; filter: drop-shadow(0 18px 24px rgba(0,0,0,.55)); }
+@media (min-aspect-ratio: 5/4) { .hero-board { max-height: 84vh; } }
+.h-cell { transform-box: fill-box; transform-origin: center; animation: hin .55s ease-out backwards; animation-delay: calc(var(--i) * 28ms); }
+@keyframes hin { 0% { transform: scale(.2) rotate(-25deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.h-cell .bg { fill: #2a1d14; stroke: #3d2b1d; stroke-width: 1.5; }
+.h-back .face { fill: var(--umber); stroke: var(--umber-d); stroke-width: 2.5; }
+.h-back .spiral { fill: none; stroke: #6d4a30; stroke-width: 2; }
+.h-front .face { fill: var(--bone); stroke: #c9ae6a; stroke-width: 2.5; }
+.h-front .num { fill: var(--ink); font-weight: 800; font-size: 25px; text-anchor: middle; dominant-baseline: central; }
+.h-front .gem { font-size: 24px; text-anchor: middle; dominant-baseline: central; }
+.h-back, .h-front { transform-box: fill-box; transform-origin: center; }
+.h-front { transform: scaleX(0); }
+.h-flipper { animation: hback 7s ease-in-out infinite; animation-delay: var(--d); }
+.h-front { animation: hfront 7s ease-in-out infinite; animation-delay: var(--d); }
+@keyframes hback { 0%, 52% { transform: scaleX(1); } 56%, 78% { transform: scaleX(0); } 82%, 100% { transform: scaleX(1); } }
+@keyframes hfront { 0%, 52% { transform: scaleX(0); } 56%, 78% { transform: scaleX(1); } 82%, 100% { transform: scaleX(0); } }
+.h-peek { animation: hpulse 2.4s ease-in-out infinite; }
+@keyframes hpulse { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+.hero-menu { position: relative; display: flex; flex-direction: column; align-items: stretch; }
+.logo { margin: 0 0 6px; font-size: clamp(54px, 11vw, 96px); line-height: .9; font-weight: 900; letter-spacing: -2px; text-align: left;
+  background: linear-gradient(180deg, #ffe3a0 10%, #f5a524 55%, #c8650f 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 0 rgba(0,0,0,.4)); animation: logoin .7s ease-out .2s backwards; }
+@keyframes logoin { 0% { transform: translateY(14px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.hero-menu .sub { font-size: 17px; margin-bottom: 4px; }
+.mode.primary { background: linear-gradient(180deg, #f7b13a, #d9791a); border-color: #ffd37e; color: #2b1b10; box-shadow: 0 6px 0 #8a4a0e, 0 14px 24px rgba(0,0,0,.4); }
+.mode.primary span { color: #4a2a10; }
+.mode.primary:active { box-shadow: 0 2px 0 #8a4a0e; }
+.mode .pips { display: flex; gap: 6px; margin-top: 4px; }
+.mode .pips i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(43,27,16,.55); }
+.mode .pips i.on { background: #2b1b10; border-color: #2b1b10; }
+@media (prefers-reduced-motion: reduce) { .h-cell, .h-flipper, .h-front, .h-peek, .logo { animation: none; } }
+
 .screen { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 22px 18px 30px; background: radial-gradient(ellipse at 50% 0%, #3a2616, var(--bg) 70%); }
 .sheet { max-width: 640px; margin: 0 auto; }
 h1 { margin: 0 0 4px; font-size: 38px; letter-spacing: .5px; }
@@ -216,9 +256,9 @@ const GAME_DATA = {
   bots: { gambleTiles: 6 },
 
   // ---- PACING (presentation only, in milliseconds) ---------------------------------------------------------
-  // An opponent's turn is shown one move at a time. `shown` is how long each move stays on screen before the next
-  // appears; a tap on the board skips ahead. Nothing else on screen advances by itself.
-  pace: { start: 450, afterYourBank: 1600, peek: 1150, flip: 900, bank: 1200 },
+  // An opponent's turn is shown one move at a time: its peek appears at once, and the next move follows after this
+  // long (each move stays on screen that many ms before the next appears). A tap on the board skips ahead.
+  pace: { peek: 650, flip: 600, bank: 0 },
 };
 </script>
 
@@ -504,7 +544,7 @@ const Engine = (() => {
     }
   }
 
-  return { createGame, peek, flipOther, flipSecond, flipOwn, canFlipSecond, canFlipOwn, bank, canBank, endTurn,
+  return { createGame, buildBoard, peek, flipOther, flipSecond, flipOwn, canFlipSecond, canFlipOwn, bank, canBank, endTurn,
            status, standings, computeResult, publicView, apply, serialize, restore, mulberry32 };
 })();
 </script>
@@ -737,7 +777,7 @@ const Campaign = (() => {
   }
 
   const ui = { screen: 'home', mode: 'pass', pass: loadPass(), beaten: loadBeaten(), levelIdx: 0, names: [], st: null, bots: [],
-               showPeek: true, note: '', help: false, menu: null, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '',
+               showPeek: true, help: false, menu: null, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '',
                countedOver: false, outcome: null, turnCard: false, lastEvent: '',
                steps: null, stage: 0, base: null, animTimer: null, liftKey: '', prevPts: null };
   ui.hints = ['auto', 'on', 'off'].includes(pref.get(HINTS_KEY)) ? pref.get(HINTS_KEY) : 'auto';
@@ -756,12 +796,12 @@ const Campaign = (() => {
     ui.st = Engine.createGame({ players: n, seed });
     ui.bots = Bots.attach(ui.st, campaign ? [null, Campaign.botSpec(LV[ui.levelIdx])] : Array(n).fill(null), seed);
     ui.names = campaign ? ['You', LV[ui.levelIdx].name] : ui.pass.names.slice(0, n);
-    Object.assign(ui, { screen: 'play', showPeek: true, note: '', prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '', countedOver: false, outcome: null,
+    Object.assign(ui, { screen: 'play', showPeek: true, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '', countedOver: false, outcome: null,
                         menu: null, help: false, lastEvent: '', prevPts: null, liftKey: '' });
     nextTurnStarts(true);
   }
   function beginTurn() {
-    ui.turnCard = false;
+    ui.turnCard = false; ui.lastEvent = '';
     if (animating()) startAnim();
   }
 
@@ -774,17 +814,18 @@ const Campaign = (() => {
     clearAnim();
     if (!animating()) return;
     if (reducedMotion()) { finishAnim(false); return; }
-    const wait = ui.stage === 0 ? (ui.lastEvent ? D.pace.afterYourBank : D.pace.start) : stepMs(ui.steps[ui.stage - 1].a);
-    ui.animTimer = setTimeout(() => { ui.animTimer = null; ui.stage++; ui.lastEvent = ''; render(); startAnim(); }, wait);
+    if (ui.stage === 0) ui.stage = 1;                          // its peek shows at once
+    if (!animating()) return;
+    ui.animTimer = setTimeout(() => { ui.animTimer = null; ui.stage++; render(); startAnim(); }, stepMs(ui.steps[ui.stage - 1].a));
   }
-  function finishAnim(redraw = true) { clearAnim(); if (ui.steps) ui.stage = ui.steps.length; ui.lastEvent = ''; if (redraw) render(); }
+  function finishAnim(redraw = true) { clearAnim(); if (ui.steps) ui.stage = ui.steps.length; if (redraw) render(); }
 
   // Called whenever a turn begins. An opponent decides its whole turn at once, but it is SHOWN one move at a time
   // (peek, then flip, ...), and then waits for a tap.
   function nextTurnStarts(first = false) {
     const st = ui.st;
     clearAnim();
-    Object.assign(ui, { showPeek: true, note: '', botWaiting: false, steps: null, stage: 0, base: null });
+    Object.assign(ui, { showPeek: true, botWaiting: false, steps: null, stage: 0, base: null });
     const bot = ui.bots[st.current];
     ui.turnCard = first || (!bot && ui.mode === 'pass');          // pass & play: say whose turn it is before they tap
     if (!bot) return;
@@ -797,10 +838,9 @@ const Campaign = (() => {
       ui.steps.push({ a, snap: snap() });
     }
     ui.botWaiting = !st.over;
-    ui.note = st.turn.banked && st.lastBank ? bankText(st.lastBank) : st.turn.matched ? 'Found a match!' : '';
     if (!ui.turnCard) startAnim();
   }
-  const bankText = b => `Banked ${b.gem ? 'a gem' : 'a ' + b.value}: +${b.base}` + (b.rolls.length ? (b.bonus ? `, +${b.bonus} bonus (rolled ${b.rolls.join(', ')})` : `, no bonus (rolled ${b.rolls[0]})`) : '');
+  const bankText = b => `${b.gem ? 'a gem' : 'a ' + b.value}: +${b.base}` + (b.rolls.length ? (b.bonus ? `, +${b.bonus} bonus (rolled ${b.rolls.join(', ')})` : `, no bonus (rolled ${b.rolls[0]})`) : '');
 
   function endTurn() {
     const st = ui.st;
@@ -825,7 +865,7 @@ const Campaign = (() => {
     try {
       if (!ui.st || ui.screen !== 'play' || ui.st.over) { pref.del(SAVE_KEY); return; }
       localStorage.setItem(SAVE_KEY, JSON.stringify({
-        schema: 2, build: BUILD, screen: ui.screen, turnCard: ui.turnCard, botWaiting: ui.botWaiting, note: ui.note, mode: ui.mode, levelIdx: ui.levelIdx, names: ui.names,
+        schema: 2, build: BUILD, screen: ui.screen, turnCard: ui.turnCard, botWaiting: ui.botWaiting, mode: ui.mode, levelIdx: ui.levelIdx, names: ui.names,
         game: Engine.serialize(ui.st), bots: ui.bots.map(b => (b ? b.save() : null)),
       }));
     } catch (e) { /* storage unavailable or full: the game still plays, it just cannot be resumed */ }
@@ -837,7 +877,7 @@ const Campaign = (() => {
       const st = Engine.restore(sv.game);
       if (sv.mode === 'campaign' && !LV[sv.levelIdx]) throw new Error('unknown level');
       ui.st = st; ui.bots = Bots.restore(st, sv.bots); ui.names = sv.names; ui.mode = sv.mode === 'campaign' ? 'campaign' : 'pass'; ui.levelIdx = sv.levelIdx | 0;
-      Object.assign(ui, { screen: 'play', turnCard: !!sv.turnCard || sv.screen === 'roll', botWaiting: !!sv.botWaiting, note: sv.note || '',
+      Object.assign(ui, { screen: 'play', turnCard: !!sv.turnCard || sv.screen === 'roll', botWaiting: !!sv.botWaiting,
                           showPeek: true, prevUp: new Set(), popTurn: st.turn.matched ? st.turnNo : -1, steps: null, stage: 0, base: null, lastEvent: '', menu: null });
     } catch (e) {
       pref.del(SAVE_KEY);
@@ -846,10 +886,20 @@ const Campaign = (() => {
   }
 
   // ---------------- taps ----------------
+  // An opponent's finished turn stays on the board until I act. My first tap on a fossil (or a set) ends it and is the
+  // start of my own turn — there is no Continue.
+  function takeOverFromOpponent() {
+    if (!ui.botWaiting) return;
+    endTurn();
+  }
+
   function cellTap(id) {
     const st = ui.st;
     if (animating()) { finishAnim(); return; }                                      // a tap skips ahead through an opponent's moves
-    if (st.over || ui.turnCard || ui.botWaiting || isBot(st.current)) return;
+    if (st.over || ui.turnCard) return;
+    takeOverFromOpponent();
+    if (st.over || ui.botWaiting || isBot(st.current)) { render(); return; }
+    ui.lastEvent = '';
     const tid = st.tokenAt[id];
     try {
       if (st.phase === 'action') {
@@ -881,9 +931,11 @@ const Campaign = (() => {
   function setTap(i) {
     const st = ui.st;
     if (animating()) { finishAnim(); return; }
-    if (st.over || ui.turnCard || ui.botWaiting || isBot(st.current)) return;
+    if (st.over || ui.turnCard) return;
+    takeOverFromOpponent();
+    if (st.over || ui.botWaiting || isBot(st.current)) { render(); return; }
     try {
-      if (Engine.canBank(st)) { Engine.bank(st, i); ui.lastEvent = `${seatName(st.current)}: ${bankText(st.lastBank)}`; endTurn(); }
+      if (Engine.canBank(st)) { Engine.bank(st, i); ui.lastEvent = `${seatName(st.current)} banked ${bankText(st.lastBank)}`; endTurn(); }
     } catch (e) { console.warn(e.message); }
     render();
   }
@@ -981,13 +1033,26 @@ const Campaign = (() => {
   // What a player has so far. While an opponent's turn is being shown move by move, its points and sets lag behind the engine.
   const shownOf = p => (animating() && p.idx === ui.st.current ? (ui.stage > 0 ? ui.steps[ui.stage - 1].snap : ui.base) : p);
 
+  // Who acts next: whoever's turn it is — or, while an opponent's finished turn is still on the board, the player after it.
+  const actor = () => (ui.botWaiting ? (ui.st.current + 1) % ui.st.n : ui.st.current);
+
+  // The scoreboard: everyone's points, big, and everyone's held sets under them. The sets of the player about to act are the
+  // ones you tap to bank — the only place sets are shown.
   function chipsHTML() {
     const st = ui.st, was = ui.prevPts, now = {};
+    const who = actor();
+    const tappable = !animating() && !ui.turnCard && !st.over && !isBot(who) && (ui.botWaiting || Engine.canBank(st));
     const html = st.players.map(p => {
-      const v = shownOf(p), sets = v.sets.length ? 'holds ' + v.sets.map(setLabel).join(' ') : 'no sets held';
+      const v = shownOf(p);
       now[p.idx] = v.points;
       const bump = was && was[p.idx] !== undefined && was[p.idx] !== v.points;
-      return `<div class="chip${p.idx === st.current ? ' cur' : ''}" style="--c:${COLORS[p.idx]}"><div class="nm"><span class="dot"></span>${esc(seatName(p.idx))}${isBot(p.idx) ? ' 🤖' : ''}</div><div class="pts${bump ? ' bump' : ''}" aria-label="${v.points} points">${v.points}</div><div class="sub">${esc(sets)}</div></div>`;
+      const matchedShown = p.idx === st.current && !!st.turn.matched && (!animating() || v.sets.length > ui.base.sets.length);
+      const sets = v.sets.map((x, i) => {
+        const pop = ui.popTurn !== st.turnNo && matchedShown && i === v.sets.length - 1 ? ' pop' : '';
+        return tappable && p.idx === who ? `<button class="setbtn act${pop}" data-act="set" data-i="${i}" aria-label="Bank this set">${setLabel(x)}</button>` : `<span class="setbtn${pop}">${setLabel(x)}</span>`;
+      }).join('');
+      if (p.idx === st.current && matchedShown) ui.popTurn = st.turnNo;
+      return `<div class="chip${p.idx === st.current ? ' cur' : ''}" style="--c:${COLORS[p.idx]}"><div class="nm"><span class="dot"></span>${esc(seatName(p.idx))}${isBot(p.idx) ? ' 🤖' : ''}</div><div class="pts${bump ? ' bump' : ''}" aria-label="${v.points} points">${v.points}</div><div class="sets">${sets || '<span class="none">no sets</span>'}</div></div>`;
     }).join('');
     ui.prevPts = now;
     return html;
@@ -1003,47 +1068,45 @@ const Campaign = (() => {
     }
     if (ui.botWaiting) {
       const t = st.turn;
-      if (t.banked) return 'It banked a set. Tap to continue.';
-      if (t.peeked !== null) return t.matched ? 'It peeked at the dashed ring, flipped the other, and matched them. Tap to continue.' : 'It peeked at the dashed ring (number hidden) and flipped the other. Tap to continue.';
-      return 'Its turn is on the board. Tap to continue.';
+      if (t.banked) return 'Tap a fossil to start your turn.';
+      return t.peeked !== null ? 'It peeked at the dashed ring and flipped the other. Tap a fossil to start your turn.' : 'Tap a fossil to start your turn.';
     }
     if (ui.turnCard) return '';
     const s = Engine.status(st);
     switch (st.phase) {
-      case 'action': return s.canBank ? 'Tap a fossil to peek — or tap one of your sets to bank it (that ends your turn).' : 'Tap a fossil to peek.';
+      case 'action': return s.canBank ? 'Tap a fossil to peek — or tap one of your sets at the top to bank it (that ends your turn).' : 'Tap a fossil to peek.';
       case 'peeked': return 'Tap another fossil to flip it — or tap a set to bank it instead.';
       case 'flipped': return st.tokens[st.turn.F].gem ? 'A gem! If yours is one too, tap a third fossil to go for the set — or end your turn.' : 'No match — end your turn to flip them back.';
       case 'gemThird': return 'Flip a third fossil.';
-      case 'resolved': return st.turn.matched ? 'Match! Your set is in front of you.' : 'End your turn to flip them back.';
+      case 'resolved': return st.turn.matched ? 'Match! Your set is at the top.' : 'End your turn to flip them back.';
       default: return '';
     }
   }
 
-  function trayHTML() {
-    const st = ui.st, cur = st.players[st.current], color = COLORS[st.current];
-    const human = !isBot(st.current) && !ui.botWaiting;
-    const s = Engine.status(st);
-    const actable = human && s.canBank;
-    const v = shownOf(cur);
-    const matchedShown = !!st.turn.matched && (!animating() || v.sets.length > ui.base.sets.length);
-    const sets = v.sets.map((x, i) => `<button class="setcard${actable ? ' act' : ''}${ui.popTurn !== st.turnNo && matchedShown && i === v.sets.length - 1 ? ' pop' : ''}" data-act="set" data-i="${i}">${Array.from({ length: x.size }, () => `<span class="mini">${setLabel(x)}</span>`).join('')}</button>`).join('');
-    const primary = ui.botWaiting || ['flipped', 'resolved'].includes(st.phase);
-    if (ui.popTurn !== st.turnNo && matchedShown) ui.popTurn = st.turnNo;
-    const note = animating() ? (ui.stage === 0 ? ui.lastEvent : '') : ui.note;
-    return `<div class="tray" style="--c:${color}">
-      <div class="who">${esc(seatName(st.current))}${isBot(st.current) ? ' 🤖' : ''}</div>
-      <div class="row"><span class="lab">Held sets</span>${sets || '<span class="dim">none yet</span>'}</div>
-      <div class="note">${esc(note)}</div>
-      <button class="end${primary ? ' go' : ''}" data-act="end">${ui.botWaiting ? 'Continue' : 'End turn'}</button>
-    </div>`;
+  // The one button on the table: end my turn (so I can flip the fossils back). Only while it is my turn.
+  function endButtonHTML() {
+    const st = ui.st;
+    if (st.over || ui.turnCard || ui.botWaiting || animating() || isBot(st.current)) return '';
+    return `<button class="end${['flipped', 'resolved'].includes(st.phase) ? ' go' : ''}" data-act="end">End turn</button>`;
   }
+
+  // The opponent banked: say so plainly, with what it scored and its new total. It sits on the board but taps pass through it.
+  function bankBannerHTML() {
+    const st = ui.st, b = st.lastBank;
+    if (!ui.botWaiting || animating() || !st.turn.banked || !b) return '';
+    const what = b.rolls.length ? (b.bonus ? ` + ${b.bonus} bonus (rolled ${b.rolls.join(', ')})` : ` (rolled ${b.rolls[0]}, no bonus)`) : '';
+    return `<div class="bankcard" style="--c:${COLORS[b.player]}"><div class="bk-who">${esc(seatName(b.player))} banked ${b.gem ? 'a gem' : 'a ' + b.value}</div>
+      <div class="bk-pts">+${b.total}</div><div class="bk-sub">${b.base}${what}</div><div class="bk-score">Score now ${st.players[b.player].points}</div></div>`;
+  }
+
+  const swatches = '<span><i style="background:var(--umber)"></i>concealed</span><span><i style="background:var(--bone)"></i>public</span>';
 
   function gameHTML() {
     const st = ui.st;
     return `<div class="game">
       <div class="bar"><div class="chips">${chipsHTML()}</div><div class="sys"><button class="q" data-act="menu" aria-label="Menu">☰</button></div></div>
-      <div class="legend"><span><i style="background:var(--umber)"></i>concealed</span><span><i style="background:var(--bone)"></i>public</span><span class="hint">${esc(hintsVisible() ? hint() : '')}</span></div>
-      <div class="main"><div class="boardwrap">${boardSVG()}</div>${trayHTML()}${ui.turnCard && !st.over ? turnCardHTML() : ''}</div>
+      <div class="legend">${ui.lastEvent && !ui.turnCard ? `<span class="event">${esc(ui.lastEvent)}</span>` : swatches}<span class="hint">${esc(hintsVisible() ? hint() : '')}</span></div>
+      <div class="main"><div class="boardwrap">${boardSVG()}</div>${bankBannerHTML()}${endButtonHTML()}${ui.turnCard && !st.over ? turnCardHTML() : ''}</div>
     </div>${st.over && !animating() ? overHTML() : ''}${ui.menu ? menuHTML() : ''}`;
   }
 
@@ -1066,14 +1129,43 @@ const Campaign = (() => {
   const libraryLink = () => (D.library && /^https?:$/.test(location.protocol) ? `<a class="back" href="${esc(D.library.href)}">‹ ${esc(D.library.name)}</a>` : '');
   const footer = () => `${ui.notice ? `<p class="dim" style="margin-top:14px">${esc(ui.notice)}</p>` : ''}<p class="dim" style="margin-top:18px">Version ${esc(BUILD)}</p>`;
 
+  // The home screen's picture: the real board, tiles flipping over by themselves to show numbers and gems. Decoration only.
+  function heroSVG() {
+    const S = 34, W = Math.sqrt(3) * S, cells = Engine.buildBoard(D);
+    const pos = c => ({ x: W * (c.q + c.r / 2), y: 1.5 * S * c.r });
+    const vals = [];
+    D.tokens.forEach(t => { for (let i = 0; i < t.count; i++) vals.push({ v: t.value, gem: !!t.gem }); });
+    for (let i = vals.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [vals[i], vals[j]] = [vals[j], vals[i]]; }
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    cells.forEach(c => { const q = pos(c); x0 = Math.min(x0, q.x - W / 2); x1 = Math.max(x1, q.x + W / 2); y0 = Math.min(y0, q.y - S); y1 = Math.max(y1, q.y + S); });
+    const flippers = new Map([[3, 0], [8, 1.9], [12, 3.7], [15, 0.9], [19, 5.1], [23, 2.8], [27, 4.4]]);   // which tiles flip, and when (seconds into the loop)
+    let out = '';
+    cells.forEach((c, k) => {
+      const { x, y } = pos(c), v = vals[k], fl = flippers.has(k);
+      out += `<g class="h-cell" style="--i:${k}"><polygon class="bg" points="${hexPts(x, y, S)}"/>
+        <g class="h-back${fl ? ' h-flipper' : ''}"${fl ? ` style="--d:-${flippers.get(k)}s"` : ''}><polygon class="face" points="${hexPts(x, y, S * 0.8)}"/><circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.3}"/><circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.13}"/></g>`;
+      if (fl) out += `<g class="h-front" style="--d:-${flippers.get(k)}s"><polygon class="face up" points="${hexPts(x, y, S * 0.8)}"/>${v.gem ? `<text class="gem" x="${x}" y="${y + 1}">💎</text>` : `<text class="num" x="${x}" y="${y + 1}">${v.v}</text>`}<polygon class="ring" style="stroke:#f5a524" points="${hexPts(x, y, S * 0.9)}"/></g>`;
+      if (k === 21) out += `<polygon class="ring peekring h-peek" style="stroke:#ff5a5f" points="${hexPts(x, y, S * 0.9)}"/>`;
+      out += '</g>';
+    });
+    const pad = 6;
+    return `<svg class="hero-board" viewBox="${(x0 - pad).toFixed(1)} ${(y0 - pad).toFixed(1)} ${(x1 - x0 + 2 * pad).toFixed(1)} ${(y1 - y0 + 2 * pad).toFixed(1)}" aria-hidden="true">${out}</svg>`;
+  }
+
   function homeHTML() {
-    return `<div class="screen"><div class="sheet">
-      ${libraryLink()}
-      <h1>🦖 Fossil Frenzy</h1><p class="sub">A memory game of matching fossils and outwitting your rivals.</p>
-      <button class="mode" data-act="mode" data-v="pass"><b>Pass &amp; Play</b><span>${D.players.min}–${D.players.max} people, one device</span></button>
-      <button class="mode" data-act="mode" data-v="campaign"><b>Campaign</b><span>Beat each opponent to unlock the next</span></button>
-      <button class="ghost" data-act="help">How to play</button>
-      ${footer()}
+    const beaten = LV.filter((l, i) => Campaign.isBeaten(i, ui.beaten)).length;
+    const pips = LV.map((l, i) => `<i class="${Campaign.isBeaten(i, ui.beaten) ? 'on' : ''}"></i>`).join('');
+    return `<div class="screen home"><div class="sheet hero">
+      <div class="hero-art">${heroSVG()}</div>
+      <div class="hero-menu">
+        ${libraryLink()}
+        <h1 class="logo">Fossil<br>Frenzy</h1>
+        <p class="sub">Peek. Flip. Match. Bank. A memory game of fossils and rivals.</p>
+        <button class="mode primary" data-act="mode" data-v="campaign"><b>Campaign</b><span>${LV.length} opponents, easiest to hardest</span><span class="pips" aria-label="${beaten} of ${LV.length} beaten">${pips}</span></button>
+        <button class="mode" data-act="mode" data-v="pass"><b>Pass &amp; Play</b><span>${D.players.min}–${D.players.max} people, one device</span></button>
+        <button class="ghost" data-act="help">How to play</button>
+        ${footer()}
+      </div>
     </div></div>`;
   }
 
@@ -1099,7 +1191,7 @@ const Campaign = (() => {
     const all = LV.every((l, i) => Campaign.isBeaten(i, ui.beaten));
     return `<div class="screen"><div class="sheet">
       <button class="back" data-act="home">‹ Fossil Frenzy</button>
-      <h1>Campaign</h1><p class="sub">Beat each opponent to unlock the next.</p>
+      <h1>Campaign</h1>
       <div class="levels">${rows}</div>
       ${all ? '<p class="sub" style="margin-top:16px">🏆 You have beaten every opponent.</p>' : ''}
     </div></div>`;
@@ -1142,7 +1234,8 @@ const Campaign = (() => {
     'Banking is your whole turn, so it ends the moment you tap the set — there is no End turn tap afterwards.',
     'Who goes first is decided at random, without a screen for it; a card names whose turn it is before they tap (in Pass & Play, every turn).',
     'After you peek a gem and flip a gem, tapping a third fossil is your consent to reveal your peeked gem too.',
-    'An opponent\'s turn is shown one move at a time: a peek (the fossil lifts, the number stays hidden), then the flip. A tap skips ahead.',
+    'An opponent\'s turn is shown one move at a time: a peek (the fossil lifts, the number stays hidden), then the flip, right away. Its turn stays on the board until you tap a fossil — that tap starts your turn, so there is no Continue. When it banks, a banner says what it scored and its new total.',
+    'Your held sets live in the scoreboard at the top, under your score — that is also where you tap one to bank it.',
     'Ties go to the most sets popped, then whoever popped the final pair.',
     'Campaign: you beat a level by winning outright (a shared win does not count). Opponents differ in how well they remember fossils and how carefully they plan their banking.',
   ];
