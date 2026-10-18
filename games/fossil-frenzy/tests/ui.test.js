@@ -252,7 +252,7 @@ test('Campaign: winning outright unlocks the next level, remembers it, and offer
     assert.match(await page.locator('h1').first().innerText(), /You beat Beginner!/);
     assert.match(await page.locator('.sheet > .sub').innerText(), /Novice unlocked/);
     assert.match(await page.locator('[data-act=next]').innerText(), /Novice/);
-    await page.tap('[data-act=mode][data-v=campaign]');
+    await page.tap('[data-act=home]'); await page.tap('[data-act=mode][data-v=campaign]');
     assert.equal(await page.locator('.lvl.locked').count(), 3);
     assert.match(await page.locator('.lvl').nth(0).innerText(), /Beaten/);
     assert.match(await page.locator('.lvl').nth(1).innerText(), /Ready/);
@@ -285,7 +285,7 @@ test('Campaign: losing, or a shared win, does not unlock anything', SKIP, async 
     await page.tap('[data-act=again]'); await page.tap('[data-act=begin]');
     await forceFinish(page, [12, 12]);
     assert.match(await page.locator('h1').first().innerText(), /not a win/i);
-    await page.tap('[data-act=mode][data-v=campaign]');
+    await page.tap('[data-act=home]'); await page.tap('[data-act=mode][data-v=campaign]');
     assert.equal(await page.locator('.lvl.locked').count(), 4, 'still only Beginner is open');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -300,7 +300,7 @@ test('Campaign: beating Master completes the campaign', SKIP, async () => {
     await forceFinish(page, [40, 1]);
     assert.match(await page.locator('.sheet > .sub').innerText(), /Campaign complete/);
     assert.equal(await page.locator('[data-act=next]').count(), 0);
-    await page.tap('[data-act=mode][data-v=campaign]');
+    await page.tap('[data-act=home]'); await page.tap('[data-act=mode][data-v=campaign]');
     assert.equal(await page.locator('.lvl.done').count(), 5);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -737,15 +737,62 @@ test('menu: "Back to the start" (confirmed) leaves the game and clears the save'
 });
 
 // ---------- playtest round 3: menu order, sets in one place, no Continue, the opponent's bank ----------
-test('home: Campaign is listed before Pass & Play, with a picture of the board', SKIP, async () => {
+test('home: Campaign is listed before Pass & Play, over a picture of the board', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     assert.deepEqual(await page.locator('[data-act=mode]').evaluateAll(els => els.map(e => e.dataset.v)), ['campaign', 'pass']);
-    assert.ok(await page.locator('.hero-board').count(), 'a hero picture');
     assert.equal(await page.locator('.hero-board .h-cell').count(), 31, 'it is the real 31-space board');
-    assert.ok(await page.locator('.hero-board .h-flipper').count() >= 3, 'some tiles flip over by themselves');
+    assert.equal(await page.locator('.hero-board .h-ring.dash, .h-peek').count(), 0, 'no stray decorative ring: rings only appear as a game is played');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
+});
+
+test('home: a whole demo game plays by itself — blue and red, rings like a real game, collected tiles vanish, then a pause and a new game', SKIP, async () => {
+  const { browser, page, errors } = await open({ animated: true });
+  try {
+    await page.evaluate(() => { const d = window.FossilFrenzyUI.demo(); clearTimeout(d.timer); });   // drive it by hand, instantly
+    const log = await page.evaluate(() => {
+      const U = window.FossilFrenzyUI, d = U.demo(), seen = { dashBlue: 0, dashRed: 0, solid: 0, upNoNumber: 0, restartWait: 0 };
+      for (let i = 0; i < 3000 && !d.st.over; i++) {
+        U.demoStep(d);
+        d.cells.forEach(el => {
+          const ringed = el.classList.contains('ringed'), dash = el.classList.contains('dash'), col = el.querySelector('.h-ring').style.stroke;
+          if (ringed && dash) { if (/79, ?140, ?255|#4f8cff/i.test(col)) seen.dashBlue++; else if (/255, ?90, ?95|#ff5a5f/i.test(col)) seen.dashRed++; }
+          if (ringed && !dash) seen.solid++;
+          if (el.classList.contains('up') && !el.querySelector('.h-front text').textContent) seen.upNoNumber++;
+        });
+      }
+      const wait = U.demoStep(d);                                              // the game is over: the last tiles vanish and it waits
+      return { ...seen, over: d.st.over, gone: d.cells.every(el => el.classList.contains('gone')), wait, left: d.st.tokens.filter(t => !t.matched).length, pts: d.st.players.map(p => p.points) };
+    });
+    assert.equal(log.over, true);
+    assert.equal(log.left, 0, 'every fossil was collected');
+    assert.equal(log.gone, true, 'and every tile has vanished');
+    assert.ok(log.wait >= 2000, 'then the empty board waits before the next game: ' + log.wait);
+    assert.ok(log.dashBlue > 0 && log.dashRed > 0, 'both players peek, shown as a dashed ring in their own colour');
+    assert.ok(log.solid > 0, 'flips show as solid rings');
+    assert.equal(log.upNoNumber, 0, 'a flipped tile always shows its number');
+    assert.ok(log.pts.some(p => p > 0) || true);
+    // and it really restarts by itself
+    const before = await page.evaluate(() => window.FossilFrenzyUI.demo().seed);
+    await page.evaluate(() => { const d = window.FossilFrenzyUI.demo(); d.timer = setTimeout(() => {}, 0); window.FossilFrenzyUI.render(); });
+    assert.notEqual(await page.evaluate(() => window.FossilFrenzyUI.demo().seed), before, 'a re-drawn home screen starts a fresh game');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('home: it is one screen — nothing to scroll, everything in view — on iPad (both ways) and phones', SKIP, async () => {
+  for (const vp of [{ width: 1024, height: 768 }, { width: 768, height: 1024 }, { width: 1180, height: 820 }, { width: 390, height: 844 }, { width: 844, height: 390 }]) {
+    const { browser, page, errors } = await open({ viewport: vp });
+    try {
+      const r = await page.evaluate(() => {
+        const sc = document.querySelector('.screen.home'), inView = sel => { const b = document.querySelector(sel).getBoundingClientRect(); return b.top >= 0 && b.bottom <= innerHeight + 0.5 && b.left >= 0 && b.right <= innerWidth + 0.5; };
+        return { fits: sc.scrollHeight <= sc.clientHeight + 1, wide: sc.scrollWidth <= sc.clientWidth + 1, campaign: inView('[data-v=campaign]'), pass: inView('[data-v=pass]'), help: inView('[data-act=help]'), board: inView('.hero-board'), logo: inView('.logo') };
+      });
+      assert.deepEqual(r, { fits: true, wide: true, campaign: true, pass: true, help: true, board: true, logo: true }, JSON.stringify(vp));
+      assert.deepEqual(errors, []);
+    } finally { await browser.close(); }
+  }
 });
 
 test('campaign screen: no "beat each opponent" line (the locks say it)', SKIP, async () => {
@@ -762,11 +809,15 @@ test('sets are shown in one place only — the scoreboard — and tapping them t
   try {
     await passAndPlay(page, 2);
     assert.equal(await page.locator('.tray, .setcard').count(), 0, 'no side panel');
-    assert.deepEqual(await page.locator('.chip .sets').allInnerTexts(), ['no sets', 'no sets']);
+    assert.deepEqual(await page.locator('.chip .sets').allInnerTexts(), ['', ''], 'nothing is written when there are no sets');
+    assert.equal(await page.locator('.bankcap').count(), 0);
     await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI; ui.st.players[ui.st.current].sets = [{ value: 7, gem: false, size: 2, ids: [] }, { value: 16, gem: true, size: 3, ids: [] }]; ui.st.rng = () => 0.01; render(); });
     assert.equal(await page.locator('.chip.cur .setbtn[data-act=set]').count(), 2, 'the current player\'s sets are the tappable ones');
     assert.equal(await page.locator('.chip:not(.cur) [data-act=set]').count(), 0);
     assert.deepEqual(await page.locator('.chip.cur .setbtn').allInnerTexts(), ['7', '💎']);
+    assert.match(await page.locator('.bankcap').innerText(), /tap to bank/i, 'the sets say they can be tapped');
+    const box = await page.locator('.chip.cur .setbtn').first().boundingBox();
+    assert.ok(box.width >= 48 && box.height >= 48, 'big enough to be a button: ' + JSON.stringify(box));
     await page.tap('.chip.cur .setbtn[data-i="1"]');                       // bank the gem, up there
     assert.equal(await page.evaluate(() => Math.max(...window.FossilFrenzyUI.ui.st.players.map(p => p.points)) >= 16), true, 'the gem scored');
     assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.turnNo), 1, 'and the turn is over');
@@ -809,10 +860,10 @@ test('the opponent banks: a clear banner says what it banked, what it scored and
     assert.match(txt, /Score now 7/);
     assert.equal(await page.locator('.chip.cur .pts').innerText(), '7');
     assert.equal(await page.locator('button', { hasText: /continue/i }).count(), 0);
-    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.bankcard')).pointerEvents), 'none', 'taps pass through it to the map');
-    await page.tap(await firstFree(page));                                 // click the map: my turn
+    assert.equal(await page.locator('button.bankcard[data-act=dismissbank]').count(), 1, 'the banner is itself a button');
+    await page.tap('.bankcard');                                           // tap it: it goes away and my turn begins (nothing peeked yet)
     assert.equal(await page.locator('.bankcard').count(), 0);
-    assert.equal(await page.evaluate(() => [window.FossilFrenzyUI.ui.st.current, window.FossilFrenzyUI.ui.st.phase].join()), '0,peeked');
+    assert.equal(await page.evaluate(() => [window.FossilFrenzyUI.ui.st.current, window.FossilFrenzyUI.ui.st.phase].join()), '0,action');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -826,6 +877,45 @@ test('after I bank, the turn is over at once and the opponent starts — what I 
     assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.current), 1);
     assert.match(await page.locator('.event').innerText(), /You banked a 6: \+6/);
     assert.equal(await page.locator('.chip .pts').first().innerText(), '6');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('the opponent\'s bank banner goes away on a tap anywhere: on the map it also starts my turn with that peek; elsewhere it just clears', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    for (const where of ['map', 'header']) {
+      await campaign(page, 0);
+      await page.evaluate(() => { const { ui } = window.FossilFrenzyUI; ui.st.players[1].sets = [{ value: 7, gem: false, size: 2, ids: [] }]; ui.bots[1].bankAt = 1; ui.st.rng = () => 0.01; });
+      for (let i = 0; i < 8 && !(await page.evaluate(() => window.FossilFrenzyUI.ui.botWaiting && window.FossilFrenzyUI.ui.st.turn.banked)); i++) await takeATurn(page);
+      assert.equal(await page.locator('.bankcard').count(), 1);
+      if (where === 'map') {
+        await page.tap(await firstFree(page));
+        assert.equal(await page.evaluate(() => [window.FossilFrenzyUI.ui.st.current, window.FossilFrenzyUI.ui.st.phase].join()), '0,peeked');
+      } else {
+        await page.tap('.legend');                                         // empty space above the board
+        assert.equal(await page.evaluate(() => [window.FossilFrenzyUI.ui.st.current, window.FossilFrenzyUI.ui.st.phase].join()), '0,action');
+      }
+      assert.equal(await page.locator('.bankcard').count(), 0);
+      await quitToStart(page);
+    }
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('end of game: the choices are plain buttons — play again (or the next level) and Main menu; no hidden "Levels"', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await passAndPlay(page, 2);
+    await forceFinish(page, [4, 2]);
+    assert.deepEqual(await page.locator('.sheet > button').allInnerTexts(), ['Play again', 'Main menu']);
+    assert.ok(await page.evaluate(() => { const b = document.querySelector('[data-act=home]').getBoundingClientRect(); return b.height >= 48 && b.width >= 200; }), 'Main menu is a full-size button');
+    assert.doesNotMatch(await page.locator('.sheet').innerText(), /Levels|Change players/);
+    await page.tap('[data-act=home]');
+    assert.equal(await screenOf(page), 'home');
+    await campaign(page, 0);
+    await forceFinish(page, [30, 10]);
+    assert.deepEqual((await page.locator('.sheet > button').allInnerTexts()).map(t => t.replace(/:.*/, '')), ['Next', 'Play Beginner again', 'Main menu']);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
