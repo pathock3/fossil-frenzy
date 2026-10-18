@@ -26,12 +26,27 @@ test('build: the library page and every game are built, each stamped with commit
   }
 });
 
-test('build: only the pages are published (no tests, docs or tools)', () => {
+test('build: only the pages and the icons are published (no tests, docs or tools)', () => {
   const dir = build();
   const files = [];
   const walk = d => fs.readdirSync(d, { withFileTypes: true }).forEach(e => (e.isDirectory() ? walk(path.join(d, e.name)) : files.push(path.relative(dir, path.join(d, e.name)))));
   walk(dir);
-  assert.deepEqual(files.sort(), ['index.html', ...games.map(g => path.join('games', g, 'index.html'))].sort());
+  const icons = fs.readdirSync(path.join(root, 'assets')).filter(f => f.endsWith('.png'));
+  assert.deepEqual(files.sort(), ['index.html', ...icons.map(f => path.join('assets', f)), ...games.map(g => path.join('games', g, 'index.html'))].sort());
+});
+
+test('icons: every page has a Home Screen / Favorites icon that exists, and the page title is the Home Screen name', () => {
+  const dir = build();
+  for (const rel of ['index.html', ...games.map(g => `games/${g}/index.html`)]) {
+    const html = read(dir, rel);
+    const href = html.match(/<link rel="apple-touch-icon" href="([^"]+)">/);
+    assert.ok(href, rel + ' has no apple-touch-icon');
+    assert.ok(fs.existsSync(path.join(dir, path.normalize(path.join(path.dirname(rel), href[1])))), rel + ' points at a missing icon');
+    assert.match(html, /<link rel="icon" type="image\/png" href="[^"]*favicon\.png">/, rel);
+  }
+  const png = fs.readFileSync(path.join(dir, 'assets', 'apple-touch-icon.png'));
+  assert.equal(png.readUInt32BE(16), 180); assert.equal(png.readUInt32BE(20), 180);   // iPad wants 180x180
+
 });
 
 test('build: production (main) builds are not labelled as previews', () => {

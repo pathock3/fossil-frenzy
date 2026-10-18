@@ -28,4 +28,9 @@ for (const rel of pages) {
   fs.mkdirSync(path.dirname(path.join(out, rel)), { recursive: true });
   fs.writeFileSync(path.join(out, rel), html.replace('content="__BUILD__"', 'content="' + label.replace(/"/g, '') + '"'));
 }
-console.log('built', pages.length, 'pages into', path.relative(root, out) || '.', '—', label);
+// shared icons (Favorites / Home Screen) are published in assets/, the same place they sit in the repo; pages link to them, but still work without them
+const assets = path.join(root, 'assets');
+const icons = fs.existsSync(assets) ? fs.readdirSync(assets).filter(f => f.endsWith('.png')) : [];
+fs.mkdirSync(path.join(out, 'assets'), { recursive: true });
+for (const f of icons) fs.copyFileSync(path.join(assets, f), path.join(out, 'assets', f));
+console.log('built', pages.length, 'pages and', icons.length, 'icons into', path.relative(root, out) || '.', '—', label);

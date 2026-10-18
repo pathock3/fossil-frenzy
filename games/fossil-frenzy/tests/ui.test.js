@@ -72,6 +72,7 @@ const rig = (page, wanted) => page.evaluate(w => {
 const forceFinish = (page, points) => page.evaluate(pts => {
   const { ui, render } = window.FossilFrenzyUI, st = ui.st;
   pts.forEach((p, i) => { st.players[i].points = p; });
+  st.players.forEach(p => { p.poppedSets = 0; }); st.lastPopper = -1;     // an opponent that went first may already have popped a pair: keep every tie-break level
   st.over = true; st.phase = 'over'; st.result = Engine.computeResult(st);
   render();
 }, points);
