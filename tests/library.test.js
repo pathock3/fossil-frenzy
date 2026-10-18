@@ -17,6 +17,12 @@ test('library: the collection is called Tabletop Library', () => {
   assert.match(html, /<title>Tabletop Library<\/title>/);
 });
 
+test('library: the designer is credited once, at the top — not under each game', () => {
+  assert.equal(LIBRARY.tagline, 'Games designed by Patrick Blim-Hockberger');
+  assert.ok(LIBRARY.games.every(g => !('by' in g)), 'games carry no per-game credit');
+  assert.doesNotMatch(html, /Designed by \$\{/);
+});
+
 test('library: every game folder is in the catalogue, and every local catalogue entry has a game', () => {
   const ids = LIBRARY.games.map(g => g.id);
   assert.equal(new Set(ids).size, ids.length, 'ids are unique');
