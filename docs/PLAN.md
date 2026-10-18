@@ -31,7 +31,7 @@ Extract only what has clearly repeated: dice/randomness, board geometry, the sea
 | Release notes | `CHANGELOG.md`, each release with its commit (cloud sessions can't push git tags; the owner can add GitHub Releases if wanted) | ✅ |
 
 ### Not interrupting players mid-game ◐ (save/resume ✅ in Fossil Frenzy)
-A deploy never changes a page already open. The danger is a reload — or iPad Safari silently reloading a backgrounded tab — which today loses the game. Plan: save the game after every action; resume on load; stamp saves with a version so an update either migrates an old save or offers to finish the game in progress. Later: an installable offline version that holds an update until the current game ends.
+A deploy never changes a page already open. The danger is a reload — or iPad Safari silently reloading a backgrounded tab. Fossil Frenzy now saves after every action and resumes on load; a save made under different rules is cleared with a quiet note (migrating old saves is possible later if a rules change should not end games in progress). Later: an installable offline version that holds an update until the current game ends.
 
 ## 3. Design philosophy — tabletop first
 
@@ -57,15 +57,17 @@ These games were designed for the table, so the clearest way to teach them is to
 9. **Use the digital advantage:** rule toggles and bot simulations test variants that are slow to test at a table.
 
 ## 4. Fossil Frenzy against this plan
-Gaps to close before it becomes the template for every game:
+Gaps closed (this is now the template for the next game):
 - ✅ Save and resume (section 2): saved after every action, resumes after a reload, refuses saves from changed rules.
-- 🔜 The hint line above the board is instructional narration.
-- 🔜 The end screen is a stats table.
-- 🔜 Flip rings are colour-only (no number or shape).
+- ✅ Prompts above the board were instructional narration: now shown only until a device has finished one game; Auto / On / Off in the help panel.
+- ✅ The end screen was a stats table: now each player's fossils laid out face up with their score, the winner marked.
+- ✅ Flip rings "colour-only": not a real gap — only the current player's flips are ever shown, so the ring colour never has to tell players apart (pieces carry numbers; the player strip names the current player). A bot's peek is a dashed ring, a flip a solid one.
+
+Still to consider (not started): take-backs before anything is revealed; a short guided first turn; "pass the device" screen for games where hidden information needs it.
 
 ## 5. Order of work
 1. ✅ Cloudflare live + preview links; tests gate deploys; build stamp; changelog.
 2. ✅ Save and resume in Fossil Frenzy.
-3. 🔜 Close the remaining Tabletop-Test gaps above.
+3. ✅ Close the Tabletop-Test gaps above.
 4. ✅ Fossil Frenzy moved into `games/fossil-frenzy/`; the Tabletop Library front page is built.
 5. ⬜ Game two; after game three, extract shared code.

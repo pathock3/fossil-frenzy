@@ -106,6 +106,15 @@ h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spac
 .table { width: 100%; border-collapse: collapse; margin: 6px 0; }
 .table td, .table th { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); font-size: 16px; }
 .winner td { color: var(--good); font-weight: 800; }
+.results { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 6px 0 4px; }
+.place { background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.place.win { border-color: var(--good); box-shadow: 0 0 0 3px rgba(62,207,142,.22); }
+.place .pn { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.place .pn .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
+.place .score { font-size: 44px; font-weight: 800; line-height: 1; }
+.place .tiles { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.place .bonus { font-size: 13px; font-weight: 800; color: var(--accent); padding: 0 4px; }
+.mini.lost { opacity: .35; text-decoration: line-through; }
 .dim { color: var(--dim); font-size: 13px; }
 </style>
 </head>
@@ -883,6 +892,14 @@ const Bots = (() => {
   const ui = { screen: 'setup', cfg: loadCfg(), st: null, bots: [], pushing: null, showPeek: true, showStash: false,
                note: '', help: false, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '' };
 
+  // Prompts above the board: shown until this device has finished one game, then quiet. Help panel: Auto / On / Off.
+  const HINTS_KEY = 'fossil-frenzy-hints', DONE_KEY = 'fossil-frenzy-games-finished';
+  const pref = {
+    get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: (k, v) => { try { localStorage.setItem(k, String(v)); } catch (e) { /* ignore */ } },
+  };
+  ui.hints = ['auto', 'on', 'off'].includes(pref.get(HINTS_KEY)) ? pref.get(HINTS_KEY) : 'auto';
+  const hintsVisible = () => ui.hints === 'on' || (ui.hints === 'auto' && !(+pref.get(DONE_KEY) > 0));
   const memOf = idx => D.bots.presets[idx];
   const seatName = i => ui.cfg.seats[i].name || 'Player ' + (i + 1);
   const isBot = i => !!ui.bots[i];
@@ -892,7 +909,7 @@ const Bots = (() => {
     const cfg = ui.cfg, seed = Math.floor(Math.random() * 2147483647);
     ui.st = Engine.createGame({ players: cfg.n, system: cfg.system, seed });
     ui.bots = Bots.attach(ui.st, cfg.seats.slice(0, cfg.n).map(s => (s.bot ? { memory: memOf(s.mem).memory } : null)), seed);
-    Object.assign(ui, { screen: 'roll', pushing: null, showPeek: true, showStash: false, note: '', prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '' });
+    Object.assign(ui, { screen: 'roll', pushing: null, showPeek: true, showStash: false, note: '', prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '', countedOver: false });
   }
 
   function beginPlay() { ui.screen = 'play'; nextTurnStarts(); }
@@ -1039,6 +1056,7 @@ const Bots = (() => {
       case 'set': return setTap(+d.i);
       case 'stash': ui.showStash = !ui.showStash; break;
       case 'end': if (st.over) break; if (ui.botWaiting) { endTurn(); break; } if (Engine.status(st).canEnd) endTurn(); break;
+      case 'hints': ui.hints = d.v; pref.set(HINTS_KEY, d.v); break;
       case 'help': ui.help = true; break;
       case 'closehelp': ui.help = false; break;
       case 'newgame':
@@ -1179,7 +1197,7 @@ const Bots = (() => {
     const st = ui.st;
     return `<div class="game">
       <div class="bar"><div class="chips">${chipsHTML()}</div><div class="sys"><button class="q" data-act="help" aria-label="How to play">?</button><button class="q" data-act="newgame" aria-label="New game">↺</button></div></div>
-      <div class="legend"><span><i style="background:var(--umber)"></i>concealed</span><span><i style="background:var(--bone)"></i>public</span><span class="hint">${esc(hint())}</span></div>
+      <div class="legend"><span><i style="background:var(--umber)"></i>concealed</span><span><i style="background:var(--bone)"></i>public</span><span class="hint">${esc(hintsVisible() ? hint() : '')}</span></div>
       <div class="main"><div class="boardwrap">${boardSVG()}</div>${trayHTML()}</div>
     </div>${st.over ? overHTML() : ''}`;
   }
@@ -1221,14 +1239,21 @@ const Bots = (() => {
     let why = '';
     if (r.winners.length > 1) why = r.winners.length === st.n ? 'Dead heat.' : 'Shared win — every tie-break is level.';
     else if (r.ranking.length > 1) { const a = r.ranking[0], b = r.ranking[1]; const k = keys.find(k => a[k] !== b[k]); why = k === 'score' ? '' : `Tied on score — won on ${WHY[k]}.`; }
-    const rows = r.ranking.map(x => {
+    const tileHTML = (v, cls = '') => `<span class="mini ${cls}">${v === 16 ? '💎' : v}</span>`;
+    const places = r.ranking.map(x => {
       const p = st.players[x.idx], win = r.winners.includes(x.idx);
-      const detail = st.system ? `${x.fossils} fossil${x.fossils === 1 ? '' : 's'}: ${p.stash.length ? p.stash.slice().sort((a, b) => b - a).map(v => (v === 16 ? '💎' : v)).join(' ') : '–'}` : `${x.sets} sets popped`;
-      const lost = x.stranded ? ` · ${x.stranded} undelivered set${x.stranded === 1 ? '' : 's'} (worth 0)` : '';
-      return `<tr class="${win ? 'winner' : ''}"><td>${win ? '🏆 ' : ''}${esc(seatName(x.idx))}</td><td>${x.score}</td><td class="dim">${esc(detail + lost)}</td></tr>`;
+      const shown = st.system ? p.stash.slice().sort((a, b) => b - a).map(v => tileHTML(v)) : p.banked.map(b => tileHTML(b.value));
+      const bonus = !st.system && p.banked.reduce((n, b) => n + b.bonus, 0);
+      const lost = p.sets.map(x => tileHTML(x.value, 'lost'));
+      return `<div class="place${win ? ' win' : ''}" style="--c:${COLORS[x.idx]}">
+        <div class="pn"><span class="dot"></span>${win ? '🏆 ' : ''}${esc(seatName(x.idx))}</div>
+        <div class="score">${x.score}</div>
+        <div class="tiles">${shown.join('') || '<span class="dim">no fossils</span>'}${bonus ? `<span class="bonus">+${bonus}</span>` : ''}</div>
+        ${lost.length ? `<div class="tiles lostrow" title="not ${st.system ? 'delivered' : 'banked'}">${lost.join('')}</div>` : ''}
+      </div>`;
     }).join('');
     return `<div class="screen"><div class="sheet"><h1>${r.winners.length > 1 ? 'Shared win!' : esc(seatName(r.winners[0])) + ' wins!'}</h1>
-      <p class="sub">${esc(why)}</p><table class="table"><tr><th>Player</th><th>Score</th><th></th></tr>${rows}</table>
+      <p class="sub">${esc(why)}</p><div class="results">${places}</div>
       <button class="big" data-act="again">Play again</button><button class="ghost" data-act="newgame">Change players</button></div></div>`;
   }
 
@@ -1258,6 +1283,7 @@ const Bots = (() => {
       <h3>End</h3><p>The game ends the moment every fossil is matched. ${on ? 'Fossils still face up in front of you are worth 0.' : 'Sets you have not banked are lost.'} Highest score wins${on ? '; ties go to the most fossils, then the highest scoring fossil' : '; ties go to the most sets popped, then whoever popped the final pair'}.</p>
       <h3>Judgment calls (where the rules were unclear)</h3><ul>${JUDGMENTS.map(j => `<li>${esc(j)}</li>`).join('')}</ul>
       <p class="dim">The full list is in DECISIONS.md. Version ${esc(BUILD)}.</p>
+      <h3>Prompts above the board</h3><p><span class="seg">${['auto', 'on', 'off'].map(v => `<button class="${ui.hints === v ? 'on' : ''}" data-act="hints" data-v="${v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</span></p><p class="dim">Auto shows them until you have finished one game on this device.</p>
       <button class="big" data-act="closehelp">Close</button></div></div>`;
   }
 
@@ -1267,6 +1293,7 @@ const Bots = (() => {
     else if (ui.screen === 'roll') html = rollHTML();
     else html = gameHTML();
     root.innerHTML = html + (ui.help ? helpHTML() : '');
+    if (ui.st && ui.st.over && !ui.countedOver) { ui.countedOver = true; pref.set(DONE_KEY, (+pref.get(DONE_KEY) || 0) + 1); }
     saveGame();
   }
 

@@ -281,3 +281,49 @@ test('save: a save from other rules, or a damaged one, is cleared with a quiet n
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
+
+// ---------- quiet prompts and the tabletop end screen ----------
+const playBotsToEnd = async page => {
+  for (let i = 0; i < 400 && !(await page.evaluate(() => window.FossilFrenzyUI.ui.st.over)); i++) await page.tap('[data-act=end]');
+  assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.over), true);
+};
+
+test('prompts: shown to a new player, quiet after the first finished game, switchable in the help panel', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await setup(page, { n: 2, system: false, bots: [0, 1] });
+    assert.notEqual((await page.locator('.hint').innerText()).trim(), '', 'a first-time player gets prompts');
+    await playBotsToEnd(page);
+    await page.tap('[data-act=again]');
+    await page.tap('[data-act=begin]');
+    assert.equal((await page.locator('.hint').innerText()).trim(), '', 'quiet once a game has been finished');
+    await page.tap('[data-act=help]'); await page.tap('[data-act=hints][data-v=on]'); await page.tap('[data-act=closehelp]');
+    assert.notEqual((await page.locator('.hint').innerText()).trim(), '');
+    await page.tap('[data-act=help]'); await page.tap('[data-act=hints][data-v=off]'); await page.tap('[data-act=closehelp]');
+    assert.equal((await page.locator('.hint').innerText()).trim(), '');
+    await page.reload();                                                  // the choice is remembered
+    await page.tap('[data-act=help]');
+    assert.equal(await page.locator('[data-act=hints].on').innerText(), 'Off');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('end screen: each player\'s fossils are laid out face up with their score; the winner is marked — no stats table', SKIP, async () => {
+  for (const system of [false, true]) {
+    const { browser, page, errors } = await open();
+    try {
+      await setup(page, { n: 3, system, bots: [0, 1, 2] });
+      await playBotsToEnd(page);
+      assert.equal(await page.locator('.results .place').count(), 3);
+      assert.ok(await page.locator('.results .place.win').count() >= 1);
+      assert.equal(await page.locator('table').count(), 0);
+      const scores = await page.locator('.place .score').allInnerTexts();
+      const real = await page.evaluate(() => window.FossilFrenzyUI.ui.st.result.ranking.map(r => String(r.score)));
+      assert.deepEqual(scores, real, 'scores shown in ranking order');
+      const shown = await page.locator('.place .tiles:not(.lostrow) .mini').count();
+      const expected = await page.evaluate(() => { const st = window.FossilFrenzyUI.ui.st; return st.players.reduce((n, p) => n + (st.system ? p.stash.length : p.banked.length), 0); });
+      assert.equal(shown, expected, 'every delivered/banked fossil is shown');
+      assert.deepEqual(errors, []);
+    } finally { await browser.close(); }
+  }
+});
