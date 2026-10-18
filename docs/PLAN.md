@@ -22,7 +22,7 @@ Extract only what has clearly repeated: dice/randomness, board geometry, the sea
 | | | |
 |---|---|---|
 | History | git; every change is a commit | ✅ |
-| Live site | `main` → `fossil-frenzy.patrickhockberger.workers.dev` = the library; games under `/games/<id>/` (friends) | ✅ |
+| Live site | `main` → `tabletop-library.patrickhockberger.workers.dev` = the library; games under `/games/<id>/` (friends) | ✅ |
 | Dev site | every other branch → its own Cloudflare preview link (owner's iPad) | ✅ |
 | Release gate | Claude merges to `main` only when the owner says so | ✅ |
 | Tests gate deploys | `npm run build` runs `npm test` first; a failing test fails the Cloudflare build and the old version stays live | ✅ |
@@ -81,10 +81,11 @@ The app is the **Tabletop Library**; each game keeps its own name inside it (Fos
 |---|---|---|
 | Library page `index.html` (`LIBRARY.name`, `<title>`, Home Screen title) | what people see | repo — done: "Tabletop Library" |
 | `package.json` `name` / `description` | tooling only | repo — done |
-| `wrangler.jsonc` `name` | **the web address** (`<name>.<account>.workers.dev`, and every preview address) | repo — **must match the Cloudflare Worker's name** |
-| Cloudflare Worker / project name | the web address friends use | **owner**, in the Cloudflare dashboard (a Worker cannot be renamed — create a new one) |
+| `wrangler.jsonc` `name` = `tabletop-library` | **the web address** (`<name>.<account>.workers.dev`, and every preview address) | repo — done; **must match the Cloudflare Worker's name** |
+| The game's browser-storage keys (`tabletop-library-fossil-frenzy-*`) | saves, campaign progress, settings | repo — done (earlier `fossil-frenzy-*` data is discarded) |
+| `README.md`, this file: the live and dev links | documentation | repo — done |
+| Cloudflare Worker / project name | the web address friends use | **owner**, in the Cloudflare dashboard (a Worker cannot be renamed — create a new one named `tabletop-library`) |
 | GitHub repository name | the code's address; redirects from the old name | **owner**, GitHub → Settings → General |
-| `README.md`, this file: the live and dev links | documentation | repo — update after the Cloudflare switch |
 | iPad Home Screen icons and bookmarks | the old address | **owner**, per device |
 | The game's own title (`games/<id>/index.html`) | stays the game's name | — |
 

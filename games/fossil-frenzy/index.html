@@ -673,14 +673,18 @@ const Campaign = (() => {
   const UNLOCK_ALL = /[?&]unlock\b/.test(location.search);
 
   // ---------------- remembered between visits (if the browser allows) ----------------
-  const PASS_KEY = 'fossil-frenzy-passplay-v2', CAMPAIGN_KEY = 'fossil-frenzy-campaign-v1', SAVE_KEY = 'fossil-frenzy-save-v2';
-  const HINTS_KEY = 'fossil-frenzy-hints', DONE_KEY = 'fossil-frenzy-games-finished';
+  // Everything this game stores lives under the Tabletop Library's name, then the game's.
+  const NS = 'tabletop-library-fossil-frenzy-';
+  const PASS_KEY = NS + 'passplay', CAMPAIGN_KEY = NS + 'campaign', SAVE_KEY = NS + 'save';
+  const HINTS_KEY = NS + 'hints', DONE_KEY = NS + 'games-finished';
+  const LEGACY_KEYS = ['fossil-frenzy-setup-v1', 'fossil-frenzy-passplay-v2', 'fossil-frenzy-campaign-v1', 'fossil-frenzy-save-v1', 'fossil-frenzy-save-v2', 'fossil-frenzy-hints', 'fossil-frenzy-games-finished'];
   const pref = {
     get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set: (k, v) => { try { localStorage.setItem(k, String(v)); } catch (e) { /* storage unavailable: fine */ } },
     del: k => { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } },
     json: k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } },
   };
+  LEGACY_KEYS.forEach(pref.del);                       // data stored under the app's earlier name is discarded
 
   function loadPass() {
     const cfg = { n: D.players.min, names: Array.from({ length: D.players.max }, (_, i) => 'Player ' + (i + 1)) };

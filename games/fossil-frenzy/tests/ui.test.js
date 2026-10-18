@@ -281,7 +281,7 @@ test('Campaign: losing, or a shared win, does not unlock anything', SKIP, async 
 test('Campaign: beating Master completes the campaign', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
-    await page.evaluate(() => localStorage.setItem('fossil-frenzy-campaign-v1', JSON.stringify({ beaten: ['beginner', 'novice', 'normal', 'challenging'] })));
+    await page.evaluate(() => localStorage.setItem('tabletop-library-fossil-frenzy-campaign', JSON.stringify({ beaten: ['beginner', 'novice', 'normal', 'challenging'] })));
     await page.reload();
     await campaign(page, 4);
     await forceFinish(page, [40, 1]);
@@ -301,7 +301,7 @@ test('Campaign: ?unlock opens every level for testing (and saves nothing)', SKIP
     await page.tap('[data-act=level][data-i="4"]');
     await page.tap('[data-act=begin]');
     assert.deepEqual(await page.evaluate(() => window.FossilFrenzyUI.ui.names), ['You', 'Master']);
-    assert.equal(await page.evaluate(() => localStorage.getItem('fossil-frenzy-campaign-v1')), null);
+    assert.equal(await page.evaluate(() => localStorage.getItem('tabletop-library-fossil-frenzy-campaign')), null);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -468,22 +468,25 @@ test('save: starting over clears the save, and a finished game is not resumed', 
   } finally { await browser.close(); }
 });
 
-test('save: a save from other rules, an old version\'s save, or a damaged one — cleared with a quiet note, never a crash', SKIP, async () => {
+test('save: a save from other rules, data from the app\'s earlier name, or a damaged one — cleared with a quiet note, never a crash', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     await passAndPlay(page, 2);
-    await page.evaluate(() => { const k = 'fossil-frenzy-save-v2', sv = JSON.parse(localStorage.getItem(k)); sv.game.fingerprint = 'other'; localStorage.setItem(k, JSON.stringify(sv)); });
+    await page.evaluate(() => { const k = 'tabletop-library-fossil-frenzy-save', sv = JSON.parse(localStorage.getItem(k)); sv.game.fingerprint = 'other'; localStorage.setItem(k, JSON.stringify(sv)); });
     await page.reload();
     assert.equal(await screenOf(page), 'home');
     assert.match(await page.locator('.sheet').innerText(), /changed the rules, so your saved game was cleared/);
-    assert.equal(await page.evaluate(() => localStorage.getItem('fossil-frenzy-save-v2')), null);
-    await page.evaluate(() => localStorage.setItem('fossil-frenzy-save-v2', '{not json'));
+    assert.equal(await page.evaluate(() => localStorage.getItem('tabletop-library-fossil-frenzy-save')), null);
+    await page.evaluate(() => localStorage.setItem('tabletop-library-fossil-frenzy-save', '{not json'));
     await page.reload();
     assert.equal(await screenOf(page), 'home');
     assert.match(await page.locator('.sheet').innerText(), /could not be resumed/);
-    await page.evaluate(() => localStorage.setItem('fossil-frenzy-save-v1', '{"anything":1}'));   // a save from the old two-rule-set version
+    await page.evaluate(() => { localStorage.setItem('fossil-frenzy-save-v2', '{"anything":1}'); localStorage.setItem('fossil-frenzy-campaign-v1', '{"beaten":["beginner"]}'); });   // data from the app's earlier name
     await page.reload();
     assert.equal(await screenOf(page), 'home');
+    assert.equal(await page.evaluate(() => ['fossil-frenzy-save-v2', 'fossil-frenzy-campaign-v1'].map(k => localStorage.getItem(k)).join()), ',', 'old-name data is discarded, not read');
+    await page.tap('[data-act=mode][data-v=campaign]');
+    assert.equal(await page.locator('.lvl.locked').count(), 4, 'old campaign progress is not carried over');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

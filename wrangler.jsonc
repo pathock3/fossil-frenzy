@@ -2,7 +2,7 @@
   // Cloudflare Workers Builds: publish the Tabletop Library (the front page and every game under games/).
   // `npm run build` creates _site/. "name" must match the Worker's name in the Cloudflare dashboard, and it
   // is what the web address is built from — see docs/PLAN.md, "Where the name lives", before changing it.
-  "name": "fossil-frenzy",
+  "name": "tabletop-library",
   "compatibility_date": "2025-10-01",
   "assets": { "directory": "./_site" },
   // Branch previews (`wrangler preview`) require this block, even empty.
