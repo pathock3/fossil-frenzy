@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+- **Fossil Frenzy is now one rule set** (owner decision). The original rulebook mode — movement, pieces, corner delivery sites — and the "movement & delivery" toggle are gone. A turn is: first tap a private peek, second tap a public flip; or bank one set.
+- **Pass & Play for 2–4 people** (humans only) **or Campaign**: five opponents — Beginner, Novice, Normal, Challenging, Master — shown by name only (no percentages). Only Beginner is open at first; the others are greyed out with a lock. Win outright to unlock the next; progress is remembered on the device. `?unlock` on the address opens every level for testing.
+- The game's address and saved games: a game saved by an earlier version is cleared with a quiet note (the rules changed); campaign progress starts fresh.
+- **Library:** the designer is credited once, at the top — "Games designed by Patrick Blim-Hockberger" — not under each game.
+- REPORT.md rewritten for the single rule set and now includes how hard each campaign level is; the old two-rule-set comparison is archived in `games/fossil-frenzy/docs/archive/`.
 - **Quieter prompts:** the line of instructions above the board shows until a device has finished one game, then goes quiet; Auto / On / Off in the help panel.
 - **End screen:** each player's fossils laid out face up with their score and the winner marked, instead of a stats table. Undelivered/unbanked sets show dimmed and struck through.
 - **Save and resume (Fossil Frenzy):** a game in progress is saved after every action and resumes after a reload — mid-turn, mid-peek, or with a bot's turn on the board. A save made under different rules (after an update that changes the rules) is cleared with a quiet note instead of resuming wrongly. A finished game or "new game" clears the save.

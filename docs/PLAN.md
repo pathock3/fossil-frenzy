@@ -58,16 +58,18 @@ These games were designed for the table, so the clearest way to teach them is to
 
 ## 4. Fossil Frenzy against this plan
 Gaps closed (this is now the template for the next game):
-- ✅ Save and resume (section 2): saved after every action, resumes after a reload, refuses saves from changed rules.
+- ✅ Save and resume: saved after every action, resumes after a reload, refuses saves from changed rules or older versions.
 - ✅ Prompts above the board were instructional narration: now shown only until a device has finished one game; Auto / On / Off in the help panel.
-- ✅ The end screen was a stats table: now each player's fossils laid out face up with their score, the winner marked.
-- ✅ Flip rings "colour-only": not a real gap — only the current player's flips are ever shown, so the ring colour never has to tell players apart (pieces carry numbers; the player strip names the current player). A bot's peek is a dashed ring, a flip a solid one.
+- ✅ The end screen was a stats table: now each player's banked fossils laid out with their score, the winner marked.
+- ✅ Ring colour is not an accessibility gap (only the current player's flips are shown). A peek is a dashed ring, a flip a solid one.
+- ✅ **One rule set** (owner decision, 2026-10-18): the original movement/delivery mode and the toggle were removed; Pass & Play (2–4) and a five-level Campaign were added.
 
-Still to consider (not started): take-backs before anything is revealed; a short guided first turn; "pass the device" screen for games where hidden information needs it.
+Still to consider (not started): take-backs before anything is revealed; a short guided first turn; a "pass the device" screen for games where hidden information needs it; more Campaign content beyond the five levels (the owner will flesh it out); a gentler first rung of the ladder (see `games/fossil-frenzy/REPORT.md`).
 
 ## 5. Order of work
 1. ✅ Cloudflare live + preview links; tests gate deploys; build stamp; changelog.
 2. ✅ Save and resume in Fossil Frenzy.
 3. ✅ Close the Tabletop-Test gaps above.
 4. ✅ Fossil Frenzy moved into `games/fossil-frenzy/`; the Tabletop Library front page is built.
+4b. ✅ Fossil Frenzy reduced to one rule set; Pass & Play and the Campaign ladder added.
 5. ⬜ Game two; after game three, extract shared code.

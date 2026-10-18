@@ -31,7 +31,6 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .chip.cur { border-color: var(--c); background: var(--panel2); }
 .chip .nm { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chip .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--c); flex: none; }
-.chip .die { margin-left: auto; font-size: 13px; font-weight: 800; background: var(--bg); color: var(--c); border-radius: 6px; padding: 0 6px; }
 .chip .sub { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sys { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
 .q { width: 34px; height: 34px; border-radius: 50%; background: var(--panel); color: var(--dim); font-weight: 700; font-size: 16px; }
@@ -45,12 +44,6 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 
 /* ---------- board ---------- */
 .cell .bg { fill: #2a1d14; stroke: #3d2b1d; stroke-width: 1.5; }
-.cell.site .bg { fill: #1e2a2a; stroke: #3e5c5c; stroke-dasharray: 5 3; }
-.cell.reach .bg { fill: #3a2c18; stroke: var(--accent); stroke-width: 2; }
-.cell.push .bg { stroke: #ff8a5c; stroke-width: 2.5; stroke-dasharray: 4 3; }
-.cell.stay .bg { stroke: var(--accent); stroke-width: 2; }
-.cell.mine .bg { fill: #3d3320; }
-.sitenum { fill: #8fb5b5; font-weight: 800; font-size: 22px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 .tile .face { fill: var(--umber); stroke: var(--umber-d); stroke-width: 2.5; }
 .tile .spiral { fill: none; stroke: #6d4a30; stroke-width: 2; pointer-events: none; }
 .tile.up .face { fill: var(--bone); stroke: #c9ae6a; }
@@ -59,9 +52,6 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .tile .gem { font-size: 24px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 .ring { fill: none; stroke-width: 4.5; pointer-events: none; }
 .ring.peekring { stroke-dasharray: 9 6; }
-.piece circle { stroke: #0d0805; stroke-width: 2; }
-.piece text { fill: #101010; font-weight: 800; font-size: 13px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
-.piece.cur circle { stroke: #fff; stroke-width: 2.5; }
 .flipin { animation: flip .32s ease-out; transform-box: fill-box; transform-origin: center; }
 @keyframes flip { 0% { transform: scaleX(.05); } 100% { transform: scaleX(1); } }
 .pop { animation: pop .4s ease-out; }
@@ -76,8 +66,6 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .setcard { display: inline-flex; gap: 3px; padding: 5px 6px; background: var(--panel2); border-radius: 10px; border: 2px solid var(--line); }
 .setcard.act { border-color: var(--good); box-shadow: 0 0 0 3px rgba(62,207,142,.25); }
 .mini { min-width: 30px; height: 30px; border-radius: 7px; background: var(--bone); color: var(--ink); font-weight: 800; display: grid; place-items: center; font-size: 15px; padding: 0 3px; }
-.pile { padding: 6px 10px; border-radius: 10px; background: var(--umber); border: 2px solid var(--umber-d); font-weight: 700; font-size: 14px; }
-.pile.open { background: var(--bone); color: var(--ink); }
 .end { margin-top: auto; background: var(--panel2); border: 2px solid var(--line); border-radius: 12px; padding: 12px 16px; font-weight: 700; font-size: 16px; }
 .end.go { border-color: var(--accent); background: #4a3418; }
 .end[disabled] { opacity: .35; }
@@ -90,22 +78,33 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 h1 { margin: 0 0 4px; font-size: 38px; letter-spacing: .5px; }
 h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--dim); }
 .sub { color: var(--dim); margin: 0 0 14px; }
-.back { display: inline-block; margin: -6px 0 8px; padding: 6px 0; color: var(--dim); font-size: 14px; text-decoration: none; }
+.back { display: inline-block; margin: -6px 0 8px; padding: 6px 0; color: var(--dim); font-size: 14px; text-decoration: none; background: none; }
 .seg { display: inline-flex; background: var(--panel); border-radius: 12px; padding: 3px; gap: 3px; flex-wrap: wrap; }
 .seg button { padding: 10px 16px; border-radius: 9px; font-weight: 700; color: var(--dim); }
 .seg button.on { background: var(--accent); color: #2b1b10; }
 .seatrow { display: flex; gap: 10px; align-items: center; margin: 8px 0; flex-wrap: wrap; }
 .seatrow .dot { width: 18px; height: 18px; border-radius: 50%; flex: none; }
 .seatrow input { flex: 1 1 130px; min-width: 0; font-size: 16px; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--panel); color: var(--text); user-select: text; -webkit-user-select: text; }
-.seatrow .seg button { padding: 8px 11px; font-size: 14px; }
 .big { display: block; width: 100%; margin-top: 22px; padding: 16px; border-radius: 14px; background: var(--accent); color: #2b1b10; font-weight: 800; font-size: 20px; }
 .ghost { margin-top: 10px; padding: 12px 16px; border-radius: 12px; background: var(--panel); font-weight: 700; }
+.mode { display: flex; flex-direction: column; gap: 4px; width: 100%; margin-top: 14px; padding: 18px 20px; text-align: left; border-radius: 16px; background: var(--panel); border: 2px solid var(--line); box-shadow: 0 5px 0 rgba(0,0,0,.35); }
+.mode:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.35); }
+.mode b { font-size: 22px; }
+.mode span { color: var(--dim); font-size: 15px; }
+.levels { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.lvl { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 18px; text-align: left; border-radius: 14px; background: var(--panel); border: 2px solid var(--line); box-shadow: 0 4px 0 rgba(0,0,0,.35); }
+.lvl b { font-size: 21px; }
+.lvl .n { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #2b1b10; font-weight: 800; display: grid; place-items: center; flex: none; }
+.lvl .state { margin-left: auto; color: var(--dim); font-size: 14px; white-space: nowrap; }
+.lvl.done .state { color: var(--good); font-weight: 700; }
+.lvl.locked { opacity: .42; box-shadow: none; filter: grayscale(.8); cursor: default; }
+.lvl.locked .n { background: var(--line); color: var(--dim); }
+.lvl.locked .state { font-size: 22px; }
 .help p, .help li { line-height: 1.45; font-size: 15px; }
 .help li { margin: 4px 0; }
 .help h3 { margin: 18px 0 4px; color: var(--accent); font-size: 16px; }
 .table { width: 100%; border-collapse: collapse; margin: 6px 0; }
 .table td, .table th { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); font-size: 16px; }
-.winner td { color: var(--good); font-weight: 800; }
 .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 6px 0 4px; }
 .place { background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
 .place.win { border-color: var(--good); box-shadow: 0 0 0 3px rgba(62,207,142,.22); }
@@ -122,34 +121,28 @@ h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spac
 <div id="app"></div>
 
 <!-- =====================================================================
-     DATA BLOCK — every rule, point value and board-setup number lives here.
-     The logic below (engine / bots / ui) reads this object and nothing else.
+     DATA BLOCK — every rule, point value, board-setup number and campaign level lives here.
+     The logic below (engine / bots / campaign / ui) reads this object and nothing else.
      ===================================================================== -->
 <script id="data">
 const GAME_DATA = {
-  // ---- MASTER TOGGLE -------------------------------------------------
-  // true  = original rulebook (rulebook.md): pieces, movement, delivery to corner sites.
-  // false = Patrick's redesign (docs/design-summary.md): no pieces, no movement,
-  //         no delivery; every turn is "peek and flip" or "bank".
-  movementDeliverySystem: true,
-
   // Where the Tabletop Library's front page is (relative to this file). Shown only when hosted over http(s).
   library: { name: 'Tabletop Library', href: '../../index.html' },
 
-  players: { min: 2, max: 6 },
-  die: { sides: 6 },
+  // Pass & Play: 2-4 people on one device.
+  players: { min: 2, max: 4 },
+  die: { sides: 6 },            // who goes first (highest roll), and the bank bonus die
 
   // ---- BOARD ---------------------------------------------------------
-  // Hexagonal board of hex spaces in axial (q, r) coordinates; radius 3 = 37 spaces.
-  // The six corner spaces are research sites (die faces 1..6, clockwise from top-left).
-  // Without the system they are removed, leaving 31 spaces: one tile per space.
+  // A hexagon of hex spaces in axial (q, r) coordinates (radius 3 = 37 spaces) with the six corners removed:
+  // 31 spaces, one fossil on each. No pieces, no movement.
   board: {
     shape: 'hex',
     radius: 3,
-    corners: [[0, -3], [3, -3], [3, 0], [0, 3], [-3, 3], [-3, 0]],
+    removed: [[0, -3], [3, -3], [3, 0], [0, 3], [-3, 3], [-3, 0]],
   },
 
-  // ---- TILES (31, "the original set") -----------------------------------
+  // ---- FOSSILS (31) ----------------------------------------------------
   tokens: [
     { value: 2,  count: 6 },
     { value: 3,  count: 6 },
@@ -162,52 +155,35 @@ const GAME_DATA = {
   ],
   matching: { pairSize: 2, gemSetSize: 3 },
 
-  // ---- RULE VARIANTS (picked by the toggle above) -----------------------
-  variants: {
-    // Toggle ON — rulebook.md
-    delivery: {
-      sites: true,                  // corner spaces exist and are delivery sites
-      movement: { maxSteps: 3, allowPush: true },
-      peekMustBeStandingOn: true,   // you may only peek at the tile you stand on
-      peekCommitsTurn: true,        // "If you peek, you must also flip one other fossil"
-      gemOrder: 'second-first',     // flip a 2nd tile, then the one you stand on
-      initialAssignment: 'startCorner', // your setup roll is also your first delivery assignment
-      scoring: {
-        type: 'delivery',           // matched sets are worth 0 until delivered
-        keptPerSet: 1,              // delivery flips ONE tile of the set face down; the match(es) go back in the box
-      },
-      tiebreaks: ['score', 'fossils', 'highestFossil'],
+  // ---- RULES -----------------------------------------------------------
+  // A turn is "peek and flip" (first tap = private peek, second tap = public flip) or "bank".
+  rules: {
+    scoring: {
+      setPoints: 'tile-number',   // banking ONE held set scores the number on its fossil (gem 16); a number here = flat points instead
+      bonusDieSides: 6,           // then roll a d6: every 6 scores +1 and rolls again (0 = no bonus roll)
+      bonusFace: 6,
+      bonusPoints: 1,
     },
-    // Toggle OFF — Patrick's redesign
-    redesign: {
-      sites: false,
-      movement: null,
-      peekMustBeStandingOn: false,  // peek any tile
-      peekCommitsTurn: false,       // after peeking you may still bank instead
-      gemOrder: 'own-first',        // reveal the peeked gem, then flip a third tile
-      initialAssignment: null,
-      scoring: {
-        type: 'bank',               // a turn may be "bank": you bank ONE of your held sets...
-        setPoints: 'tile-number',   // ...worth the number on its fossil (gem 16); a number here = flat points instead
-        bonusDieSides: 6,           // ...then roll a d6: every 6 scores +1 and rolls again (0 = no bonus roll)
-        bonusFace: 6,
-        bonusPoints: 1,
-      },
-      tiebreaks: ['score', 'sets', 'finalPair'],
-    },
+    tiebreaks: ['score', 'sets', 'finalPair'],   // highest score, then most sets popped, then who popped the final pair
   },
 
-  // ---- BOT PRESETS (memory = chance a bot retains each revealed tile) -------
-  bots: {
-    defaultMemory: 0.9,
-    presets: [
-      { name: 'Beginner',    memory: 0.80 },
-      { name: 'Novice',      memory: 0.85 },
-      { name: 'Normal',      memory: 0.90 },
-      { name: 'Challenging', memory: 0.965 },
-      { name: 'Master',      memory: 0.99 },
+  // ---- CAMPAIGN --------------------------------------------------------
+  // You against one opponent per level. Beat a level (win outright) to unlock the next; only the first starts open.
+  // memory = chance the opponent remembers each revealed fossil. bankAt / endgameTiles = when it banks: once it holds
+  // this many sets, or once this few fossils remain (0 = never plans for the end).
+  campaign: {
+    levels: [
+      { id: 'beginner',    name: 'Beginner',    memory: 0.80,  bankAt: 3, endgameTiles: 0 },
+      { id: 'novice',      name: 'Novice',      memory: 0.85,  bankAt: 3, endgameTiles: 2 },
+      { id: 'normal',      name: 'Normal',      memory: 0.90,  bankAt: 3, endgameTiles: 6 },
+      { id: 'challenging', name: 'Challenging', memory: 0.965, bankAt: 3, endgameTiles: 4 },
+      { id: 'master',      name: 'Master',      memory: 0.99,  bankAt: 3, endgameTiles: 4 },
     ],
   },
+
+  // Bot behaviour shared by every opponent: with this few fossils left (and always when only gems remain) a bot
+  // will gamble on a third gem even if it has not seen one.
+  bots: { gambleTiles: 6 },
 };
 </script>
 
@@ -216,7 +192,6 @@ const GAME_DATA = {
      ===================================================================== -->
 <script id="engine">
 const Engine = (() => {
-  const DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
   const clone = o => JSON.parse(JSON.stringify(o));
 
   // Seeded RNG whose position can be saved and restored (so a saved game continues exactly where it stopped).
@@ -241,56 +216,37 @@ const Engine = (() => {
   const emit = (s, ev) => { for (const o of s.observers) o.onEvent(ev, s); };
 
   // ---------------- board ----------------
-  function buildBoard(data, sites) {
-    const R = data.board.radius, cells = [], byKey = {};
-    const cornerKeys = data.board.corners.map(c => c.join(','));
+  function buildBoard(data) {
+    const R = data.board.radius, removed = new Set(data.board.removed.map(c => c.join(',')));
+    const cells = [];
     for (let r = -R; r <= R; r++) {
       for (let q = -R; q <= R; q++) {
-        if (Math.abs(q + r) > R) continue;
-        const corner = cornerKeys.indexOf(q + ',' + r);
-        if (corner >= 0 && !sites) continue;
-        const c = { id: cells.length, q, r, site: corner >= 0 ? corner + 1 : 0, nbrs: [] };
-        cells.push(c); byKey[q + ',' + r] = c.id;
-      }
-    }
-    for (const c of cells) {
-      for (const [dq, dr] of DIRS) {
-        const id = byKey[(c.q + dq) + ',' + (c.r + dr)];
-        if (id !== undefined) c.nbrs.push(id);
+        if (Math.abs(q + r) > R || removed.has(q + ',' + r)) continue;
+        cells.push({ id: cells.length, q, r });
       }
     }
     return cells;
   }
 
-  function hexDist(a, b) {
-    const dq = a.q - b.q, dr = a.r - b.r;
-    return Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr));
-  }
-
   // ---------------- creation ----------------
   function createGame(opts = {}) {
     const data = clone(opts.data || GAME_DATA);
-    const system = opts.system === undefined ? !!data.movementDeliverySystem : !!opts.system;
-    const variant = system ? data.variants.delivery : data.variants.redesign;
     const n = opts.players || 2;
     if (n < data.players.min || n > data.players.max) fail('player count ' + n);
     const rng = opts.rng || (opts.seed !== undefined ? mulberry32(opts.seed) : Math.random);
-    const s = { data, system, variant, rng, n, observers: [], over: false, result: null,
-                matchedCount: 0, turnNo: 0, lastPopper: -1, box: 0, lastBank: null };
+    const s = { data, rules: data.rules, rng, n, observers: [], over: false, result: null,
+                matchedCount: 0, turnNo: 0, lastPopper: -1, lastBank: null };
 
-    s.cells = buildBoard(data, variant.sites);
-    s.siteCell = {};
-    for (const c of s.cells) if (c.site) s.siteCell[c.site] = c.id;
-    const tileCells = s.cells.filter(c => !c.site).map(c => c.id);
+    s.cells = buildBoard(data);
 
-    // tiles
+    // fossils
     let values = [];
     for (const t of data.tokens) {
       const size = t.gem ? data.matching.gemSetSize : data.matching.pairSize;
       if (t.count % size) fail('token count of ' + t.value + ' is not a multiple of its set size');
       for (let i = 0; i < t.count; i++) values.push({ value: t.value, gem: !!t.gem });
     }
-    if (values.length !== tileCells.length) fail(values.length + ' tiles for ' + tileCells.length + ' spaces');
+    if (values.length !== s.cells.length) fail(values.length + ' tiles for ' + s.cells.length + ' spaces');
     if (opts.layout) {           // deterministic layout for tests: values in cell order
       const pool = values.slice();
       values = opts.layout.map(v => {
@@ -303,24 +259,19 @@ const Engine = (() => {
         const j = rint(s, i + 1); [values[i], values[j]] = [values[j], values[i]];
       }
     }
-    s.tokens = values.map((v, i) => ({ id: i, value: v.value, gem: v.gem, cell: tileCells[i], matched: false }));
+    s.tokens = values.map((v, i) => ({ id: i, value: v.value, gem: v.gem, cell: s.cells[i].id, matched: false }));
     s.tokenAt = new Array(s.cells.length).fill(-1);
     for (const t of s.tokens) s.tokenAt[t.cell] = t.id;
 
-    // players
     s.players = [];
-    for (let i = 0; i < n; i++) s.players.push({ idx: i, pos: null, assign: null, roll: 0, sets: [], stash: [], banked: [], points: 0, poppedSets: 0 });
+    for (let i = 0; i < n; i++) s.players.push({ idx: i, roll: 0, sets: [], banked: [], points: 0, poppedSets: 0 });
 
-    // setup: everyone rolls; a duplicate roll is re-rolled by whoever rolled it second
+    // who starts: everyone rolls; a duplicate roll is re-rolled by whoever rolled it second; highest goes first
     const used = new Set();
     for (const p of s.players) {
       let r, guard = 0;
       do { r = rollDie(s); } while (used.has(r) && ++guard < 1000);
       used.add(r); p.roll = r;
-      if (system) {
-        p.pos = s.siteCell[r];
-        p.assign = variant.initialAssignment === 'startCorner' ? r : rollDie(s);
-      }
     }
     s.firstPlayer = s.players.reduce((b, p) => (p.roll > s.players[b].roll ? p.idx : b), 0);
     s.current = s.firstPlayer;
@@ -329,67 +280,14 @@ const Engine = (() => {
   }
 
   function beginTurn(s) {
-    s.turn = { T: null, F: null, F2: null, revealed: [], peeked: null, delivered: false };
-    s.phase = s.variant.movement ? 'move' : 'action';
-    emit(s, { type: 'turn', actor: s.current });
-  }
-
-  // ---------------- movement ----------------
-  function availableMoves(s) {
-    if (s.phase !== 'move') return null;
-    const mv = s.variant.movement, p = cur(s);
-    const occ = new Map();
-    for (const q of s.players) if (q.idx !== p.idx) occ.set(q.pos, q.idx);
-    const dist = new Map([[p.pos, 0]]);
-    const queue = [p.pos];
-    while (queue.length) {
-      const c = queue.shift(), d = dist.get(c);
-      if (d >= mv.maxSteps) continue;
-      for (const nb of s.cells[c].nbrs) {
-        if (occ.has(nb) || dist.has(nb)) continue;
-        dist.set(nb, d + 1); queue.push(nb);
-      }
-    }
-    const steps = {};
-    for (const [c, d] of dist) steps[c] = d;
-    const pushes = {};
-    if (mv.allowPush) {
-      const approach = new Map();        // victim cell -> cells you could push from (reached with a step to spare)
-      for (const [c, d] of dist) {
-        if (d > mv.maxSteps - 1) continue;
-        for (const nb of s.cells[c].nbrs) if (occ.has(nb)) {
-          if (!approach.has(nb)) approach.set(nb, []);
-          approach.get(nb).push(c);
-        }
-      }
-      for (const [x, from] of approach) {
-        // victim moves one space in any direction onto an empty space (never into another player,
-        // never onto the pusher, who is standing on the cell the push starts from)
-        const options = s.cells[x].nbrs.filter(y => !occ.has(y) && from.some(a => a !== y));
-        if (options.length) pushes[x] = { victim: occ.get(x), options };
-      }
-    }
-    return { stay: p.pos, steps, pushes };
-  }
-
-  function move(s, choice) {
-    if (s.phase !== 'move') fail('not the movement phase');
-    const m = availableMoves(s), p = cur(s), to = choice.to;
-    if (to === p.pos) { /* stay: 0 spaces */ }
-    else if (m.steps[to] !== undefined) p.pos = to;
-    else if (m.pushes[to]) {
-      const push = m.pushes[to];
-      if (!push.options.includes(choice.victimTo)) fail('push destination');
-      s.players[push.victim].pos = choice.victimTo;
-      p.pos = to;
-      emit(s, { type: 'push', actor: p.idx, victim: push.victim, to: choice.victimTo });
-    } else fail('cannot move to ' + to);
+    s.turn = { T: null, F: null, F2: null, revealed: [], peeked: null };
     s.phase = 'action';
-    emit(s, { type: 'move', actor: p.idx, to: p.pos });
+    emit(s, { type: 'turn', actor: s.current });
   }
 
   // ---------------- peek / flip / match ----------------
   const unmatched = (s, id) => id >= 0 && id < s.tokens.length && !s.tokens[id].matched;
+  const hiddenOthers = s => s.tokens.filter(t => !t.matched && !s.turn.revealed.includes(t.id) && t.id !== s.turn.T);
 
   function reveal(s, tid, step) {
     const t = s.tokens[tid];
@@ -397,27 +295,17 @@ const Engine = (() => {
     emit(s, { type: 'reveal', actor: s.current, tid, cell: t.cell, value: t.value, gem: t.gem, step });
   }
 
-  function peekable(s) {
-    if (s.phase !== 'action') return [];
-    if (s.variant.peekMustBeStandingOn) {
-      const tid = s.tokenAt[cur(s).pos];
-      return tid >= 0 ? [tid] : [];
-    }
-    return s.tokens.filter(t => !t.matched).map(t => t.id);
-  }
-
+  // First tap: a private peek at any fossil. It does not use up the turn (you may still bank instead).
   function peek(s, tid) {
-    const ok = peekable(s);
-    if (tid === undefined && ok.length === 1) tid = ok[0];
-    if (!ok.includes(tid)) fail('cannot peek at ' + tid);
+    if (s.phase !== 'action') fail('cannot peek now');
+    if (!unmatched(s, tid)) fail('cannot peek at ' + tid);
     s.turn.T = tid; s.turn.peeked = tid; s.phase = 'peeked';
     const t = s.tokens[tid];
     emit(s, { type: 'peek', actor: s.current, tid, cell: t.cell, value: t.value, gem: t.gem });
     return t.value;
   }
 
-  const hiddenOthers = s => s.tokens.filter(t => !t.matched && !s.turn.revealed.includes(t.id) && t.id !== s.turn.T);
-
+  // Second tap: a public flip of a different fossil.
   function flipOther(s, tid) {
     if (s.phase !== 'peeked') fail('flip only after peeking');
     if (tid === s.turn.T || !unmatched(s, tid)) fail('cannot flip ' + tid);
@@ -436,50 +324,34 @@ const Engine = (() => {
     if (s.matchedCount === s.tokens.length) finish(s);
   }
 
-  function canFlipSecond(s) {
-    const gemOrder = s.variant.gemOrder;
-    const phaseOk = gemOrder === 'second-first' ? s.phase === 'flipped' : s.phase === 'gemThird';
-    return phaseOk && s.tokens[s.turn.F].gem && hiddenOthers(s).length > 0;
+  // Reveal the fossil you peeked at. A matching pair is yours. If it and the flipped one are both gems you may
+  // go on and flip a third fossil; three gems make a set. Anything else flips back at the end of the turn.
+  function flipOwn(s) {
+    if (s.phase !== 'flipped') fail('cannot flip the peeked fossil now');
+    const T = s.tokens[s.turn.T], F = s.tokens[s.turn.F];
+    reveal(s, T.id, 'own');
+    if (!T.gem && !F.gem && T.value === F.value) return popSet(s, [T.id, F.id]);
+    if (T.gem && F.gem && hiddenOthers(s).length > 0) { s.phase = 'gemThird'; return; }
+    s.phase = 'resolved';
   }
 
+  const canFlipOwn = s => s.phase === 'flipped';
+  const canFlipSecond = s => s.phase === 'gemThird' && hiddenOthers(s).length > 0;
+
   function flipSecond(s, tid) {
-    if (!canFlipSecond(s)) fail('no second flip available');
+    if (!canFlipSecond(s)) fail('no third flip available');
     if (!hiddenOthers(s).some(t => t.id === tid)) fail('cannot flip ' + tid);
     s.turn.F2 = tid; reveal(s, tid, 'second');
-    if (s.variant.gemOrder === 'second-first') { s.phase = 'flipped2'; return; }
-    // own-first: T is already public; all three gems -> match, otherwise everything flips back
     if (s.tokens[tid].gem) popSet(s, [s.turn.T, s.turn.F, tid]); else s.phase = 'resolved';
   }
 
-  function canFlipOwn(s) {
-    return s.phase === 'flipped' || (s.phase === 'flipped2' && s.variant.gemOrder === 'second-first');
-  }
-
-  function flipOwn(s) {
-    if (!canFlipOwn(s)) fail('cannot flip the peeked tile now');
-    const T = s.tokens[s.turn.T], F = s.tokens[s.turn.F], F2 = s.turn.F2 === null ? null : s.tokens[s.turn.F2];
-    reveal(s, T.id, 'own');
-    const pair = !T.gem && !F.gem && T.value === F.value;
-    if (s.variant.gemOrder === 'second-first') {
-      if (F2 === null && pair) return popSet(s, [T.id, F.id]);
-      if (F2 !== null && T.gem && F.gem && F2.gem) return popSet(s, [T.id, F.id, F2.id]);
-      s.phase = 'resolved';
-    } else {
-      if (pair) return popSet(s, [T.id, F.id]);
-      if (T.gem && F.gem && hiddenOthers(s).length > 0) { s.phase = 'gemThird'; return; }
-      s.phase = 'resolved';
-    }
-  }
-
-  // ---------------- banking (redesign) ----------------
-  function canBank(s) {
-    return s.variant.scoring.type === 'bank' && (s.phase === 'action' || s.phase === 'peeked') && cur(s).sets.length > 0;
-  }
+  // ---------------- banking ----------------
+  const canBank = s => (s.phase === 'action' || s.phase === 'peeked') && cur(s).sets.length > 0;
 
   // Bank ONE held set (the player's choice). It scores the number on its fossil, then the bonus d6 chain.
   function bank(s, setIndex = 0) {
     if (!canBank(s)) fail('cannot bank');
-    const sc = s.variant.scoring, p = cur(s), set = p.sets[setIndex];
+    const sc = s.rules.scoring, p = cur(s), set = p.sets[setIndex];
     if (!set) fail('no such set');
     const base = sc.setPoints === 'tile-number' ? set.value : sc.setPoints;
     const rolls = []; let bonus = 0, r;
@@ -492,34 +364,9 @@ const Engine = (() => {
     emit(s, { type: 'bank', actor: p.idx, info: s.lastBank });
   }
 
-  // ---------------- delivery (rulebook) ----------------
-  function canDeliver(s) {
-    if (s.variant.scoring.type !== 'delivery') return false;
-    if (s.phase !== 'action' && s.phase !== 'delivering') return false;
-    const p = cur(s);
-    return p.sets.length > 0 && s.cells[p.pos].site === p.assign;
-  }
-
-  function deliver(s, setIndex) {
-    if (!canDeliver(s)) fail('cannot deliver');
-    const p = cur(s), set = p.sets[setIndex];
-    if (!set) fail('no such set');
-    const kept = s.variant.scoring.keptPerSet;
-    p.sets.splice(setIndex, 1);
-    for (let i = 0; i < kept; i++) p.stash.push(set.value);
-    s.box += set.size - kept;
-    const newAssign = rollDie(s);
-    const site = s.cells[p.pos].site;
-    p.assign = newAssign;
-    s.turn.delivered = true; s.phase = 'delivering';
-    emit(s, { type: 'deliver', actor: p.idx, value: set.value, roll: newAssign, again: newAssign === site && p.sets.length > 0 });
-  }
-
   // ---------------- turn end / game end ----------------
   function endTurn(s) {
     if (s.over) return;
-    if (s.phase === 'move') fail('must move (or stay) first');
-    if (s.phase === 'peeked' && s.variant.peekCommitsTurn) fail('a peek must be followed by a flip');
     s.turn.revealed = [];
     s.turnNo++;
     s.current = (s.current + 1) % s.n;
@@ -527,22 +374,13 @@ const Engine = (() => {
   }
 
   function standings(s) {
-    return s.players.map(p => {
-      const stash = p.stash;
-      return {
-        idx: p.idx,
-        score: s.variant.scoring.type === 'delivery' ? stash.reduce((a, b) => a + b, 0) : p.points,
-        fossils: stash.length,
-        highestFossil: stash.length ? Math.max(...stash) : 0,
-        sets: p.poppedSets,
-        finalPair: s.lastPopper === p.idx ? 1 : 0,
-        stranded: p.sets.length,
-      };
-    });
+    return s.players.map(p => ({
+      idx: p.idx, score: p.points, sets: p.poppedSets, finalPair: s.lastPopper === p.idx ? 1 : 0, stranded: p.sets.length,
+    }));
   }
 
   function computeResult(s) {
-    const keys = s.variant.tiebreaks, st = standings(s);
+    const keys = s.rules.tiebreaks, st = standings(s);
     const cmp = (a, b) => { for (const k of keys) if (a[k] !== b[k]) return b[k] - a[k]; return 0; };
     const ranking = st.slice().sort(cmp);
     const winners = ranking.filter(r => cmp(r, ranking[0]) === 0).map(r => r.idx);
@@ -556,10 +394,10 @@ const Engine = (() => {
   }
 
   // ---------------- save / resume ----------------
-  const SAVE_SCHEMA = 1;
+  const SAVE_SCHEMA = 2;
   // Identifies the rules a save was made under; a save from different rules (an updated data block) is not resumed.
   function fingerprint(s) {
-    const str = JSON.stringify([s.system, s.data.board, s.data.tokens, s.data.matching, s.data.die, s.variant]);
+    const str = JSON.stringify([s.data.board, s.data.tokens, s.data.matching, s.data.die, s.rules]);
     let h = 5381;
     for (let i = 0; i < str.length; i++) h = ((h * 33) ^ str.charCodeAt(i)) >>> 0;
     return h.toString(36);
@@ -570,9 +408,9 @@ const Engine = (() => {
     if (!s.rng.getState) throw new Error('this game uses an RNG that cannot be saved');
     if (s.over) throw new Error('a finished game is not saved');
     return JSON.parse(JSON.stringify({
-      schema: SAVE_SCHEMA, fingerprint: fingerprint(s), system: s.system, n: s.n,
+      schema: SAVE_SCHEMA, fingerprint: fingerprint(s), n: s.n,
       tokens: s.tokens, tokenAt: s.tokenAt, players: s.players, current: s.current, phase: s.phase, turn: s.turn,
-      turnNo: s.turnNo, matchedCount: s.matchedCount, lastPopper: s.lastPopper, box: s.box, lastBank: s.lastBank,
+      turnNo: s.turnNo, matchedCount: s.matchedCount, lastPopper: s.lastPopper, lastBank: s.lastBank,
       firstPlayer: s.firstPlayer, rngState: s.rng.getState(),
     }));
   }
@@ -580,38 +418,32 @@ const Engine = (() => {
   // Rebuilds a game from serialize(); throws if the save is from another schema or other rules.
   function restore(saved, opts = {}) {
     if (!saved || saved.schema !== SAVE_SCHEMA) throw new Error('unknown save format');
-    const s = createGame({ data: opts.data, players: saved.n, system: saved.system, seed: 1 });
+    const s = createGame({ data: opts.data, players: saved.n, seed: 1 });
     if (fingerprint(s) !== saved.fingerprint) throw new Error('the rules changed since this game was saved');
     if (saved.tokens.length !== s.tokens.length || saved.players.length !== s.n) throw new Error('save does not match the game');
-    for (const k of ['tokens', 'tokenAt', 'players', 'current', 'phase', 'turn', 'turnNo', 'matchedCount', 'lastPopper', 'box', 'lastBank', 'firstPlayer']) s[k] = saved[k];
+    for (const k of ['tokens', 'tokenAt', 'players', 'current', 'phase', 'turn', 'turnNo', 'matchedCount', 'lastPopper', 'lastBank', 'firstPlayer']) s[k] = saved[k];
     s.rng.setState(saved.rngState);
     return s;
   }
 
   // ---------------- views / dispatch ----------------
   function status(s) {
-    const p = cur(s);
     return {
       phase: s.phase,
-      canPeek: peekable(s).length > 0,
-      peekable: peekable(s),
+      canPeek: s.phase === 'action' && s.tokens.some(t => !t.matched),
       canBank: canBank(s),
-      canDeliver: canDeliver(s),
-      canFlipSecond: s.phase === 'flipped' || s.phase === 'gemThird' ? canFlipSecond(s) : false,
       canFlipOwn: canFlipOwn(s),
-      mustFlip: s.phase === 'peeked',
-      canEnd: !s.over && s.phase !== 'move' && !(s.phase === 'peeked' && s.variant.peekCommitsTurn),
-      onSite: s.variant.movement ? s.cells[p.pos].site : 0,
+      canFlipSecond: canFlipSecond(s),
+      canEnd: !s.over,
     };
   }
 
-  // What a player at the table may legitimately know: no face-down tile values.
+  // What a player at the table may legitimately know: no face-down fossil values.
   function publicView(s, idx) {
     const seen = new Map();
     for (const tid of s.turn.revealed) seen.set(tid, s.tokens[tid].value);
     return {
-      n: s.n, me: idx, current: s.current, phase: s.phase, system: s.system, over: s.over,
-      variant: s.variant, die: s.data.die, turnNo: s.turnNo,
+      n: s.n, me: idx, current: s.current, phase: s.phase, over: s.over, rules: s.rules, die: s.data.die, turnNo: s.turnNo,
       setPair: s.data.matching.pairSize, setGem: s.data.matching.gemSetSize,
       cells: s.cells,
       tokens: s.tokens.map(t => ({ id: t.id, cell: t.cell, matched: t.matched })),
@@ -620,57 +452,44 @@ const Engine = (() => {
       T: s.turn.T,
       F: s.turn.F,
       peeked: idx === s.current && s.turn.peeked !== null ? { tid: s.turn.peeked, value: s.tokens[s.turn.peeked].value, gem: s.tokens[s.turn.peeked].gem } : null,
-      players: s.players.map(p => ({
-        idx: p.idx, pos: p.pos, assign: p.assign,
-        sets: p.sets.map(x => ({ value: x.value, gem: x.gem, size: x.size })),
-        stashCount: p.stash.length, points: p.points,
-      })),
-      myStash: s.players[idx].stash.slice(),
-      moves: idx === s.current ? availableMoves(s) : null,
+      players: s.players.map(p => ({ idx: p.idx, sets: p.sets.map(x => ({ value: x.value, gem: x.gem, size: x.size })), points: p.points })),
       status: idx === s.current ? status(s) : null,
     };
   }
 
   function apply(s, a) {
     switch (a.type) {
-      case 'move': return move(s, a);
       case 'peek': return peek(s, a.tid);
       case 'flipOther': return flipOther(s, a.tid);
       case 'flipSecond': return flipSecond(s, a.tid);
       case 'flipOwn': return flipOwn(s);
       case 'bank': return bank(s, a.set);
-      case 'deliver': return deliver(s, a.set);
       case 'endTurn': return endTurn(s);
       default: fail('unknown action ' + a.type);
     }
   }
 
-  return { createGame, availableMoves, move, peek, peekable, flipOther, flipSecond, flipOwn, canFlipSecond, canFlipOwn,
-           bank, canBank, deliver, canDeliver, endTurn, status, standings, computeResult, publicView, apply,
-           serialize, restore, hexDist, mulberry32, DIRS };
+  return { createGame, peek, flipOther, flipSecond, flipOwn, canFlipSecond, canFlipOwn, bank, canBank, endTurn,
+           status, standings, computeResult, publicView, apply, serialize, restore, mulberry32 };
 })();
 </script>
 
 <script id="bots">
 /* =====================================================================
-   BOTS — adjustable memory.  A bot remembers each revealed tile (a public flip by
-   anybody, or its own peek) with probability `memory`, independently per tile, and
-   never forgets it afterwards.  A bot never sees a hidden tile: it decides from
+   BOTS — adjustable memory.  A bot remembers each revealed fossil (a public flip by
+   anybody, or its own peek) with probability `memory`, independently per fossil, and
+   never forgets it afterwards.  A bot never sees a hidden fossil: it decides from
    Engine.publicView() plus what it remembers.
    ===================================================================== */
 const Bots = (() => {
-  const DISC = 0.7;            // a goal loses 30% of its worth per extra turn of walking
-  const EXPLORE = 2.5;         // worth of walking to a tile it knows nothing about
-  const MATCH_FACTOR = 0.7;    // a located pair is worth less than face value (it still needs delivering)
-  const DELIVER_FACTOR = 1.2;  // a delivery banks points for sure
-
   function create(opts) {
     const bot = {
       seat: opts.seat,
       memory: opts.memory === undefined ? 0.9 : opts.memory,
       rng: opts.rng || Math.random,
-      bankAt: opts.bankAt === undefined ? 1 : opts.bankAt,                      // redesign: bank (one set per turn) once holding this many sets...
-      endgameTiles: opts.endgameTiles === undefined ? 6 : opts.endgameTiles,   // ...or when this few tiles remain; also when it gambles on a gem set
+      bankAt: opts.bankAt === undefined ? 1 : opts.bankAt,                      // bank (one set per turn) once holding this many sets...
+      endgameTiles: opts.endgameTiles === undefined ? 6 : opts.endgameTiles,   // ...or once this few fossils remain (0 = never plans for the end)
+      gambleTiles: opts.gambleTiles === undefined ? GAME_DATA.bots.gambleTiles : opts.gambleTiles,
       mem: new Map(),          // tid -> {value, gem}: long-term memory
       turnKnown: new Map(),    // tid -> {value, gem}: what it saw this turn (always exact)
     };
@@ -694,7 +513,7 @@ const Bots = (() => {
 
     const known = tid => bot.turnKnown.get(tid) || bot.mem.get(tid) || null;
 
-    // known, unmatched tiles equal to (value, gem), other than `except`
+    // known, unmatched fossils equal to (value, gem), other than `except`
     function twins(v, value, gem, except) {
       const out = [];
       for (const t of v.tokens) {
@@ -704,61 +523,25 @@ const Bots = (() => {
       }
       return out;
     }
-    const others = (v, gem) => (gem ? v.setGem : v.setPair) - 1;      // how many partners a tile needs
+    const others = (v, gem) => (gem ? v.setGem : v.setPair) - 1;      // how many partners a fossil needs
     const located = (v, tid) => { const k = known(tid); return !!k && twins(v, k.value, k.gem, tid).length >= others(v, k.gem); };
     const unknownTiles = (v, except) => v.tokens.filter(t => !t.matched && !known(t.id) && !except.includes(t.id)).map(t => t.id);
     const anyTiles = (v, except) => v.tokens.filter(t => !t.matched && !except.includes(t.id)).map(t => t.id);
     const revealed = (v, tid) => v.revealed.find(r => r.tid === tid);
     const bestSet = me => { let b = 0; me.sets.forEach((x, i) => { if (x.value > me.sets[b].value) b = i; }); return b; };
 
-    // ---- rulebook mode: where to walk ----
-    function chooseMove(v) {
-      const me = v.players[v.me], mv = v.moves, cells = v.cells, maxSteps = v.variant.movement.maxSteps;
-      const goals = [];
-      if (me.sets.length) {
-        const site = cells.find(c => c.site === me.assign).id;
-        goals.push({ cell: site, value: Math.max(...me.sets.map(x => x.value)) * DELIVER_FACTOR });
-      }
-      for (const t of v.tokens) {
-        if (t.matched) continue;
-        const k = known(t.id);
-        if (!k) goals.push({ cell: t.cell, value: EXPLORE });
-        else if (located(v, t.id)) goals.push({ cell: t.cell, value: k.value * MATCH_FACTOR });
-      }
-      const dist = (a, b) => { const x = cells[a], y = cells[b], dq = x.q - y.q, dr = x.r - y.r; return Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr)); };
-      const score = cell => {
-        let best = 0;
-        for (const g of goals) best = Math.max(best, g.value * Math.pow(DISC, Math.ceil(dist(cell, g.cell) / maxSteps)));
-        return best;
-      };
-      const cands = [{ to: mv.stay, s: score(mv.stay) }];
-      for (const c of Object.keys(mv.steps)) if (Number(c) !== mv.stay) cands.push({ to: Number(c), s: score(Number(c)) });
-      for (const c of Object.keys(mv.pushes)) cands.push({ to: Number(c), s: score(Number(c)) - 0.05, victimTo: pick(mv.pushes[c].options) });
-      const top = Math.max(...cands.map(c => c.s));
-      const best = pick(cands.filter(c => c.s >= top - 1e-9));
-      return { type: 'move', to: best.to, victimTo: best.victimTo };
-    }
-
     function chooseAction(v) {
       const st = v.status, me = v.players[v.me];
-      if (st.canDeliver) return { type: 'deliver', set: bestSet(me) };
-      if (v.variant.scoring.type === 'bank') {           // redesign: bank, or peek any tile
-        if (st.canBank && (me.sets.length >= bot.bankAt || v.tokensLeft <= bot.endgameTiles)) return { type: 'bank', set: bestSet(me) };
-        const sure = v.tokens.find(t => !t.matched && located(v, t.id));
-        if (sure) return { type: 'peek', tid: sure.id };
-        const unk = unknownTiles(v, []);
-        if (unk.length) return { type: 'peek', tid: pick(unk) };
-        const any = anyTiles(v, []);
-        return any.length ? { type: 'peek', tid: pick(any) } : { type: 'endTurn' };
-      }
-      if (st.canPeek) {                                   // rulebook: only the tile underfoot
-        const tid = st.peekable[0];
-        if (!known(tid) || located(v, tid)) return { type: 'peek', tid };
-      }
-      return { type: 'endTurn' };
+      if (st.canBank && (me.sets.length >= bot.bankAt || v.tokensLeft <= bot.endgameTiles)) return { type: 'bank', set: bestSet(me) };
+      const sure = v.tokens.find(t => !t.matched && located(v, t.id));
+      if (sure) return { type: 'peek', tid: sure.id };
+      const unk = unknownTiles(v, []);
+      if (unk.length) return { type: 'peek', tid: pick(unk) };
+      const any = anyTiles(v, []);
+      return any.length ? { type: 'peek', tid: pick(any) } : { type: 'endTurn' };
     }
 
-    function chooseFlip(v) {                              // after a peek: the forced public flip
+    function chooseFlip(v) {                              // after a peek: the public flip
       const T = v.peeked, tw = twins(v, T.value, T.gem, T.tid);
       if (tw.length) return { type: 'flipOther', tid: tw[0] };
       const unk = unknownTiles(v, [T.tid]);
@@ -771,22 +554,11 @@ const Bots = (() => {
       const T = v.peeked, F = revealed(v, v.F);
       if (!T.gem && !F.gem && T.value === F.value) return { type: 'flipOwn' };
       if (T.gem && F.gem) {
-        const third = thirdGem(v);
-        if (v.variant.gemOrder === 'second-first') {      // rulebook: flip a second tile first, my own gem last
-          if (!v.status.canFlipSecond) return { type: 'endTurn' };
-          const cand = third.length ? third : unknownTiles(v, [T.tid, v.F]);
-          return cand.length ? { type: 'flipSecond', tid: third.length ? third[0] : pick(cand) } : { type: 'endTurn' };
-        }
-        // redesign: reveal my gem only if the third is located — or in the endgame, when gambling is all that is left
-        if (third.length || v.tokensLeft <= bot.endgameTiles) return { type: 'flipOwn' };
+        // reveal my gem only if the third is located — or late in the game, when gambling is all that is left
+        // (always when only the gems remain, so a game can never stall)
+        if (thirdGem(v).length || v.tokensLeft <= Math.max(bot.gambleTiles, v.setGem)) return { type: 'flipOwn' };
       }
       return { type: 'endTurn' };
-    }
-
-    function afterSecond(v) {
-      const T = v.peeked, F = revealed(v, v.F);
-      const F2 = v.revealed.find(r => r.tid !== v.F && r.tid !== T.tid);
-      return T.gem && F.gem && F2 && F2.gem ? { type: 'flipOwn' } : { type: 'endTurn' };
     }
 
     function chooseThird(v) {
@@ -796,19 +568,16 @@ const Bots = (() => {
     }
 
     // What a bot needs to carry on after a reload: its memory and where its random numbers stand.
-    bot.save = () => ({ seat: bot.seat, memory: bot.memory, bankAt: bot.bankAt, endgameTiles: bot.endgameTiles,
+    bot.save = () => ({ seat: bot.seat, memory: bot.memory, bankAt: bot.bankAt, endgameTiles: bot.endgameTiles, gambleTiles: bot.gambleTiles,
                         mem: [...bot.mem], turnKnown: [...bot.turnKnown], rngState: bot.rng.getState ? bot.rng.getState() : null });
 
     bot.decide = v => {
       switch (v.phase) {
-        case 'move': return chooseMove(v);
         case 'action': return chooseAction(v);
         case 'peeked': return chooseFlip(v);
         case 'flipped': return afterFlip(v);
-        case 'flipped2': return afterSecond(v);
         case 'gemThird': return chooseThird(v);
-        case 'resolved': case 'delivering':
-          return v.status.canDeliver ? { type: 'deliver', set: bestSet(v.players[v.me]) } : { type: 'endTurn' };
+        case 'resolved': return { type: 'endTurn' };
         default: return null;
       }
     };
@@ -820,7 +589,7 @@ const Bots = (() => {
     const rng0 = Engine.mulberry32((seed || 1) * 7919 + 13);
     return specs.map((sp, seat) => {
       if (!sp) return null;
-      const b = create({ seat, memory: sp.memory, bankAt: sp.bankAt, endgameTiles: sp.endgameTiles,
+      const b = create({ seat, memory: sp.memory, bankAt: sp.bankAt, endgameTiles: sp.endgameTiles, gambleTiles: sp.gambleTiles,
                          rng: Engine.mulberry32(Math.floor(rng0() * 4294967296)) });
       state.observers.push(b);
       return b;
@@ -831,7 +600,7 @@ const Bots = (() => {
   function restore(state, saved) {
     return saved.map(sv => {
       if (!sv) return null;
-      const b = create({ seat: sv.seat, memory: sv.memory, bankAt: sv.bankAt, endgameTiles: sv.endgameTiles, rng: Engine.mulberry32(1) });
+      const b = create({ seat: sv.seat, memory: sv.memory, bankAt: sv.bankAt, endgameTiles: sv.endgameTiles, gambleTiles: sv.gambleTiles, rng: Engine.mulberry32(1) });
       b.mem = new Map(sv.mem); b.turnKnown = new Map(sv.turnKnown);
       if (sv.rngState !== null) b.rng.setState(sv.rngState);
       state.observers.push(b);
@@ -857,96 +626,102 @@ const Bots = (() => {
   return { create, attach, restore, step, playGame };
 })();
 </script>
+
+<!-- =====================================================================
+     CAMPAIGN — pure unlock logic (no DOM, no storage).  The UI keeps the list of beaten levels.
+     ===================================================================== -->
+<script id="campaign">
+const Campaign = (() => {
+  const levels = () => GAME_DATA.campaign.levels;
+
+  // A level is open if it is the first, or the one before it has been beaten.
+  const isUnlocked = (i, beaten) => i === 0 || beaten.includes(levels()[i - 1].id);
+  const isBeaten = (i, beaten) => beaten.includes(levels()[i].id);
+
+  // "Defeat" a level = win the game outright. A shared win (every tie-break level) is not a defeat.
+  const humanWon = (result, seat = 0) => result.winners.length === 1 && result.winners[0] === seat;
+
+  // The bot spec for a level (see Bots.attach).
+  const botSpec = level => ({ memory: level.memory, bankAt: level.bankAt, endgameTiles: level.endgameTiles });
+
+  // After a finished game at level i: the new list of beaten levels, and what changed.
+  function recordResult(beaten, i, won) {
+    const lv = levels();
+    const next = won && !beaten.includes(lv[i].id) ? [...beaten, lv[i].id] : beaten.slice();
+    const unlocked = won && i + 1 < lv.length && !beaten.includes(lv[i].id) && !isUnlocked(i + 1, beaten) ? lv[i + 1].name : null;
+    return { beaten: next, won, newlyUnlocked: unlocked, completed: next.length === lv.length && beaten.length < lv.length };
+  }
+
+  return { levels, isUnlocked, isBeaten, humanWon, botSpec, recordResult };
+})();
+</script>
+
 <script id="ui">
 /* =====================================================================
-   UI — hot-seat table for touch.  The table is the UI: tap tiles, pieces, sets and piles.
-   Nothing advances on a timer; bot results stay on the board until the next player taps.
+   UI — a table for touch.  The table is the UI: tap fossils and sets.
+   Nothing advances on a timer; an opponent's turn stays on the board until you tap.
    ===================================================================== */
 (() => {
   'use strict';
-  const D = GAME_DATA;
-  const COLORS = ['#4f8cff', '#ff5a5f', '#3ecf8e', '#f5a524', '#b26bff', '#2ec4b6'];
-  const KEY = 'fossil-frenzy-setup-v1';
+  const D = GAME_DATA, LV = D.campaign.levels;
+  const COLORS = ['#4f8cff', '#ff5a5f', '#3ecf8e', '#f5a524'];
   const root = document.getElementById('app');
   // Which build is this? tools/build.js stamps the commit/branch; an unbuilt file says so.
   const BUILD = (() => { const m = document.querySelector('meta[name=build]'); const v = m ? m.content : ''; return !v || v.startsWith('__') ? 'local file' : v; })();
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // ?unlock opens every campaign level for this visit (for testing; nothing is saved).
+  const UNLOCK_ALL = /[?&]unlock\b/.test(location.search);
 
-  // ---------------- setup config (remembered between visits, if storage allows) ----------------
-  function defaultCfg() {
-    return { n: 2, system: !!D.movementDeliverySystem, seats: Array.from({ length: D.players.max }, (_, i) => ({ name: 'Player ' + (i + 1), bot: false, mem: 2 })) };
-  }
-  function loadCfg() {
-    const cfg = defaultCfg();
-    try {
-      const s = JSON.parse(localStorage.getItem(KEY) || 'null');
-      if (s && s.n >= D.players.min && s.n <= D.players.max) {
-        cfg.n = s.n; cfg.system = !!s.system;
-        (s.seats || []).forEach((x, i) => { if (cfg.seats[i]) Object.assign(cfg.seats[i], { name: String(x.name || cfg.seats[i].name).slice(0, 14), bot: !!x.bot, mem: Math.min(D.bots.presets.length - 1, Math.max(0, x.mem | 0)) }); });
-      }
-    } catch (e) { /* storage unavailable: fine */ }
-    return cfg;
-  }
-  function saveCfg() { try { localStorage.setItem(KEY, JSON.stringify(ui.cfg)); } catch (e) { /* ignore */ } }
-
-  const ui = { screen: 'setup', cfg: loadCfg(), st: null, bots: [], pushing: null, showPeek: true, showStash: false,
-               note: '', help: false, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '' };
-
-  // Prompts above the board: shown until this device has finished one game, then quiet. Help panel: Auto / On / Off.
+  // ---------------- remembered between visits (if the browser allows) ----------------
+  const PASS_KEY = 'fossil-frenzy-passplay-v2', CAMPAIGN_KEY = 'fossil-frenzy-campaign-v1', SAVE_KEY = 'fossil-frenzy-save-v2';
   const HINTS_KEY = 'fossil-frenzy-hints', DONE_KEY = 'fossil-frenzy-games-finished';
   const pref = {
     get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
-    set: (k, v) => { try { localStorage.setItem(k, String(v)); } catch (e) { /* ignore */ } },
+    set: (k, v) => { try { localStorage.setItem(k, String(v)); } catch (e) { /* storage unavailable: fine */ } },
+    del: k => { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } },
+    json: k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } },
   };
+
+  function loadPass() {
+    const cfg = { n: D.players.min, names: Array.from({ length: D.players.max }, (_, i) => 'Player ' + (i + 1)) };
+    const s = pref.json(PASS_KEY);
+    if (s && s.n >= D.players.min && s.n <= D.players.max) {
+      cfg.n = s.n;
+      (s.names || []).forEach((x, i) => { if (i < D.players.max && x) cfg.names[i] = String(x).slice(0, 14); });
+    }
+    return cfg;
+  }
+  function loadBeaten() {
+    const b = pref.json(CAMPAIGN_KEY);
+    const ids = new Set(LV.map(l => l.id));
+    return Array.isArray(b && b.beaten) ? b.beaten.filter(id => ids.has(id)) : [];
+  }
+
+  const ui = { screen: 'home', mode: 'pass', pass: loadPass(), beaten: loadBeaten(), levelIdx: 0, names: [], st: null, bots: [],
+               showPeek: true, note: '', help: false, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '',
+               countedOver: false, outcome: null };
   ui.hints = ['auto', 'on', 'off'].includes(pref.get(HINTS_KEY)) ? pref.get(HINTS_KEY) : 'auto';
+  // Prompts above the board: shown until this device has finished one game, then quiet. Help panel: Auto / On / Off.
   const hintsVisible = () => ui.hints === 'on' || (ui.hints === 'auto' && !(+pref.get(DONE_KEY) > 0));
-  const memOf = idx => D.bots.presets[idx];
-  const seatName = i => ui.cfg.seats[i].name || 'Player ' + (i + 1);
+  const seatName = i => ui.names[i] || 'Player ' + (i + 1);
   const isBot = i => !!ui.bots[i];
+  const unlocked = i => UNLOCK_ALL || Campaign.isUnlocked(i, ui.beaten);
 
   // ---------------- game flow ----------------
   function startGame() {
-    const cfg = ui.cfg, seed = Math.floor(Math.random() * 2147483647);
-    ui.st = Engine.createGame({ players: cfg.n, system: cfg.system, seed });
-    ui.bots = Bots.attach(ui.st, cfg.seats.slice(0, cfg.n).map(s => (s.bot ? { memory: memOf(s.mem).memory } : null)), seed);
-    Object.assign(ui, { screen: 'roll', pushing: null, showPeek: true, showStash: false, note: '', prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '', countedOver: false });
+    const seed = Math.floor(Math.random() * 2147483647), campaign = ui.mode === 'campaign';
+    const n = campaign ? 2 : ui.pass.n;
+    ui.st = Engine.createGame({ players: n, seed });
+    ui.bots = Bots.attach(ui.st, campaign ? [null, Campaign.botSpec(LV[ui.levelIdx])] : Array(n).fill(null), seed);
+    ui.names = campaign ? ['You', LV[ui.levelIdx].name] : ui.pass.names.slice(0, n);
+    Object.assign(ui, { screen: 'roll', showPeek: true, note: '', prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '', countedOver: false, outcome: null });
   }
-
   function beginPlay() { ui.screen = 'play'; nextTurnStarts(); }
 
-  // ---------------- save / resume: a game in progress survives a reload (or iPad Safari discarding the tab) ----------------
-  const SAVE_KEY = 'fossil-frenzy-save-v1';
-  function saveGame() {
-    try {
-      if (!ui.st || ui.screen === 'setup' || ui.st.over) { localStorage.removeItem(SAVE_KEY); return; }
-      localStorage.setItem(SAVE_KEY, JSON.stringify({
-        schema: 1, build: BUILD, screen: ui.screen, botWaiting: ui.botWaiting, note: ui.note,
-        cfg: { n: ui.cfg.n, system: ui.cfg.system, seats: ui.cfg.seats.slice(0, ui.cfg.n) },
-        game: Engine.serialize(ui.st), bots: ui.bots.map(b => (b ? b.save() : null)),
-      }));
-    } catch (e) { /* storage unavailable or full: the game still plays, it just cannot be resumed */ }
-  }
-  function resumeGame() {
-    let raw = null;
-    try { raw = localStorage.getItem(SAVE_KEY); } catch (e) { return; }
-    if (!raw) return;
-    try {
-      const sv = JSON.parse(raw), st = Engine.restore(sv.game);
-      ui.st = st; ui.bots = Bots.restore(st, sv.bots);
-      ui.cfg.n = sv.cfg.n; ui.cfg.system = sv.cfg.system;
-      sv.cfg.seats.forEach((x, i) => Object.assign(ui.cfg.seats[i], { name: x.name, bot: x.bot, mem: x.mem }));
-      Object.assign(ui, { screen: sv.screen === 'roll' ? 'roll' : 'play', botWaiting: !!sv.botWaiting, note: sv.note || '',
-                          pushing: null, showPeek: true, showStash: false, prevUp: new Set(), popTurn: st.turn.matched ? st.turnNo : -1 });
-    } catch (e) {
-      try { localStorage.removeItem(SAVE_KEY); } catch (e2) { /* ignore */ }
-      ui.notice = /rules changed/.test(e.message) ? 'A new version changed the rules, so your saved game was cleared.' : 'Your saved game could not be resumed, so it was cleared.';
-    }
-  }
-
-  // Called whenever a turn begins: bots play their whole turn at once and wait for a tap.
+  // Called whenever a turn begins: an opponent plays its whole turn at once and waits for a tap.
   function nextTurnStarts() {
     const st = ui.st;
-    Object.assign(ui, { pushing: null, showPeek: true, showStash: false, note: '', botWaiting: false });
+    Object.assign(ui, { showPeek: true, note: '', botWaiting: false });
     const bot = ui.bots[st.current];
     if (!bot) return;
     for (let guard = 0; guard < 200 && !st.over; guard++) {
@@ -955,18 +730,9 @@ const Bots = (() => {
       Engine.apply(st, a);
     }
     ui.botWaiting = !st.over;
-    ui.note = describeBotTurn();
-  }
-
-  function describeBotTurn() {
-    const st = ui.st;
-    if (st.turn.banked && st.lastBank) return botBankText();
-    if (st.turn.delivered) return 'Delivered a fossil.';
-    if (st.turn.matched) return 'Found a match!';
-    return '';
+    ui.note = st.turn.banked && st.lastBank ? bankText(st.lastBank) : st.turn.matched ? 'Found a match!' : '';
   }
   const bankText = b => `Banked ${b.gem ? 'a gem' : 'a ' + b.value}: +${b.base}` + (b.rolls.length ? (b.bonus ? `, +${b.bonus} bonus (rolled ${b.rolls.join(', ')})` : `, no bonus (rolled ${b.rolls[0]})`) : '');
-  const botBankText = () => bankText(ui.st.lastBank);
 
   function endTurn() {
     const st = ui.st;
@@ -975,44 +741,63 @@ const Bots = (() => {
     nextTurnStarts();
   }
 
+  // When a game ends: count it, and in the campaign record whether the level was beaten.
+  function gameFinished() {
+    ui.countedOver = true;
+    pref.set(DONE_KEY, (+pref.get(DONE_KEY) || 0) + 1);
+    if (ui.mode !== 'campaign') return;
+    const won = Campaign.humanWon(ui.st.result, 0);
+    ui.outcome = Campaign.recordResult(ui.beaten, ui.levelIdx, won);
+    ui.beaten = ui.outcome.beaten;
+    pref.set(CAMPAIGN_KEY, JSON.stringify({ beaten: ui.beaten }));
+  }
+
+  // ---------------- save / resume: a game in progress survives a reload (or iPad Safari discarding the tab) ----------------
+  function saveGame() {
+    try {
+      if (!ui.st || ui.screen === 'home' || ui.screen === 'pass' || ui.screen === 'campaign' || ui.st.over) { pref.del(SAVE_KEY); return; }
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        schema: 2, build: BUILD, screen: ui.screen, botWaiting: ui.botWaiting, note: ui.note, mode: ui.mode, levelIdx: ui.levelIdx, names: ui.names,
+        game: Engine.serialize(ui.st), bots: ui.bots.map(b => (b ? b.save() : null)),
+      }));
+    } catch (e) { /* storage unavailable or full: the game still plays, it just cannot be resumed */ }
+  }
+  function resumeGame() {
+    const sv = pref.json(SAVE_KEY);
+    if (!sv) { if (pref.get(SAVE_KEY) !== null) { pref.del(SAVE_KEY); ui.notice = 'Your saved game could not be resumed, so it was cleared.'; } return; }
+    try {
+      const st = Engine.restore(sv.game);
+      if (sv.mode === 'campaign' && !LV[sv.levelIdx]) throw new Error('unknown level');
+      ui.st = st; ui.bots = Bots.restore(st, sv.bots); ui.names = sv.names; ui.mode = sv.mode === 'campaign' ? 'campaign' : 'pass'; ui.levelIdx = sv.levelIdx | 0;
+      Object.assign(ui, { screen: sv.screen === 'roll' ? 'roll' : 'play', botWaiting: !!sv.botWaiting, note: sv.note || '',
+                          showPeek: true, prevUp: new Set(), popTurn: st.turn.matched ? st.turnNo : -1 });
+    } catch (e) {
+      pref.del(SAVE_KEY);
+      ui.notice = /rules changed/.test(e.message) ? 'A new version changed the rules, so your saved game was cleared.' : 'Your saved game could not be resumed, so it was cleared.';
+    }
+  }
+
   // ---------------- taps ----------------
   function cellTap(id) {
     const st = ui.st;
     if (st.over || ui.botWaiting || isBot(st.current)) return;
     const tid = st.tokenAt[id];
-    const cur = st.players[st.current];
     try {
-      if (st.phase === 'move') {
-        const m = Engine.availableMoves(st);
-        if (ui.pushing) {
-          const p = ui.pushing; ui.pushing = null;
-          if (m.pushes[p].options.includes(id)) Engine.move(st, { to: p, victimTo: id });
-        } else if (id === m.stay || m.steps[id] !== undefined) Engine.move(st, { to: id });
-        else if (m.pushes[id]) {
-          if (m.pushes[id].options.length === 1) Engine.move(st, { to: id, victimTo: m.pushes[id].options[0] });
-          else ui.pushing = id;
-        }
-      } else if (st.phase === 'action') {
-        if (tid >= 0 && Engine.peekable(st).includes(tid)) { Engine.peek(st, tid); ui.showPeek = true; }
+      if (st.phase === 'action') {
+        if (tid >= 0) { Engine.peek(st, tid); ui.showPeek = true; }                 // first tap: a private peek
       } else if (st.phase === 'peeked') {
         if (tid === st.turn.T) ui.showPeek = !ui.showPeek;
         else if (tid >= 0) {
-          Engine.flipOther(st, tid);
+          Engine.flipOther(st, tid);                                                // second tap: a public flip
           const T = st.tokens[st.turn.T], F = st.tokens[st.turn.F];
-          if (!T.gem && !F.gem && T.value === F.value) Engine.flipOwn(st);       // a pair: you always take it
+          if (!T.gem && !F.gem && T.value === F.value) Engine.flipOwn(st);          // a pair: you always take it
         }
       } else if (st.phase === 'flipped') {
-        if (st.variant.gemOrder === 'second-first') {
-          if (tid >= 0 && tid !== st.turn.T && Engine.canFlipSecond(st)) {
-            Engine.flipSecond(st, tid);
-            const g = i => st.tokens[i].gem;
-            if (g(st.turn.T) && g(st.turn.F) && g(st.turn.F2)) Engine.flipOwn(st);   // all three gems: take them
-          } else if (tid === st.turn.T) ui.showPeek = !ui.showPeek;
-        } else if (tid === st.turn.T && st.tokens[st.turn.F].gem) Engine.flipOwn(st);   // reveal my gem
+        if (tid === st.turn.T && st.tokens[st.turn.F].gem) Engine.flipOwn(st);      // reveal my gem to try for a third
         else if (tid === st.turn.T) ui.showPeek = !ui.showPeek;
       } else if (st.phase === 'gemThird') {
         if (tid >= 0 && tid !== st.turn.T && tid !== st.turn.F) Engine.flipSecond(st, tid);
-      } else if (st.phase === 'flipped2' || st.phase === 'resolved') {
+      } else if (st.phase === 'resolved') {
         if (tid === st.turn.T) ui.showPeek = !ui.showPeek;
       }
     } catch (e) { console.warn(e.message); }
@@ -1022,17 +807,7 @@ const Bots = (() => {
   function setTap(i) {
     const st = ui.st;
     if (st.over || ui.botWaiting || isBot(st.current)) return;
-    try {
-      if (Engine.canDeliver(st)) {
-        const v = st.players[st.current].sets[i].value;
-        Engine.deliver(st, i);
-        const p = st.players[st.current];
-        ui.note = `Delivered a ${v === 16 ? 'gem' : v}. Next site: ${p.assign}.` + (Engine.canDeliver(st) ? ' Same site — deliver again?' : '');
-      } else if (Engine.canBank(st)) {
-        Engine.bank(st, i);
-        ui.note = bankText(st.lastBank);
-      }
-    } catch (e) { console.warn(e.message); }
+    try { if (Engine.canBank(st)) { Engine.bank(st, i); ui.note = bankText(st.lastBank); } } catch (e) { console.warn(e.message); }
     render();
   }
 
@@ -1041,27 +816,22 @@ const Bots = (() => {
     if (!el) return;
     const d = el.dataset, st = ui.st;
     switch (d.act) {
-      case 'n': ui.cfg.n = +d.v; saveCfg(); break;
-      case 'sys': ui.cfg.system = d.v === 'on'; saveCfg(); break;
-      case 'bot': {
-        const s = ui.cfg.seats[+d.i]; s.bot = d.v === 'bot';
-        if (s.bot && /^Player \d$/.test(s.name)) s.name = 'Bot ' + (+d.i + 1);
-        if (!s.bot && /^Bot \d$/.test(s.name)) s.name = 'Player ' + (+d.i + 1);
-        saveCfg(); break;
-      }
-      case 'mem': ui.cfg.seats[+d.i].mem = +d.v; saveCfg(); break;
-      case 'start': startGame(); break;
+      case 'mode': ui.screen = d.v; ui.mode = d.v === 'campaign' ? 'campaign' : 'pass'; break;
+      case 'home': ui.screen = 'home'; break;
+      case 'n': ui.pass.n = +d.v; pref.set(PASS_KEY, JSON.stringify(ui.pass)); break;
+      case 'deal': ui.mode = 'pass'; startGame(); break;
+      case 'level': if (unlocked(+d.i)) { ui.mode = 'campaign'; ui.levelIdx = +d.i; startGame(); } break;
+      case 'next': ui.levelIdx = Math.min(ui.levelIdx + 1, LV.length - 1); startGame(); break;
       case 'begin': beginPlay(); break;
       case 'cell': return cellTap(+d.id);
       case 'set': return setTap(+d.i);
-      case 'stash': ui.showStash = !ui.showStash; break;
-      case 'end': if (st.over) break; if (ui.botWaiting) { endTurn(); break; } if (Engine.status(st).canEnd) endTurn(); break;
+      case 'end': if (st.over) break; if (ui.botWaiting || Engine.status(st).canEnd) endTurn(); break;
       case 'hints': ui.hints = d.v; pref.set(HINTS_KEY, d.v); break;
       case 'help': ui.help = true; break;
       case 'closehelp': ui.help = false; break;
       case 'newgame':
-        if (ui.screen === 'play' && st && !st.over && typeof confirm === 'function' && !confirm('Start a new game? The current game will be lost.')) return;
-        ui.screen = 'setup'; ui.help = false; break;
+        if (ui.screen === 'play' && st && !st.over && typeof confirm === 'function' && !confirm('Start over? The current game will be lost.')) return;
+        ui.screen = 'home'; ui.help = false; break;
       case 'again': startGame(); break;
       default: return;
     }
@@ -1070,11 +840,12 @@ const Bots = (() => {
   root.addEventListener('click', onClick);
   root.addEventListener('input', e => {
     const el = e.target;
-    if (el.dataset && el.dataset.act === 'name') { ui.cfg.seats[+el.dataset.i].name = el.value.slice(0, 14); saveCfg(); }
+    if (el.dataset && el.dataset.act === 'name') { ui.pass.names[+el.dataset.i] = el.value.slice(0, 14); pref.set(PASS_KEY, JSON.stringify(ui.pass)); }
   });
 
   // ---------------- rendering ----------------
   const hexPts = (cx, cy, r) => Array.from({ length: 6 }, (_, i) => { const a = (Math.PI / 180) * (60 * i - 30); return (cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1); }).join(' ');
+  const setLabel = s => (s.gem ? '💎' : s.value);
 
   function boardSVG() {
     const st = ui.st, S = 34, W = Math.sqrt(3) * S, color = COLORS[st.current];
@@ -1082,32 +853,17 @@ const Bots = (() => {
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
     for (const c of st.cells) { const p = pos(c); x0 = Math.min(x0, p.x - W / 2); x1 = Math.max(x1, p.x + W / 2); y0 = Math.min(y0, p.y - S); y1 = Math.max(y1, p.y + S); }
     const human = !isBot(st.current) && !ui.botWaiting;
-    const moves = human && st.phase === 'move' ? Engine.availableMoves(st) : null;
     const revealed = new Set(st.turn.revealed);
     const peekTid = st.turn.peeked;
     const peekShown = peekTid !== null && human && ui.showPeek;
     const nowUp = new Set([...revealed, ...(peekShown ? [peekTid] : [])]);
     const flipped = tid => nowUp.has(tid) !== ui.prevUp.has(tid);
-    const pushOpts = ui.pushing !== null && moves ? moves.pushes[ui.pushing].options : [];
     let out = '';
     for (const c of st.cells) {
       const { x, y } = pos(c);
       let tid = st.tokenAt[c.id];
       if (tid < 0) { const m = (st.turn.matched || []).find(i => st.tokens[i].cell === c.id); if (m !== undefined) tid = m; }   // a match stays face up until the turn ends
-      const cls = ['cell'];
-      if (c.site) cls.push('site');
-      if (moves) {
-        if (ui.pushing !== null) { if (pushOpts.includes(c.id)) cls.push('reach'); }
-        else if (c.id === moves.stay) cls.push('stay');
-        else if (moves.steps[c.id] !== undefined) cls.push('reach');
-        else if (moves.pushes[c.id]) cls.push('push');
-      }
-      let g = `<g class="${cls.join(' ')}" data-act="cell" data-id="${c.id}"><polygon class="bg" points="${hexPts(x, y, S)}"/>`;
-      if (c.site) {
-        g += `<text class="sitenum" x="${x}" y="${y}">${c.site}</text>`;
-        const mine = st.players[st.current].assign === c.site && st.system;
-        if (mine) g += `<polygon class="ring" style="stroke:${color}" points="${hexPts(x, y, S - 3)}"/>`;
-      }
+      let g = `<g class="cell" data-act="cell" data-id="${c.id}"><polygon class="bg" points="${hexPts(x, y, S)}"/>`;
       if (tid >= 0) {
         const t = st.tokens[tid], up = revealed.has(tid), peeking = peekShown && tid === peekTid;
         const shown = up || peeking;
@@ -1119,9 +875,6 @@ const Bots = (() => {
         if (up) g += `<polygon class="ring" style="stroke:${color}" points="${hexPts(x, y, S * 0.9)}"/>`;
         else if (tid === peekTid) g += `<polygon class="ring peekring" style="stroke:${color}" points="${hexPts(x, y, S * 0.9)}"/>`;   // peeked: dashed, number hidden
       }
-      for (const p of st.players) if (p.pos === c.id) {
-        g += `<g class="piece${p.idx === st.current ? ' cur' : ''}"><circle cx="${x}" cy="${y + S * 0.56}" r="${S * 0.34}" fill="${COLORS[p.idx]}"/><text x="${x}" y="${y + S * 0.58}">${p.idx + 1}</text></g>`;
-      }
       out += g + '</g>';
     }
     ui.prevUp = nowUp;
@@ -1129,14 +882,11 @@ const Bots = (() => {
     return `<svg class="board" viewBox="${(x0 - pad).toFixed(1)} ${(y0 - pad).toFixed(1)} ${(x1 - x0 + 2 * pad).toFixed(1)} ${(y1 - y0 + 2 * pad).toFixed(1)}" preserveAspectRatio="xMidYMid meet">${out}</svg>`;
   }
 
-  const setLabel = s => (s.gem ? '💎' : s.value);
-
   function chipsHTML() {
     const st = ui.st;
     return st.players.map(p => {
       const sets = p.sets.length ? p.sets.map(setLabel).join(' ') : '–';
-      const sub = st.system ? `sets ${sets} · delivered ${p.stash.length}` : `${p.points} pt${p.points === 1 ? '' : 's'} · sets ${sets}`;
-      return `<div class="chip${p.idx === st.current ? ' cur' : ''}" style="--c:${COLORS[p.idx]}"><div class="nm"><span class="dot"></span>${esc(seatName(p.idx))}${isBot(p.idx) ? ' 🤖' : ''}${st.system ? `<span class="die">${p.assign}</span>` : ''}</div><div class="sub">${esc(sub)}</div></div>`;
+      return `<div class="chip${p.idx === st.current ? ' cur' : ''}" style="--c:${COLORS[p.idx]}"><div class="nm"><span class="dot"></span>${esc(seatName(p.idx))}${isBot(p.idx) ? ' 🤖' : ''}</div><div class="sub">${esc(`${p.points} pt${p.points === 1 ? '' : 's'} · sets ${sets}`)}</div></div>`;
     }).join('');
   }
 
@@ -1151,20 +901,11 @@ const Bots = (() => {
     }
     const s = Engine.status(st);
     switch (st.phase) {
-      case 'move': return ui.pushing !== null ? 'Tap where to push them.' : 'Move up to 3 spaces — tap a space, or your own piece to stay.';
-      case 'action':
-        if (st.system) return s.canDeliver ? 'At your site — tap a set to deliver it.' : s.canPeek ? 'Tap your fossil to peek — or end your turn.' : 'Nothing to do here — end your turn.';
-        return s.canBank ? 'Tap a fossil to peek — or tap one of your sets to bank it.' : 'Tap a fossil to peek.';
-      case 'peeked': return st.system ? 'Now tap another fossil to flip it for everyone.' : 'Tap another fossil to flip it — or tap a set to bank it instead.';
-      case 'flipped': {
-        const F = st.tokens[st.turn.F];
-        if (F.gem) return st.variant.gemOrder === 'second-first' ? 'A gem! Flip a second fossil to try for all three — or end your turn.' : 'A gem! If yours is one too, tap it to reveal it — or end your turn.';
-        return 'No match — end your turn to flip them back.';
-      }
-      case 'flipped2': return 'No match — end your turn to flip them back.';
+      case 'action': return s.canBank ? 'Tap a fossil to peek — or tap one of your sets to bank it.' : 'Tap a fossil to peek.';
+      case 'peeked': return 'Tap another fossil to flip it — or tap a set to bank it instead.';
+      case 'flipped': return st.tokens[st.turn.F].gem ? 'A gem! If yours is one too, tap it to reveal it — or end your turn.' : 'No match — end your turn to flip them back.';
       case 'gemThird': return 'Flip a third fossil.';
       case 'resolved': return st.turn.matched ? 'Match! Your set is in front of you.' : 'End your turn to flip them back.';
-      case 'delivering': return '';
       default: return '';
     }
   }
@@ -1173,114 +914,126 @@ const Bots = (() => {
     const st = ui.st, cur = st.players[st.current], color = COLORS[st.current];
     const human = !isBot(st.current) && !ui.botWaiting;
     const s = Engine.status(st);
-    const actable = human && (s.canDeliver || s.canBank);
+    const actable = human && s.canBank;
     const sets = cur.sets.map((x, i) => `<button class="setcard${actable ? ' act' : ''}${ui.popTurn !== st.turnNo && st.turn.matched && i === cur.sets.length - 1 ? ' pop' : ''}" data-act="set" data-i="${i}">${Array.from({ length: x.size }, () => `<span class="mini">${setLabel(x)}</span>`).join('')}</button>`).join('');
-    let stash = '';
-    if (st.system) {
-      const open = ui.showStash && human;
-      stash = `<button class="pile${open ? ' open' : ''}" data-act="stash">${open ? (cur.stash.length ? cur.stash.map(v => (v === 16 ? '💎' : v)).join(' · ') + ' = ' + cur.stash.reduce((a, b) => a + b, 0) : 'empty') : `Delivered ×${cur.stash.length}`}</button>`;
-    }
-    const endLabel = ui.botWaiting ? 'Continue' : 'End turn';
-    const canEnd = ui.botWaiting || s.canEnd;
-    const primary = ui.botWaiting || ['flipped', 'flipped2', 'resolved', 'delivering'].includes(st.phase);
+    const primary = ui.botWaiting || ['flipped', 'resolved'].includes(st.phase);
     if (ui.popTurn !== st.turnNo && st.turn.matched) ui.popTurn = st.turnNo;
     return `<div class="tray" style="--c:${color}">
-      <div class="who">${esc(seatName(st.current))}${isBot(st.current) ? ' 🤖' : ''}${st.system ? ` · site ${cur.assign}` : ''}</div>
-      <div class="row"><span class="lab">${st.system ? 'Face up, in front of you' : 'Held sets'}</span>${sets || '<span class="dim">none yet</span>'}</div>
-      ${stash ? `<div class="row">${stash}</div>` : ''}
+      <div class="who">${esc(seatName(st.current))}${isBot(st.current) ? ' 🤖' : ''}</div>
+      <div class="row"><span class="lab">Held sets</span>${sets || '<span class="dim">none yet</span>'}</div>
       <div class="note">${esc(ui.note)}</div>
-      <button class="end${primary ? ' go' : ''}" data-act="end"${canEnd ? '' : ' disabled'}>${endLabel}</button>
+      <button class="end${primary ? ' go' : ''}" data-act="end">${ui.botWaiting ? 'Continue' : 'End turn'}</button>
     </div>`;
   }
 
   function gameHTML() {
     const st = ui.st;
     return `<div class="game">
-      <div class="bar"><div class="chips">${chipsHTML()}</div><div class="sys"><button class="q" data-act="help" aria-label="How to play">?</button><button class="q" data-act="newgame" aria-label="New game">↺</button></div></div>
+      <div class="bar"><div class="chips">${chipsHTML()}</div><div class="sys"><button class="q" data-act="help" aria-label="How to play">?</button><button class="q" data-act="newgame" aria-label="Start over">↺</button></div></div>
       <div class="legend"><span><i style="background:var(--umber)"></i>concealed</span><span><i style="background:var(--bone)"></i>public</span><span class="hint">${esc(hintsVisible() ? hint() : '')}</span></div>
       <div class="main"><div class="boardwrap">${boardSVG()}</div>${trayHTML()}</div>
     </div>${st.over ? overHTML() : ''}`;
   }
 
-  function setupHTML() {
-    const cfg = ui.cfg;
-    const seats = Array.from({ length: cfg.n }, (_, i) => {
-      const s = cfg.seats[i];
-      return `<div class="seatrow"><span class="dot" style="background:${COLORS[i]}"></span>
-        <input value="${esc(s.name)}" maxlength="14" data-act="name" data-i="${i}" aria-label="Name of seat ${i + 1}">
-        <span class="seg"><button class="${s.bot ? '' : 'on'}" data-act="bot" data-i="${i}" data-v="human">Human</button><button class="${s.bot ? 'on' : ''}" data-act="bot" data-i="${i}" data-v="bot">Bot</button></span>
-        ${s.bot ? `<span class="seg">${D.bots.presets.map((p, k) => `<button class="${s.mem === k ? 'on' : ''}" data-act="mem" data-i="${i}" data-v="${k}">${p.name}<br><small>${Math.round(p.memory * 1000) / 10}%</small></button>`).join('')}</span>` : ''}</div>`;
-    }).join('');
+  const libraryLink = () => (D.library && /^https?:$/.test(location.protocol) ? `<a class="back" href="${esc(D.library.href)}">‹ ${esc(D.library.name)}</a>` : '');
+  const footer = () => `${ui.notice ? `<p class="dim" style="margin-top:14px">${esc(ui.notice)}</p>` : ''}<p class="dim" style="margin-top:18px">Version ${esc(BUILD)}</p>`;
+
+  function homeHTML() {
     return `<div class="screen"><div class="sheet">
-      ${D.library && /^https?:$/.test(location.protocol) ? `<a class="back" href="${esc(D.library.href)}">‹ ${esc(D.library.name)}</a>` : ''}
-      <h1>🦖 Fossil Frenzy</h1><p class="sub">A memory game of matching, delivering and outwitting. Pass the device around the table.</p>
-      <h2>Players</h2><span class="seg">${Array.from({ length: D.players.max - D.players.min + 1 }, (_, k) => k + D.players.min).map(n => `<button class="${cfg.n === n ? 'on' : ''}" data-act="n" data-v="${n}">${n}</button>`).join('')}</span>
-      ${seats}
-      <h2>Movement &amp; delivery</h2><span class="seg"><button class="${cfg.system ? 'on' : ''}" data-act="sys" data-v="on">On — original rules</button><button class="${cfg.system ? '' : 'on'}" data-act="sys" data-v="off">Off — peek, flip, bank</button></span>
-      <button class="big" data-act="start">Deal the fossils</button>
+      ${libraryLink()}
+      <h1>🦖 Fossil Frenzy</h1><p class="sub">A memory game of matching fossils and outwitting your rivals.</p>
+      <button class="mode" data-act="mode" data-v="pass"><b>Pass &amp; Play</b><span>${D.players.min}–${D.players.max} people, one device</span></button>
+      <button class="mode" data-act="mode" data-v="campaign"><b>Campaign</b><span>Beat each opponent to unlock the next</span></button>
       <button class="ghost" data-act="help">How to play</button>
-      ${ui.notice ? `<p class="dim" style="margin-top:14px">${esc(ui.notice)}</p>` : ''}
-      <p class="dim" style="margin-top:18px">Version ${esc(BUILD)}</p>
+      ${footer()}
+    </div></div>`;
+  }
+
+  function passHTML() {
+    const p = ui.pass;
+    const seats = Array.from({ length: p.n }, (_, i) => `<div class="seatrow"><span class="dot" style="background:${COLORS[i]}"></span>
+        <input value="${esc(p.names[i])}" maxlength="14" data-act="name" data-i="${i}" aria-label="Name of player ${i + 1}"></div>`).join('');
+    return `<div class="screen"><div class="sheet">
+      <button class="back" data-act="home">‹ Fossil Frenzy</button>
+      <h1>Pass &amp; Play</h1><p class="sub">Pass the device around the table.</p>
+      <h2>Players</h2><span class="seg">${Array.from({ length: D.players.max - D.players.min + 1 }, (_, k) => k + D.players.min).map(n => `<button class="${p.n === n ? 'on' : ''}" data-act="n" data-v="${n}">${n}</button>`).join('')}</span>
+      ${seats}
+      <button class="big" data-act="deal">Deal the fossils</button>
+    </div></div>`;
+  }
+
+  function campaignHTML() {
+    const rows = LV.map((l, i) => {
+      const open = unlocked(i), done = Campaign.isBeaten(i, ui.beaten);
+      return `<button class="lvl${open ? '' : ' locked'}${done ? ' done' : ''}" data-act="level" data-i="${i}"${open ? '' : ' aria-disabled="true"'}>
+        <span class="n">${i + 1}</span><b>${esc(l.name)}</b><span class="state">${open ? (done ? '✓ Beaten' : 'Ready') : '🔒'}</span></button>`;
+    }).join('');
+    const all = LV.every((l, i) => Campaign.isBeaten(i, ui.beaten));
+    return `<div class="screen"><div class="sheet">
+      <button class="back" data-act="home">‹ Fossil Frenzy</button>
+      <h1>Campaign</h1><p class="sub">Beat each opponent to unlock the next.</p>
+      <div class="levels">${rows}</div>
+      ${all ? '<p class="sub" style="margin-top:16px">🏆 You have beaten every opponent.</p>' : ''}
     </div></div>`;
   }
 
   function rollHTML() {
     const st = ui.st;
-    const rows = st.players.map(p => `<tr><td><span class="dot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${COLORS[p.idx]};margin-right:8px"></span>${esc(seatName(p.idx))}${isBot(p.idx) ? ' 🤖' : ''}</td><td>🎲 ${p.roll}</td><td>${st.system ? 'corner ' + p.roll : ''}</td><td>${p.idx === st.firstPlayer ? '← goes first' : ''}</td></tr>`).join('');
-    return `<div class="screen"><div class="sheet"><h1>Roll for corners</h1>
-      <p class="sub">${st.system ? 'Everyone rolled their die. You start in the matching corner — and that corner is your first delivery site.' : 'Everyone rolled their die to see who starts.'} Highest roll goes first; play continues clockwise.</p>
+    const rows = st.players.map(p => `<tr><td><span class="dot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${COLORS[p.idx]};margin-right:8px"></span>${esc(seatName(p.idx))}${isBot(p.idx) ? ' 🤖' : ''}</td><td>🎲 ${p.roll}</td><td>${p.idx === st.firstPlayer ? '← goes first' : ''}</td></tr>`).join('');
+    return `<div class="screen"><div class="sheet"><h1>Who goes first?</h1>
+      <p class="sub">Everyone rolled a die. Highest roll goes first; play continues clockwise.</p>
       <table class="table">${rows}</table>
-      <button class="big" data-act="begin">${esc(seatName(st.firstPlayer))} starts</button></div></div>`;
+      <button class="big" data-act="begin">${esc(seatName(st.firstPlayer))} ${seatName(st.firstPlayer) === 'You' ? 'start' : 'starts'}</button></div></div>`;
   }
 
-  const WHY = { score: 'highest score', fossils: 'most fossils', highestFossil: 'highest scoring fossil', sets: 'most sets popped', finalPair: 'popped the final pair' };
+  const WHY = { score: 'highest score', sets: 'most sets popped', finalPair: 'popped the final pair' };
   function overHTML() {
-    const st = ui.st, r = st.result, keys = st.variant.tiebreaks;
+    const st = ui.st, r = st.result, keys = st.rules.tiebreaks, campaign = ui.mode === 'campaign', o = ui.outcome;
     let why = '';
     if (r.winners.length > 1) why = r.winners.length === st.n ? 'Dead heat.' : 'Shared win — every tie-break is level.';
     else if (r.ranking.length > 1) { const a = r.ranking[0], b = r.ranking[1]; const k = keys.find(k => a[k] !== b[k]); why = k === 'score' ? '' : `Tied on score — won on ${WHY[k]}.`; }
+    let title = r.winners.length > 1 ? 'Shared win!' : esc(seatName(r.winners[0])) + ' wins!';
+    if (campaign && o) title = o.won ? `You beat ${esc(LV[ui.levelIdx].name)}!` : r.winners.length > 1 ? 'A draw — not a win.' : `${esc(LV[ui.levelIdx].name)} wins`;
+    const extra = campaign && o ? (o.completed ? '🏆 Campaign complete — every opponent beaten!' : o.newlyUnlocked ? `🔓 ${esc(o.newlyUnlocked)} unlocked.` : o.won ? '' : 'Win outright to unlock the next level.') : '';
     const tileHTML = (v, cls = '') => `<span class="mini ${cls}">${v === 16 ? '💎' : v}</span>`;
     const places = r.ranking.map(x => {
       const p = st.players[x.idx], win = r.winners.includes(x.idx);
-      const shown = st.system ? p.stash.slice().sort((a, b) => b - a).map(v => tileHTML(v)) : p.banked.map(b => tileHTML(b.value));
-      const bonus = !st.system && p.banked.reduce((n, b) => n + b.bonus, 0);
-      const lost = p.sets.map(x => tileHTML(x.value, 'lost'));
+      const bonus = p.banked.reduce((n, b) => n + b.bonus, 0);
       return `<div class="place${win ? ' win' : ''}" style="--c:${COLORS[x.idx]}">
         <div class="pn"><span class="dot"></span>${win ? '🏆 ' : ''}${esc(seatName(x.idx))}</div>
         <div class="score">${x.score}</div>
-        <div class="tiles">${shown.join('') || '<span class="dim">no fossils</span>'}${bonus ? `<span class="bonus">+${bonus}</span>` : ''}</div>
-        ${lost.length ? `<div class="tiles lostrow" title="not ${st.system ? 'delivered' : 'banked'}">${lost.join('')}</div>` : ''}
+        <div class="tiles">${p.banked.map(b => tileHTML(b.value)).join('') || '<span class="dim">nothing banked</span>'}${bonus ? `<span class="bonus">+${bonus}</span>` : ''}</div>
+        ${p.sets.length ? `<div class="tiles lostrow" title="not banked">${p.sets.map(s => tileHTML(s.value, 'lost')).join('')}</div>` : ''}
       </div>`;
     }).join('');
-    return `<div class="screen"><div class="sheet"><h1>${r.winners.length > 1 ? 'Shared win!' : esc(seatName(r.winners[0])) + ' wins!'}</h1>
-      <p class="sub">${esc(why)}</p><div class="results">${places}</div>
-      <button class="big" data-act="again">Play again</button><button class="ghost" data-act="newgame">Change players</button></div></div>`;
+    const nextBtn = campaign && o && o.won && ui.levelIdx + 1 < LV.length && unlocked(ui.levelIdx + 1);
+    return `<div class="screen"><div class="sheet"><h1>${title}</h1>
+      <p class="sub">${[why, extra].filter(Boolean).join(' ')}</p><div class="results">${places}</div>
+      ${nextBtn ? `<button class="big" data-act="next">Next: ${esc(LV[ui.levelIdx + 1].name)}</button><button class="ghost" data-act="again">Play ${esc(LV[ui.levelIdx].name)} again</button>`
+                : `<button class="big" data-act="again">${campaign ? 'Try again' : 'Play again'}</button>`}
+      <button class="ghost" data-act="mode" data-v="${campaign ? 'campaign' : 'pass'}">${campaign ? 'Levels' : 'Change players'}</button></div></div>`;
   }
 
   const JUDGMENTS = [
-    'The board is a hexagon of 37 spaces: 31 for fossils and the six corners as research sites (die faces 1–6, clockwise). Without movement/delivery the corners are removed.',
-    'Fossils that do not match are flipped back face down at the end of the turn that revealed them.',
+    'The board is a hexagon of 31 spaces, one fossil on each. There are no pieces and no movement: you can peek at any fossil.',
+    'Your first tap is a private peek (the board shows you the number — hold the device toward yourself); your second tap is a public flip. Fossils that do not match flip back at the end of your turn.',
+    'A peek does not use up your turn: you may bank instead of flipping.',
     'Matches are pairs (a set of three for the gems). Only the fossil you peeked can be matched, against the one you flipped.',
-    'Your setup roll is both your starting corner and your first delivery assignment.',
-    'Pieces cannot share a space or pass through each other; a push can only go onto an empty space (never onto the pusher), and pushing uses one of your three steps and ends your move.',
-    'Delivery happens after moving: move to your site (or stay if you are there), tap a set, and its die roll follows automatically. You cannot also peek that turn (corners hold no fossil).',
-    'Peeking and delivered fossils are private by honour: the board shows the value of your peek on screen — hold the device toward yourself.',
-    'Off mode: a peek does not use your turn. Banking takes one set of your choice and scores the number on its fossil (a gem is 16), then a d6 chain adds +1 for every 6. Ties go to most sets popped, then whoever popped the final pair.',
-    'Bots remember each revealed fossil with a fixed probability; Beginner–Master use the memory levels from the design summary.',
+    'Banking takes one set of your choice, worth the number on its fossil (a gem is 16), then a d6 chain adds +1 for every 6. Sets you never bank are worth nothing.',
+    'Ties go to the most sets popped, then whoever popped the final pair.',
+    'Campaign: you beat a level by winning outright (a shared win does not count). Opponents differ in how well they remember fossils and how carefully they plan their banking.',
   ];
   function helpHTML() {
-    const on = ui.cfg.system;
     return `<div class="screen help" style="z-index:5"><div class="sheet"><h1>How to play</h1>
-      <p>Match fossils from memory, ${on ? 'deliver them to your research site, ' : 'bank them, '}and finish with the most points.</p>
+      <p>Match fossils from memory, bank your matches, and finish with the most points.</p>
       <h3>Your turn</h3><ul>
-        ${on ? '<li><b>Move</b> 0–3 spaces (tap a highlighted space; tap your own piece to stay). Tap a player in your way to push them one space.</li>' : ''}
-        <li><b>Peek</b> at ${on ? 'the fossil you stand on' : 'any one fossil'} — tap it. Only you should look.</li>
-        <li><b>Flip</b> another fossil — tap it. Everyone sees it. ${on ? 'After a peek you must flip.' : ''}</li>
+        <li><b>Peek</b> at any fossil — tap it. Only you should look.</li>
+        <li><b>Flip</b> another fossil — tap it. Everyone sees it.</li>
         <li>If your peek and the flipped fossil match, they are yours. Otherwise tap <b>End turn</b> to flip them back — remember them!</li>
-        <li><b>Gems</b> (💎, worth 16) match as a set of three: ${on ? 'when you flip a gem, tap a second fossil, then yours is flipped for you.' : 'peek a gem, flip a gem, tap your peeked gem to reveal it, then flip a third.'}</li>
-        ${on ? '<li><b>Deliver</b>: matched fossils score nothing until you stand on your assigned corner (the number on your die) and tap a set. One fossil of the set is kept face down (private) at face value; the match goes back in the box. Then your die is rolled for the next site.</li>' : '<li><b>Bank</b> instead of peeking: tap ONE of your held sets. It scores the number on its fossil (a gem is 16), then a d6 chain: every 6 adds +1 and rolls again. Banking takes the whole turn.</li>'}
+        <li><b>Gems</b> (💎, worth 16) match as a set of three: peek a gem, flip a gem, tap your peeked gem to reveal it, then flip a third.</li>
+        <li><b>Bank</b> instead of flipping: tap ONE of your held sets. It scores the number on its fossil (a gem is 16), then a d6 chain: every 6 adds +1 and rolls again. Banking takes the whole turn.</li>
       </ul>
-      <h3>End</h3><p>The game ends the moment every fossil is matched. ${on ? 'Fossils still face up in front of you are worth 0.' : 'Sets you have not banked are lost.'} Highest score wins${on ? '; ties go to the most fossils, then the highest scoring fossil' : '; ties go to the most sets popped, then whoever popped the final pair'}.</p>
+      <h3>End</h3><p>The game ends the moment every fossil is matched. Sets you have not banked are lost. Highest score wins; ties go to the most sets popped, then whoever popped the final pair.</p>
       <h3>Judgment calls (where the rules were unclear)</h3><ul>${JUDGMENTS.map(j => `<li>${esc(j)}</li>`).join('')}</ul>
       <p class="dim">The full list is in DECISIONS.md. Version ${esc(BUILD)}.</p>
       <h3>Prompts above the board</h3><p><span class="seg">${['auto', 'on', 'off'].map(v => `<button class="${ui.hints === v ? 'on' : ''}" data-act="hints" data-v="${v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</span></p><p class="dim">Auto shows them until you have finished one game on this device.</p>
@@ -1288,12 +1041,9 @@ const Bots = (() => {
   }
 
   function render() {
-    let html;
-    if (ui.screen === 'setup') html = setupHTML();
-    else if (ui.screen === 'roll') html = rollHTML();
-    else html = gameHTML();
+    if (ui.st && ui.st.over && !ui.countedOver) gameFinished();     // count the game (and record a campaign result) before drawing the end screen
+    const html = { home: homeHTML, pass: passHTML, campaign: campaignHTML, roll: rollHTML, play: gameHTML }[ui.screen]();
     root.innerHTML = html + (ui.help ? helpHTML() : '');
-    if (ui.st && ui.st.over && !ui.countedOver) { ui.countedOver = true; pref.set(DONE_KEY, (+pref.get(DONE_KEY) || 0) + 1); }
     saveGame();
   }
 

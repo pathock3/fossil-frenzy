@@ -7,7 +7,8 @@ function rolls(faces, seed = 1) {
   return () => (i < faces.length ? (faces[i++] - 0.5) / GAME_DATA.die.sides : rest());
 }
 
-// Canonical tile list in cell order, with overrides {tileIndex: value} swapped in (value 16 = gem).
+// Canonical fossil list in space order, with overrides {index: value} swapped in (value 16 = gem).
+// Indexes: 0-5 are 2s, 6-11 are 3s, 12-15 are 5s, 16-19 are 6s, 20-23 are 7s, 24-25 are 10s, 26-27 are 11s, 28-30 are gems.
 function layout(overrides = {}) {
   const list = [];
   for (const t of GAME_DATA.tokens) for (let i = 0; i < t.count; i++) list.push({ value: t.value, gem: !!t.gem });
@@ -16,7 +17,7 @@ function layout(overrides = {}) {
     const i = Number(idx);
     if (list[i].value !== v) {
       const j = list.findIndex((x, k) => x.value === v && !fixed.has(k));
-      if (j < 0) throw new Error('layout: no spare tile of value ' + v);
+      if (j < 0) throw new Error('layout: no spare fossil of value ' + v);
       [list[i], list[j]] = [list[j], list[i]];
     }
     fixed.add(i);
@@ -24,21 +25,15 @@ function layout(overrides = {}) {
   return list;
 }
 
+// A game with player 0 going first (rolls default to descending), a known layout, and optional data overrides.
 function game(o = {}) {
+  const n = o.players || 2;
   return Engine.createGame({
-    players: o.players || 2,
-    system: o.system === undefined ? true : o.system,
-    rng: o.rng || rolls(o.rolls || [6, 5, 4, 3, 2, 1].slice(0, o.players || 2)),
+    players: n,
+    rng: o.rng || rolls(o.rolls || [6, 5, 4, 3].slice(0, n)),
     layout: layout(o.layout || {}),
     data: o.data,
   });
 }
 
-const cellAt = (s, q, r) => s.cells.find(c => c.q === q && c.r === r).id;
-const place = (s, idx, cell) => { s.players[idx].pos = cell; };
-const tileCell = (s, tid) => s.tokens[tid].cell;
-// put player on the space holding tile `tid`
-const standOn = (s, idx, tid) => place(s, idx, s.tokens[tid].cell);
-const stay = s => Engine.move(s, { to: s.players[s.current].pos });
-
-module.exports = { rolls, layout, game, cellAt, place, tileCell, standOn, stay };
+module.exports = { rolls, layout, game };

@@ -1,6 +1,6 @@
 # Tabletop Library — project rules
 
-A collection of Patrick Hockberger's tabletop game designs, adapted as browser games. The front page (`index.html`) is the library; each game lives in `games/<id>/`. Roadmap and design philosophy: **`docs/PLAN.md`** — read it before starting new work.
+A collection of Patrick Blim-Hockberger's tabletop game designs, adapted as browser games. The front page (`index.html`) is the library; each game lives in `games/<id>/`. Roadmap and design philosophy: **`docs/PLAN.md`** — read it before starting new work.
 
 ## Hard rules
 1. **Every game is one self-contained `index.html`** (`games/<id>/index.html`), playable by touch on an iPad in Safari. It must work opened directly, with no runtime dependencies and no network. Plain JavaScript. The build only copies files and stamps the version.
@@ -18,11 +18,10 @@ A collection of Patrick Hockberger's tabletop game designs, adapted as browser g
 - `tools/build.js`, `wrangler.jsonc`, `.github/workflows/ci.yml` — build and deploy.
 
 ## Fossil Frenzy (`games/fossil-frenzy/`)
-- `rulebook.md` — the original game (movement/delivery system **ON**).
-- `docs/design-summary.md` — Patrick's redesign (movement/delivery system **OFF**: peek-and-flip or bank) and his UI philosophy.
-- `GAME_DATA.movementDeliverySystem` is the master toggle: `true` = rulebook, `false` = redesign.
+- **One rule set**: peek (first tap, private) then flip (second tap, public), or bank one set; 31 fossils on a corner-less hexagon; no pieces, no movement; Pass & Play (2–4 people) or Campaign (five levels, beat each to unlock the next; levels are shown by name only, never percentages). Do not reintroduce the removed rulebook mechanics (movement, delivery, a rule-set toggle) without the owner asking.
+- `docs/design-summary.md` — the redesign this game implements, plus Patrick's UI philosophy. `rulebook.md` — the original physical game (history only). The owner's later feedback overrides both; it is logged in `DECISIONS.md`.
 - `DECISIONS.md` — when a rule is unclear: choose the most sensible reading, log it there, keep going.
-- Index of scripts in `index.html`: `data`, `engine` (pure rules, no DOM), `bots`, `ui`.
+- Scripts in `index.html`: `data` (all rules, the campaign levels), `engine` (pure rules, no DOM), `bots`, `campaign` (pure unlock logic), `ui`.
 
 ## UI philosophy (from the owner — "the Tabletop Test")
 - The table is the UI: tap tiles, pieces and piles like physical components. No verb buttons ("Deliver"), no dropdowns, no modals for game actions. System chrome (help, new game) stays small and quiet.

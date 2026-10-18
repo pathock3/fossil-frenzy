@@ -1,62 +1,56 @@
-# DECISIONS
+# DECISIONS — Fossil Frenzy
 
-Unclear rules and judgment calls, in the order they were made. The owner can overrule any of them; most are single values in the data block (`GAME_DATA` in `index.html`) and every one has a test. The in-game *How to play* panel lists the ones that matter at the table.
+Unclear rules and judgment calls, grouped by topic. The owner can overrule any of them; most are single values in the data block (`GAME_DATA` in `index.html`) and every one has a test. The in-game *How to play* panel lists the ones that matter at the table.
 
-## Inputs and precedence
-1. **Two inputs, two modes.** `rulebook.md` is the original game. `docs/design-summary.md` (handed over mid-task, written by an earlier agent session) describes Patrick's redesign: no pieces, no movement, no delivery; every turn is "peek and flip" or "bank". I mapped them onto the requested toggle: `movementDeliverySystem: true` = rulebook, `false` = redesign. Where the two disagree, the mode being played decides. Where the task statement and the summary disagree (the summary's five-tier AI with overconfidence and memory decay vs. the task's "remembers a revealed fossil with a set probability"), the task statement wins.
-2. **Commits go straight to `main`**, as instructed, although the session started on a `claude/…` branch.
-3. **JavaScript in one HTML file.** Easiest to share (open the file, AirDrop it, or host it on GitHub Pages) and it runs offline on an iPad. Node is used only for tests and simulations.
+## Where the rules come from
+1. **One rule set.** `docs/design-summary.md` (Patrick's redesign: no pieces, no movement, no delivery; a turn is peek-and-flip or bank) plus the owner's later feedback *is* the game. `rulebook.md` is the original physical game, kept as history; its movement and delivery rules are **no longer implemented** (they were removed on 2026-10-18 at the owner's request: "don't have two different rule sets"). The removed code and its tests are in git history, last present at commit `369ea0b`.
+2. **Where sources disagree, the owner's latest word wins:** the 2026-10-18 feedback replaced the summary's "1 point per set" with "the number on the fossil is the points; bank ONE set"; and asked for Pass & Play (up to 4) and a five-level Campaign. The summary's tiered-AI memory *decay* and "overconfidence" are not implemented (memory is the task's "remembers with a set probability").
+3. **The designer is credited once**, at the top of the Tabletop Library, as Patrick Blim-Hockberger (changed surname), not per game. `rulebook.md` is a verbatim copy of the original PDF and still carries the old surname; it was left untouched as a historical document.
 
 ## Board and setup
-4. **Board = hexagon of 37 hex spaces** (radius 3). The rulebook says 31 tiles, one per space "except the corners", six corners → 37 spaces, which is exactly a radius-3 hexagon. Die faces 1–6 = the corners clockwise from top-left. The redesign removes the corners, leaving 31 spaces (matches the summary's "31 spaces, exactly one tile per space"). Board radius, corners and the tile list are data; the engine refuses a tile count that doesn't match the space count (the summary wants the board parameterised for later sizes).
-5. **Setup dice:** players roll in seat order; whoever rolls a number already taken re-rolls until different. Highest roll goes first; "clockwise" = increasing seat number around the table. In the redesign the same roll decides who starts.
-6. **Your setup roll is also your first delivery assignment** (the die you rolled is still showing). Data flag `initialAssignment` (`'startCorner'`, anything else = roll again).
-
-## Movement (rulebook mode)
-7. Pieces cannot share a space and cannot pass through each other. "Go around" = a path of up to 3 steps that avoids occupied spaces; you cannot stop on an occupied space.
-8. **Push:** only the step *into* the victim's space can be a push; it uses one of your 3 steps (so a victim 3 spaces away can be pushed, one 4 away cannot) and ends your move. The pusher chooses the direction. The victim goes onto an adjacent **empty** space — never onto another player (no bumping), never onto the space the pusher is pushing from. It may land on a corner or on a space with a fossil. Pushes can be switched off in the data (`allowPush`).
-9. Moving 0 spaces is a real choice (tap your own piece).
+4. **A hexagon of 31 spaces** (radius 3 = 37 spaces, minus the six corners), one fossil on each. The count follows from the tile set (31) and the summary ("31 spaces, exactly one tile per space"). Board radius, removed spaces and the fossil list are data; the engine refuses a fossil count that does not match the space count.
+5. **Who starts:** everyone rolls a die; a duplicate roll is re-rolled by whoever rolled it second; highest goes first; play continues clockwise (seat order). The roll is shown on a "Who goes first?" screen, one tap.
 
 ## Peek, flip, match
-10. **Unmatched flipped fossils flip back face down at the end of the turn** that revealed them. The rulebook calls this a memory game and the summary says so explicitly ("both tiles flip back"). So there are no persistent face-up fossils on the board; "face up" means a matched set in front of a player.
-11. **A match is the fossil you peeked at plus the fossil you flipped** (same number; the rulebook's "to another on the board"). Pairs for numbers; a gem set needs all three gems — two gems never match.
-12. One peek and at most one match attempt per turn. Peeking needs a fossil underfoot (rulebook) or any fossil (redesign). In the rulebook mode a peek must be followed by a flip, so you cannot end the turn after a bare peek; in the redesign a peek does not spend the turn (you may bank or end instead).
-13. The forced flip may be any other face-down fossil, even one a piece is standing on.
-14. "You now have the *option* to flip the fossil you stand on" is optional in the engine; the UI takes it for you when it is a pair (it can only help) and when all three gems are showing.
-15. **Gems, rulebook order:** flip a gem as your forced flip → you *may* flip one second fossil → then your own. The extra flip is offered whenever the forced flip is a gem (not only if your own is one), so offering it leaks nothing. Redesign order: reveal your peeked gem first, then flip a third fossil; declining keeps your gem private (summary §4).
+6. **First tap = a private peek at any fossil; second tap = a public flip of another.** The peek shows on your screen (honour system on a shared device: tap the peeked fossil again to hide it). A peek does not use up the turn: you may bank instead, or just end the turn (the peek stays private).
+7. **Unmatched fossils flip back at the end of the turn** that revealed them ("memory game"; the summary agrees). No fossils stay face up on the board.
+8. **A match is the fossil you peeked at plus the one you flipped** (same number). Pairs for numbers; a set of three for the gems — two gems never match. One peek and one match attempt per turn.
+9. **Gems:** peek a gem and flip a gem → you *may* tap your peeked gem to reveal it, then flip a third fossil; a gem makes the set, otherwise everything flips back. Declining (End turn) keeps your gem private. (The rulebook's other order — flip the extra fossil first — was part of the removed rule set.)
+10. **The UI takes the obvious option for you:** when your peek and the flipped fossil are a pair they are taken at once; revealing your own gem is a deliberate tap because it shows information.
+11. **A match stays face up on the board until the turn ends** (yours or an opponent's), instead of vanishing, so players can see what happened; the matched fossils join the player's held sets.
 
-## Delivery (rulebook mode)
-16. Matched sets sit face up in front of you and are worth 0 until delivered. Delivering flips **one** fossil of a set face down at its face value and tosses the rest ("50% cut": one of a pair, one of the three gems = 16).
-17. Delivery happens after movement. If you already stand on your site, move 0 and deliver. After a delivery you roll for the next site; if it is the site you are standing on and you still hold a set, you may deliver again. You cannot move afterwards. With no set in hand nothing is rolled.
-18. You cannot peek and deliver in the same turn (corners hold no fossil). The turn is move + (peek/flip/match **or** deliver chain).
-19. Delivered (face-down) fossils are private; others see only how many. Everything is revealed at the end.
+## Banking and scoring
+12. **Bank = take ONE held set of your choice and score the number on its fossil** (a gem set scores 16), then one d6 chain: each 6 adds +1 and rolls again (kept from the design summary; `bonusDieSides: 0` removes it). Banking takes the whole turn. The other sets stay in front of you; sets never banked score nothing. Values are data.
+13. **The game ends the instant the last fossil is matched.** Tie-breaks (from the summary): highest score, then most sets popped, then whoever popped the final pair, then a shared win.
 
-## End and scoring
-20. The game ends the instant the last fossil is matched, even if players still hold undelivered sets (worth 0). Tie-breaks: score → most fossils → highest scoring fossil → shared win. Redesign (summary §6): score → sets popped → who popped the final pair → draw.
-21. **Redesign bank (owner feedback, 2026-10-18):** a bank turn takes **one** held set of the player's choice and scores **the number on its fossil** (gem set 16); the other sets stay in front of you. Then one d6 chain per bank: each 6 = +1 and rolls again (kept from the design summary — set `bonusDieSides: 0` in the data to remove it). This replaces my earlier "1 point per held set, all at once". Values are data (`setPoints`, `bonus*`).
-22. Point values are the tile numbers; delivered fossils count at that number (gems 16).
+## Campaign
+14. **Five levels — Beginner, Novice, Normal, Challenging, Master — shown by name only (no percentages).** All five are visible; only Beginner is open at first; the other four are greyed out with a lock. You play one opponent per level.
+15. **You defeat a level by winning outright.** A shared win (every tie-break level) is a draw and does not unlock anything; a loss does not either. Beating a level opens exactly the next one. Beaten levels can be replayed. Beating Master completes the campaign.
+16. **Levels differ in memory and in banking habits**, both from the design summary: memory 0.80 / 0.85 / 0.90 / 0.965 / 0.99; every level banks once it holds three sets; and plans for the end of the game by banking when 0 / 2 / 6 / 4 / 4 fossils remain (0 = never). The summary's "overconfidence" is not modelled. Everything is data (`campaign.levels`).
+17. **Progress is stored in the browser** (`localStorage`) per device. `?unlock` on the page's address opens every level for that visit, for testing; it saves nothing.
+18. **Pass & Play is humans only (2–4)**, exempt from the campaign. The campaign is you against one opponent (so a campaign game has 2 players).
+19. The campaign ladder is **monotone but uneven**: the first three levels are close in strength (see REPORT.md). The owner chose these levels; the `memory` values are the lever for a gentler start.
 
 ## Bots
-23. **Memory model:** each bot remembers every revealed fossil (any public flip, or its own peek) independently with probability `memory`, permanently. What it sees during its own turn is exact (it must act on it); it recalls that later only with probability `memory`. It never records anyone else's peek. Memory is forgotten for matched fossils.
-24. Bots are given `Engine.publicView` only (no hidden tile values); a test asserts the view contains none.
-25. **Strategy** (same for all bots, only memory differs): rulebook — walk toward the best goal (deliver a set > go to a located pair > explore an unseen fossil, each discounted 30% per extra turn of walking), deliver whenever at the site with a set, peek only when it can learn something. Redesign — bank the most valuable held set as soon as it holds one (head-to-head, waiting was no better), otherwise peek a located pair or an unseen fossil; so a bot always reveals a space on a turn it does not bank. Gems: try for the third gem always (rulebook), or only when it is located or in the endgame (redesign; otherwise two bots can deadlock when only the gems remain).
-26. Bots do not model opponents, do not plan deliveries against the end of the game, and ignore the summary's "overconfidence" and decay. Presets are named after the summary's tiers with its memory levels (80 / 85 / 90 / 96.5 / 99 %).
+20. **Memory:** each bot remembers every revealed fossil (any public flip, or its own peek) independently with probability `memory`, permanently. What it sees during its own turn is exact (it must act on it); it recalls that later only with probability `memory`. It never records anyone else's peek. Matched fossils are forgotten.
+21. **Information discipline:** bots are given `Engine.publicView` only (no hidden fossil values); a test asserts the view contains none.
+22. **Strategy** (the same for every level; only memory and banking habits differ): bank the most valuable held set once `bankAt` sets are held or `endgameTiles` or fewer fossils remain; otherwise peek a fossil whose partners it has located, else an unseen one, and flip the located partner or an unseen one. **Gems:** it tries for the third gem when it has located one, or when ≤ 6 fossils remain, or always when only the gems remain (otherwise two cautious bots can stall forever when only the gems are left).
+23. Bots do not model opponents or plan banking against the end of the game beyond `endgameTiles`.
 
-## UI
-27. Following the owner's "tabletop test": tap tiles, pieces, held sets and the delivered pile; no verb buttons, no timers. Quiet **End turn** / **Continue** is the only pacing control. A bot's whole turn is played at once and stays on the board (ring in its colour; its peek is a ringed face-down fossil) until the next tap.
-28. Privacy is by honour: your peek shows on the tile (tap it again to hide) and your delivered pile opens on tap. No "pass the device" screens, to keep taps to a minimum.
-29. The toggle's default is `GAME_DATA.movementDeliverySystem`; the setup screen can override it per game. Setup (names, bots, memory) is remembered in `localStorage` when available.
-30. No save/resume of a game in progress (a reload starts over).
-34. **Bot turns show their work (owner feedback):** a bot's peek is a dashed ring on a face-down space (number hidden); its flip is a solid ring on a face-up one. When a bot matches, the matched fossils stay face up on the board until the next tap (your own matches too), instead of vanishing with no trace.
-35. **Gem rule in the redesign** (peek a gem, flip a gem, tap your peeked gem to reveal it, then flip a third; a gem makes the set) was already implemented and is now covered by a tap-level browser test. In the rulebook mode the same set is made in the rulebook's order (flip a second fossil first, your own last), which keeps your gem private if the attempt fails.
-36. **Save and resume:** the game saves to the browser (`localStorage`) after every action — any phase, including mid-peek and with a bot's turn on the board — and resumes automatically on load; no "resume?" question (picking the game back up is the point). The random numbers' position is saved, so a resumed game plays out exactly as it would have. A save made under different rules (the rules data changed in an update) is cleared with a quiet note rather than resumed wrongly; a finished game, "new game", or a damaged save also clears it. Per device and browser: another iPad or a cleared browser starts fresh.
-37. **Prompts above the board:** shown to new players until the device has finished one game, then hidden (Auto / On / Off in the help panel). A compromise between the owner's "no instructional narration" rule and friends who have never seen the game.
-38. **End screen:** players' fossils laid out face up with the score instead of a table; the tiebreak reason stays as one short line because it is information the board cannot show.
-39. **Ring colour is not an accessibility gap:** only the current player's flips are on the board at any time, so the ring colour never has to distinguish players; the player strip and pieces carry names and numbers.
+## UI (the owner's "Tabletop Test")
+24. **Tap the table:** fossils and held sets are the controls; no verb buttons for game actions. The small **End turn** / **Continue** button is the only pacing control, and nothing advances on a timer. An opponent's whole turn is played at once and stays on the board until the next tap.
+25. **An opponent's turn shows its work:** its peek is a **dashed ring** on a face-down fossil (number hidden), its flip a **solid ring** on a face-up one; a bot that does not bank always reveals a space. Ring colour is not an accessibility gap, since only the current player's flips are ever shown.
+26. **Prompts above the board** show until a device has finished one game, then go quiet (Auto / On / Off in the help panel) — a compromise between "no instructional narration" and friends who have never seen the game.
+27. **End screen:** each player's banked fossils laid out with their score (a "+n" for bonus points), unbanked sets dimmed and struck through, the winner marked — not a stats table. The tiebreak reason stays as one line because the board cannot show it.
+28. **Save and resume:** the game saves to the browser after every action (any phase, mid-peek, with an opponent's turn showing) and resumes automatically on load; the random numbers' position is saved, so a resumed game plays out exactly as it would have. A save made under different rules, from an older version, or damaged is cleared with a quiet note rather than resumed wrongly. A finished game or starting over clears it. Per device and browser.
+29. A **library link** (‹ Tabletop Library) appears on the home screen when the game is served over http(s); opened as a standalone file there is nothing to link to.
 
 ## Simulation (REPORT.md)
-31. Fixed definitions: 4 players, memory 0.90 unless stated; seeds are `seed·100000 + game number` so runs are reproducible; "early leader" = the unique top scorer after 25 / 50 / 75 % of the game's turns (and a tie-aware variant); a shared win counts as a fractional win. OFF scores are pair counts, so spread is compared with the coefficient of variation as well as raw numbers.
-32. Caveat: bots are simple heuristics, so absolute numbers (especially how many points they strand undelivered) are bot behaviour, not human behaviour.
+30. Fixed definitions: seeds are `seed·100000 + game number`; "early leader" = the top scorer after 25 / 50 / 75 % of the game's turns, a tied lead sharing its credit; a shared win counts as a fractional win; head-to-head cells alternate who sits first. The "human proxy" is a bot of a given memory banking promptly — an ordering of difficulty, not a promise of a win rate.
+31. Banking habit was checked head-to-head (600 games per policy): waiting to bank was no better than banking at once within noise, so bots that stand in for people bank promptly.
+
+## Removed with the original rule set (for the record)
+Movement (0–3 spaces on a hex board, going around or pushing other pieces), the six corner research sites, die-rolled delivery assignments with repeat deposits, "50% cut" delivery of one fossil per set, and the rulebook's gem order. The decisions behind them are in the git history before 2026-10-18.
 
 ## Process
-33. Tests use Node's built-in runner (`npm test`); the browser tests use Playwright if installed and skip themselves otherwise.
+32. Tests use Node's built-in runner (`npm test`); the browser tests use Playwright if installed and skip themselves otherwise. A build runs the tests first, so a failing test keeps the old version live.

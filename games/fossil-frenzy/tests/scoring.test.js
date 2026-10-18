@@ -1,9 +1,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { Engine } = require('./load');
-const { game, standOn, stay } = require('./helpers');
+const { game } = require('./helpers');
 
-// Plays every remaining match through the real engine actions, current player doing each.
+// Plays every remaining match through the real engine actions, the current player doing each.
 function matchEverything(s, { stopBeforeLast = false } = {}) {
   const groups = {};
   for (const t of s.tokens) if (!t.matched) (groups[t.gem ? 'g' : t.value] ||= []).push(t.id);
@@ -12,15 +12,13 @@ function matchEverything(s, { stopBeforeLast = false } = {}) {
     for (let i = 0; i < ids.length; i += size) out.push(ids.slice(i, i + size));
     return out;
   });
-  list.sort((a, b) => b.length - a.length);   // gem triple first, so the last match is a pair
-  const total = list.length;
+  list.sort((a, b) => b.length - a.length);                       // gem triple first, so the last match is a pair
   list.forEach((ids, n) => {
-    if (stopBeforeLast && n === total - 1) return;
-    if (s.system) { standOn(s, s.current, ids[0]); stay(s); }
+    if (stopBeforeLast && n === list.length - 1) return;
     Engine.peek(s, ids[0]);
     Engine.flipOther(s, ids[1]);
-    if (ids.length === 3) { Engine.flipSecond(s, ids[2]); Engine.flipOwn(s); }
-    else Engine.flipOwn(s);
+    Engine.flipOwn(s);
+    if (ids.length === 3) Engine.flipSecond(s, ids[2]);
     if (!s.over) Engine.endTurn(s);
   });
   return list.length;
@@ -28,13 +26,11 @@ function matchEverything(s, { stopBeforeLast = false } = {}) {
 
 test('end: the game ends immediately when the last fossil is matched', () => {
   const s = game();
-  assert.equal(matchEverything(s, { stopBeforeLast: true }) , 15);
+  assert.equal(matchEverything(s, { stopBeforeLast: true }), 15);
   assert.equal(s.over, false);
   assert.equal(s.matchedCount, 29);
-  // final pair
   const rest = s.tokens.filter(t => !t.matched);
-  standOn(s, s.current, rest[0].id); stay(s);
-  Engine.peek(s); Engine.flipOther(s, rest[1].id); Engine.flipOwn(s);
+  Engine.peek(s, rest[0].id); Engine.flipOther(s, rest[1].id); Engine.flipOwn(s);
   assert.equal(s.over, true);
   assert.equal(s.phase, 'over');
   assert.ok(s.result);
@@ -43,50 +39,39 @@ test('end: the game ends immediately when the last fossil is matched', () => {
 });
 
 test('end: there are exactly 15 matches in a game (14 pairs + 1 gem triple)', () => {
-  const s = game();
-  assert.equal(matchEverything(s), 15);
-  assert.equal(s.over, true);
+  assert.equal(matchEverything(game()), 15);
 });
 
-test('end: face-up (undelivered) fossils are worth 0 points at the end', () => {
+test('end: sets you never banked are worth 0 points', () => {
   const s = game();
   matchEverything(s);
-  const sum = s.players.reduce((a, p) => a + p.sets.length, 0);
-  assert.equal(sum, 15);
+  assert.equal(s.players.reduce((a, p) => a + p.sets.length, 0), 15);
   assert.ok(Engine.standings(s).every(r => r.score === 0));
   assert.equal(s.result.standings.reduce((a, r) => a + r.stranded, 0), 15);
 });
 
-function finished(stashes) {
-  const s = game({ players: stashes.length });
-  stashes.forEach((st, i) => { s.players[i].stash = st; });
+function ended(points, sets, lastPopper) {
+  const s = game({ players: points.length });
+  points.forEach((p, i) => { s.players[i].points = p; s.players[i].poppedSets = sets[i]; });
+  s.lastPopper = lastPopper;
   return Engine.computeResult(s);
 }
 
-test('scoring: score is the sum of face-down delivered fossils; highest score wins', () => {
-  const r = finished([[10, 5], [16], [3, 2, 2]]);
-  assert.deepEqual(r.winners, [1]);
-  assert.deepEqual(r.ranking.map(x => x.idx), [1, 0, 2]);
-  assert.equal(r.standings[0].score, 15);
-  assert.equal(r.standings[1].score, 16);           // a gem is worth 16
+test('scoring: the highest score wins', () => {
+  const r = ended([5, 3, 9], [1, 9, 2], 1);
+  assert.deepEqual(r.winners, [2]);
+  assert.deepEqual(r.ranking.map(x => x.idx), [2, 0, 1]);
 });
 
-test('scoring tie-break 1: the most fossils wins', () => {
-  const r = finished([[10, 5], [5, 5, 5], [15]]);
-  assert.deepEqual(r.winners, [1]);
+test('tie-break 1: the most sets popped wins', () => {
+  assert.deepEqual(ended([5, 5], [4, 6], 0).winners, [1]);
 });
 
-test('scoring tie-break 2: still tied — the highest scoring fossil wins', () => {
-  const r = finished([[11, 4], [10, 5]]);
-  assert.deepEqual(r.winners, [0]);
+test('tie-break 2: still tied — whoever popped the final pair wins', () => {
+  assert.deepEqual(ended([5, 5], [6, 6], 1).winners, [1]);
+  assert.deepEqual(ended([5, 5, 5], [6, 6, 6], 2).winners, [2]);
 });
 
-test('scoring: still tied after all tie-breaks — shared win', () => {
-  const r = finished([[10, 5], [5, 10]]);
-  assert.deepEqual(r.winners.sort(), [0, 1]);
-});
-
-test('scoring: points come from the data block (gem value 16)', () => {
-  const s = game();
-  assert.ok(s.tokens.filter(t => t.gem).every(t => t.value === 16));
+test('tie-break 3: the final popper is not among the tied players — a shared win', () => {
+  assert.deepEqual(ended([5, 5, 2], [6, 6, 9], 2).winners, [0, 1]);
 });

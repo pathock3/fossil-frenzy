@@ -1,1707 +1,888 @@
 {
  "games": 1000,
  "seed": 1,
- "modes": {
-  "on": {
-   "equal4": {
-    "games": 1000,
-    "players": 4,
-    "turns": {
-     "mean": 43.28,
-     "median": 43,
-     "sd": 3.8405207980168563,
-     "p10": 38,
-     "p90": 48
-    },
-    "rounds": 10.82,
-    "finalScore": {
-     "meanPerPlayer": 16.99825,
-     "meanWinning": 24.998
-    },
-    "spread": {
-     "sdWithinGame": 5.919407058611937,
-     "rangeWithinGame": 15.228,
-     "cvWithinGame": 0.3514908563553426,
-     "meanMargin": 6.224,
-     "marginPctOfWinner": 0.24897991839347147
-    },
-    "sharedWinPct": 0.001,
-    "scoreTiePct": 0.049,
-    "early": {
-     "0.25": {
-      "games": 766,
-      "share": 0.766,
-      "winRate": 0.34595300261096606,
-      "anyGames": 779,
-      "anyShare": 0.779,
-      "tieAwareWinRate": 0.3433889602053915
-     },
-     "0.5": {
-      "games": 933,
-      "share": 0.933,
-      "winRate": 0.4565916398713826,
-      "anyGames": 1000,
-      "anyShare": 1,
-      "tieAwareWinRate": 0.4488333333333333
-     },
-     "0.75": {
-      "games": 946,
-      "share": 0.946,
-      "winRate": 0.5761099365750528,
-      "anyGames": 1000,
-      "anyShare": 1,
-      "tieAwareWinRate": 0.5641666666666667
-     }
-    },
-    "seatOrderWinShare": [
-     0.267,
-     0.2585,
-     0.2475,
-     0.227
-    ],
-    "stranded": {
-     "mean": 20.007,
-     "gamesWithAny": 1
-    }
+ "levels": [
+  "Beginner",
+  "Novice",
+  "Normal",
+  "Challenging",
+  "Master"
+ ],
+ "equal4": {
+  "games": 1000,
+  "players": 4,
+  "turns": {
+   "mean": 41.578,
+   "median": 42,
+   "sd": 2.2198909883145213,
+   "p10": 39,
+   "p90": 44
+  },
+  "rounds": 10.3945,
+  "finalScore": {
+   "meanPerPlayer": 18.352,
+   "meanWinning": 26.821
+  },
+  "spread": {
+   "sdWithinGame": 6.2378273415521,
+   "rangeWithinGame": 15.996,
+   "cvWithinGame": 0.3399443228119424,
+   "meanMargin": 6.586,
+   "marginPctOfWinner": 0.24555385705230975
+  },
+  "sharedWinPct": 0.013,
+  "scoreTiePct": 0.063,
+  "early": {
+   "0.25": {
+    "games": 925,
+    "share": 0.925,
+    "winRate": 0.3362162162162162,
+    "anyGames": 978,
+    "anyShare": 0.978,
+    "tieAwareWinRate": 0.32805044308111797
    },
-   "byPlayers": {
-    "2": {
-     "games": 1000,
-     "players": 2,
-     "turns": {
-      "mean": 43.227,
-      "median": 43,
-      "sd": 3.1517409474764913,
-      "p10": 39,
-      "p90": 47
-     },
-     "rounds": 21.6135,
-     "finalScore": {
-      "meanPerPlayer": 38.3175,
-      "meanWinning": 44.263
-     },
-     "spread": {
-      "sdWithinGame": 5.9455,
-      "rangeWithinGame": 11.891,
-      "cvWithinGame": 0.15541360706081142,
-      "meanMargin": 11.891,
-      "marginPctOfWinner": 0.2686442401102501
-     },
-     "sharedWinPct": 0,
-     "scoreTiePct": 0.026,
-     "early": {
-      "0.25": {
-       "games": 945,
-       "share": 0.945,
-       "winRate": 0.5693121693121693,
-       "anyGames": 965,
-       "anyShare": 0.965,
-       "tieAwareWinRate": 0.5678756476683938
-      },
-      "0.5": {
-       "games": 960,
-       "share": 0.96,
-       "winRate": 0.6510416666666666,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.645
-      },
-      "0.75": {
-       "games": 973,
-       "share": 0.973,
-       "winRate": 0.7841726618705036,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.7765
-      }
-     },
-     "seatOrderWinShare": [
-      0.503,
-      0.497
-     ],
-     "stranded": {
-      "mean": 11.365,
-      "gamesWithAny": 1
-     }
-    },
-    "3": {
-     "games": 1000,
-     "players": 3,
-     "turns": {
-      "mean": 43.513,
-      "median": 43,
-      "sd": 3.3123754316200307,
-      "p10": 39,
-      "p90": 48
-     },
-     "rounds": 14.504333333333333,
-     "finalScore": {
-      "meanPerPlayer": 24.297999999999973,
-      "meanWinning": 32.119
-     },
-     "spread": {
-      "sdWithinGame": 6.503274226853153,
-      "rangeWithinGame": 15.187,
-      "cvWithinGame": 0.26795864051977625,
-      "meanMargin": 8.276,
-      "marginPctOfWinner": 0.25766680158161837
-     },
-     "sharedWinPct": 0,
-     "scoreTiePct": 0.045,
-     "early": {
-      "0.25": {
-       "games": 873,
-       "share": 0.873,
-       "winRate": 0.41122565864833904,
-       "anyGames": 887,
-       "anyShare": 0.887,
-       "tieAwareWinRate": 0.41037204058624577
-      },
-      "0.5": {
-       "games": 957,
-       "share": 0.957,
-       "winRate": 0.542319749216301,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.5343333333333332
-      },
-      "0.75": {
-       "games": 950,
-       "share": 0.95,
-       "winRate": 0.6821052631578948,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.6683333333333332
-      }
-     },
-     "seatOrderWinShare": [
-      0.354,
-      0.345,
-      0.301
-     ],
-     "stranded": {
-      "mean": 15.106,
-      "gamesWithAny": 1
-     }
-    },
-    "4": {
-     "games": 1000,
-     "players": 4,
-     "turns": {
-      "mean": 43.28,
-      "median": 43,
-      "sd": 3.8405207980168563,
-      "p10": 38,
-      "p90": 48
-     },
-     "rounds": 10.82,
-     "finalScore": {
-      "meanPerPlayer": 16.99825,
-      "meanWinning": 24.998
-     },
-     "spread": {
-      "sdWithinGame": 5.919407058611937,
-      "rangeWithinGame": 15.228,
-      "cvWithinGame": 0.3514908563553426,
-      "meanMargin": 6.224,
-      "marginPctOfWinner": 0.24897991839347147
-     },
-     "sharedWinPct": 0.001,
-     "scoreTiePct": 0.049,
-     "early": {
-      "0.25": {
-       "games": 766,
-       "share": 0.766,
-       "winRate": 0.34595300261096606,
-       "anyGames": 779,
-       "anyShare": 0.779,
-       "tieAwareWinRate": 0.3433889602053915
-      },
-      "0.5": {
-       "games": 933,
-       "share": 0.933,
-       "winRate": 0.4565916398713826,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.4488333333333333
-      },
-      "0.75": {
-       "games": 946,
-       "share": 0.946,
-       "winRate": 0.5761099365750528,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.5641666666666667
-      }
-     },
-     "seatOrderWinShare": [
-      0.267,
-      0.2585,
-      0.2475,
-      0.227
-     ],
-     "stranded": {
-      "mean": 20.007,
-      "gamesWithAny": 1
-     }
-    },
-    "5": {
-     "games": 1000,
-     "players": 5,
-     "turns": {
-      "mean": 43.114,
-      "median": 43,
-      "sd": 3.820079056773562,
-      "p10": 38,
-      "p90": 48
-     },
-     "rounds": 8.6228,
-     "finalScore": {
-      "meanPerPlayer": 12.923000000000009,
-      "meanWinning": 21.559
-     },
-     "spread": {
-      "sdWithinGame": 5.687760678805223,
-      "rangeWithinGame": 15.676,
-      "cvWithinGame": 0.44558630011278005,
-      "meanMargin": 5.797,
-      "marginPctOfWinner": 0.2688900227283269
-     },
-     "sharedWinPct": 0,
-     "scoreTiePct": 0.068,
-     "early": {
-      "0.25": {
-       "games": 730,
-       "share": 0.73,
-       "winRate": 0.2821917808219178,
-       "anyGames": 739,
-       "anyShare": 0.739,
-       "tieAwareWinRate": 0.2814614343707713
-      },
-      "0.5": {
-       "games": 943,
-       "share": 0.943,
-       "winRate": 0.4093319194061506,
-       "anyGames": 999,
-       "anyShare": 0.999,
-       "tieAwareWinRate": 0.4014014014014014
-      },
-      "0.75": {
-       "games": 926,
-       "share": 0.926,
-       "winRate": 0.541036717062635,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.5245
-      }
-     },
-     "seatOrderWinShare": [
-      0.232,
-      0.187,
-      0.229,
-      0.183,
-      0.169
-     ],
-     "stranded": {
-      "mean": 23.385,
-      "gamesWithAny": 1
-     }
-    },
-    "6": {
-     "games": 1000,
-     "players": 6,
-     "turns": {
-      "mean": 42.46,
-      "median": 42,
-      "sd": 3.86631607606002,
-      "p10": 38,
-      "p90": 48
-     },
-     "rounds": 7.076666666666667,
-     "finalScore": {
-      "meanPerPlayer": 9.984666666666667,
-      "meanWinning": 18.502
-     },
-     "spread": {
-      "sdWithinGame": 5.261761337490492,
-      "rangeWithinGame": 15.317,
-      "cvWithinGame": 0.5365015474599422,
-      "meanMargin": 4.972,
-      "marginPctOfWinner": 0.2687277051129608
-     },
-     "sharedWinPct": 0.002,
-     "scoreTiePct": 0.068,
-     "early": {
-      "0.25": {
-       "games": 546,
-       "share": 0.546,
-       "winRate": 0.2692307692307692,
-       "anyGames": 553,
-       "anyShare": 0.553,
-       "tieAwareWinRate": 0.2694394213381555
-      },
-      "0.5": {
-       "games": 952,
-       "share": 0.952,
-       "winRate": 0.35714285714285715,
-       "anyGames": 997,
-       "anyShare": 0.997,
-       "tieAwareWinRate": 0.35255767301905716
-      },
-      "0.75": {
-       "games": 936,
-       "share": 0.936,
-       "winRate": 0.49893162393162394,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.4835
-      }
-     },
-     "seatOrderWinShare": [
-      0.171,
-      0.1855,
-      0.1665,
-      0.1625,
-      0.1605,
-      0.154
-     ],
-     "stranded": {
-      "mean": 28.092,
-      "gamesWithAny": 1
-     }
-    }
+   "0.5": {
+    "games": 911,
+    "share": 0.911,
+    "winRate": 0.43907793633369924,
+    "anyGames": 1000,
+    "anyShare": 1,
+    "tieAwareWinRate": 0.4270833333333333
    },
-   "mixedWide": {
-    "levels": [
-     0.3,
-     0.55,
-     0.8,
-     1
-    ],
-    "rows": [
-     {
-      "memory": 0.3,
-      "winShare": 0.047,
-      "ci": 0.013117511410324748,
-      "meanScore": 10.043,
-      "meanRank": 3.377
-     },
-     {
-      "memory": 0.55,
-      "winShare": 0.164,
-      "ci": 0.022949917786345118,
-      "meanScore": 15.535,
-      "meanRank": 2.629
-     },
-     {
-      "memory": 0.8,
-      "winShare": 0.289,
-      "ci": 0.02809569586965235,
-      "meanScore": 19.43,
-      "meanRank": 2.135
-     },
-     {
-      "memory": 1,
-      "winShare": 0.5,
-      "ci": 0.030990321069650113,
-      "meanScore": 22.743,
-      "meanRank": 1.707
-     }
-    ],
-    "fairShare": 0.25,
-    "spearman": 0.5531878708138699,
-    "summary": {
-     "games": 1000,
-     "players": 4,
-     "turns": {
-      "mean": 46.445,
-      "median": 46,
-      "sd": 3.887283756043542,
-      "p10": 42,
-      "p90": 51
-     },
-     "rounds": 11.61125,
-     "finalScore": {
-      "meanPerPlayer": 16.93775,
-      "meanWinning": 27.252
-     },
-     "spread": {
-      "sdWithinGame": 7.657258959645292,
-      "rangeWithinGame": 19.765,
-      "cvWithinGame": 0.4547460244677079,
-      "meanMargin": 7.858,
-      "marginPctOfWinner": 0.2883458094818729
-     },
-     "sharedWinPct": 0,
-     "scoreTiePct": 0.051,
-     "early": {
-      "0.25": {
-       "games": 737,
-       "share": 0.737,
-       "winRate": 0.37449118046132973,
-       "anyGames": 755,
-       "anyShare": 0.755,
-       "tieAwareWinRate": 0.3748344370860927
-      },
-      "0.5": {
-       "games": 962,
-       "share": 0.962,
-       "winRate": 0.524948024948025,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.518
-      },
-      "0.75": {
-       "games": 929,
-       "share": 0.929,
-       "winRate": 0.6835306781485468,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.661
-      }
-     },
-     "seatOrderWinShare": [
-      0.292,
-      0.245,
-      0.225,
-      0.238
-     ],
-     "stranded": {
-      "mean": 20.249,
-      "gamesWithAny": 1
-     }
-    }
-   },
-   "mixedTiers": {
-    "levels": [
-     0.8,
-     0.9,
-     0.965,
-     0.99
-    ],
-    "rows": [
-     {
-      "memory": 0.8,
-      "winShare": 0.196,
-      "ci": 0.02460436332035438,
-      "meanScore": 15.738,
-      "meanRank": 2.639
-     },
-     {
-      "memory": 0.9,
-      "winShare": 0.236,
-      "ci": 0.026318355693317926,
-      "meanScore": 16.871,
-      "meanRank": 2.473
-     },
-     {
-      "memory": 0.965,
-      "winShare": 0.271,
-      "ci": 0.02754891385154776,
-      "meanScore": 17.628,
-      "meanRank": 2.373
-     },
-     {
-      "memory": 0.99,
-      "winShare": 0.297,
-      "ci": 0.028321220058464994,
-      "meanScore": 18.173,
-      "meanRank": 2.284
-     }
-    ],
-    "fairShare": 0.25,
-    "spearman": 0.11594672314952428,
-    "summary": {
-     "games": 1000,
-     "players": 4,
-     "turns": {
-      "mean": 43.222,
-      "median": 43,
-      "sd": 3.7478948757936066,
-      "p10": 39,
-      "p90": 48
-     },
-     "rounds": 10.8055,
-     "finalScore": {
-      "meanPerPlayer": 17.1025,
-      "meanWinning": 25.42
-     },
-     "spread": {
-      "sdWithinGame": 6.067429445924281,
-      "rangeWithinGame": 15.665,
-      "cvWithinGame": 0.3576704800168004,
-      "meanMargin": 6.662,
-      "marginPctOfWinner": 0.2620771046420141
-     },
-     "sharedWinPct": 0,
-     "scoreTiePct": 0.051,
-     "early": {
-      "0.25": {
-       "games": 761,
-       "share": 0.761,
-       "winRate": 0.35611038107752957,
-       "anyGames": 775,
-       "anyShare": 0.775,
-       "tieAwareWinRate": 0.3567741935483871
-      },
-      "0.5": {
-       "games": 936,
-       "share": 0.936,
-       "winRate": 0.42628205128205127,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.41883333333333334
-      },
-      "0.75": {
-       "games": 940,
-       "share": 0.94,
-       "winRate": 0.5840425531914893,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.57
-      }
-     },
-     "seatOrderWinShare": [
-      0.282,
-      0.252,
-      0.251,
-      0.215
-     ],
-     "stranded": {
-      "mean": 19.59,
-      "gamesWithAny": 1
-     }
-    }
-   },
-   "curve": [
-    {
-     "memory": 0.3,
-     "winShare": 0.066,
-     "ci": 0.015388683842356369,
-     "meanScore": 10.891
-    },
-    {
-     "memory": 0.5,
-     "winShare": 0.15,
-     "ci": 0.022131515989646983,
-     "meanScore": 14.05
-    },
-    {
-     "memory": 0.7,
-     "winShare": 0.2765,
-     "ci": 0.027721894531218462,
-     "meanScore": 17.106
-    },
-    {
-     "memory": 0.9,
-     "winShare": 0.353,
-     "ci": 0.029620716831299,
-     "meanScore": 19.244
-    },
-    {
-     "memory": 1,
-     "winShare": 0.415,
-     "ci": 0.030539227888078634,
-     "meanScore": 20.433
-    }
-   ],
-   "equalMemory": {
-    "1": {
-     "games": 1000,
-     "players": 4,
-     "turns": {
-      "mean": 42.757,
-      "median": 43,
-      "sd": 3.6466355726888877,
-      "p10": 38,
-      "p90": 47
-     },
-     "rounds": 10.68925,
-     "finalScore": {
-      "meanPerPlayer": 17.2335,
-      "meanWinning": 25.244
-     },
-     "spread": {
-      "sdWithinGame": 5.872869649812098,
-      "rangeWithinGame": 15.122,
-      "cvWithinGame": 0.3435758835431387,
-      "meanMargin": 6.26,
-      "marginPctOfWinner": 0.24797971795278084
-     },
-     "sharedWinPct": 0,
-     "scoreTiePct": 0.061,
-     "early": {
-      "0.25": {
-       "games": 789,
-       "share": 0.789,
-       "winRate": 0.32192648922686945,
-       "anyGames": 801,
-       "anyShare": 0.801,
-       "tieAwareWinRate": 0.32147315855181025
-      },
-      "0.5": {
-       "games": 936,
-       "share": 0.936,
-       "winRate": 0.4155982905982906,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.4098333333333334
-      },
-      "0.75": {
-       "games": 933,
-       "share": 0.933,
-       "winRate": 0.602357984994641,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.5825
-      }
-     },
-     "seatOrderWinShare": [
-      0.268,
-      0.242,
-      0.244,
-      0.246
-     ],
-     "stranded": {
-      "mean": 19.066,
-      "gamesWithAny": 1
-     }
-    },
-    "0.5": {
-     "games": 1000,
-     "players": 4,
-     "turns": {
-      "mean": 48.322,
-      "median": 48,
-      "sd": 4.309096889140472,
-      "p10": 43,
-      "p90": 54
-     },
-     "rounds": 12.0805,
-     "finalScore": {
-      "meanPerPlayer": 16.7005,
-      "meanWinning": 25.631
-     },
-     "spread": {
-      "sdWithinGame": 6.545134717032344,
-      "rangeWithinGame": 16.84,
-      "cvWithinGame": 0.3944691854324125,
-      "meanMargin": 7.048,
-      "marginPctOfWinner": 0.27497951699114354
-     },
-     "sharedWinPct": 0.002,
-     "scoreTiePct": 0.048,
-     "early": {
-      "0.25": {
-       "games": 726,
-       "share": 0.726,
-       "winRate": 0.3691460055096419,
-       "anyGames": 739,
-       "anyShare": 0.739,
-       "tieAwareWinRate": 0.36671177266576455
-      },
-      "0.5": {
-       "games": 942,
-       "share": 0.942,
-       "winRate": 0.46231422505307856,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.4525
-      },
-      "0.75": {
-       "games": 946,
-       "share": 0.946,
-       "winRate": 0.5909090909090909,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.579
-      }
-     },
-     "seatOrderWinShare": [
-      0.249,
-      0.2485,
-      0.243,
-      0.2595
-     ],
-     "stranded": {
-      "mean": 21.198,
-      "gamesWithAny": 1
-     }
-    },
-    "0.7": {
-     "games": 1000,
-     "players": 4,
-     "turns": {
-      "mean": 45.198,
-      "median": 45,
-      "sd": 3.889318192177131,
-      "p10": 41,
-      "p90": 51
-     },
-     "rounds": 11.2995,
-     "finalScore": {
-      "meanPerPlayer": 16.86725,
-      "meanWinning": 25.075
-     },
-     "spread": {
-      "sdWithinGame": 6.012623475450334,
-      "rangeWithinGame": 15.434,
-      "cvWithinGame": 0.3588393931666861,
-      "meanMargin": 6.499,
-      "marginPctOfWinner": 0.2591824526420738
-     },
-     "sharedWinPct": 0.001,
-     "scoreTiePct": 0.067,
-     "early": {
-      "0.25": {
-       "games": 745,
-       "share": 0.745,
-       "winRate": 0.3402684563758389,
-       "anyGames": 758,
-       "anyShare": 0.758,
-       "tieAwareWinRate": 0.3403693931398417
-      },
-      "0.5": {
-       "games": 949,
-       "share": 0.949,
-       "winRate": 0.4262381454162276,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.421
-      },
-      "0.75": {
-       "games": 930,
-       "share": 0.93,
-       "winRate": 0.5924731182795699,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.5761666666666667
-      }
-     },
-     "seatOrderWinShare": [
-      0.256,
-      0.258,
-      0.2525,
-      0.2335
-     ],
-     "stranded": {
-      "mean": 20.531,
-      "gamesWithAny": 1
-     }
-    },
-    "0.9": {
-     "games": 1000,
-     "players": 4,
-     "turns": {
-      "mean": 43.28,
-      "median": 43,
-      "sd": 3.8405207980168563,
-      "p10": 38,
-      "p90": 48
-     },
-     "rounds": 10.82,
-     "finalScore": {
-      "meanPerPlayer": 16.99825,
-      "meanWinning": 24.998
-     },
-     "spread": {
-      "sdWithinGame": 5.919407058611937,
-      "rangeWithinGame": 15.228,
-      "cvWithinGame": 0.3514908563553426,
-      "meanMargin": 6.224,
-      "marginPctOfWinner": 0.24897991839347147
-     },
-     "sharedWinPct": 0.001,
-     "scoreTiePct": 0.049,
-     "early": {
-      "0.25": {
-       "games": 766,
-       "share": 0.766,
-       "winRate": 0.34595300261096606,
-       "anyGames": 779,
-       "anyShare": 0.779,
-       "tieAwareWinRate": 0.3433889602053915
-      },
-      "0.5": {
-       "games": 933,
-       "share": 0.933,
-       "winRate": 0.4565916398713826,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.4488333333333333
-      },
-      "0.75": {
-       "games": 946,
-       "share": 0.946,
-       "winRate": 0.5761099365750528,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.5641666666666667
-      }
-     },
-     "seatOrderWinShare": [
-      0.267,
-      0.2585,
-      0.2475,
-      0.227
-     ],
-     "stranded": {
-      "mean": 20.007,
-      "gamesWithAny": 1
-     }
-    }
+   "0.75": {
+    "games": 943,
+    "share": 0.943,
+    "winRate": 0.6049840933191941,
+    "anyGames": 1000,
+    "anyShare": 1,
+    "tieAwareWinRate": 0.5915
    }
   },
-  "off": {
-   "equal4": {
-    "games": 1000,
-    "players": 4,
-    "turns": {
-     "mean": 41.578,
-     "median": 42,
-     "sd": 2.2198909883145213,
-     "p10": 39,
-     "p90": 44
-    },
-    "rounds": 10.3945,
-    "finalScore": {
-     "meanPerPlayer": 18.352,
-     "meanWinning": 26.821
-    },
-    "spread": {
-     "sdWithinGame": 6.2378273415521,
-     "rangeWithinGame": 15.996,
-     "cvWithinGame": 0.3399443228119424,
-     "meanMargin": 6.586,
-     "marginPctOfWinner": 0.24555385705230975
-    },
-    "sharedWinPct": 0.013,
-    "scoreTiePct": 0.063,
-    "early": {
-     "0.25": {
-      "games": 925,
-      "share": 0.925,
-      "winRate": 0.3362162162162162,
-      "anyGames": 978,
-      "anyShare": 0.978,
-      "tieAwareWinRate": 0.32805044308111797
-     },
-     "0.5": {
-      "games": 911,
-      "share": 0.911,
-      "winRate": 0.43907793633369924,
-      "anyGames": 1000,
-      "anyShare": 1,
-      "tieAwareWinRate": 0.4270833333333333
-     },
-     "0.75": {
-      "games": 943,
-      "share": 0.943,
-      "winRate": 0.6049840933191941,
-      "anyGames": 1000,
-      "anyShare": 1,
-      "tieAwareWinRate": 0.5915
-     }
-    },
-    "seatOrderWinShare": [
-     0.2665,
-     0.248,
-     0.2305,
-     0.255
-    ],
-    "stranded": {
-     "mean": 2.58,
-     "gamesWithAny": 1
-    }
+  "seatOrderWinShare": [
+   0.2665,
+   0.248,
+   0.2305,
+   0.255
+  ],
+  "stranded": {
+   "mean": 2.58,
+   "gamesWithAny": 1
+  }
+ },
+ "byPlayers": {
+  "2": {
+   "games": 1000,
+   "players": 2,
+   "turns": {
+    "mean": 40.778,
+    "median": 41,
+    "sd": 1.8505988220033058,
+    "p10": 38,
+    "p90": 43
    },
-   "byPlayers": {
-    "2": {
-     "games": 1000,
-     "players": 2,
-     "turns": {
-      "mean": 40.778,
-      "median": 41,
-      "sd": 1.8505988220033058,
-      "p10": 38,
-      "p90": 43
-     },
-     "rounds": 20.389,
-     "finalScore": {
-      "meanPerPlayer": 40.3885,
-      "meanWinning": 46.622
-     },
-     "spread": {
-      "sdWithinGame": 6.2335,
-      "rangeWithinGame": 12.467,
-      "cvWithinGame": 0.1542198753684424,
-      "meanMargin": 12.467,
-      "marginPctOfWinner": 0.26740594569087556
-     },
-     "sharedWinPct": 0,
-     "scoreTiePct": 0.025,
-     "early": {
-      "0.25": {
-       "games": 930,
-       "share": 0.93,
-       "winRate": 0.5903225806451613,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.584
-      },
-      "0.5": {
-       "games": 960,
-       "share": 0.96,
-       "winRate": 0.6479166666666667,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.642
-      },
-      "0.75": {
-       "games": 975,
-       "share": 0.975,
-       "winRate": 0.7630769230769231,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.7565
-      }
-     },
-     "seatOrderWinShare": [
-      0.541,
-      0.459
-     ],
-     "stranded": {
-      "mean": 1.518,
-      "gamesWithAny": 1
-     }
-    },
-    "3": {
-     "games": 1000,
-     "players": 3,
-     "turns": {
-      "mean": 41.452,
-      "median": 41,
-      "sd": 2.018835307795055,
-      "p10": 39,
-      "p90": 44
-     },
-     "rounds": 13.817333333333332,
-     "finalScore": {
-      "meanPerPlayer": 25.69433333333336,
-      "meanWinning": 33.65
-     },
-     "spread": {
-      "sdWithinGame": 6.546390245389062,
-      "rangeWithinGame": 15.265,
-      "cvWithinGame": 0.25511580489934654,
-      "meanMargin": 8.602,
-      "marginPctOfWinner": 0.25563150074294205
-     },
-     "sharedWinPct": 0.008,
-     "scoreTiePct": 0.038,
-     "early": {
-      "0.25": {
-       "games": 937,
-       "share": 0.937,
-       "winRate": 0.4028815368196371,
-       "anyGames": 995,
-       "anyShare": 0.995,
-       "tieAwareWinRate": 0.39849246231155777
-      },
-      "0.5": {
-       "games": 925,
-       "share": 0.925,
-       "winRate": 0.505945945945946,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.49491666666666667
-      },
-      "0.75": {
-       "games": 964,
-       "share": 0.964,
-       "winRate": 0.6592323651452282,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.6508333333333334
-      }
-     },
-     "seatOrderWinShare": [
-      0.351,
-      0.3115,
-      0.3375
-     ],
-     "stranded": {
-      "mean": 2.078,
-      "gamesWithAny": 1
-     }
-    },
-    "4": {
-     "games": 1000,
-     "players": 4,
-     "turns": {
-      "mean": 41.578,
-      "median": 42,
-      "sd": 2.2198909883145213,
-      "p10": 39,
-      "p90": 44
-     },
-     "rounds": 10.3945,
-     "finalScore": {
-      "meanPerPlayer": 18.352,
-      "meanWinning": 26.821
-     },
-     "spread": {
-      "sdWithinGame": 6.2378273415521,
-      "rangeWithinGame": 15.996,
-      "cvWithinGame": 0.3399443228119424,
-      "meanMargin": 6.586,
-      "marginPctOfWinner": 0.24555385705230975
-     },
-     "sharedWinPct": 0.013,
-     "scoreTiePct": 0.063,
-     "early": {
-      "0.25": {
-       "games": 925,
-       "share": 0.925,
-       "winRate": 0.3362162162162162,
-       "anyGames": 978,
-       "anyShare": 0.978,
-       "tieAwareWinRate": 0.32805044308111797
-      },
-      "0.5": {
-       "games": 911,
-       "share": 0.911,
-       "winRate": 0.43907793633369924,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.4270833333333333
-      },
-      "0.75": {
-       "games": 943,
-       "share": 0.943,
-       "winRate": 0.6049840933191941,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.5915
-      }
-     },
-     "seatOrderWinShare": [
-      0.2665,
-      0.248,
-      0.2305,
-      0.255
-     ],
-     "stranded": {
-      "mean": 2.58,
-      "gamesWithAny": 1
-     }
-    },
-    "5": {
-     "games": 1000,
-     "players": 5,
-     "turns": {
-      "mean": 41.753,
-      "median": 42,
-      "sd": 2.350317212633225,
-      "p10": 39,
-      "p90": 45
-     },
-     "rounds": 8.3506,
-     "finalScore": {
-      "meanPerPlayer": 13.984799999999982,
-      "meanWinning": 22.951
-     },
-     "spread": {
-      "sdWithinGame": 5.88201737753191,
-      "rangeWithinGame": 16.12,
-      "cvWithinGame": 0.4207647056897962,
-      "meanMargin": 5.975,
-      "marginPctOfWinner": 0.26033724020739835
-     },
-     "sharedWinPct": 0.018,
-     "scoreTiePct": 0.069,
-     "early": {
-      "0.25": {
-       "games": 860,
-       "share": 0.86,
-       "winRate": 0.27868217054263567,
-       "anyGames": 888,
-       "anyShare": 0.888,
-       "tieAwareWinRate": 0.2772147147147147
-      },
-      "0.5": {
-       "games": 912,
-       "share": 0.912,
-       "winRate": 0.41849415204678364,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.4031666666666666
-      },
-      "0.75": {
-       "games": 922,
-       "share": 0.922,
-       "winRate": 0.562183658712943,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.5448333333333333
-      }
-     },
-     "seatOrderWinShare": [
-      0.21333333333333332,
-      0.2263333333333333,
-      0.1855,
-      0.18866666666666665,
-      0.18616666666666665
-     ],
-     "stranded": {
-      "mean": 3.068,
-      "gamesWithAny": 1
-     }
-    },
-    "6": {
-     "games": 1000,
-     "players": 6,
-     "turns": {
-      "mean": 41.919,
-      "median": 42,
-      "sd": 2.5803951247822523,
-      "p10": 39,
-      "p90": 45
-     },
-     "rounds": 6.9864999999999995,
-     "finalScore": {
-      "meanPerPlayer": 11.125500000000006,
-      "meanWinning": 19.994
-     },
-     "spread": {
-      "sdWithinGame": 5.42182288759996,
-      "rangeWithinGame": 15.728,
-      "cvWithinGame": 0.4877908708973103,
-      "meanMargin": 5.267,
-      "marginPctOfWinner": 0.2634290287086126
-     },
-     "sharedWinPct": 0.022,
-     "scoreTiePct": 0.085,
-     "early": {
-      "0.25": {
-       "games": 728,
-       "share": 0.728,
-       "winRate": 0.21497252747252749,
-       "anyGames": 742,
-       "anyShare": 0.742,
-       "tieAwareWinRate": 0.21428571428571427
-      },
-      "0.5": {
-       "games": 926,
-       "share": 0.926,
-       "winRate": 0.36915046796256296,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.3591666666666667
-      },
-      "0.75": {
-       "games": 907,
-       "share": 0.907,
-       "winRate": 0.5044101433296582,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.48499999999999993
-      }
-     },
-     "seatOrderWinShare": [
-      0.191,
-      0.1373333333333333,
-      0.175,
-      0.16733333333333333,
-      0.165,
-      0.16433333333333333
-     ],
-     "stranded": {
-      "mean": 3.483,
-      "gamesWithAny": 1
-     }
-    }
+   "rounds": 20.389,
+   "finalScore": {
+    "meanPerPlayer": 40.3885,
+    "meanWinning": 46.622
    },
-   "mixedWide": {
-    "levels": [
-     0.3,
-     0.55,
-     0.8,
-     1
-    ],
-    "rows": [
-     {
-      "memory": 0.3,
-      "winShare": 0.0425,
-      "ci": 0.012503163999564271,
-      "meanScore": 11.029,
-      "meanRank": 3.333
-     },
-     {
-      "memory": 0.55,
-      "winShare": 0.1255,
-      "ci": 0.02053325691652447,
-      "meanScore": 16.088,
-      "meanRank": 2.695
-     },
-     {
-      "memory": 0.8,
-      "winShare": 0.33,
-      "ci": 0.029144086192570865,
-      "meanScore": 21.344,
-      "meanRank": 2.041
-     },
-     {
-      "memory": 1,
-      "winShare": 0.502,
-      "ci": 0.03099007314608986,
-      "meanScore": 24.233,
-      "meanRank": 1.739
-     }
-    ],
-    "fairShare": 0.25,
-    "spearman": 0.5485585909099626,
-    "summary": {
-     "games": 1000,
-     "players": 4,
-     "turns": {
-      "mean": 44.99,
-      "median": 45,
-      "sd": 2.855853637706245,
-      "p10": 41,
-      "p90": 49
-     },
-     "rounds": 11.2475,
-     "finalScore": {
-      "meanPerPlayer": 18.1735,
-      "meanWinning": 28.914
-     },
-     "spread": {
-      "sdWithinGame": 7.9893417462094085,
-      "rangeWithinGame": 20.56,
-      "cvWithinGame": 0.4397956152894266,
-      "meanMargin": 8.215,
-      "marginPctOfWinner": 0.2841184201424915
-     },
-     "sharedWinPct": 0.012,
-     "scoreTiePct": 0.055,
-     "early": {
-      "0.25": {
-       "games": 924,
-       "share": 0.924,
-       "winRate": 0.36742424242424243,
-       "anyGames": 978,
-       "anyShare": 0.978,
-       "tieAwareWinRate": 0.3647750511247444
-      },
-      "0.5": {
-       "games": 915,
-       "share": 0.915,
-       "winRate": 0.5409836065573771,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.5229166666666667
-      },
-      "0.75": {
-       "games": 938,
-       "share": 0.938,
-       "winRate": 0.6673773987206824,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.6495
-      }
-     },
-     "seatOrderWinShare": [
-      0.268,
-      0.2625,
-      0.2395,
-      0.23
-     ],
-     "stranded": {
-      "mean": 2.605,
-      "gamesWithAny": 1
-     }
-    }
+   "spread": {
+    "sdWithinGame": 6.2335,
+    "rangeWithinGame": 12.467,
+    "cvWithinGame": 0.1542198753684424,
+    "meanMargin": 12.467,
+    "marginPctOfWinner": 0.26740594569087556
    },
-   "mixedTiers": {
-    "levels": [
-     0.8,
-     0.9,
-     0.965,
-     0.99
-    ],
-    "rows": [
-     {
-      "memory": 0.8,
-      "winShare": 0.173,
-      "ci": 0.023444008906328286,
-      "meanScore": 16.661,
-      "meanRank": 2.686
-     },
-     {
-      "memory": 0.9,
-      "winShare": 0.246,
-      "ci": 0.0266937321182333,
-      "meanScore": 18.167,
-      "meanRank": 2.457
-     },
-     {
-      "memory": 0.965,
-      "winShare": 0.2535,
-      "ci": 0.026962487652292026,
-      "meanScore": 18.697,
-      "meanRank": 2.398
-     },
-     {
-      "memory": 0.99,
-      "winShare": 0.3275,
-      "ci": 0.02908759856021119,
-      "meanScore": 19.793,
-      "meanRank": 2.262
-     }
-    ],
-    "fairShare": 0.25,
-    "spearman": 0.1357371721441245,
-    "summary": {
-     "games": 1000,
-     "players": 4,
-     "turns": {
-      "mean": 41.552,
-      "median": 42,
-      "sd": 2.197565926201077,
-      "p10": 39,
-      "p90": 44
-     },
-     "rounds": 10.388,
-     "finalScore": {
-      "meanPerPlayer": 18.3295,
-      "meanWinning": 27.026
-     },
-     "spread": {
-      "sdWithinGame": 6.3348740980082505,
-      "rangeWithinGame": 16.305,
-      "cvWithinGame": 0.345796279598296,
-      "meanMargin": 6.946,
-      "marginPctOfWinner": 0.257011766447125
-     },
-     "sharedWinPct": 0.008,
-     "scoreTiePct": 0.047,
-     "early": {
-      "0.25": {
-       "games": 916,
-       "share": 0.916,
-       "winRate": 0.3395196506550218,
-       "anyGames": 973,
-       "anyShare": 0.973,
-       "tieAwareWinRate": 0.3340184994861254
-      },
-      "0.5": {
-       "games": 911,
-       "share": 0.911,
-       "winRate": 0.4643249176728869,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.4518333333333333
-      },
-      "0.75": {
-       "games": 932,
-       "share": 0.932,
-       "winRate": 0.6078326180257511,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.5889166666666666
-      }
-     },
-     "seatOrderWinShare": [
-      0.2565,
-      0.2615,
-      0.248,
-      0.234
-     ],
-     "stranded": {
-      "mean": 2.574,
-      "gamesWithAny": 1
-     }
-    }
-   },
-   "curve": [
-    {
-     "memory": 0.3,
-     "winShare": 0.053,
-     "ci": 0.013885738928843505,
-     "meanScore": 11.19
-    },
-    {
-     "memory": 0.5,
-     "winShare": 0.1425,
-     "ci": 0.021666091248769354,
-     "meanScore": 15.342
-    },
-    {
-     "memory": 0.7,
-     "winShare": 0.26,
-     "ci": 0.027186832106738733,
-     "meanScore": 18.335
-    },
-    {
-     "memory": 0.9,
-     "winShare": 0.37,
-     "ci": 0.02992452104879876,
-     "meanScore": 20.694
-    },
-    {
-     "memory": 1,
-     "winShare": 0.424,
-     "ci": 0.03063022883362121,
-     "meanScore": 22.015
-    }
-   ],
-   "equalMemory": {
-    "1": {
-     "games": 1000,
-     "players": 4,
-     "turns": {
-      "mean": 40.907,
-      "median": 41,
-      "sd": 2.1373701130127225,
-      "p10": 38,
-      "p90": 44
-     },
-     "rounds": 10.22675,
-     "finalScore": {
-      "meanPerPlayer": 18.32,
-      "meanWinning": 26.752
-     },
-     "spread": {
-      "sdWithinGame": 6.1537919338620455,
-      "rangeWithinGame": 15.787,
-      "cvWithinGame": 0.33522226389667636,
-      "meanMargin": 6.611,
-      "marginPctOfWinner": 0.2471217105263158
-     },
-     "sharedWinPct": 0.017,
-     "scoreTiePct": 0.061,
-     "early": {
-      "0.25": {
-       "games": 928,
-       "share": 0.928,
-       "winRate": 0.3421336206896552,
-       "anyGames": 983,
-       "anyShare": 0.983,
-       "tieAwareWinRate": 0.3336724313326551
-      },
-      "0.5": {
-       "games": 911,
-       "share": 0.911,
-       "winRate": 0.4610318331503842,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.45175
-      },
-      "0.75": {
-       "games": 932,
-       "share": 0.932,
-       "winRate": 0.6169527896995708,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.5993333333333334
-      }
-     },
-     "seatOrderWinShare": [
-      0.267,
-      0.2515,
-      0.238,
-      0.2435
-     ],
-     "stranded": {
-      "mean": 2.595,
-      "gamesWithAny": 1
-     }
+   "sharedWinPct": 0,
+   "scoreTiePct": 0.025,
+   "early": {
+    "0.25": {
+     "games": 930,
+     "share": 0.93,
+     "winRate": 0.5903225806451613,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.584
     },
     "0.5": {
-     "games": 1000,
-     "players": 4,
-     "turns": {
-      "mean": 46.797,
-      "median": 47,
-      "sd": 3.1463933320549735,
-      "p10": 43,
-      "p90": 51
-     },
-     "rounds": 11.69925,
-     "finalScore": {
-      "meanPerPlayer": 18.096,
-      "meanWinning": 27.271
-     },
-     "spread": {
-      "sdWithinGame": 6.7233194254134885,
-      "rangeWithinGame": 17.298,
-      "cvWithinGame": 0.3718445712770771,
-      "meanMargin": 7.154,
-      "marginPctOfWinner": 0.26232994756334566
-     },
-     "sharedWinPct": 0.013,
-     "scoreTiePct": 0.058,
-     "early": {
-      "0.25": {
-       "games": 907,
-       "share": 0.907,
-       "winRate": 0.3484013230429989,
-       "anyGames": 963,
-       "anyShare": 0.963,
-       "tieAwareWinRate": 0.3435444790584977
-      },
-      "0.5": {
-       "games": 930,
-       "share": 0.93,
-       "winRate": 0.45483870967741935,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.4430833333333334
-      },
-      "0.75": {
-       "games": 933,
-       "share": 0.933,
-       "winRate": 0.602357984994641,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.5866666666666667
-      }
-     },
-     "seatOrderWinShare": [
-      0.2635,
-      0.259,
-      0.232,
-      0.2455
-     ],
-     "stranded": {
-      "mean": 2.614,
-      "gamesWithAny": 1
-     }
+     "games": 960,
+     "share": 0.96,
+     "winRate": 0.6479166666666667,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.642
     },
-    "0.7": {
-     "games": 1000,
-     "players": 4,
-     "turns": {
-      "mean": 43.721,
-      "median": 44,
-      "sd": 2.6816336438820425,
-      "p10": 40,
-      "p90": 47
-     },
-     "rounds": 10.93025,
-     "finalScore": {
-      "meanPerPlayer": 18.1735,
-      "meanWinning": 26.88
-     },
-     "spread": {
-      "sdWithinGame": 6.4093898744613105,
-      "rangeWithinGame": 16.55,
-      "cvWithinGame": 0.3525970524792416,
-      "meanMargin": 6.788,
-      "marginPctOfWinner": 0.25252976190476195
-     },
-     "sharedWinPct": 0.009,
-     "scoreTiePct": 0.041,
-     "early": {
-      "0.25": {
-       "games": 913,
-       "share": 0.913,
-       "winRate": 0.33406352683461116,
-       "anyGames": 969,
-       "anyShare": 0.969,
-       "tieAwareWinRate": 0.3328173374613003
-      },
-      "0.5": {
-       "games": 922,
-       "share": 0.922,
-       "winRate": 0.46366594360086766,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.45374999999999993
-      },
-      "0.75": {
-       "games": 934,
-       "share": 0.934,
-       "winRate": 0.617237687366167,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.6013333333333335
-      }
-     },
-     "seatOrderWinShare": [
-      0.2845,
-      0.229,
-      0.234,
-      0.2525
-     ],
-     "stranded": {
-      "mean": 2.643,
-      "gamesWithAny": 1
-     }
-    },
-    "0.9": {
-     "games": 1000,
-     "players": 4,
-     "turns": {
-      "mean": 41.578,
-      "median": 42,
-      "sd": 2.2198909883145213,
-      "p10": 39,
-      "p90": 44
-     },
-     "rounds": 10.3945,
-     "finalScore": {
-      "meanPerPlayer": 18.352,
-      "meanWinning": 26.821
-     },
-     "spread": {
-      "sdWithinGame": 6.2378273415521,
-      "rangeWithinGame": 15.996,
-      "cvWithinGame": 0.3399443228119424,
-      "meanMargin": 6.586,
-      "marginPctOfWinner": 0.24555385705230975
-     },
-     "sharedWinPct": 0.013,
-     "scoreTiePct": 0.063,
-     "early": {
-      "0.25": {
-       "games": 925,
-       "share": 0.925,
-       "winRate": 0.3362162162162162,
-       "anyGames": 978,
-       "anyShare": 0.978,
-       "tieAwareWinRate": 0.32805044308111797
-      },
-      "0.5": {
-       "games": 911,
-       "share": 0.911,
-       "winRate": 0.43907793633369924,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.4270833333333333
-      },
-      "0.75": {
-       "games": 943,
-       "share": 0.943,
-       "winRate": 0.6049840933191941,
-       "anyGames": 1000,
-       "anyShare": 1,
-       "tieAwareWinRate": 0.5915
-      }
-     },
-     "seatOrderWinShare": [
-      0.2665,
-      0.248,
-      0.2305,
-      0.255
-     ],
-     "stranded": {
-      "mean": 2.58,
-      "gamesWithAny": 1
-     }
+    "0.75": {
+     "games": 975,
+     "share": 0.975,
+     "winRate": 0.7630769230769231,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.7565
     }
+   },
+   "seatOrderWinShare": [
+    0.541,
+    0.459
+   ],
+   "stranded": {
+    "mean": 1.518,
+    "gamesWithAny": 1
+   }
+  },
+  "3": {
+   "games": 1000,
+   "players": 3,
+   "turns": {
+    "mean": 41.452,
+    "median": 41,
+    "sd": 2.018835307795055,
+    "p10": 39,
+    "p90": 44
+   },
+   "rounds": 13.817333333333332,
+   "finalScore": {
+    "meanPerPlayer": 25.69433333333336,
+    "meanWinning": 33.65
+   },
+   "spread": {
+    "sdWithinGame": 6.546390245389062,
+    "rangeWithinGame": 15.265,
+    "cvWithinGame": 0.25511580489934654,
+    "meanMargin": 8.602,
+    "marginPctOfWinner": 0.25563150074294205
+   },
+   "sharedWinPct": 0.008,
+   "scoreTiePct": 0.038,
+   "early": {
+    "0.25": {
+     "games": 937,
+     "share": 0.937,
+     "winRate": 0.4028815368196371,
+     "anyGames": 995,
+     "anyShare": 0.995,
+     "tieAwareWinRate": 0.39849246231155777
+    },
+    "0.5": {
+     "games": 925,
+     "share": 0.925,
+     "winRate": 0.505945945945946,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.49491666666666667
+    },
+    "0.75": {
+     "games": 964,
+     "share": 0.964,
+     "winRate": 0.6592323651452282,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.6508333333333334
+    }
+   },
+   "seatOrderWinShare": [
+    0.351,
+    0.3115,
+    0.3375
+   ],
+   "stranded": {
+    "mean": 2.078,
+    "gamesWithAny": 1
+   }
+  },
+  "4": {
+   "games": 1000,
+   "players": 4,
+   "turns": {
+    "mean": 41.578,
+    "median": 42,
+    "sd": 2.2198909883145213,
+    "p10": 39,
+    "p90": 44
+   },
+   "rounds": 10.3945,
+   "finalScore": {
+    "meanPerPlayer": 18.352,
+    "meanWinning": 26.821
+   },
+   "spread": {
+    "sdWithinGame": 6.2378273415521,
+    "rangeWithinGame": 15.996,
+    "cvWithinGame": 0.3399443228119424,
+    "meanMargin": 6.586,
+    "marginPctOfWinner": 0.24555385705230975
+   },
+   "sharedWinPct": 0.013,
+   "scoreTiePct": 0.063,
+   "early": {
+    "0.25": {
+     "games": 925,
+     "share": 0.925,
+     "winRate": 0.3362162162162162,
+     "anyGames": 978,
+     "anyShare": 0.978,
+     "tieAwareWinRate": 0.32805044308111797
+    },
+    "0.5": {
+     "games": 911,
+     "share": 0.911,
+     "winRate": 0.43907793633369924,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.4270833333333333
+    },
+    "0.75": {
+     "games": 943,
+     "share": 0.943,
+     "winRate": 0.6049840933191941,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.5915
+    }
+   },
+   "seatOrderWinShare": [
+    0.2665,
+    0.248,
+    0.2305,
+    0.255
+   ],
+   "stranded": {
+    "mean": 2.58,
+    "gamesWithAny": 1
    }
   }
  },
- "seconds": 42.805
+ "equalMemory": {
+  "1": {
+   "games": 1000,
+   "players": 4,
+   "turns": {
+    "mean": 40.907,
+    "median": 41,
+    "sd": 2.1373701130127225,
+    "p10": 38,
+    "p90": 44
+   },
+   "rounds": 10.22675,
+   "finalScore": {
+    "meanPerPlayer": 18.32,
+    "meanWinning": 26.752
+   },
+   "spread": {
+    "sdWithinGame": 6.1537919338620455,
+    "rangeWithinGame": 15.787,
+    "cvWithinGame": 0.33522226389667636,
+    "meanMargin": 6.611,
+    "marginPctOfWinner": 0.2471217105263158
+   },
+   "sharedWinPct": 0.017,
+   "scoreTiePct": 0.061,
+   "early": {
+    "0.25": {
+     "games": 928,
+     "share": 0.928,
+     "winRate": 0.3421336206896552,
+     "anyGames": 983,
+     "anyShare": 0.983,
+     "tieAwareWinRate": 0.3336724313326551
+    },
+    "0.5": {
+     "games": 911,
+     "share": 0.911,
+     "winRate": 0.4610318331503842,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.45175
+    },
+    "0.75": {
+     "games": 932,
+     "share": 0.932,
+     "winRate": 0.6169527896995708,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.5993333333333334
+    }
+   },
+   "seatOrderWinShare": [
+    0.267,
+    0.2515,
+    0.238,
+    0.2435
+   ],
+   "stranded": {
+    "mean": 2.595,
+    "gamesWithAny": 1
+   }
+  },
+  "0.5": {
+   "games": 1000,
+   "players": 4,
+   "turns": {
+    "mean": 46.797,
+    "median": 47,
+    "sd": 3.1463933320549735,
+    "p10": 43,
+    "p90": 51
+   },
+   "rounds": 11.69925,
+   "finalScore": {
+    "meanPerPlayer": 18.096,
+    "meanWinning": 27.271
+   },
+   "spread": {
+    "sdWithinGame": 6.7233194254134885,
+    "rangeWithinGame": 17.298,
+    "cvWithinGame": 0.3718445712770771,
+    "meanMargin": 7.154,
+    "marginPctOfWinner": 0.26232994756334566
+   },
+   "sharedWinPct": 0.013,
+   "scoreTiePct": 0.058,
+   "early": {
+    "0.25": {
+     "games": 907,
+     "share": 0.907,
+     "winRate": 0.3484013230429989,
+     "anyGames": 963,
+     "anyShare": 0.963,
+     "tieAwareWinRate": 0.3435444790584977
+    },
+    "0.5": {
+     "games": 930,
+     "share": 0.93,
+     "winRate": 0.45483870967741935,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.4430833333333334
+    },
+    "0.75": {
+     "games": 933,
+     "share": 0.933,
+     "winRate": 0.602357984994641,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.5866666666666667
+    }
+   },
+   "seatOrderWinShare": [
+    0.2635,
+    0.259,
+    0.232,
+    0.2455
+   ],
+   "stranded": {
+    "mean": 2.614,
+    "gamesWithAny": 1
+   }
+  },
+  "0.7": {
+   "games": 1000,
+   "players": 4,
+   "turns": {
+    "mean": 43.721,
+    "median": 44,
+    "sd": 2.6816336438820425,
+    "p10": 40,
+    "p90": 47
+   },
+   "rounds": 10.93025,
+   "finalScore": {
+    "meanPerPlayer": 18.1735,
+    "meanWinning": 26.88
+   },
+   "spread": {
+    "sdWithinGame": 6.4093898744613105,
+    "rangeWithinGame": 16.55,
+    "cvWithinGame": 0.3525970524792416,
+    "meanMargin": 6.788,
+    "marginPctOfWinner": 0.25252976190476195
+   },
+   "sharedWinPct": 0.009,
+   "scoreTiePct": 0.041,
+   "early": {
+    "0.25": {
+     "games": 913,
+     "share": 0.913,
+     "winRate": 0.33406352683461116,
+     "anyGames": 969,
+     "anyShare": 0.969,
+     "tieAwareWinRate": 0.3328173374613003
+    },
+    "0.5": {
+     "games": 922,
+     "share": 0.922,
+     "winRate": 0.46366594360086766,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.45374999999999993
+    },
+    "0.75": {
+     "games": 934,
+     "share": 0.934,
+     "winRate": 0.617237687366167,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.6013333333333335
+    }
+   },
+   "seatOrderWinShare": [
+    0.2845,
+    0.229,
+    0.234,
+    0.2525
+   ],
+   "stranded": {
+    "mean": 2.643,
+    "gamesWithAny": 1
+   }
+  },
+  "0.9": {
+   "games": 1000,
+   "players": 4,
+   "turns": {
+    "mean": 41.578,
+    "median": 42,
+    "sd": 2.2198909883145213,
+    "p10": 39,
+    "p90": 44
+   },
+   "rounds": 10.3945,
+   "finalScore": {
+    "meanPerPlayer": 18.352,
+    "meanWinning": 26.821
+   },
+   "spread": {
+    "sdWithinGame": 6.2378273415521,
+    "rangeWithinGame": 15.996,
+    "cvWithinGame": 0.3399443228119424,
+    "meanMargin": 6.586,
+    "marginPctOfWinner": 0.24555385705230975
+   },
+   "sharedWinPct": 0.013,
+   "scoreTiePct": 0.063,
+   "early": {
+    "0.25": {
+     "games": 925,
+     "share": 0.925,
+     "winRate": 0.3362162162162162,
+     "anyGames": 978,
+     "anyShare": 0.978,
+     "tieAwareWinRate": 0.32805044308111797
+    },
+    "0.5": {
+     "games": 911,
+     "share": 0.911,
+     "winRate": 0.43907793633369924,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.4270833333333333
+    },
+    "0.75": {
+     "games": 943,
+     "share": 0.943,
+     "winRate": 0.6049840933191941,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.5915
+    }
+   },
+   "seatOrderWinShare": [
+    0.2665,
+    0.248,
+    0.2305,
+    0.255
+   ],
+   "stranded": {
+    "mean": 2.58,
+    "gamesWithAny": 1
+   }
+  }
+ },
+ "mixedWide": {
+  "levels": [
+   0.3,
+   0.55,
+   0.8,
+   1
+  ],
+  "rows": [
+   {
+    "memory": 0.3,
+    "winShare": 0.0425,
+    "ci": 0.012503163999564271,
+    "meanScore": 11.029,
+    "meanRank": 3.333
+   },
+   {
+    "memory": 0.55,
+    "winShare": 0.1255,
+    "ci": 0.02053325691652447,
+    "meanScore": 16.088,
+    "meanRank": 2.695
+   },
+   {
+    "memory": 0.8,
+    "winShare": 0.33,
+    "ci": 0.029144086192570865,
+    "meanScore": 21.344,
+    "meanRank": 2.041
+   },
+   {
+    "memory": 1,
+    "winShare": 0.502,
+    "ci": 0.03099007314608986,
+    "meanScore": 24.233,
+    "meanRank": 1.739
+   }
+  ],
+  "fairShare": 0.25,
+  "spearman": 0.5485585909099626
+ },
+ "mixedTiers": {
+  "levels": [
+   0.8,
+   0.9,
+   0.965,
+   0.99
+  ],
+  "rows": [
+   {
+    "memory": 0.8,
+    "winShare": 0.173,
+    "ci": 0.023444008906328286,
+    "meanScore": 16.661,
+    "meanRank": 2.686
+   },
+   {
+    "memory": 0.9,
+    "winShare": 0.246,
+    "ci": 0.0266937321182333,
+    "meanScore": 18.167,
+    "meanRank": 2.457
+   },
+   {
+    "memory": 0.965,
+    "winShare": 0.2535,
+    "ci": 0.026962487652292026,
+    "meanScore": 18.697,
+    "meanRank": 2.398
+   },
+   {
+    "memory": 0.99,
+    "winShare": 0.3275,
+    "ci": 0.02908759856021119,
+    "meanScore": 19.793,
+    "meanRank": 2.262
+   }
+  ],
+  "fairShare": 0.25,
+  "spearman": 0.1357371721441245
+ },
+ "curve": [
+  {
+   "memory": 0.3,
+   "winShare": 0.053,
+   "ci": 0.013885738928843505,
+   "meanScore": 11.19
+  },
+  {
+   "memory": 0.5,
+   "winShare": 0.1425,
+   "ci": 0.021666091248769354,
+   "meanScore": 15.342
+  },
+  {
+   "memory": 0.7,
+   "winShare": 0.26,
+   "ci": 0.027186832106738733,
+   "meanScore": 18.335
+  },
+  {
+   "memory": 0.9,
+   "winShare": 0.37,
+   "ci": 0.02992452104879876,
+   "meanScore": 20.694
+  },
+  {
+   "memory": 1,
+   "winShare": 0.424,
+   "ci": 0.03063022883362121,
+   "meanScore": 22.015
+  }
+ ],
+ "ladder": [
+  [
+   null,
+   {
+    "winShare": 0.503,
+    "ci": 0.030989763238850342,
+    "outright": 0.503,
+    "draws": 0
+   },
+   {
+    "winShare": 0.446,
+    "ci": 0.030809055396100675,
+    "outright": 0.446,
+    "draws": 0
+   },
+   {
+    "winShare": 0.375,
+    "ci": 0.03000624934909393,
+    "outright": 0.375,
+    "draws": 0
+   },
+   {
+    "winShare": 0.364,
+    "ci": 0.029821900784490582,
+    "outright": 0.364,
+    "draws": 0
+   }
+  ],
+  [
+   {
+    "winShare": 0.542,
+    "ci": 0.03088079366855716,
+    "outright": 0.542,
+    "draws": 0
+   },
+   null,
+   {
+    "winShare": 0.492,
+    "ci": 0.030986354054647988,
+    "outright": 0.492,
+    "draws": 0
+   },
+   {
+    "winShare": 0.442,
+    "ci": 0.030781112026695853,
+    "outright": 0.442,
+    "draws": 0
+   },
+   {
+    "winShare": 0.427,
+    "ci": 0.030658247073177547,
+    "outright": 0.427,
+    "draws": 0
+   }
+  ],
+  [
+   {
+    "winShare": 0.565,
+    "ci": 0.03072733701445669,
+    "outright": 0.565,
+    "draws": 0
+   },
+   {
+    "winShare": 0.518,
+    "ci": 0.03097023283089748,
+    "outright": 0.518,
+    "draws": 0
+   },
+   null,
+   {
+    "winShare": 0.402,
+    "ci": 0.030389229565752404,
+    "outright": 0.402,
+    "draws": 0
+   },
+   {
+    "winShare": 0.387,
+    "ci": 0.030188517843710048,
+    "outright": 0.387,
+    "draws": 0
+   }
+  ],
+  [
+   {
+    "winShare": 0.602,
+    "ci": 0.030338622144059215,
+    "outright": 0.602,
+    "draws": 0
+   },
+   {
+    "winShare": 0.556,
+    "ci": 0.03079533637419796,
+    "outright": 0.556,
+    "draws": 0
+   },
+   {
+    "winShare": 0.568,
+    "ci": 0.030702384949707083,
+    "outright": 0.568,
+    "draws": 0
+   },
+   null,
+   {
+    "winShare": 0.476,
+    "ci": 0.030954599632364813,
+    "outright": 0.476,
+    "draws": 0
+   }
+  ],
+  [
+   {
+    "winShare": 0.621,
+    "ci": 0.030069172492770732,
+    "outright": 0.621,
+    "draws": 0
+   },
+   {
+    "winShare": 0.571,
+    "ci": 0.030676285537854807,
+    "outright": 0.571,
+    "draws": 0
+   },
+   {
+    "winShare": 0.583,
+    "ci": 0.030560353689052747,
+    "outright": 0.583,
+    "draws": 0
+   },
+   {
+    "winShare": 0.513,
+    "ci": 0.03097984457030087,
+    "outright": 0.513,
+    "draws": 0
+   },
+   null
+  ]
+ ],
+ "vsReference": [
+  [
+   {
+    "winShare": 0.264,
+    "ci": 0.027321022059944976,
+    "outright": 0.264,
+    "draws": 0
+   },
+   {
+    "winShare": 0.419,
+    "ci": 0.03058096241781805,
+    "outright": 0.419,
+    "draws": 0
+   },
+   {
+    "winShare": 0.567,
+    "ci": 0.030710829646885155,
+    "outright": 0.567,
+    "draws": 0
+   },
+   {
+    "winShare": 0.625,
+    "ci": 0.03000624934909393,
+    "outright": 0.625,
+    "draws": 0
+   }
+  ],
+  [
+   {
+    "winShare": 0.233,
+    "ci": 0.026201835386094618,
+    "outright": 0.233,
+    "draws": 0
+   },
+   {
+    "winShare": 0.401,
+    "ci": 0.030376775312728636,
+    "outright": 0.401,
+    "draws": 0
+   },
+   {
+    "winShare": 0.559,
+    "ci": 0.03077381013784286,
+    "outright": 0.559,
+    "draws": 0
+   },
+   {
+    "winShare": 0.609,
+    "ci": 0.03024496570340261,
+    "outright": 0.609,
+    "draws": 0
+   }
+  ],
+  [
+   {
+    "winShare": 0.235,
+    "ci": 0.026279719176581777,
+    "outright": 0.235,
+    "draws": 0
+   },
+   {
+    "winShare": 0.357,
+    "ci": 0.029695843507130757,
+    "outright": 0.357,
+    "draws": 0
+   },
+   {
+    "winShare": 0.507,
+    "ci": 0.030987283869355186,
+    "outright": 0.507,
+    "draws": 0
+   },
+   {
+    "winShare": 0.564,
+    "ci": 0.030735399890029085,
+    "outright": 0.564,
+    "draws": 0
+   }
+  ],
+  [
+   {
+    "winShare": 0.168,
+    "ci": 0.023172472496477366,
+    "outright": 0.168,
+    "draws": 0
+   },
+   {
+    "winShare": 0.32,
+    "ci": 0.028912491418070493,
+    "outright": 0.32,
+    "draws": 0
+   },
+   {
+    "winShare": 0.458,
+    "ci": 0.03088079366855716,
+    "outright": 0.458,
+    "draws": 0
+   },
+   {
+    "winShare": 0.499,
+    "ci": 0.030990259088946,
+    "outright": 0.499,
+    "draws": 0
+   }
+  ],
+  [
+   {
+    "winShare": 0.167,
+    "ci": 0.02311728395811238,
+    "outright": 0.167,
+    "draws": 0
+   },
+   {
+    "winShare": 0.31,
+    "ci": 0.028665628198244666,
+    "outright": 0.31,
+    "draws": 0
+   },
+   {
+    "winShare": 0.437,
+    "ci": 0.030743335694097998,
+    "outright": 0.437,
+    "draws": 0
+   },
+   {
+    "winShare": 0.479,
+    "ci": 0.030962975541766007,
+    "outright": 0.479,
+    "draws": 0
+   }
+  ]
+ ],
+ "refs": [
+  0.5,
+  0.7,
+  0.9,
+  1
+ ],
+ "seconds": 20.234
 }
