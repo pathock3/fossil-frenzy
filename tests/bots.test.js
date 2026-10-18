@@ -98,12 +98,29 @@ test('a bot with a pair in hand at its site delivers it', () => {
   assert.deepEqual(s.players[0].stash, [7]);
 });
 
-test('redesign: a bot banks once it holds bankAt sets', () => {
+test('redesign: a bot banks once it holds bankAt sets — one set, the most valuable', () => {
   const s = game({ players: 2, system: false, rolls: [6, 5, 2] });
   const bot = Bots.create({ seat: 0, memory: 1, bankAt: 2, rng: Engine.mulberry32(2) });
-  s.players[0].sets = [{ value: 2, gem: false, size: 2 }, { value: 3, gem: false, size: 2 }];
+  s.players[0].sets = [{ value: 2, gem: false, size: 2 }, { value: 9, gem: false, size: 2 }];
   assert.equal(Bots.step(s, bot).type, 'bank');
-  assert.equal(s.players[0].points, 2);
+  assert.equal(s.players[0].points, 9);
+  assert.deepEqual(s.players[0].sets.map(x => x.value), [2]);
+});
+
+test('redesign: a bot reveals a space on every turn unless it banked', () => {
+  for (let g = 0; g < 30; g++) {
+    const s = Engine.createGame({ players: 3, system: false, seed: 4000 + g });
+    const bots = Bots.attach(s, [0, 0.5, 1].map(m => ({ memory: m })), g);
+    let reveals = 0, banked = false, turns = 0;
+    const check = () => { if (turns) assert.ok(banked || reveals >= 1, 'a bot turn neither banked nor revealed a space'); };
+    s.observers.push({ onEvent: e => {
+      if (e.type === 'turn') { check(); reveals = 0; banked = false; turns++; }
+      else if (e.type === 'reveal') reveals++;
+      else if (e.type === 'bank') banked = true;
+    } });
+    while (!s.over) Bots.step(s, bots[s.current]);
+    check();
+  }
 });
 
 test('better memory wins more: perfect memory beats no memory head-to-head, in both modes', () => {

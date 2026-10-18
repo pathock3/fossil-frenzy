@@ -33,13 +33,13 @@ Unclear rules and judgment calls, in the order they were made. The owner can ove
 
 ## End and scoring
 20. The game ends the instant the last fossil is matched, even if players still hold undelivered sets (worth 0). Tie-breaks: score → most fossils → highest scoring fossil → shared win. Redesign (summary §6): score → sets popped → who popped the final pair → draw.
-21. **Redesign bank:** each held set = 1 point (a gem set too), then one d6 chain per bank (not per set): each 6 = +1 and rolls again. Values are data.
+21. **Redesign bank (owner feedback, 2026-10-18):** a bank turn takes **one** held set of the player's choice and scores **the number on its fossil** (gem set 16); the other sets stay in front of you. Then one d6 chain per bank: each 6 = +1 and rolls again (kept from the design summary — set `bonusDieSides: 0` in the data to remove it). This replaces my earlier "1 point per held set, all at once". Values are data (`setPoints`, `bonus*`).
 22. Point values are the tile numbers; delivered fossils count at that number (gems 16).
 
 ## Bots
 23. **Memory model:** each bot remembers every revealed fossil (any public flip, or its own peek) independently with probability `memory`, permanently. What it sees during its own turn is exact (it must act on it); it recalls that later only with probability `memory`. It never records anyone else's peek. Memory is forgotten for matched fossils.
 24. Bots are given `Engine.publicView` only (no hidden tile values); a test asserts the view contains none.
-25. **Strategy** (same for all bots, only memory differs): rulebook — walk toward the best goal (deliver a set > go to a located pair > explore an unseen fossil, each discounted 30% per extra turn of walking), deliver whenever at the site with a set, peek only when it can learn something. Redesign — bank at ≥ 2 held sets or when ≤ 6 fossils remain, otherwise peek a located pair or an unseen fossil. Gems: try for the third gem always (rulebook), or only when it is located or in the endgame (redesign; otherwise two bots can deadlock when only the gems remain).
+25. **Strategy** (same for all bots, only memory differs): rulebook — walk toward the best goal (deliver a set > go to a located pair > explore an unseen fossil, each discounted 30% per extra turn of walking), deliver whenever at the site with a set, peek only when it can learn something. Redesign — bank the most valuable held set as soon as it holds one (head-to-head, waiting was no better), otherwise peek a located pair or an unseen fossil; so a bot always reveals a space on a turn it does not bank. Gems: try for the third gem always (rulebook), or only when it is located or in the endgame (redesign; otherwise two bots can deadlock when only the gems remain).
 26. Bots do not model opponents, do not plan deliveries against the end of the game, and ignore the summary's "overconfidence" and decay. Presets are named after the summary's tiers with its memory levels (80 / 85 / 90 / 96.5 / 99 %).
 
 ## UI
@@ -47,6 +47,8 @@ Unclear rules and judgment calls, in the order they were made. The owner can ove
 28. Privacy is by honour: your peek shows on the tile (tap it again to hide) and your delivered pile opens on tap. No "pass the device" screens, to keep taps to a minimum.
 29. The toggle's default is `GAME_DATA.movementDeliverySystem`; the setup screen can override it per game. Setup (names, bots, memory) is remembered in `localStorage` when available.
 30. No save/resume of a game in progress (a reload starts over).
+34. **Bot turns show their work (owner feedback):** a bot's peek is a dashed ring on a face-down space (number hidden); its flip is a solid ring on a face-up one. When a bot matches, the matched fossils stay face up on the board until the next tap (your own matches too), instead of vanishing with no trace.
+35. **Gem rule in the redesign** (peek a gem, flip a gem, tap your peeked gem to reveal it, then flip a third; a gem makes the set) was already implemented and is now covered by a tap-level browser test. In the rulebook mode the same set is made in the rulebook's order (flip a second fossil first, your own last), which keeps your gem private if the attempt fails.
 
 ## Simulation (REPORT.md)
 31. Fixed definitions: 4 players, memory 0.90 unless stated; seeds are `seed·100000 + game number` so runs are reproducible; "early leader" = the unique top scorer after 25 / 50 / 75 % of the game's turns (and a tie-aware variant); a shared win counts as a fractional win. OFF scores are pair counts, so spread is compared with the coefficient of variation as well as raw numbers.

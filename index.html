@@ -58,6 +58,7 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .tile .num { fill: var(--ink); font-weight: 800; font-size: 25px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 .tile .gem { font-size: 24px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 .ring { fill: none; stroke-width: 4.5; pointer-events: none; }
+.ring.peekring { stroke-dasharray: 9 6; }
 .piece circle { stroke: #0d0805; stroke-width: 2; }
 .piece text { fill: #101010; font-weight: 800; font-size: 13px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 .piece.cur circle { stroke: #fff; stroke-width: 2.5; }
@@ -173,9 +174,9 @@ const GAME_DATA = {
       gemOrder: 'own-first',        // reveal the peeked gem, then flip a third tile
       initialAssignment: null,
       scoring: {
-        type: 'bank',               // a turn may be "bank": each held set = 1 point...
-        pointsPerSet: 1,
-        bonusDieSides: 6,           // ...then roll a d6: every 6 scores +1 and rolls again
+        type: 'bank',               // a turn may be "bank": you bank ONE of your held sets...
+        setPoints: 'tile-number',   // ...worth the number on its fossil (gem 16); a number here = flat points instead
+        bonusDieSides: 6,           // ...then roll a d6: every 6 scores +1 and rolls again (0 = no bonus roll)
         bonusFace: 6,
         bonusPoints: 1,
       },
@@ -458,14 +459,16 @@ const Engine = (() => {
     return s.variant.scoring.type === 'bank' && (s.phase === 'action' || s.phase === 'peeked') && cur(s).sets.length > 0;
   }
 
-  function bank(s) {
+  // Bank ONE held set (the player's choice). It scores the number on its fossil, then the bonus d6 chain.
+  function bank(s, setIndex = 0) {
     if (!canBank(s)) fail('cannot bank');
-    const sc = s.variant.scoring, p = cur(s);
-    const base = p.sets.length * sc.pointsPerSet;
+    const sc = s.variant.scoring, p = cur(s), set = p.sets[setIndex];
+    if (!set) fail('no such set');
+    const base = sc.setPoints === 'tile-number' ? set.value : sc.setPoints;
     const rolls = []; let bonus = 0, r;
-    do { r = rollDie(s, sc.bonusDieSides); rolls.push(r); if (r === sc.bonusFace) bonus += sc.bonusPoints; } while (r === sc.bonusFace);
-    s.lastBank = { player: p.idx, sets: p.sets.length, base, rolls, bonus, total: base + bonus };
-    p.points += base + bonus; p.sets = [];
+    if (sc.bonusDieSides) do { r = rollDie(s, sc.bonusDieSides); rolls.push(r); if (r === sc.bonusFace) bonus += sc.bonusPoints; } while (r === sc.bonusFace);
+    s.lastBank = { player: p.idx, value: set.value, gem: set.gem, base, rolls, bonus, total: base + bonus, setsLeft: p.sets.length - 1 };
+    p.points += base + bonus; p.sets.splice(setIndex, 1);
     s.turn.T = null; s.turn.peeked = null; s.turn.banked = true;
     s.phase = 'resolved';
     emit(s, { type: 'bank', actor: p.idx, info: s.lastBank });
@@ -584,7 +587,7 @@ const Engine = (() => {
       case 'flipOther': return flipOther(s, a.tid);
       case 'flipSecond': return flipSecond(s, a.tid);
       case 'flipOwn': return flipOwn(s);
-      case 'bank': return bank(s);
+      case 'bank': return bank(s, a.set);
       case 'deliver': return deliver(s, a.set);
       case 'endTurn': return endTurn(s);
       default: fail('unknown action ' + a.type);
@@ -615,8 +618,8 @@ const Bots = (() => {
       seat: opts.seat,
       memory: opts.memory === undefined ? 0.9 : opts.memory,
       rng: opts.rng || Math.random,
-      bankAt: opts.bankAt === undefined ? 2 : opts.bankAt,                      // redesign: bank at this many held sets...
-      endgameTiles: opts.endgameTiles === undefined ? 6 : opts.endgameTiles,   // ...or when this few tiles remain
+      bankAt: opts.bankAt === undefined ? 1 : opts.bankAt,                      // redesign: bank (one set per turn) once holding this many sets...
+      endgameTiles: opts.endgameTiles === undefined ? 6 : opts.endgameTiles,   // ...or when this few tiles remain; also when it gambles on a gem set
       mem: new Map(),          // tid -> {value, gem}: long-term memory
       turnKnown: new Map(),    // tid -> {value, gem}: what it saw this turn (always exact)
     };
@@ -689,7 +692,7 @@ const Bots = (() => {
       const st = v.status, me = v.players[v.me];
       if (st.canDeliver) return { type: 'deliver', set: bestSet(me) };
       if (v.variant.scoring.type === 'bank') {           // redesign: bank, or peek any tile
-        if (st.canBank && (me.sets.length >= bot.bankAt || v.tokensLeft <= bot.endgameTiles)) return { type: 'bank' };
+        if (st.canBank && (me.sets.length >= bot.bankAt || v.tokensLeft <= bot.endgameTiles)) return { type: 'bank', set: bestSet(me) };
         const sure = v.tokens.find(t => !t.matched && located(v, t.id));
         if (sure) return { type: 'peek', tid: sure.id };
         const unk = unknownTiles(v, []);
@@ -858,7 +861,8 @@ const Bots = (() => {
     if (st.turn.matched) return 'Found a match!';
     return '';
   }
-  const botBankText = () => { const b = ui.st.lastBank; return `Banked ${b.sets} set${b.sets === 1 ? '' : 's'}: +${b.total}`; };
+  const bankText = b => `Banked ${b.gem ? 'a gem' : 'a ' + b.value}: +${b.base}` + (b.rolls.length ? (b.bonus ? `, +${b.bonus} bonus (rolled ${b.rolls.join(', ')})` : `, no bonus (rolled ${b.rolls[0]})`) : '');
+  const botBankText = () => bankText(ui.st.lastBank);
 
   function endTurn() {
     const st = ui.st;
@@ -921,9 +925,8 @@ const Bots = (() => {
         const p = st.players[st.current];
         ui.note = `Delivered a ${v === 16 ? 'gem' : v}. Next site: ${p.assign}.` + (Engine.canDeliver(st) ? ' Same site — deliver again?' : '');
       } else if (Engine.canBank(st)) {
-        Engine.bank(st);
-        const b = st.lastBank;
-        ui.note = `Banked ${b.sets} set${b.sets === 1 ? '' : 's'}: +${b.base}` + (b.bonus ? ` and +${b.bonus} bonus (rolled ${b.rolls.join(', ')})` : ` (rolled ${b.rolls[0]})`);
+        Engine.bank(st, i);
+        ui.note = bankText(st.lastBank);
       }
     } catch (e) { console.warn(e.message); }
     render();
@@ -983,7 +986,9 @@ const Bots = (() => {
     const pushOpts = ui.pushing !== null && moves ? moves.pushes[ui.pushing].options : [];
     let out = '';
     for (const c of st.cells) {
-      const { x, y } = pos(c), tid = st.tokenAt[c.id];
+      const { x, y } = pos(c);
+      let tid = st.tokenAt[c.id];
+      if (tid < 0) { const m = (st.turn.matched || []).find(i => st.tokens[i].cell === c.id); if (m !== undefined) tid = m; }   // a match stays face up until the turn ends
       const cls = ['cell'];
       if (c.site) cls.push('site');
       if (moves) {
@@ -1006,7 +1011,8 @@ const Bots = (() => {
         if (shown) g += t.gem ? `<text class="gem" x="${x}" y="${y + 1}">💎</text>` : `<text class="num" x="${x}" y="${y + 1}">${t.value}</text>`;
         else g += `<circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.3}"/><circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.13}"/>`;
         g += '</g>';
-        if (up || tid === peekTid) g += `<polygon class="ring" style="stroke:${color}" points="${hexPts(x, y, S * 0.9)}"/>`;
+        if (up) g += `<polygon class="ring" style="stroke:${color}" points="${hexPts(x, y, S * 0.9)}"/>`;
+        else if (tid === peekTid) g += `<polygon class="ring peekring" style="stroke:${color}" points="${hexPts(x, y, S * 0.9)}"/>`;   // peeked: dashed, number hidden
       }
       for (const p of st.players) if (p.pos === c.id) {
         g += `<g class="piece${p.idx === st.current ? ' cur' : ''}"><circle cx="${x}" cy="${y + S * 0.56}" r="${S * 0.34}" fill="${COLORS[p.idx]}"/><text x="${x}" y="${y + S * 0.58}">${p.idx + 1}</text></g>`;
@@ -1032,14 +1038,19 @@ const Bots = (() => {
   function hint() {
     const st = ui.st;
     if (st.over) return '';
-    if (ui.botWaiting) return 'Its turn is on the board. Tap to continue.';
+    if (ui.botWaiting) {
+      const t = st.turn;
+      if (t.banked) return 'It banked a set. Tap to continue.';
+      if (t.peeked !== null) return t.matched ? 'It peeked at the dashed ring, flipped the other, and matched them. Tap to continue.' : 'It peeked at the dashed ring (number hidden) and flipped the other. Tap to continue.';
+      return 'Its turn is on the board. Tap to continue.';
+    }
     const s = Engine.status(st);
     switch (st.phase) {
       case 'move': return ui.pushing !== null ? 'Tap where to push them.' : 'Move up to 3 spaces — tap a space, or your own piece to stay.';
       case 'action':
         if (st.system) return s.canDeliver ? 'At your site — tap a set to deliver it.' : s.canPeek ? 'Tap your fossil to peek — or end your turn.' : 'Nothing to do here — end your turn.';
-        return s.canBank ? 'Tap a fossil to peek — or tap your sets to bank.' : 'Tap a fossil to peek.';
-      case 'peeked': return st.system ? 'Now tap another fossil to flip it for everyone.' : 'Tap another fossil to flip it — or bank instead.';
+        return s.canBank ? 'Tap a fossil to peek — or tap one of your sets to bank it.' : 'Tap a fossil to peek.';
+      case 'peeked': return st.system ? 'Now tap another fossil to flip it for everyone.' : 'Tap another fossil to flip it — or tap a set to bank it instead.';
       case 'flipped': {
         const F = st.tokens[st.turn.F];
         if (F.gem) return st.variant.gemOrder === 'second-first' ? 'A gem! Flip a second fossil to try for all three — or end your turn.' : 'A gem! If yours is one too, tap it to reveal it — or end your turn.';
@@ -1140,7 +1151,7 @@ const Bots = (() => {
     'Pieces cannot share a space or pass through each other; a push can only go onto an empty space (never onto the pusher), and pushing uses one of your three steps and ends your move.',
     'Delivery happens after moving: move to your site (or stay if you are there), tap a set, and its die roll follows automatically. You cannot also peek that turn (corners hold no fossil).',
     'Peeking and delivered fossils are private by honour: the board shows the value of your peek on screen — hold the device toward yourself.',
-    'Off mode follows the design summary: a peek does not use your turn, bank scores 1 point per held set plus a d6 chain of +1s, ties go to most sets popped then whoever popped the final pair.',
+    'Off mode: a peek does not use your turn. Banking takes one set of your choice and scores the number on its fossil (a gem is 16), then a d6 chain adds +1 for every 6. Ties go to most sets popped, then whoever popped the final pair.',
     'Bots remember each revealed fossil with a fixed probability; Beginner–Master use the memory levels from the design summary.',
   ];
   function helpHTML() {
@@ -1153,7 +1164,7 @@ const Bots = (() => {
         <li><b>Flip</b> another fossil — tap it. Everyone sees it. ${on ? 'After a peek you must flip.' : ''}</li>
         <li>If your peek and the flipped fossil match, they are yours. Otherwise tap <b>End turn</b> to flip them back — remember them!</li>
         <li><b>Gems</b> (💎, worth 16) match as a set of three: ${on ? 'when you flip a gem, tap a second fossil, then yours is flipped for you.' : 'peek a gem, flip a gem, tap your peeked gem to reveal it, then flip a third.'}</li>
-        ${on ? '<li><b>Deliver</b>: matched fossils score nothing until you stand on your assigned corner (the number on your die) and tap a set. One fossil of the set is kept face down (private) at face value; the match goes back in the box. Then your die is rolled for the next site.</li>' : '<li><b>Bank</b> instead of peeking: tap your held sets — each scores 1 point, then a d6 chain: every 6 adds +1 and rolls again.</li>'}
+        ${on ? '<li><b>Deliver</b>: matched fossils score nothing until you stand on your assigned corner (the number on your die) and tap a set. One fossil of the set is kept face down (private) at face value; the match goes back in the box. Then your die is rolled for the next site.</li>' : '<li><b>Bank</b> instead of peeking: tap ONE of your held sets. It scores the number on its fossil (a gem is 16), then a d6 chain: every 6 adds +1 and rolls again. Banking takes the whole turn.</li>'}
       </ul>
       <h3>End</h3><p>The game ends the moment every fossil is matched. ${on ? 'Fossils still face up in front of you are worth 0.' : 'Sets you have not banked are lost.'} Highest score wins${on ? '; ties go to the most fossils, then the highest scoring fossil' : '; ties go to the most sets popped, then whoever popped the final pair'}.</p>
       <h3>Judgment calls (where the rules were unclear)</h3><ul>${JUDGMENTS.map(j => `<li>${esc(j)}</li>`).join('')}</ul>

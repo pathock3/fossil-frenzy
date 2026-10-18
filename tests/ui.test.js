@@ -124,3 +124,86 @@ test('UI: your delivered pile is private — it opens on your tap and shows your
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
+
+// Make the first tiles specific values by swapping with the tile that has it (keeps the tile set intact).
+const rig = (page, wanted) => page.evaluate(w => {
+  const st = window.FossilFrenzyUI.ui.st, used = new Set();
+  Object.entries(w).forEach(([id, value]) => {
+    const a = st.tokens[Number(id)];
+    used.add(a.id);
+    if (a.value === value) return;
+    const c = st.tokens.find(t => t.value === value && !used.has(t.id));
+    [a.value, c.value] = [c.value, a.value]; [a.gem, c.gem] = [c.gem, a.gem];
+  });
+  window.FossilFrenzyUI.render();
+}, wanted);
+const tile = (page, id) => page.evaluate(i => window.FossilFrenzyUI.ui.st.tokens[i].cell, id).then(c => `[data-act=cell][data-id="${c}"]`);
+
+test('UI (redesign): peek a gem, flip a gem, tap your own gem, flip a third — three gems match', { skip: !chromium && 'Playwright/Chromium not available' }, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await setup(page, { n: 2, system: false });
+    await rig(page, { 0: 16, 1: 16, 2: 16 });
+    await page.tap(await tile(page, 0));                                   // peek
+    await page.tap(await tile(page, 1));                                   // public flip: a gem
+    assert.match(await page.locator('.hint').innerText(), /gem/i);
+    await page.tap(await tile(page, 0));                                   // reveal my peeked gem
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.phase), 'gemThird');
+    await page.tap(await tile(page, 2));                                   // third space: a gem
+    const r = await page.evaluate(() => { const p = window.FossilFrenzyUI.ui.st.players[window.FossilFrenzyUI.ui.st.current]; return [p.sets.length, p.sets[0].size, p.sets[0].gem]; });
+    assert.deepEqual(r, [1, 3, true]);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('UI (redesign): a match stays face up on the board until the turn ends', { skip: !chromium && 'Playwright/Chromium not available' }, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await setup(page, { n: 2, system: false });
+    await rig(page, { 0: 7, 1: 7 });
+    await page.tap(await tile(page, 0)); await page.tap(await tile(page, 1));
+    assert.equal(await page.locator('.tile.up').count(), 2);               // both matched fossils still shown
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.matchedCount), 2);
+    await page.tap('[data-act=end]');
+    assert.equal(await page.locator('.tile.up').count(), 0);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('UI (redesign): you bank ONE set, by tapping it, for the number on its fossil', { skip: !chromium && 'Playwright/Chromium not available' }, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await setup(page, { n: 2, system: false });
+    await page.evaluate(() => {
+      const { ui, render } = window.FossilFrenzyUI;
+      ui.st.players[ui.st.current].sets = [{ value: 7, gem: false, size: 2, ids: [] }, { value: 3, gem: false, size: 2, ids: [] }];
+      ui.st.rng = () => 0.01;                                              // bonus die shows a 1: no bonus
+      render();
+    });
+    await page.tap('[data-act=set][data-i="1"]');                          // bank the 3, not the 7
+    const r = await page.evaluate(() => { const st = window.FossilFrenzyUI.ui.st, p = st.players[st.current]; return [p.points, p.sets.map(x => x.value)]; });
+    assert.deepEqual(r, [3, [7]]);
+    assert.match(await page.locator('.note').innerText(), /Banked a 3: \+3/);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('UI (redesign): a bot\'s peek shows as a dashed ring on a face-down space, its flip as a solid ring', { skip: !chromium && 'Playwright/Chromium not available' }, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await setup(page, { n: 2, system: false, bots: [0, 1] });
+    let checked = 0;
+    for (let i = 0; i < 80 && checked < 3 && !(await page.evaluate(() => window.FossilFrenzyUI.ui.st.over)); i++) {
+      const t = await page.evaluate(() => { const s = window.FossilFrenzyUI.ui.st.turn; return { banked: !!s.banked, matched: !!s.matched, revealed: s.revealed.length, peeked: s.peeked !== null }; });
+      if (!t.banked && !t.matched) {
+        assert.equal(await page.locator('.ring.peekring').count(), 1, 'one dashed ring where it peeked');
+        assert.ok(await page.locator('.ring:not(.peekring)').count() >= 1, 'a solid ring on what it flipped');
+        assert.equal(await page.locator('.tile.peek').count(), 0, 'the bot\'s number is never shown');
+        checked++;
+      }
+      await page.tap('[data-act=end]');
+    }
+    assert.ok(checked >= 1, 'saw at least one non-matching bot turn');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});

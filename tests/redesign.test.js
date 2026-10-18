@@ -58,19 +58,45 @@ test('redesign: bank is only offered while holding at least one set', () => {
   assert.throws(() => Engine.bank(s));
 });
 
-test('redesign: bank scores 1 point per held set, then a d6 — a 6 adds +1 and rolls again', () => {
-  const s = off({ rolls: [6, 5, 3] });
-  s.players[0].sets = [{ value: 2, gem: false, size: 2 }, { value: 3, gem: false, size: 2 }];
-  Engine.bank(s);
-  assert.equal(s.players[0].points, 2);
-  assert.deepEqual(s.lastBank.rolls, [3]);
-  assert.equal(s.players[0].sets.length, 0);
+const held = (...vals) => vals.map(v => (v === 16 ? { value: 16, gem: true, size: 3 } : { value: v, gem: false, size: 2 }));
 
-  const t = off({ rolls: [6, 5, 6, 6, 2] });
-  t.players[0].sets = [{ value: 2, gem: false, size: 2 }];
-  Engine.bank(t);
-  assert.equal(t.players[0].points, 1 + 2);       // two 6s, then a 2
-  assert.deepEqual(t.lastBank.rolls, [6, 6, 2]);
+test('redesign: bank takes ONE held set and scores the number on its fossil', () => {
+  const s = off({ rolls: [6, 5, 3] });
+  s.players[0].sets = held(7, 3);
+  Engine.bank(s, 0);
+  assert.equal(s.players[0].points, 7);
+  assert.deepEqual(s.players[0].sets.map(x => x.value), [3], 'the other set stays in front of you');
+  assert.deepEqual([s.lastBank.value, s.lastBank.base, s.lastBank.bonus, s.lastBank.setsLeft], [7, 7, 0, 1]);
+});
+
+test('redesign: you choose which set to bank', () => {
+  const s = off({ rolls: [6, 5, 2] });
+  s.players[0].sets = held(7, 3, 10);
+  Engine.bank(s, 1);
+  assert.equal(s.players[0].points, 3);
+  assert.deepEqual(s.players[0].sets.map(x => x.value), [7, 10]);
+  assert.throws(() => Engine.bank(off(), 0), /cannot bank/);
+});
+
+test('redesign: banking a gem set scores 16', () => {
+  const s = off({ rolls: [6, 5, 1] });
+  s.players[0].sets = held(16);
+  Engine.bank(s, 0);
+  assert.equal(s.players[0].points, 16);
+});
+
+test('redesign: after banking, a d6 chain — each 6 adds +1 and rolls again', () => {
+  const s = off({ rolls: [6, 5, 6, 6, 2] });
+  s.players[0].sets = held(5);
+  Engine.bank(s, 0);
+  assert.equal(s.players[0].points, 5 + 2);       // two 6s, then a 2
+  assert.deepEqual(s.lastBank.rolls, [6, 6, 2]);
+});
+
+test('redesign: bank rejects a set that is not there', () => {
+  const s = off({ rolls: [6, 5, 1] });
+  s.players[0].sets = held(5);
+  assert.throws(() => Engine.bank(s, 3), /no such set/);
 });
 
 test('redesign: bank takes the whole turn (and works right after a peek, which flips back secret)', () => {
@@ -85,13 +111,15 @@ test('redesign: bank takes the whole turn (and works right after a peek, which f
   assert.throws(() => Engine.bank(s));
 });
 
-test('redesign: bank values come from the data block', () => {
+test('redesign: bank rules come from the data block (flat points, no bonus die)', () => {
   const d = JSON.parse(JSON.stringify(GAME_DATA));
-  d.variants.redesign.scoring.pointsPerSet = 5;
-  const s = game({ system: false, data: d, rolls: [6, 5, 1] });
-  s.players[0].sets = [{ value: 2, gem: false, size: 2 }];
-  Engine.bank(s);
+  d.variants.redesign.scoring.setPoints = 5;
+  d.variants.redesign.scoring.bonusDieSides = 0;
+  const s = game({ system: false, data: d, rolls: [6, 5] });
+  s.players[0].sets = held(9);
+  Engine.bank(s, 0);
   assert.equal(s.players[0].points, 5);
+  assert.deepEqual(s.lastBank.rolls, []);
 });
 
 test('redesign gems: peeked gem + public gem — reveal yours, then flip a third; all gems pop as one set', () => {

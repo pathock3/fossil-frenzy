@@ -13,7 +13,7 @@ A fast, family memory game for 2–6 players, played hot-seat on one screen (bui
 |---|---|---|
 | Board | 37 spaces: 31 fossils + 6 corner research sites | 31 spaces, all fossils |
 | Turn | move 0–3 (push rivals), peek the fossil you stand on, flip another, match — or deliver | peek any fossil, flip another, match — or bank |
-| Scoring | delivered fossils at face value (gem 16) | 1 point per banked set + d6 bonus chain |
+| Scoring | delivered fossils at face value (gem 16) | bank ONE set per turn: the number on its fossil (gem 16) + d6 bonus chain |
 
 ## Files
 - `index.html` — the whole game: data block, rules engine, bots, touch UI.
