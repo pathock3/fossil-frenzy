@@ -2,7 +2,7 @@
 
 Alt titles: Fossils, Fossil Hunt, Hunters, Hunting, Playing with Matches
 
-Designer: Patrick Hockberger
+Designer: Patrick Blim-Hockberger
 Created: Jan. 2019
 Version: .2, 3/24/19
 
