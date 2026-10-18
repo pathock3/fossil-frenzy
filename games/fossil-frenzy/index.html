@@ -296,7 +296,7 @@ const GAME_DATA = {
 
   // The home screen plays a whole demo game by itself (two opponents, over and over). Milliseconds between moves, and
   // how long the empty board waits before the next game starts.
-  homeDemo: { peek: 800, flip: 900, bank: 900, endTurn: 1100, restart: 4000 },
+  homeDemo: { peek: 700, flip: 1000, bank: 800, endTurn: 150, restart: 4000 },
 };
 </script>
 
@@ -1180,8 +1180,9 @@ const Campaign = (() => {
   const footer = () => `${ui.notice ? `<p class="dim" style="margin-top:14px">${esc(ui.notice)}</p>` : ''}<p class="dim" style="margin-top:18px">Version ${esc(BUILD)}</p>`;
 
   // ---------------- the home screen's demo game ----------------
-  // Two opponents play a whole real game on the real board, over and over: peeks (dashed ring), flips (solid ring),
-  // matches that vanish when collected, misses that flip back — then a pause on the empty board and a fresh game.
+  // Two opponents (blue and red) play a whole real game on the real board, over and over. Each turn flips two tiles face up in the
+  // player's colour and leaves them there; when the other colour flips its first tile, a miss turns face down and a match vanishes.
+  // When every fossil is gone the empty board waits, then a fresh game starts.
   // Decoration only; it never touches the game you play.
   let demo = null;
   const stopDemo = () => { if (demo && demo.timer) clearTimeout(demo.timer); demo = null; };
@@ -1214,7 +1215,7 @@ const Campaign = (() => {
     const art = document.querySelector('.hero-art');
     if (!art) return false;
     d.el = art;
-    d.cells = []; art.querySelectorAll('.h-cell').forEach(el => { d.cells[+el.dataset.c] = el; });
+    d.prev = null; d.cells = []; art.querySelectorAll('.h-cell').forEach(el => { d.cells[+el.dataset.c] = el; });
     d.pts = [...art.querySelectorAll('.hs b')];
     return true;
   }
@@ -1228,30 +1229,36 @@ const Campaign = (() => {
     el.classList.add('ringed'); el.classList.toggle('dash', !solid); el.classList.toggle('up', solid);
   }
 
+  // The tiles a turn left face up stay up until the next player's first move: a miss then flips face down, a match vanishes.
+  function demoClearPrev(d) {
+    if (!d.prev) return;
+    d.prev.up.forEach(c => { const el = d.cells[c]; el.classList.remove('ringed', 'dash', 'lift', 'up'); if (d.prev.matched.has(c)) el.classList.add('gone'); });
+    d.prev = null;
+  }
+
   // One move of the demo; returns how long to wait before the next one.
   function demoStep(d) {
     const st = d.st, P = D.homeDemo;
     if (st.over) {                                    // everything collected: the last set vanishes, then the empty board waits
       d.cells.forEach(el => { el.classList.add('gone'); el.classList.remove('ringed', 'up'); });
+      d.prev = null;
       demoScores(d);
       return P.restart;
     }
     const bot = d.bots[st.current], a = bot.decide(Engine.publicView(st, st.current));
     d.moves++;
-    if (!a || a.type === 'endTurn' || d.moves > 4000) {            // the turn is over: collected fossils vanish, the rest flip back
-      const matched = new Set(st.turn.matched || []);
-      d.cells.forEach((el, c) => {
-        const tid = st.tokens.findIndex(t => t.cell === c);
-        el.classList.remove('ringed', 'dash', 'lift');
-        if (matched.has(tid)) el.classList.add('gone');
-        else el.classList.remove('up');
-      });
+    if (!a || a.type === 'endTurn' || d.moves > 4000) {            // the turn is over: its tiles stay up for the next player's first move to clear
+      const up = new Set((st.turn.revealed || []).map(t => st.tokens[t].cell));
+      if (st.turn.T !== null && st.turn.T !== undefined && (st.turn.matched || []).includes(st.turn.T)) up.add(st.tokens[st.turn.T].cell);
+      d.prev = { up, matched: new Set((st.turn.matched || []).map(t => st.tokens[t].cell)) };
       Engine.endTurn(st);
       demoScores(d);
       return P.endTurn;
     }
+    demoClearPrev(d);                                              // this is the first move of a new turn: what the last player left comes down
     Engine.apply(st, a);
-    if (a.type === 'peek') { const el = demoCell(d, a.tid); demoShow(d, a.tid, false); el.classList.remove('lift'); void el.getBoundingClientRect(); el.classList.add('lift'); return P.peek; }
+    // Both tiles of a turn show face up in the player's colour (the first one is the peek, the second the flip).
+    if (a.type === 'peek') { const el = demoCell(d, a.tid); demoShow(d, a.tid, true); el.classList.remove('lift'); void el.getBoundingClientRect(); el.classList.add('lift'); return P.peek; }
     if (a.type === 'flipOther' || a.type === 'flipSecond') { demoShow(d, a.tid, true); return P.flip; }
     if (a.type === 'flipOwn') { demoShow(d, st.turn.T, true); return P.flip; }
     if (a.type === 'bank') { demoScores(d); return P.bank; }

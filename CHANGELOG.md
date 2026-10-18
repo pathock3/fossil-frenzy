@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **Home screen demo:** each turn now leaves its two tiles face up until the other colour flips its first tile — then a miss flips face down and a match vanishes — so the board never goes blank between turns.
 - **Fossil values:** the 10 and 11 are now a **9 and a 10**, and gems are worth **12** (was 16), so a couple of big fossils don't decide the game. Simulations re-run: scores are a little lower and closer together (REPORT.md). Saved games from before this change are cleared (the rules changed).
 - **Settings:** a new Settings panel (home screen and in-game ☰ menu) with the prompts choice and **Unlock everything** — it warns that playing through the campaign is the recommended way, then opens every level. Remembered on the device; can be switched back.
 - **End screen:** after a campaign win you get **Next level** and **Main menu** (no replay); after a loss, **Try again** and **Main menu**. Each player's fossils are two labelled rows — *Banked* and *Matched, not banked* — and the "+1 / +2" is gone. **Unlocks are celebrated** with a big card and confetti instead of small print.
