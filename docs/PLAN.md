@@ -22,7 +22,7 @@ Extract only what has clearly repeated: dice/randomness, board geometry, the sea
 | | | |
 |---|---|---|
 | History | git; every change is a commit | ✅ |
-| Live site | `main` → `tabletop-library.patrickhockberger.workers.dev` = the library; games under `/games/<id>/` (friends) | ✅ |
+| Live site | `main` → `tabletop-library.patrick-blim-hockberger.workers.dev` = the library; games under `/games/<id>/` (friends) | ✅ |
 | Dev site | every other branch → its own Cloudflare preview link (owner's iPad) | ✅ |
 | Release gate | Claude merges to `main` only when the owner says so | ✅ |
 | Tests gate deploys | `npm run build` runs `npm test` first; a failing test fails the Cloudflare build and the old version stays live | ✅ |

@@ -15,9 +15,9 @@ test('naming: package.json and the Cloudflare config are named tabletop-library'
 
 test('naming: the docs point at the tabletop-library web addresses, not the old fossil-frenzy ones', () => {
   for (const f of ['README.md', 'docs/PLAN.md', 'CLAUDE.md']) {
-    assert.doesNotMatch(read(f), /fossil-frenzy\.patrickhockberger|fvc0jn-fossil-frenzy/, `${f} still links to the old address`);
+    assert.doesNotMatch(read(f), /fossil-frenzy\.patrick|\.patrickhockberger\.|fvc0jn-fossil-frenzy/, `${f} still links to the old address`);
   }
-  assert.match(read('README.md'), /https:\/\/tabletop-library\.patrickhockberger\.workers\.dev\//);
+  assert.match(read('README.md'), /https:\/\/tabletop-library\.patrick-blim-hockberger\.workers\.dev\//);
 });
 
 test('naming: the game stores everything under tabletop-library-fossil-frenzy-…; the old fossil-frenzy-… keys appear only in the cleanup list', () => {
