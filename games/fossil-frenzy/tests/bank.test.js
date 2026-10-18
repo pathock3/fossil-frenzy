@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { GAME_DATA, Engine } = require('./load');
 const { game } = require('./helpers');
 
-const held = (...vals) => vals.map(v => (v === 16 ? { value: 16, gem: true, size: 3 } : { value: v, gem: false, size: 2 }));
+const held = (...vals) => vals.map(v => (v === 12 ? { value: 12, gem: true, size: 3 } : { value: v, gem: false, size: 2 }));
 const me = s => s.players[s.current];
 
 test('bank: only while holding at least one set', () => {
@@ -30,11 +30,11 @@ test('bank: you choose which set to bank', () => {
   assert.throws(() => Engine.bank(s, 0), /cannot bank/, 'banking took the whole turn');
 });
 
-test('bank: a gem set scores 16', () => {
+test('bank: a gem set scores 12', () => {
   const s = game({ rolls: [6, 5, 1] });
-  me(s).sets = held(16);
+  me(s).sets = held(12);
   Engine.bank(s, 0);
-  assert.equal(me(s).points, 16);
+  assert.equal(me(s).points, 12);
 });
 
 test('bank: afterwards a d6 chain — each 6 adds +1 and rolls again', () => {

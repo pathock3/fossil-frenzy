@@ -116,7 +116,7 @@ test('turn: ending a turn passes to the next player', () => {
 // ---- gems: peek a gem, flip a gem, reveal your own gem, then flip a third; a gem makes the set ----
 test('gems: peek a gem, flip a gem, flip your own gem, then a third — three gems match as one set', () => {
   const s = game(); const me = s.players[s.current];
-  assert.equal(Engine.peek(s, 28), 16);
+  assert.equal(Engine.peek(s, 28), 12);
   Engine.flipOther(s, 29);
   assert.equal(Engine.canFlipSecond(s), false, 'the third flip comes only after revealing your own gem');
   assert.equal(Engine.canFlipOwn(s), true);
@@ -124,7 +124,7 @@ test('gems: peek a gem, flip a gem, flip your own gem, then a third — three ge
   assert.equal(s.phase, 'gemThird');
   assert.equal(Engine.canFlipSecond(s), true);
   Engine.flipSecond(s, 30);
-  assert.deepEqual([me.sets[0].value, me.sets[0].size, me.sets[0].gem], [16, 3, true]);
+  assert.deepEqual([me.sets[0].value, me.sets[0].size, me.sets[0].gem], [12, 3, true]);
   assert.equal(s.matchedCount, 3);
 });
 

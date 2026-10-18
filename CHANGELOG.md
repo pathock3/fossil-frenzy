@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **Fossil values:** the 10 and 11 are now a **9 and a 10**, and gems are worth **12** (was 16), so a couple of big fossils don't decide the game. Simulations re-run: scores are a little lower and closer together (REPORT.md). Saved games from before this change are cleared (the rules changed).
 - **Settings:** a new Settings panel (home screen and in-game ☰ menu) with the prompts choice and **Unlock everything** — it warns that playing through the campaign is the recommended way, then opens every level. Remembered on the device; can be switched back.
 - **End screen:** after a campaign win you get **Next level** and **Main menu** (no replay); after a loss, **Try again** and **Main menu**. Each player's fossils are two labelled rows — *Banked* and *Matched, not banked* — and the "+1 / +2" is gone. **Unlocks are celebrated** with a big card and confetti instead of small print.
 - **Playtest round 4 (Fossil Frenzy):** the home-screen board now **plays a whole demo game by itself** (blue vs red, rings and vanishing tiles like the real thing, then a pause and a new game), and the home screen is **one screen with no scrolling**. **Held sets are big raised buttons** with a "Tap to bank" label when you can bank. The **opponent's bank banner is a button** — tap it, or anywhere, to go on. Removed "no sets" and "…is thinking". Your own peeked tile no longer has a stray brown dashed edge. The **end-of-game screen** now has two clear buttons — Play again (or Next level) and Main menu — instead of a small "Levels" link.

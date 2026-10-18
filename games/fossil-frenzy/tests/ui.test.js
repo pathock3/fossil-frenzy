@@ -54,7 +54,7 @@ const otherFree = page => page.evaluate(() => { const st = window.FossilFrenzyUI
 const openSettings = async page => { if (await page.locator('[data-act=menu]').count()) await page.tap('[data-act=menu]'); await page.tap('[data-act=settings]'); };
 const openRules = async page => { if (await page.locator('[data-act=menu]').count()) await page.tap('[data-act=menu]'); await page.tap('[data-act=help]'); };
 const quitToStart = async page => { await page.tap('[data-act=menu]'); await page.tap('[data-act=menu-ask][data-v=quit]'); await page.tap('[data-act=quit]'); };
-const takeATurn = async page => { await page.tap(await firstFree(page)); await page.tap(await otherFree(page)); await page.tap('[data-act=end]'); };
+const takeATurn = async page => { if (await page.locator('.bankcard').count()) await page.tap('.bankcard'); await page.tap(await firstFree(page)); await page.tap(await otherFree(page)); await page.tap('[data-act=end]'); };
 
 // Make specific fossils particular values by swapping with another fossil that has it (keeps the set intact).
 const rig = (page, wanted) => page.evaluate(w => {
@@ -94,6 +94,7 @@ async function playByTaps(page, humanSeats) {
       const { ui } = window.FossilFrenzyUI, real = ui.st;
       if (real.over) return { done: true };
       if (ui.turnCard) return { sel: '[data-act=begin]' };
+      if (document.querySelector('.bankcard')) return { sel: '.bankcard' };      // the opponent banked: its banner sits over the board; tap it to go on
       // while an opponent's finished turn is on the board, my first tap ends it and starts mine: plan from there
       let st = real;
       if (ui.botWaiting) { st = Engine.restore(Engine.serialize(real)); Engine.endTurn(st); }
@@ -335,7 +336,7 @@ test('peek then flip: a gem sequence — peek a gem, flip a gem, tap a third —
   const { browser, page, errors } = await open();
   try {
     await passAndPlay(page, 2);
-    await rig(page, { 0: 16, 1: 16, 2: 16 });
+    await rig(page, { 0: 12, 1: 12, 2: 12 });
     await page.tap(await cellOf(page, 0));                                 // first tap: private peek
     await page.tap(await cellOf(page, 1));                                 // second tap: public flip — a gem
     assert.match(await page.locator('.hint').innerText(), /gem/i);
@@ -350,7 +351,7 @@ test('gems: a third tap that misses flips my gem and the third, then the turn is
   const { browser, page, errors } = await open();
   try {
     await passAndPlay(page, 2);
-    await rig(page, { 0: 16, 1: 16, 2: 7 });
+    await rig(page, { 0: 12, 1: 12, 2: 7 });
     await page.tap(await cellOf(page, 0)); await page.tap(await cellOf(page, 1));
     await page.tap(await cellOf(page, 0));                                 // my own peeked gem: only hides/shows my private look
     assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.turn.revealed.length), 1, 'still only the flipped gem is public');
@@ -365,7 +366,7 @@ test('gems: if the flipped fossil is not a gem, tapping a third does nothing', S
   const { browser, page, errors } = await open();
   try {
     await passAndPlay(page, 2);
-    await rig(page, { 0: 16, 1: 5, 2: 16 });
+    await rig(page, { 0: 12, 1: 5, 2: 12 });
     await page.tap(await cellOf(page, 0)); await page.tap(await cellOf(page, 1));
     await page.tap(await cellOf(page, 2));
     const r = await page.evaluate(() => { const st = window.FossilFrenzyUI.ui.st; return [st.phase, st.turn.revealed.length]; });
@@ -812,7 +813,7 @@ test('sets are shown in one place only — the scoreboard — and tapping them t
     assert.equal(await page.locator('.tray, .setcard').count(), 0, 'no side panel');
     assert.deepEqual(await page.locator('.chip .sets').allInnerTexts(), ['', ''], 'nothing is written when there are no sets');
     assert.equal(await page.locator('.bankcap').count(), 0);
-    await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI; ui.st.players[ui.st.current].sets = [{ value: 7, gem: false, size: 2, ids: [] }, { value: 16, gem: true, size: 3, ids: [] }]; ui.st.rng = () => 0.01; render(); });
+    await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI; ui.st.players[ui.st.current].sets = [{ value: 7, gem: false, size: 2, ids: [] }, { value: 12, gem: true, size: 3, ids: [] }]; ui.st.rng = () => 0.01; render(); });
     assert.equal(await page.locator('.chip.cur .setbtn[data-act=set]').count(), 2, 'the current player\'s sets are the tappable ones');
     assert.equal(await page.locator('.chip:not(.cur) [data-act=set]').count(), 0);
     assert.deepEqual(await page.locator('.chip.cur .setbtn').allInnerTexts(), ['7', '💎']);
@@ -820,7 +821,7 @@ test('sets are shown in one place only — the scoreboard — and tapping them t
     const box = await page.locator('.chip.cur .setbtn').first().boundingBox();
     assert.ok(box.width >= 48 && box.height >= 48, 'big enough to be a button: ' + JSON.stringify(box));
     await page.tap('.chip.cur .setbtn[data-i="1"]');                       // bank the gem, up there
-    assert.equal(await page.evaluate(() => Math.max(...window.FossilFrenzyUI.ui.st.players.map(p => p.points)) >= 16), true, 'the gem scored');
+    assert.equal(await page.evaluate(() => Math.max(...window.FossilFrenzyUI.ui.st.players.map(p => p.points)) >= 12), true, 'the gem scored');
     assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.turnNo), 1, 'and the turn is over');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -945,7 +946,7 @@ test('end screen: each player\'s fossils are two labelled rows — Banked, and M
     await passAndPlay(page, 2);
     await page.evaluate(() => {
       const { ui } = window.FossilFrenzyUI, st = ui.st;
-      st.players[0].banked = [{ value: 7, gem: false, base: 7, bonus: 1 }, { value: 3, gem: false, base: 3, bonus: 0 }]; st.players[0].sets = [{ value: 5, gem: false, size: 2, ids: [] }, { value: 16, gem: true, size: 3, ids: [] }];
+      st.players[0].banked = [{ value: 7, gem: false, base: 7, bonus: 1 }, { value: 3, gem: false, base: 3, bonus: 0 }]; st.players[0].sets = [{ value: 5, gem: false, size: 2, ids: [] }, { value: 12, gem: true, size: 3, ids: [] }];
       st.players[1].banked = []; st.players[1].sets = [];
     });
     await forceFinish(page, [11, 0]);

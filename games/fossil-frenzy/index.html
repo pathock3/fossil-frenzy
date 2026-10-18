@@ -253,9 +253,9 @@ const GAME_DATA = {
     { value: 5,  count: 4 },
     { value: 6,  count: 4 },
     { value: 7,  count: 4 },
+    { value: 9,  count: 2 },
     { value: 10, count: 2 },
-    { value: 11, count: 2 },
-    { value: 16, count: 3, gem: true },   // gems: worth 16, matched as a set of three
+    { value: 12, count: 3, gem: true },   // gems: worth 12, matched as a set of three
   ],
   matching: { pairSize: 2, gemSetSize: 3 },
 
@@ -263,7 +263,7 @@ const GAME_DATA = {
   // A turn is "peek and flip" (first tap = private peek, second tap = public flip) or "bank".
   rules: {
     scoring: {
-      setPoints: 'tile-number',   // banking ONE held set scores the number on its fossil (gem 16); a number here = flat points instead
+      setPoints: 'tile-number',   // banking ONE held set scores the number on its fossil (a gem scores its own value); a number here = flat points instead
       bonusDieSides: 6,           // then roll a d6: every 6 scores +1 and rolls again (0 = no bonus roll)
       bonusFace: 6,
       bonusPoints: 1,
@@ -1340,16 +1340,16 @@ const Campaign = (() => {
     let title = r.winners.length > 1 ? 'Shared win!' : esc(seatName(r.winners[0])) + ' wins!';
     if (campaign && o) title = o.won ? `You beat ${esc(LV[ui.levelIdx].name)}!` : r.winners.length > 1 ? 'A draw — not a win.' : `${esc(LV[ui.levelIdx].name)} wins`;
     const extra = campaign && o && !o.won ? 'Win outright to unlock the next level.' : '';
-    const tileHTML = (v, cls = '') => `<span class="mini ${cls}">${v === 16 ? '💎' : v}</span>`;
+    const tileHTML = (x, cls = '') => `<span class="mini ${cls}">${x.gem ? '💎' : x.value}</span>`;
     const places = r.ranking.map(x => {
       const p = st.players[x.idx], win = r.winners.includes(x.idx);
       return `<div class="place${win ? ' win' : ''}" style="--c:${COLORS[x.idx]}">
         <div class="pn"><span class="dot"></span>${win ? '🏆 ' : ''}${esc(seatName(x.idx))}</div>
         <div class="score">${x.score}</div>
         <div class="rowlab">Banked</div>
-        <div class="tiles">${p.banked.map(b => tileHTML(b.value)).join('') || '<span class="dim">none</span>'}</div>
+        <div class="tiles">${p.banked.map(b => tileHTML(b)).join('') || '<span class="dim">none</span>'}</div>
         <div class="rowlab">Matched, not banked</div>
-        <div class="tiles lostrow">${p.sets.map(s => tileHTML(s.value, 'lost')).join('') || '<span class="dim">none</span>'}</div>
+        <div class="tiles lostrow">${p.sets.map(s => tileHTML(s, 'lost')).join('') || '<span class="dim">none</span>'}</div>
       </div>`;
     }).join('');
     // Celebrate a win in the campaign where you can't miss it: a big card (and confetti) above the results.
@@ -1371,12 +1371,13 @@ const Campaign = (() => {
     return `<div class="confetti" aria-hidden="true">${Array.from({ length: 36 }, (_, i) => `<i style="left:${(i * 37) % 100}%;background:${cols[i % cols.length]};animation-delay:${((i * 53) % 90) / 100}s;animation-duration:${2.2 + (i % 5) * 0.35}s;--dx:${((i * 29) % 80) - 40}px"></i>`).join('')}</div>`;
   }
 
+  const GEM_VALUE = (D.tokens.find(t => t.gem) || {}).value;     // shown in the help text; the number itself lives in the data block
   const JUDGMENTS = [
     'The board is a hexagon of 31 spaces, one fossil on each. There are no pieces and no movement: you can peek at any fossil.',
     'Your first tap is a private peek (the board shows you the number — hold the device toward yourself); your second tap is a public flip. Fossils that do not match flip back at the end of your turn.',
     'A peek does not use up your turn: you may bank instead of flipping.',
     'Matches are pairs (a set of three for the gems). Only the fossil you peeked can be matched, against the one you flipped.',
-    'Banking takes one set of your choice, worth the number on its fossil (a gem is 16), then a d6 chain adds +1 for every 6. Sets you never bank are worth nothing.',
+    `Banking takes one set of your choice, worth the number on its fossil (a gem is ${GEM_VALUE}), then a d6 chain adds +1 for every 6. Sets you never bank are worth nothing.`,
     'Banking is your whole turn, so it ends the moment you tap the set — there is no End turn tap afterwards.',
     'Who goes first is decided at random, without a screen for it; a card names whose turn it is before they tap (in Pass & Play, every turn).',
     'After you peek a gem and flip a gem, tapping a third fossil is your consent to reveal your peeked gem too.',
@@ -1393,8 +1394,8 @@ const Campaign = (() => {
         <li><b>Flip</b> another fossil — tap it. Everyone sees it.</li>
         <li>If your peek and the flipped fossil match, they are yours. Otherwise tap <b>End turn</b> to flip them back — remember them!</li>
         <li>The scores are at the top, and whose turn it is is lit up. Who goes first is decided at random.</li>
-        <li><b>Gems</b> (💎, worth 16) match as a set of three: peek a gem, flip a gem, then tap a third fossil — that reveals your peeked gem too, and if the third is a gem, the set is yours.</li>
-        <li><b>Bank</b> instead of flipping: tap ONE of your held sets. It scores the number on its fossil (a gem is 16), then a d6 chain: every 6 adds +1 and rolls again. Banking takes the whole turn, so your turn ends the moment you bank.</li>
+        <li><b>Gems</b> (💎, worth ${GEM_VALUE}) match as a set of three: peek a gem, flip a gem, then tap a third fossil — that reveals your peeked gem too, and if the third is a gem, the set is yours.</li>
+        <li><b>Bank</b> instead of flipping: tap ONE of your held sets. It scores the number on its fossil (a gem is ${GEM_VALUE}), then a d6 chain: every 6 adds +1 and rolls again. Banking takes the whole turn, so your turn ends the moment you bank.</li>
       </ul>
       <h3>End</h3><p>The game ends the moment every fossil is matched. Sets you have not banked are lost. Highest score wins; ties go to the most sets popped, then whoever popped the final pair.</p>
       <h3>Judgment calls (where the rules were unclear)</h3><ul>${JUDGMENTS.map(j => `<li>${esc(j)}</li>`).join('')}</ul>

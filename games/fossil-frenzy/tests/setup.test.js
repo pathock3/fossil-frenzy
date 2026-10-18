@@ -3,14 +3,14 @@ const assert = require('node:assert/strict');
 const { GAME_DATA, Engine } = require('./load');
 const { game, rolls } = require('./helpers');
 
-test('fossils: 31 — six 2s, six 3s, four 5s/6s/7s, two 10s/11s, three gems worth 16', () => {
+test('fossils: 31 — six 2s, six 3s, four 5s/6s/7s, two 9s/10s, three gems worth 12', () => {
   const s = game();
   assert.equal(s.tokens.length, 31);
   const count = v => s.tokens.filter(t => t.value === v && !t.gem).length;
-  assert.deepEqual([2, 3, 5, 6, 7, 10, 11].map(count), [6, 6, 4, 4, 4, 2, 2]);
+  assert.deepEqual([2, 3, 5, 6, 7, 9, 10].map(count), [6, 6, 4, 4, 4, 2, 2]);
   const gems = s.tokens.filter(t => t.gem);
   assert.equal(gems.length, 3);
-  assert.ok(gems.every(t => t.value === 16));
+  assert.ok(gems.every(t => t.value === 12));
 });
 
 test('board: a hexagon of 31 spaces — the six corners are not part of the game', () => {

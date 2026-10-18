@@ -14,7 +14,7 @@ Patrick Blim-Hockberger's tabletop game designs, adapted as browser games you ca
 - On an iPad, Safari → Share → *Add to Home Screen* on the library page gives a full-screen app.
 
 ## Fossil Frenzy in one paragraph
-31 fossils lie face down on a hexagonal board (no pieces, no movement). On your turn you **peek** (first tap, private) at any fossil, then **flip** (second tap, public) another. If they match, they are yours; otherwise they flip back — remember them. Or **bank** one of your sets: it scores the number on its fossil (gems are worth 16), plus a d6 bonus chain. Gems match as a set of three. The game ends when every fossil is matched; unbanked sets are lost. The rules and every number in them are in the data block at the top of `games/fossil-frenzy/index.html`; every ambiguous call is in `games/fossil-frenzy/DECISIONS.md`.
+31 fossils lie face down on a hexagonal board (no pieces, no movement). On your turn you **peek** (first tap, private) at any fossil, then **flip** (second tap, public) another. If they match, they are yours; otherwise they flip back — remember them. Or **bank** one of your sets: it scores the number on its fossil (gems are worth 12), plus a d6 bonus chain. Gems match as a set of three. The game ends when every fossil is matched; unbanked sets are lost. The rules and every number in them are in the data block at the top of `games/fossil-frenzy/index.html`; every ambiguous call is in `games/fossil-frenzy/DECISIONS.md`.
 
 ## Files
 - `index.html` — the library page; its data block is the catalogue of games.
