@@ -1,7 +1,7 @@
 # Changelog
 
 ## Unreleased
-- **The app is the Tabletop Library** (renamed; Fossil Frenzy remains the name of the game inside it): package, Cloudflare config (`tabletop-library`), links in the docs and the game's browser-storage keys now use the new name. **Saved games and campaign progress made under the old name are discarded.** The web address changes when the Cloudflare project is renamed (owner step); `docs/PLAN.md` lists every place the name lives.
+- **The app is the Tabletop Library** (renamed; Fossil Frenzy remains the name of the game inside it): package, Cloudflare config (`tabletop-library`), links in the docs and the game's browser-storage keys now use the new name. **Saved games and campaign progress made under the old name are discarded.** The live address is now `https://tabletop-library.patrickhockberger.workers.dev/` (a new Cloudflare project named `tabletop-library`); the GitHub repository keeps its old name on purpose. `docs/PLAN.md` lists every place the name lives.
 - **Fossil Frenzy is now one rule set** (owner decision). The original rulebook mode — movement, pieces, corner delivery sites — and the "movement & delivery" toggle are gone. A turn is: first tap a private peek, second tap a public flip; or bank one set.
 - **Pass & Play for 2–4 people** (humans only) **or Campaign**: five opponents — Beginner, Novice, Normal, Challenging, Master — shown by name only (no percentages). Only Beginner is open at first; the others are greyed out with a lock. Win outright to unlock the next; progress is remembered on the device. `?unlock` on the address opens every level for testing.
 - The game's address and saved games: a game saved by an earlier version is cleared with a quiet note (the rules changed); campaign progress starts fresh.

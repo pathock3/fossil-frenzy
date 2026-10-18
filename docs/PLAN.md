@@ -85,7 +85,7 @@ The app is the **Tabletop Library**; each game keeps its own name inside it (Fos
 | The game's browser-storage keys (`tabletop-library-fossil-frenzy-*`) | saves, campaign progress, settings | repo — done (earlier `fossil-frenzy-*` data is discarded) |
 | `README.md`, this file: the live and dev links | documentation | repo — done |
 | Cloudflare Worker / project name | the web address friends use | **owner**, in the Cloudflare dashboard (a Worker cannot be renamed — create a new one named `tabletop-library`) |
-| GitHub repository name | the code's address; redirects from the old name | **owner**, GitHub → Settings → General |
+| GitHub repository name (`fossil-frenzy`) | the code's address — only we see it | **skipped on purpose**; can be renamed any time in GitHub → Settings → General (GitHub redirects the old name) |
 | iPad Home Screen icons and bookmarks | the old address | **owner**, per device |
 | The game's own title (`games/<id>/index.html`) | stays the game's name | — |
 
