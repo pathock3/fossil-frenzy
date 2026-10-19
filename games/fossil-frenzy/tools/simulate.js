@@ -170,11 +170,15 @@ R.refs = REFS;
 console.error('what each ability is worth …');
 const ABILITIES = [
   ['memory 0.8 (instead of perfect)', { memory: 0.8 }],
+  ['memory 0.8, and overconfident about it (overconfidence 10)', { memory: 0.8, overconfidence: 10 }],
   ['no feel for set values (valueSense 0)', { valueSense: 0 }],
   ['no eye on the win (leadSense 0)', { leadSense: 0 }],
   ['no sense of the game ending (endSense 0, banks at 3 sets)', { endSense: 0, bankAt: 3 }],
   ['does not track which sets are left (setsSense 0)', { setsSense: 0 }],
-  ['all of those (memory 0.8, every sense 0, banks at 3 sets)', { memory: 0.8, valueSense: 0, leadSense: 0, endSense: 0, setsSense: 0, bankAt: 3 }],
+  ['always goes for the third gem (gemSense 0)', { gemSense: 0 }],
+  ['plays a random move 10% of the time (mistakes 0.1)', { mistakes: 0.1 }],
+  ['plays a random move 25% of the time (mistakes 0.25)', { mistakes: 0.25 }],
+  ['all of the weak settings (memory 0.8, overconfident, every skill 0, mistakes 0.2, banks at 3 sets)', { memory: 0.8, overconfidence: 10, valueSense: 0, leadSense: 0, endSense: 0, setsSense: 0, gemSense: 0, mistakes: 0.2, bankAt: 3 }],
 ];
 R.abilities = ABILITIES.map(([name, o]) => ({ name, ...headToHead(EXPERT, { ...EXPERT, ...o }) }));
 R.tutorial = LEVELS.map((_, i) => headToHead(level(i), GAME_DATA.ai.profiles.random));
@@ -233,9 +237,9 @@ L.push('', 'Outright wins only, since the campaign counts only an outright win a
 L.push('## Table 9 — what each ability is worth: the perfect player against itself with one ability taken away (2 players; the perfect player wins this often, a draw counts half)', '', '| the other player lacks… | perfect player wins |', '|---|---|');
 R.abilities.forEach(x => L.push(`| ${x.name} | ${P(x.winShare)} ±${P(x.ci)} |`));
 L.push('');
-L.push('## Table 10 — the five campaign opponents\' settings', '', '| level | memory | valueSense | leadSense | endSense | setsSense | bank habit |', '|---|---|---|---|---|---|---|');
-R.levelSettings.forEach(x => L.push(`| ${x.name} | ${x.memory} | ${x.valueSense} | ${x.leadSense} | ${x.endSense} | ${x.setsSense} | ${x.bankAt ? 'at ' + x.bankAt + ' sets' : 'none'}${x.endgameTiles ? ', and when ≤ ' + x.endgameTiles + ' fossils left' : ''} |`));
-L.push('', 'Senses run from 0 (none) to 1 (perfect); memory is the chance a remembered fact is still recalled exactly, per turn that passes (see `docs/AI.md`).', '');
+L.push('## Table 10 — the five campaign opponents\' settings', '', '| level | memory | overconfidence | valueSense | leadSense | endSense | setsSense | gemSense | mistakes | bank habit |', '|---|---|---|---|---|---|---|---|---|---|');
+R.levelSettings.forEach(x => L.push(`| ${x.name} | ${x.memory} | ${x.overconfidence} | ${x.valueSense} | ${x.leadSense} | ${x.endSense} | ${x.setsSense} | ${x.gemSense} | ${P(x.mistakes)} | ${x.bankAt ? 'at ' + x.bankAt + ' sets' : 'none'}${x.endgameTiles ? ', and when ≤ ' + x.endgameTiles + ' fossils left' : ''} |`));
+L.push('', 'Skills run from 0 (none) to 10 (perfect); memory is the chance a remembered fact is still recalled exactly, per turn that passes; mistakes is the chance of a random move (see `docs/AI.md`).', '');
 L.push('## Table 11 — the tutorial opponent (plays at random): how often each campaign level beats it (2 players)', '', '| level | wins |', '|---|---|');
 R.tutorial.forEach((x, i) => L.push(`| ${R.levels[i]} | ${P(x.winShare)} |`));
 L.push('');

@@ -273,33 +273,37 @@ const GAME_DATA = {
 
   // ---- CAMPAIGN --------------------------------------------------------
   // You against one opponent per level. Beat a level (win outright) to unlock the next; only the first starts open.
-  // memory = chance the opponent remembers each revealed fossil. bankAt / endgameTiles = when it banks: once it holds
-  // this many sets, or once this few fossils remain (0 = never plans for the end).
+  // Each level's opponent is an `ai` profile (abilities scored 0-10; see THE OPPONENTS' BRAINS below). To make a level easier or
+  // harder, change its numbers: memory first, then the skills.
   campaign: {
     levels: [
-      { id: 'beginner',    name: 'Beginner',    ai: { memory: 0.80, valueSense: 0,   leadSense: 0,   endSense: 0,   setsSense: 0, bankAt: 3, endgameTiles: 0 } },
-      { id: 'novice',      name: 'Novice',      ai: { memory: 0.85, valueSense: 0.4, leadSense: 0,   endSense: 0,   setsSense: 0, bankAt: 3, endgameTiles: 4 } },
-      { id: 'normal',      name: 'Normal',      ai: { memory: 0.90, valueSense: 0.8, leadSense: 0.3, endSense: 0.5, setsSense: 1 } },
-      { id: 'challenging', name: 'Challenging', ai: { memory: 0.95, valueSense: 1,   leadSense: 0.7, endSense: 0.8, setsSense: 1 } },
-      { id: 'master',      name: 'Master',      ai: { memory: 0.99, valueSense: 1,   leadSense: 1,   endSense: 1,   setsSense: 1 } },
+      { id: 'beginner',    name: 'Beginner',    ai: { memory: 0.70, overconfidence: 10, valueSense: 0,  leadSense: 0,  endSense: 0,  setsSense: 0,  gemSense: 0,  mistakes: 0.20, bankAt: 2 } },
+      { id: 'novice',      name: 'Novice',      ai: { memory: 0.78, overconfidence: 8,  valueSense: 3,  leadSense: 0,  endSense: 0,  setsSense: 0,  gemSense: 0,  mistakes: 0.12, bankAt: 3, endgameTiles: 4 } },
+      { id: 'normal',      name: 'Normal',      ai: { memory: 0.84, overconfidence: 5,  valueSense: 7,  leadSense: 3,  endSense: 4,  setsSense: 10, gemSense: 5,  mistakes: 0.08 } },
+      { id: 'challenging', name: 'Challenging', ai: { memory: 0.89, overconfidence: 3,  valueSense: 10, leadSense: 6,  endSense: 7,  setsSense: 10, gemSense: 10, mistakes: 0.05 } },
+      { id: 'master',      name: 'Master',      ai: { memory: 0.94, overconfidence: 1,  valueSense: 10, leadSense: 10, endSense: 10, setsSense: 10, gemSense: 10, mistakes: 0.02 } },
     ],
   },
 
   // ---- THE OPPONENTS' BRAINS ------------------------------------------------------------------------------------
-  // A profile says what an opponent is good at. `expert` is the perfect player: every ability at 1.
-  //   memory      each turn that passes, the chance a remembered fossil is still recalled exactly (1 = never forgets). When an
-  //               opponent acts on a memory it taps the right spot with probability memory^age, otherwise a random other spot.
-  //   valueSense  0..1  understands that high sets are worth more than low ones (0 = every set looks the same)
-  //   leadSense   0..1  plays for the win: protects a lead, chases a deficit (0 = just collects points)
-  //   endSense    0..1  knows how close the game is to its end (when to bank, how much time is left)
-  //   setsSense   0..1  tracks which sets are still on the board (0 = no idea what is left)
-  //   bankAt      habit: bank whenever holding this many sets (0 = no habit)
-  //   endgameTiles  habit: bank whenever this few fossils (or fewer) remain (0 = no habit)
+  // A profile says what an opponent is good at. `expert` is the perfect player: memory 1, every skill 10. Skills are scored 0 (none) to 10 (perfect).
+  //   memory         each turn that passes, the chance a remembered fossil is still recalled exactly (1 = never forgets). When an opponent
+  //                  acts on a memory it taps the right spot with probability memory^age, otherwise a random other spot.
+  //   overconfidence 0..10  how much it overrates its own memory: 0 trusts a fading memory only as much as it deserves, 10 trusts it fully
+  //                  (so it goes for matches it cannot reliably make — and sometimes gets them wrong)
+  //   valueSense     understands that high sets are worth more than low ones (0 = every set looks the same)
+  //   leadSense      plays for the win: protects a lead, chases a deficit (0 = just collects points)
+  //   endSense       knows how close the game is to its end: when to bank, how much time is left (0 = no idea)
+  //   setsSense      tracks which sets are still on the board (below 5 it has no idea what is left)
+  //   gemSense       understands that going for the third gem gives two gems' positions away (below 5 it always goes for it)
+  //   mistakes       the chance, on any move, that it plays a random move instead (0 = never)
+  //   bankAt         habit: bank whenever holding this many sets (0 = no habit)
+  //   endgameTiles   habit: bank whenever this few fossils (or fewer) remain (0 = no habit)
   // `random` is the tutorial opponent: it just plays at random.
   ai: {
     profiles: {
       random: { style: 'random' },
-      expert: { memory: 1, valueSense: 1, leadSense: 1, endSense: 1, setsSense: 1 },
+      expert: { memory: 1, overconfidence: 0, valueSense: 10, leadSense: 10, endSense: 10, setsSense: 10, gemSense: 10, mistakes: 0 },
     },
     // How the smart opponent weighs things. These are calibration numbers (see games/fossil-frenzy/docs/AI.md), shared by every level.
     tuning: {
@@ -311,7 +315,9 @@ const GAME_DATA = {
       denialSpread: 1.5, replyShare: 0.7,                        // how likely an opponent is to grab a public set
       wpScale: 2.5, sigmaBase: 8,                                // from lead to chance of winning
       endBias: 0, endScale: 6,                                   // extra push to finish the game when ahead / keep it going when behind (0: simulations found no gain)
-      gemLeak: 3,                                                // what gambling on the third gem costs it (information given away)
+      defaultBias: 3, defaultDecay: 1, defaultRef: 5,            // early in the game, banking what you hold and taking a set you can make are the default: a nudge that fades as the game goes on, smaller for low sets
+      gemLeak: 3, gemEager: 100,                                                // what gambling on the third gem costs it (information given away)
+      slipShare: 0.4,                                            // when it taps the wrong spot, how much of what exploring would have given it still gets
       recallFloor: 0.05,                                         // even a very old memory is recalled this often (so a forgetful opponent can never be stuck for good)
     },
   },
@@ -625,11 +631,17 @@ const Engine = (() => {
    recalls a fact exactly is `memory`.  When a bot acts on a fact (peek/flip where it believes a fossil is) it gets the spot
    right with probability memory^age; otherwise it taps a random other spot.  memory 1 = perfect.
 
-   Strategy (the "perfect" bot has every ability at 1; easier bots have them lower — see GAME_DATA.ai):
+   Overconfidence: a bot may believe its memory is better than it is (it trusts a fading memory more than it should), so it goes
+   for matches it cannot reliably make — and sometimes gets them wrong.
+
+   Strategy (the "perfect" bot scores 10 on every ability; easier bots score lower — see GAME_DATA.ai):
+     Abilities are scored 0 (none) to 10 (perfect).
      valueSense   how much it understands that high sets are worth more than low ones (0 = every set looks the same)
      leadSense    how much it plays for the win (protect a lead / chase a deficit) rather than for raw points
      endSense     how well it knows how close the game is to ending (when to bank, when time is running out)
      setsSense    whether it keeps track of which sets are still on the board
+     gemSense     whether it understands that going for the third gem gives two gems' positions away (0 = it always goes for the third)
+     mistakes     the chance, on any move, that it plays a random move instead
      bankAt       a habit: bank whenever it holds this many sets (0 = no habit)
      endgameTiles a habit: bank whenever this few fossils (or fewer) remain (0 = no habit)
    ===================================================================== */
@@ -646,7 +658,7 @@ const Bots = (() => {
   const softplus = x => (x > 20 ? x : Math.log1p(Math.exp(x)));
   const keyOf = (value, gem) => (gem ? 'g' : 'n') + value;
 
-  const DEFAULTS = { style: 'smart', memory: 1, valueSense: 1, leadSense: 1, endSense: 1, setsSense: 1, bankAt: 0, endgameTiles: 0 };
+  const DEFAULTS = { style: 'smart', memory: 1, overconfidence: 0, valueSense: 10, leadSense: 10, endSense: 10, setsSense: 10, gemSense: 10, mistakes: 0, bankAt: 0, endgameTiles: 0 };
   function profileOf(spec) {
     if (typeof spec === 'string') { if (!AI().profiles[spec]) throw new Error('unknown bot profile ' + spec); return { ...DEFAULTS, ...AI().profiles[spec] }; }
     const base = spec && spec.profile ? AI().profiles[spec.profile] : null;
@@ -673,7 +685,9 @@ const Bots = (() => {
       const sc = v.rules.scoring;
       BONUS = sc.bonusDieSides ? sc.bonusPoints * (1 / sc.bonusDieSides) / (1 - 1 / sc.bonusDieSides) : 0;      // expected bonus of a bank (a chain of sixes)
     }
-    const ve = value => (1 - P.valueSense) * MEAN_VALUE + P.valueSense * value;                                     // the value this bot sees in a set
+    // abilities are scored 0-10 in the profile; the engine works with 0-1
+    const sk = name => P[name] / 10;
+    const ve = value => (1 - sk('valueSense')) * MEAN_VALUE + sk('valueSense') * value;                                     // the value this bot sees in a set
 
     // ---------- what it learns ----------
     bot.onEvent = ev => {
@@ -696,7 +710,10 @@ const Bots = (() => {
     };
 
     // does it recall a fact exactly right now?  (memory^age)
-    const recalls = f => P.memory >= 1 || rnd() < Math.max(T.recallFloor, Math.pow(P.memory, bot.turnIx - f.t));      // (a small floor, so a forgetful bot can never be stuck for good)
+    const trueRecall = f => (P.memory >= 1 ? 1 : Math.max(T.recallFloor, Math.pow(P.memory, bot.turnIx - f.t)));      // (a small floor, so a forgetful bot can never be stuck for good)
+    const recalls = f => P.memory >= 1 || rnd() < trueRecall(f);
+    // how reliable the bot THINKS a memory is: the truth, or — if it is overconfident — closer to certain
+    const believedRecall = f => { const p = trueRecall(f); return p + sk('overconfidence') * (1 - p); };
 
     // ---------- the picture of the game from where it sits ----------
     function look(v) {
@@ -705,27 +722,27 @@ const Bots = (() => {
       const known = [];
       for (const [tid, f] of bot.facts) {
         if (v.tokens[tid].matched) { bot.facts.delete(tid); continue; }
-        known.push({ tid, key: keyOf(f.value, f.gem), value: f.value, gem: f.gem, pub: f.pub, t: f.t });
+        known.push({ tid, key: keyOf(f.value, f.gem), value: f.value, gem: f.gem, pub: f.pub, t: f.t, pr: believedRecall(f) });
       }
       const byKey = {};
       for (const k of known) (byKey[k.key] = byKey[k.key] || []).push(k);
       // what is still on the board, by kind (if it tracks the sets; else a proportional guess)
       const R = {};
-      for (const k of KINDS) R[k.key] = P.setsSense >= 0.5 ? Math.max(0, k.count - (bot.gone[k.key] || 0)) : k.count * L / TOTAL;
+      for (const k of KINDS) R[k.key] = sk('setsSense') >= 0.5 ? Math.max(0, k.count - (bot.gone[k.key] || 0)) : k.count * L / TOTAL;
       const unknownN = Math.max(0, L - known.length);
       const c = {};
       let cs = 0;
       for (const k of KINDS) { c[k.key] = Math.max(0, R[k.key] - (byKey[k.key] ? byKey[k.key].length : 0)); cs += c[k.key]; }
       if (cs > 0) for (const k in c) c[k] *= unknownN / cs;
       const sets = [];                                       // the sets still to be made, by value
-      for (const k of KINDS) { const m = P.setsSense >= 0.5 ? Math.floor(R[k.key] / k.size + 1e-9) : Math.round(R[k.key] / k.size); for (let i = 0; i < m; i++) sets.push(k.value); }
+      for (const k of KINDS) { const m = sk('setsSense') >= 0.5 ? Math.floor(R[k.key] / k.size + 1e-9) : Math.round(R[k.key] / k.size); for (let i = 0; i < m; i++) sets.push(k.value); }
       // sure sets: kinds I know enough tiles of to complete right now
       const sure = [];                                       // {key, value, gem, tiles:[known], pub}
       for (const k of KINDS) {
         const have = byKey[k.key] || [];
         for (let i = 0; i + k.size <= have.length; i += k.size) {
           const tiles = have.slice().sort((a, b) => (b.pub ? 1 : 0) - (a.pub ? 1 : 0)).slice(i, i + k.size);   // use up public knowledge first
-          sure.push({ key: k.key, value: k.value, gem: k.gem, tiles, pub: tiles.every(t => t.pub) });
+          sure.push({ key: k.key, value: k.value, gem: k.gem, tiles, pub: tiles.every(t => t.pub), pr: tiles.reduce((a, t) => a * t.pr, 1) });
         }
       }
       const singles = [];                                    // private knowledge that is not yet a sure set
@@ -741,7 +758,7 @@ const Bots = (() => {
       const Eall = Math.max(Sn * T.minTurnsPerSet, T.turnsPerSet * Sn - T.knownRelief * sure.length);
       const Eme = Eall / n;
       // it only notices the end approaching once it is within `endSense` x horizonTurns of it; before that it assumes there is plenty of time
-      const E = Eme <= P.endSense * T.horizonTurns ? Eme : Math.max(Eme, T.blindTurns);
+      const E = Eme <= sk('endSense') * T.horizonTurns ? Eme : Math.max(Eme, T.blindTurns);
       return { v, L, n, me, known, byKey, c, unknownN, sets, sure, singles, E, C: Math.max(0, E - 1),
                publicKnown: known.filter(k => k.pub), privateKnown: known.filter(k => !k.pub) };
     }
@@ -783,12 +800,12 @@ const Bots = (() => {
     function utility(X, st, setsAfter, pubLeft, oppE, sigRef) {
       let D = eqMine(st, X.unknownN) - oppE;
       if (pubLeft.length) D -= denial(X, Math.max(...pubLeft));
-      if (P.leadSense <= 0) return D;
+      if (sk('leadSense') <= 0) return D;
       const wp = Phi(D / sigmaOf(setsAfter));
       // ahead: finishing the game sooner protects the lead; behind: keeping fossils on the board buys time to catch up
       const removed = X.sets.length - setsAfter.length;
-      const hurry = T.endBias * P.endSense * Math.tanh(D / T.endScale) * removed;
-      return (1 - P.leadSense) * D + P.leadSense * (sigRef * T.wpScale * (wp - 0.5) + hurry);
+      const hurry = T.endBias * sk('endSense') * Math.tanh(D / T.endScale) * removed;
+      return (1 - sk('leadSense')) * D + sk('leadSense') * (sigRef * T.wpScale * (wp - 0.5) + hurry);
     }
     const without = (arr, val) => { const a = arr.slice(), i = a.indexOf(val); if (i >= 0) a.splice(i, 1); return a; };
 
@@ -799,16 +816,22 @@ const Bots = (() => {
       const pubPairs = X.sure.filter(s => s.pub).map(s => s.value);
       const base = baseState(X);
       const U = (st, setsAfter, pubLeft) => utility(X, st, setsAfter, pubLeft, oppE, sigRef);
+      // The default moves — bank what you hold, take a set you can make — are worth a nudge early in the game, fading as the game goes on
+      // (later the score and the time left matter more); a low set earns less of it.
+      const phase = Math.pow(X.L / TOTAL, T.defaultDecay);
+      const nudge = value => T.defaultBias * phase * Math.min(1, ve(value) / T.defaultRef);
       // bank
       if (X.v.status && X.v.status.canBank && X.me.sets.length) {
         let bi = 0; X.me.sets.forEach((s, i) => { if (s.value > X.me.sets[bi].value) bi = i; });
         const val = X.me.sets[bi].value;
-        out.push({ kind: 'bank', set: bi, u: U({ ...base, pts: base.pts + val + BONUS, held: without(base.held, val) }, X.sets, pubPairs) });
+        out.push({ kind: 'bank', set: bi, u: U({ ...base, pts: base.pts + val + BONUS, held: without(base.held, val) }, X.sets, pubPairs) + nudge(val) });
       }
-      // take a sure set
+      // take a sure set (it only works if it recalls where the fossils are)
+      const matchPlans = [];
       for (const s of X.sure) {
         const st = { ...base, held: base.held.concat([s.value]), priv: s.pub ? base.priv : without(base.priv, s.value) };
-        out.push({ kind: 'match', sure: s, u: U(st, without(X.sets, s.value), s.pub ? without(pubPairs, s.value) : pubPairs) });
+        const plan = { kind: 'match', sure: s, u: U(st, without(X.sets, s.value), s.pub ? without(pubPairs, s.value) : pubPairs) + nudge(s.value) };
+        matchPlans.push(plan); out.push(plan);
       }
       // explore: peek a tile I know nothing about, then flip another I know nothing about (two new fossils learned at once)
       if (X.unknownN > 0) {
@@ -821,7 +844,11 @@ const Bots = (() => {
           if (knownN(k) >= k.size - 1) {                                                    // my peek completes a set with what I already know: flip the partner
             const singlesAfter = base.singles.slice(), si = singlesAfter.findIndex(z => z.key === k.key);
             if (si >= 0) singlesAfter.splice(si, 1);
-            eu += pi * U({ ...base, held: base.held.concat([k.value]), singles: singlesAfter }, without(X.sets, k.value), pubPairs);
+            const hit = U({ ...base, held: base.held.concat([k.value]), singles: singlesAfter }, without(X.sets, k.value), pubPairs);
+            // ...if it recalls where the partner is (otherwise it taps the wrong spot and just learns what it peeked)
+            const partner = (X.byKey[k.key] || []).slice().sort((a, b) => b.pr - a.pr).slice(0, k.size - 1).reduce((a, t) => a * t.pr, 1);
+            const miss = partner < 1 ? U({ ...base, singles: base.singles.concat([{ x: k.value, c: Math.max(0, ck - 1), key: k.key }]) }, X.sets, pubPairs) : 0;
+            eu += pi * (partner * hit + (1 - partner) * miss);
             continue;
           }
           // otherwise I learn it privately, and flip some other unknown fossil publicly
@@ -842,6 +869,10 @@ const Bots = (() => {
         }
         out.push({ kind: 'explore', u: eu });
       }
+      // a set it believes it can make is only as good as its recall of it: otherwise the turn is mostly wasted (about what exploring would give)
+      const idle = U(base, X.sets, pubPairs), ex = out.find(p => p.kind === 'explore');
+      const failU = ex ? idle + T.slipShare * (ex.u - idle) : idle;            // a slip taps a random spot: some of the value of exploring, not all
+      for (const p of matchPlans) if (p.sure.pr < 1) p.u = p.sure.pr * p.u + (1 - p.sure.pr) * failU;
       // gem gamble: two gems known, the third is out there
       for (const k of KINDS) {
         if (!k.gem) continue;
@@ -850,7 +881,8 @@ const Bots = (() => {
           const p = X.c[k.key] / X.unknownN;
           const hit = U({ ...base, held: base.held.concat([k.value]) }, without(X.sets, k.value), pubPairs);
           const miss = U(base, X.sets, pubPairs) - T.gemLeak;
-          out.push({ kind: 'gamble', tiles: have, u: p * hit + (1 - p) * miss });
+          // a bot with no feel for what going for the third gem gives away simply always goes for it
+          out.push({ kind: 'gamble', tiles: have, u: p * hit + (1 - p) * miss + (sk('gemSense') < 0.5 ? T.gemEager : 0) });
         }
       }
       return out;
@@ -868,6 +900,7 @@ const Bots = (() => {
     function chooseAction(v) {
       const X = look(v);
       const me = X.me;
+      if (P.mistakes > 0 && rnd() < P.mistakes) { const any = unmatchedIds(v); if (any.length) return { type: 'peek', tid: pick(any) }; }      // a slip: it just taps something
       if (v.status.canBank && me.sets.length && ((P.bankAt > 0 && me.sets.length >= P.bankAt) || (P.endgameTiles > 0 && v.tokensLeft <= P.endgameTiles))) { let bi = 0; me.sets.forEach((s, i) => { if (s.value > me.sets[bi].value) bi = i; }); return { type: 'bank', set: bi }; }
       const ps = plans(X);
       let best = null;
@@ -885,13 +918,14 @@ const Bots = (() => {
 
     function chooseFlip(v) {
       const X = look(v), T0 = v.peeked;
+      if (P.mistakes > 0 && rnd() < P.mistakes) { const any = unmatchedIds(v).filter(t => t !== T0.tid); if (any.length) return { type: 'flipOther', tid: pick(any) }; }
       const k = keyOf(T0.value, T0.gem);
       const twins = (X.byKey[k] || []).filter(t => t.tid !== T0.tid);
       if (twins.length) {
         const wantTwins = T0.gem ? SIZES.gem - 1 : SIZES.pair - 1;
         // is it worth taking?  (a low set may be worth leaving, depending on the game)
         if (twins.length >= wantTwins && takeIt(X, T0)) return { type: 'flipOther', tid: aim(X, twins[0], [T0.tid]) };
-        if (T0.gem && twins.length >= 1 && gambleIt(X, T0, twins)) return { type: 'flipOther', tid: aim(X, twins[0], [T0.tid]) };
+        if (T0.gem && twins.length >= 1 && (sk('gemSense') < 0.5 || gambleIt(X, T0, twins))) return { type: 'flipOther', tid: aim(X, twins[0], [T0.tid]) };
       }
       // no set to take: flip something I have not seen (a second new fossil learned, and a chance it matches my peek)
       const unk = unknownIds(X, [T0.tid]);
@@ -927,6 +961,7 @@ const Bots = (() => {
         const X = look(v);
         const third = (X.byKey[keyOf(T0.value, true)] || []).filter(t => t.tid !== T0.tid && t.tid !== v.F);
         if (third.length) return { type: 'flipOwn' };
+        if (sk('gemSense') < 0.5) return { type: 'flipOwn' };                           // found two gems: it goes for the third, whatever that gives away
         if (gambleIt(X, T0, third)) return { type: 'flipOwn' };
         if (v.tokensLeft <= SIZES.gem) return { type: 'flipOwn' };
       }

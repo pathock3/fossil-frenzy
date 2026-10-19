@@ -2,7 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { GAME_DATA, Engine, Bots } = require('./load');
-const { position, lateGame } = require('./helpers');
+const { game, position, lateGame } = require('./helpers');
 
 const EXPERT = GAME_DATA.ai.profiles.expert;
 const LEVELS = GAME_DATA.campaign.levels.map(l => l.ai);
@@ -12,9 +12,9 @@ const best = w => w.plans[0];
 const pairOf = v => [{ tid: 20, value: v, pub: true }, { tid: 21, value: v, pub: true }];
 
 // ---------------------------------------------------------------- the perfect player's judgement
-test('perfect AI: it does not rush to bank — early in the game a held set (even a high one) waits while exploring is worth more', () => {
-  assert.equal(best(position({ held: [[2], []] }).weigh()).kind, 'explore');
-  assert.equal(best(position({ held: [[9], []] }).weigh()).kind, 'explore');
+test('perfect AI: early in the game banking is the default move — it banks a good set — but a low set may not be worth the turn', () => {
+  for (const v of [5, 7, 9]) assert.equal(best(position({ held: [[v], []] }).weigh()).kind, 'bank', `holding a ${v}`);
+  assert.equal(best(position({ held: [[2], []] }).weigh()).kind, 'explore', 'a 2 is not worth a turn');
 });
 
 test('perfect AI: as the game nears its end it banks — and banks the most valuable set first', () => {
@@ -28,6 +28,7 @@ test('perfect AI: a set\'s worth to it follows its number — a public pair of 9
   assert.equal(best(high).kind, 'match');
   assert.equal(best(high).value, 9);
   assert.equal(best(low).kind, 'explore', 'just because it can make a match of two 2s does not mean it will');
+  assert.equal(best(position({ known: pairOf(5) }).weigh()).kind, 'match', 'but a set worth having is the default');
   assert.ok(util(high, 'match') - util(high, 'explore') > util(low, 'match') - util(low, 'explore') + 3, 'the higher the set, the more it wants it');
 });
 
@@ -44,6 +45,58 @@ test('perfect AI: it never plans on the value of a fossil it has not seen (it pl
   const before = JSON.stringify(p.weigh());
   p.s.tokens[5].value = 10; p.s.tokens[6].value = 2;                        // change hidden fossils behind its back
   assert.equal(JSON.stringify(p.weigh()), before);
+});
+
+// ---------------------------------------------------------------- the human-like imperfections
+const aged = (profile, turns) => {
+  const p = position({ known: pairOf(7), profile });
+  for (let i = 0; i < turns; i++) p.bot.onEvent({ type: 'turn', actor: 1 });
+  return p;
+};
+
+test('overconfidence: a bot with a fading memory that is realistic about it explores rather than trust an old memory; an overconfident one goes for the match', () => {
+  const faded = { ...EXPERT, memory: 0.8 };
+  const calm = aged({ ...faded, overconfidence: 0 }, 8).weigh(), rash = aged({ ...faded, overconfidence: 10 }, 8).weigh();
+  assert.equal(best(calm).kind, 'explore', 'a pair it saw 8 turns ago is mostly a guess: it looks for something surer');
+  assert.equal(best(rash).kind, 'match', 'the overconfident bot is sure it remembers');
+  assert.equal(best(aged({ ...faded, overconfidence: 0 }, 0).weigh()).kind, 'match', 'a fresh memory is trusted by everyone');
+});
+
+test('overconfidence: going for a match it cannot reliably make, it often taps the wrong spot', () => {
+  const p = aged({ ...EXPERT, memory: 0.8, overconfidence: 10 }, 8);
+  let right = 0, N = 1500;
+  for (let i = 0; i < N; i++) { const a = p.decide(); if (a.type === 'peek' && a.tid === 20) right++; }
+  assert.ok(right / N < 0.3, `right ${right / N}`);
+});
+
+test('gems: a bot with no feel for them always goes for the third gem; the perfect AI only does when it knows where it is', () => {
+  const two = [{ tid: 28, value: 12, gem: true, pub: true }, { tid: 29, value: 12, gem: true, pub: true }];
+  assert.equal(best(position({ known: two, profile: { ...EXPERT, gemSense: 0 } }).weigh()).kind, 'gamble');
+  assert.notEqual(best(position({ known: two }).weigh()).kind, 'gamble', 'the perfect AI would be giving two gems away');
+  const three = two.concat([{ tid: 30, value: 12, gem: true, pub: true }]);
+  assert.equal(best(position({ known: three }).weigh()).kind, 'match', 'it takes the gem set when it knows all three');
+  // in the middle of a turn: it has peeked a gem and flipped a gem — does it go on?
+  const turn = profile => {
+    const s = game({ players: 2, rolls: [6, 5] });
+    const bot = Bots.create({ seat: 0, profile, rng: Engine.mulberry32(2) });
+    s.observers.push(bot);
+    Engine.peek(s, 28); Engine.flipOther(s, 29);
+    return bot.decide(Engine.publicView(s, 0)).type;
+  };
+  assert.equal(turn({ ...EXPERT, gemSense: 0 }), 'flipOwn', 'two gems found: go for the third');
+  assert.equal(turn(EXPERT), 'endTurn', 'the perfect AI keeps the two positions to itself');
+});
+
+test('mistakes: a bot with a mistake rate plays a random move that often instead of the best one', () => {
+  const rate = m => {
+    const p = position({ held: [[9], []], profile: { ...EXPERT, mistakes: m } });
+    let banked = 0, N = 2000;
+    for (let i = 0; i < N; i++) if (p.decide().type === 'bank') banked++;
+    return banked / N;
+  };
+  assert.equal(rate(0), 1, 'the best move here is to bank');
+  assert.ok(Math.abs(rate(0.3) - 0.7) < 0.04);
+  assert.ok(rate(1) < 0.01, 'a bot that only makes mistakes never banks on purpose');
 });
 
 // ---------------------------------------------------------------- what the easier opponents lack
@@ -66,11 +119,15 @@ test('easier AI: not tracking the sets means it guesses what is left from the nu
 });
 
 test('levels: the five opponents\' abilities never go down from one level to the next', () => {
-  for (const key of ['memory', 'valueSense', 'leadSense', 'endSense', 'setsSense']) {
+  for (const key of ['memory', 'valueSense', 'leadSense', 'endSense', 'setsSense', 'gemSense']) {
     for (let i = 1; i < LEVELS.length; i++) assert.ok(LEVELS[i][key] >= LEVELS[i - 1][key], `${key} drops at level ${i + 1}`);
   }
-  assert.deepEqual(Object.keys(EXPERT).sort(), ['endSense', 'leadSense', 'memory', 'setsSense', 'valueSense']);
-  assert.ok(Object.values(EXPERT).every(x => x === 1), 'the perfect AI has every ability at 1');
+  for (const key of ['overconfidence', 'mistakes']) {
+    for (let i = 1; i < LEVELS.length; i++) assert.ok(LEVELS[i][key] <= LEVELS[i - 1][key], `${key} rises at level ${i + 1}`);
+  }
+  assert.deepEqual(Object.keys(EXPERT).sort(), ['endSense', 'gemSense', 'leadSense', 'memory', 'mistakes', 'overconfidence', 'setsSense', 'valueSense']);
+  for (const k of ['valueSense', 'leadSense', 'endSense', 'setsSense', 'gemSense']) assert.equal(EXPERT[k], 10, k);
+  assert.deepEqual([EXPERT.memory, EXPERT.overconfidence, EXPERT.mistakes], [1, 0, 0], 'the perfect AI never forgets, is never overconfident, never slips');
 });
 
 // ---------------------------------------------------------------- strength follows ability (fixed seeds: deterministic)

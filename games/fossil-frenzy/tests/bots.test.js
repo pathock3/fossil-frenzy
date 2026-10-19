@@ -73,7 +73,7 @@ test('a bot forgets fossils once they are matched, and keeps count of which sets
 // ---------------------------------------------------------------- memory: it fades with every turn that passes
 const recallRate = (memory, ageTurns, N = 3000) => {
   // the bot knows a valuable pair (tiles 0 and 1, learnt `ageTurns` turns ago); how often does it peek exactly tile 0?
-  const p = position({ known: [{ tid: 0, value: 9, pub: true }, { tid: 1, value: 9, pub: true }], profile: withMemory(memory) });
+  const p = position({ known: [{ tid: 0, value: 9, pub: true }, { tid: 1, value: 9, pub: true }], profile: { ...withMemory(memory), overconfidence: 10 } });   // (overconfident: it always tries, so we can see how often the memory holds)
   for (let i = 0; i < ageTurns; i++) p.bot.onEvent({ type: 'turn', actor: 1 });
   let right = 0, aimed = 0;
   for (let i = 0; i < N; i++) {
@@ -98,7 +98,7 @@ test('memory: an older memory is worse than a newer one, and a better memory is 
 });
 
 test('memory: when it slips it taps a random OTHER spot on the board — never the one it meant, never a gone fossil', () => {
-  const p = position({ matched: [[3, false], [3, false]], known: [{ tid: 0, value: 9, pub: true }, { tid: 1, value: 9, pub: true }], profile: withMemory(0.5) });
+  const p = position({ matched: [[3, false], [3, false]], known: [{ tid: 0, value: 9, pub: true }, { tid: 1, value: 9, pub: true }], profile: { ...withMemory(0.5), overconfidence: 10 } });
   for (let i = 0; i < 6; i++) p.bot.onEvent({ type: 'turn', actor: 1 });
   const hits = new Map();
   for (let i = 0; i < 3000; i++) { const a = p.decide(); if (a.type === 'peek' && a.tid !== 0) hits.set(a.tid, (hits.get(a.tid) || 0) + 1); }
