@@ -175,11 +175,12 @@ test('play: a complete level A by taps, then OK deals level B (2x3), whose clock
   assert.ok(s.round.faceUp.every(Boolean), 'dealt face up');
   await advance(t.page, 3000);                                     // study time counts
   await t.page.tap('[data-act=flip]');
-  s = await S(t.page); assert.equal(s.round.phase, 'recall'); assert.equal(await t.page.locator('.card.down').count(), 4);
-  assert.equal(await t.page.locator('.flip').isVisible(), false, 'the button has nothing to do while counting');
+  s = await S(t.page); assert.equal(s.round.phase, 'study', 'Flip only turns the cards down; nothing says an attempt has begun'); assert.equal(await t.page.locator('.card.down').count(), 4);
+  assert.equal(await t.page.locator('.flip').isVisible(), false, 'with everything face down the button has nothing to do');
   await advance(t.page, 2000);
   const lay = s.round.layout;
   await tapAll(t.page, lay, 1, 3);
+  assert.equal((await S(t.page)).round.phase, 'recall', 'the first tap on a face-down board began the attempt');
   assert.equal(await t.page.locator('.card.down').count(), 1, 'correct cards stay face up');
   assert.equal((await S(t.page)).results, null);
   await tapNumber(t.page, lay, 4);
@@ -203,13 +204,13 @@ test('play: before Flip, tapping any card turns it face down or up again (free f
     await page.tap('[data-act=start]');
     const lay = (await S(page)).round.layout;
     const up = n => page.evaluate(p => window.AdvancedCountingUI.ui.round.faceUp[p], lay.indexOf(n));
-    for (let n = 1; n <= lay.length; n++) await tapNumber(page, lay, n);        // turn 1, 2, 3, 4 face down by tapping them
-    for (let n = 1; n <= lay.length; n++) assert.equal(await up(n), false, 'card ' + n + ' is face down');
-    for (let n = 1; n <= lay.length; n++) { await tapNumber(page, lay, n); assert.equal(await up(n), true, 'tapping ' + n + ' again turns it face up'); }
+    for (let n = 1; n <= lay.length - 1; n++) await tapNumber(page, lay, n);    // practise 1, 2, 3: turn them face down (one card stays up)
+    for (let n = 1; n <= lay.length - 1; n++) assert.equal(await up(n), false, 'card ' + n + ' is face down');
+    for (let n = 1; n <= lay.length - 1; n++) { await tapNumber(page, lay, n); assert.equal(await up(n), true, 'tapping ' + n + ' again turns it face up'); }
     const s = await S(page);
     assert.equal(s.round.phase, 'study'); assert.equal(s.round.mistakes, 0, 'testing yourself costs nothing');
-    await page.tap('[data-act=flip]');                                           // Flip still starts the real count
-    assert.equal((await S(page)).round.phase, 'recall');
+    await page.tap('[data-act=flip]');                                           // Flip turns everything down
+    assert.equal((await S(page)).round.phase, 'study'); assert.equal(await page.locator('.card.down').count(), lay.length);
     await tapAll(page, lay, 1, lay.length);
     assert.ok((await S(page)).results, 'and the level completes as usual');
     assert.deepEqual(t.errors, []);
@@ -250,6 +251,29 @@ test('cards show the number and nothing else — no corner numbers — in the bi
   } finally { await t.close(); }
 });
 
+test('play: no attempt switch — turn every card down by hand and count: a lucky run completes the level; a wrong tap turns everything face up', SKIP, async () => {
+  const t = await open({ viewport: IPAD_L });
+  const { page } = t;
+  try {
+    await page.tap('[data-act=start]');
+    for (let i = 0; i < 4; i++) { await advance(page, 1000); }
+    const lay = (await S(page)).round.layout;
+    await tapAll(page, lay, 1, 4);                                      // turn all four face down by tapping them
+    assert.equal(await page.locator('.card.down').count(), 4);
+    assert.equal(await page.locator('.flip').isVisible(), false);
+    assert.equal(await page.locator('body').innerText().then(x => /attempt|try|count/i.test(x.replace(/Advanced Counting/i, ''))), false, 'the screen never says an attempt has begun');
+    await tapNumber(page, lay, 2);                                       // wrong first tap: mistake, everything face up
+    let s = await S(page);
+    assert.equal(s.round.mistakes, 1); assert.equal(await page.locator('.card.down').count(), 0);
+    assert.equal(await page.locator('.flip').isVisible(), true, 'the Flip button is back');
+    await tapAll(page, lay, 1, 4);                                       // all down by hand again...
+    await tapAll(page, lay, 1, 4);                                       // ...and the lucky run, in order
+    s = await S(page);
+    assert.ok(s.results, 'that was enough to complete the level'); assert.equal(s.results.mistakes, 1);
+    assert.deepEqual(t.errors, []);
+  } finally { await t.close(); }
+});
+
 test('play: a wrong tap re-deals the identical layout face up, counts a mistake, and only completion deals a new layout', SKIP, async () => {
   const t = await open();
   await t.page.tap('[data-act=start]'); await t.page.tap('[data-act=flip]');
@@ -282,7 +306,7 @@ test('play: the results screen has LEVEL / MISTAKES / TIME columns (label above 
   const cols = await t.page.locator('.results .col').evaluateAll(els => els.map(e => e.getBoundingClientRect().x));
   assert.ok(cols[0] < cols[1] && cols[1] < cols[2]);
   assert.ok(await t.page.locator('.results [data-act=ok]').isVisible());
-  assert.equal(await t.page.locator('.results [data-act=ok]').innerText(), 'OK');
+  assert.equal(await t.page.locator('.results [data-act=ok]').innerText(), 'Next level', 'the button says what it does: it starts the next level (and its clock)');
   await t.close();
 });
 
@@ -340,6 +364,7 @@ test('high scores: tapping a level row starts practice: Start button, free card 
   assert.deepEqual(await texts(t.page, '.results .lab'), ['LEVEL', 'MISTAKES', 'TIME']);
   assert.equal(await t.page.evaluate(() => JSON.stringify(window.AdvancedCountingUI.ui.store.profiles[0].levels)), '{}', 'practice changed no records');
   assert.equal(await store(t.page), null, 'and saved nothing');
+  assert.equal(await t.page.locator('.results [data-act=ok]').innerText(), 'Done', 'practice: Done returns to High scores');
   await t.page.tap('[data-act=ok]');
   assert.equal((await S(t.page)).screen, 'scores');
   await t.close();
@@ -373,13 +398,14 @@ test('play: a tap on a card while the Menu is open only closes the Menu', SKIP, 
   await t.close();
 });
 
-test('play: after level M, OK returns to the main menu', SKIP, async () => {
+test('play: after level M the button reads Main menu and returns to it', SKIP, async () => {
   const t = await open({ viewport: PHONE });
   await t.page.evaluate(() => window.AdvancedCountingUI.dealRound(12, false));
   await t.page.tap('[data-act=flip]');
   const lay = (await S(t.page)).round.layout; assert.equal(lay.length, 64);
   await t.page.evaluate(lay => { for (let n = 1; n <= lay.length; n++) document.querySelector(`[data-pos="${lay.indexOf(n)}"]`).dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); }, lay);
   assert.equal((await S(t.page)).results.level, 'M');
+  assert.equal(await t.page.locator('.results [data-act=ok]').innerText(), 'Main menu');
   await t.page.tap('[data-act=ok]');
   assert.equal((await S(t.page)).screen, 'menu');
   assert.equal((await store(t.page)).profiles[0].highest, 'M');

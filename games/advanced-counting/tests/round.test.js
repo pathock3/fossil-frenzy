@@ -45,13 +45,38 @@ test('layout: the shuffle is fair enough (every number lands in every position o
   seen.forEach(set => assert.equal(set.size, 4));
 });
 
-test('round: dealt face up, studying; Flip turns every card face down and counting starts at 1', () => {
+test('round: dealt face up; Flip turns every card face down; the first tap on a face-down board begins counting at 1', () => {
   const r = round();
   assert.equal(r.phase, 'study'); assert.ok(r.faceUp.every(Boolean)); assert.equal(E.primaryLabel(r), 'Flip');
   assert.equal(E.flip(r, 0), true);
-  assert.equal(r.phase, 'recall'); assert.ok(r.faceUp.every(f => !f)); assert.equal(r.next, 1);
+  assert.ok(r.faceUp.every(f => !f)); assert.equal(r.phase, 'study', 'Flip alone starts nothing: there is no attempt mode to switch on');
+  assert.equal(E.primaryLabel(r), null, 'with everything face down the button has nothing to do');
+  assert.equal(E.flip(r, 0), false);
+  assert.equal(E.tapCard(r, posOf(r, 1), 1).type, 'correct', 'this tap begins an attempt, and 1 is right');
+  assert.equal(r.phase, 'recall'); assert.equal(r.next, 2);
   assert.equal(E.primaryLabel(r), null, 'the button has nothing to do while counting');
   assert.equal(E.flip(r, 0), false, 'Flip does nothing mid-count');
+});
+
+test('attempts begin by themselves: turn every card face down by tapping, then count — a lucky run advances; partial practice never counts', () => {
+  const r = round({ levelIndex: 2 });                                // 3x3
+  const n = r.def.count;
+  for (let k = 1; k <= 3; k++) assert.equal(E.tapCard(r, posOf(r, k), 1).type, 'toggle');   // practise 1, 2, 3: turn them down...
+  for (let k = 3; k >= 1; k--) assert.equal(E.tapCard(r, posOf(r, k), 2).type, 'toggle');   // ...and back up in any order: only practice
+  assert.equal(r.mistakes, 0); assert.equal(r.phase, 'study');
+  for (let k = 1; k <= n; k++) assert.equal(E.tapCard(r, posOf(r, k), 3).type, 'toggle');   // now turn EVERY card down by hand
+  assert.ok(r.faceUp.every(f => !f)); assert.equal(r.phase, 'study', 'all down by hand: the attempt has not started until the next tap');
+  let last;
+  for (let k = 1; k <= n; k++) last = E.tapCard(r, posOf(r, k), 4);                          // and get the whole count right
+  assert.equal(last.type, 'complete'); assert.equal(r.phase, 'done'); assert.equal(r.mistakes, 0);
+});
+
+test('attempts: a wrong FIRST tap on an all-face-down board is a mistake and turns everything face up', () => {
+  const r = round({ levelIndex: 1 });
+  E.flip(r, 0);
+  const res = E.tapCard(r, posOf(r, 3), 1);
+  assert.equal(res.type, 'wrong'); assert.equal(r.mistakes, 1); assert.ok(r.faceUp.every(Boolean)); assert.equal(r.phase, 'study');
+  assert.equal(E.primaryLabel(r), 'Flip', 'and the button is back');
 });
 
 test('round: taps in order 1..N complete the level; a correct tap leaves the card face up', () => {
@@ -114,7 +139,7 @@ test('round: in the climb too, cards can be flipped freely while studying — th
   assert.equal(E.isRunning(r), true, 'the climb clock keeps running while you study');
   E.flip(r, 2);
   assert.ok(r.faceUp.every(f => !f), 'Flip turns every card face down, including those already down');
-  assert.equal(r.phase, 'recall'); assert.equal(r.next, 1);
+  assert.equal(r.phase, 'study'); assert.equal(r.next, 1);
 });
 
 test('time: a climb round counts from the moment it is dealt, through study and every retry, to the last correct tap', () => {
@@ -165,16 +190,17 @@ test('practice: dealt face up, the primary button reads Start, cards flip freely
   assert.equal(r.mistakes, 0);
 });
 
-test('practice: Start begins a try (all face down) and starts the clock; wrong taps re-deal as in the climb', () => {
+test('practice: the clock starts with the first counting tap on an all-face-down board; wrong taps re-deal as in the climb', () => {
   const r = round({ levelIndex: 0, practice: true, now: 0 });
   assert.equal(E.elapsed(r, 5000), 0);
-  E.tapCard(r, 0, 100);
+  E.tapCard(r, 0, 100);                                         // just flipping a card: no clock
+  assert.equal(E.isRunning(r), false);
   assert.equal(E.flip(r, 10000), true);
-  assert.ok(r.faceUp.every(f => !f)); assert.equal(r.phase, 'recall');
-  assert.equal(E.tapCard(r, posOf(r, 2), 11000).type, 'wrong');
+  assert.ok(r.faceUp.every(f => !f)); assert.equal(r.phase, 'study'); assert.equal(E.isRunning(r), false);
+  assert.equal(E.tapCard(r, posOf(r, 2), 11000).type, 'wrong');   // the first tap begins the attempt (clock starts) — and it is wrong
   assert.equal(r.phase, 'study'); assert.equal(E.primaryLabel(r), 'Start'); assert.ok(r.faceUp.every(Boolean));
   E.flip(r, 12000); for (let k = 1; k <= 4; k++) E.tapCard(r, posOf(r, k), 14000);
-  assert.equal(r.timeMs, 4000, 'practice time runs from the first Start, through the retry');
+  assert.equal(r.timeMs, 3000, 'practice time runs from the first counting tap, through the retry');
   const res = E.result(r); assert.equal(res.practice, true); assert.equal(res.mistakes, 1);
 });
 

@@ -283,7 +283,7 @@ const GAME_DATA = {
     flip: 'Flip', start: 'Start', continueAt: 'Continue · Level {L}',
     settings: 'Settings', soundLabel: 'Sound', highScores: 'High scores ▸', howToPlay: 'How to play',
     menu: 'Menu', menuItems: ['Rules', 'Main Menu'],
-    ok: 'OK', newRecord: 'NEW RECORD!',
+    nextLevel: 'Next level', mainMenu: 'Main menu', newRecord: 'NEW RECORD!',
     columns: ['LEVEL', 'MISTAKES', 'TIME'],
     scoreColumns: ['LEVEL', 'BEST TIME', 'MISTAKES'],
     practice: 'Practice', highScoresTitle: 'High scores', noRecord: '—',
@@ -301,11 +301,11 @@ const GAME_DATA = {
     finePrintTitle: 'Fine print',
     finePrint: [
       'Levels: A 2×2 (cards 1–4), B 2×3, C 3×3, D 3×4, E 4×4, F 4×5, G 5×5, H 5×6, I 6×6, J 6×7, K 7×7, L 7×8, M 8×8 (cards 1–64). Each level is a fresh shuffle.',
-      'Flip turns every card face down. A correct tap leaves the card face up. A wrong tap counts one mistake and deals the identical layout face up again; Flip starts the next try from 1. Only finishing a level deals a new layout.',
-      'The clock starts when a level is dealt (your tap on Start or OK) and stops on the last correct tap, so it includes studying and every retry. It is not shown during play, and it never runs while a results sheet is up.',
-      'The climb: Start begins at A. After each level the results wait for your OK; the next level’s clock starts on that tap. After M, OK returns to the main menu. Menu → Main Menu leaves the round without asking; finished levels are already saved.',
+      'The Flip button turns every card face down. There is no attempt switch: whenever every card is face down, your next tap begins counting — tap 1, 2, 3… in order. A correct tap leaves the card face up. A wrong tap counts one mistake and turns every card face up again, on the identical layout. Only finishing a level deals a new layout. Turning every card down by hand and then counting them in order counts too.',
+      'The clock starts when a level is dealt (your tap on Start, Continue or Next level) and stops on the last correct tap, so it includes studying and every retry. It is not shown during play, and it never runs while a results sheet is up.',
+      'The climb: Start begins at A. After each level the results wait for your tap on Next level; the next level’s clock starts on that tap. After M the button reads Main menu. Menu → Main Menu leaves the round without asking; finished levels are already saved.',
       'Start always begins a fresh climb at level A. Once you have beaten a level, a Continue button appears under Start and picks up at the first level you have not yet beaten (whatever your last run was; if you have beaten them all, the top level).',
-      'Studying: before you press Flip (or Start), tap any card to turn it face down or face up again — turn some down and test yourself. This works in every round. Practice (tap a level in High scores): the same, and Start begins a try and starts the clock. Practice never changes your records and never shows NEW RECORD!.',
+      'Practising: when some cards are face up, tap any card to turn it face down or face up again — for example turn just 10, 11 and 12 down and test yourself; this costs nothing and works in every round. Practice rounds (tap a level in High scores) are the same, but never change your records or show NEW RECORD!; their button reads Start, and their clock starts with the first counting tap.',
       'Records, per profile: highest level completed in the climb, and for each level the best time and the fewest mistakes (kept separately). NEW RECORD! under LEVEL when you complete a level above your previous highest; under MISTAKES or TIME when you beat your earlier best for that level. The first time you complete a level only sets the mark to beat. Times are kept to a tenth of a second and a tie is not a record.',
       'Profiles: you start as Player 1. A new profile is named Player N (the lowest free number). Rename profile… keeps your records; a blank name is refused. Up to 6 profiles; names up to 16 letters.',
       'High scores lists all 13 levels with — for levels not yet completed, and a star on your highest level.',
@@ -376,7 +376,10 @@ const Engine = (() => {
   }
 
   // ---------- the round ----------
-  // phase: 'study' (cards face up, looking) -> 'recall' (face down, counting) -> 'done'.
+  // There is no separate "attempt" mode to switch on.  phase 'study': nobody is counting — cards can be turned up and down freely
+  // (practise 10, 11, 12 by turning just those down).  The moment EVERY card is face down, the next tap begins an attempt
+  // (phase 'recall'): tap 1, 2, 3… in order.  A wrong tap counts a mistake and turns everything face up again.  Completing the
+  // sequence finishes the level ('done') — however the cards came to be face down.
   // The clock is the sum of the spans in which it ran; `now` is always passed in (milliseconds).
   function newRound({ levelIndex, practice = false, seed = 1, rng, layout, now = 0 }) {
     const def = level(levelIndex);
@@ -399,15 +402,14 @@ const Engine = (() => {
   function resume(r, now) { if (r.phase === 'done' || !r.paused) return; r.paused = false; if (r.since !== null) r.since = now; }
   const isRunning = r => running(r);
 
-  // Which label the primary button wears right now (null: it has nothing to do while you are counting).
-  function primaryLabel(r) { return r.phase === 'study' ? (r.practice ? D.texts.start : D.texts.flip) : null; }
+  const allDown = r => r.faceUp.every(f => !f);
+  // Which label the primary button wears right now (null: nothing to do — everything is already face down, or you are counting).
+  function primaryLabel(r) { return r.phase === 'study' && !allDown(r) ? (r.practice ? D.texts.start : D.texts.flip) : null; }
 
-  // The primary button: turn every card face down and start counting from 1 (in practice this is also where the clock starts).
+  // The primary button: turn every card face down.  (That alone starts nothing: the first tap on a card does.)
   function flip(r, now) {
-    if (r.phase !== 'study') return false;
+    if (r.phase !== 'study' || allDown(r)) return false;
     r.faceUp = r.faceUp.map(() => false);
-    r.phase = 'recall'; r.next = 1;
-    if (r.practice && r.since === null) r.since = now;              // the practice clock starts here
     return true;
   }
 
@@ -415,8 +417,12 @@ const Engine = (() => {
   function tapCard(r, pos, now) {
     if (r.phase === 'done' || !Number.isInteger(pos) || pos < 0 || pos >= r.layout.length) return { type: 'ignored' };
     if (r.phase === 'study') {
-      r.faceUp[pos] = !r.faceUp[pos];                           // free card flips while you study (every round, practice or climb): turn cards down and up to test yourself
-      return { type: 'toggle', pos, up: r.faceUp[pos] };
+      if (!allDown(r)) {
+        r.faceUp[pos] = !r.faceUp[pos];                         // free card flips: turn cards down and up to test yourself
+        return { type: 'toggle', pos, up: r.faceUp[pos] };
+      }
+      r.phase = 'recall'; r.next = 1;                           // everything is face down: this tap begins an attempt (nothing says so)
+      if (r.practice && r.since === null) r.since = now;        // a practice clock starts with the attempt
     }
     if (r.faceUp[pos]) return { type: 'ignored' };              // already turned over correctly
     const number = r.layout[pos];
@@ -831,7 +837,7 @@ const Sound = (() => {
   function resultsHTML() {
     const R = ui.results, vals = [R.level, R.mistakes, R.time], keys = ['level', 'mistakes', 'time'];
     return `<div class="over results" data-act="noop"><div class="sheet"><div class="cols">${vals.map((v, i) => `<div class="col"><div class="lab">${T.columns[i]}</div><div class="val">${esc(v)}</div><div class="slot">${R.badges[keys[i]] ? `<span class="record">${T.newRecord}</span>` : ''}</div></div>`).join('')}</div>
-      <button class="btn gold ok" data-act="ok">${T.ok}</button></div></div>`;
+      <button class="btn gold ok" data-act="ok">${esc(R.practice ? T.done : R.level === E.levels[E.levels.length - 1].id ? T.mainMenu : T.nextLevel)}</button></div></div>`;
   }
   function playSkeleton() {
     const r = ui.round;
@@ -888,8 +894,8 @@ const Sound = (() => {
     const res = E.tapCard(r, pos, ui.now());
     const els = cardEls(), el = els[pos];
     switch (res.type) {
-      case 'toggle': syncCards(); sfx('flip'); break;
-      case 'correct': syncCards(); sfx('chime', Math.pow(2, E.chimeSemitones(res.number, r.def.count) / 12)); if (!reduced()) { const l = el.firstElementChild; l.classList.remove('pulse', 'pulse2', 'pop'); void l.offsetWidth; l.classList.add('pop'); } break;
+      case 'toggle': syncCards(); sfx('flip'); syncDock(); break;
+      case 'correct': syncCards(); syncDock(); sfx('chime', Math.pow(2, E.chimeSemitones(res.number, r.def.count) / 12)); if (!reduced()) { const l = el.firstElementChild; l.classList.remove('pulse', 'pulse2', 'pop'); void l.offsetWidth; l.classList.add('pop'); } break;
       case 'complete':
         syncCards(E.waveDelays(r.def.rows, r.def.cols, pos, 40, 400));
         sfx('chime', Math.pow(2, E.chimeSemitones(res.number, r.def.count) / 12));
