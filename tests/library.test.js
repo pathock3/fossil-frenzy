@@ -73,6 +73,7 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     const errors = []; page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
     await page.goto(base + '/index.html');
     assert.equal(await page.title(), 'Tabletop Library');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.body).overscrollBehaviorY), 'none', 'no pull-to-refresh on the shelf');
     assert.equal(await page.locator('a.box').count(), 1, 'only listed games with an address are on the shelf');
     assert.match(await page.locator('a.box').getAttribute('aria-label'), /Fossil Frenzy/);
     // a box is a picture first: cover art (an SVG) and a small info band, not a paragraph of text
@@ -83,8 +84,10 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     assert.equal(await page.locator('a.box p').count(), 0, 'no paragraph of text on the box');
     assert.ok((await page.locator('a.box .strip').innerText()).trim().length < 40, 'only a small info band');
     assert.ok(await page.locator('.strip .pill').evaluateAll(els => els.every(e => parseFloat(getComputedStyle(e).fontSize) >= 14)), 'the info band is legible');
-    assert.match(await page.locator('.strip').innerText(), /1–4 players/);
-    assert.equal(await page.locator('.played').count(), 0);
+    assert.equal((await page.locator('.strip').innerText()).trim(), '1–4 players', 'just the players: no play time, no Played tag');
+    // the tagline in the ribbon fits inside its oval
+    const fit = await page.evaluate(() => { const svg = document.querySelector('a.box .art svg'), t = [...svg.querySelectorAll('text')].find(x => /PEEK/.test(x.textContent)), r = [...svg.querySelectorAll('rect')].find(x => x.getAttribute('rx') === '12'); const tb = t.getBBox(), rb = r.getBBox(); return { tx: tb.x, tr: tb.x + tb.width, rx: rb.x, rr: rb.x + rb.width }; });
+    assert.ok(fit.tx >= fit.rx + 10 && fit.tr <= fit.rr - 10, 'the words sit inside the oval: ' + JSON.stringify(fit));
     await page.goto(base + '/index.html?unlisted');
     assert.equal(await page.locator('a.box').count(), 1, 'an unlisted placeholder without an address still does not render a dead link');
     await page.goto(base + '/index.html');
@@ -97,7 +100,7 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     await page.tap('a.back');
     await page.waitForURL(base + '/index.html');
     assert.equal(await page.title(), 'Tabletop Library');
-    assert.equal(await page.locator('.played').count(), 1, 'the box you opened is marked Played');
+    assert.equal(await page.locator('.played').count(), 0, 'boxes carry no Played tag');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); server.close(); }
 });

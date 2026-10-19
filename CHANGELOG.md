@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **Library boxes:** no play time and no "Played" tag on the box (just the player count); the tagline on Fossil Frenzy's cover now fits inside its oval; the shelf no longer pull-to-refreshes or rubber-bands.
 - **How to play is now mostly pictures:** four little illustrated cards (Peek, Flip, Match, Bank) with a line each, two one-line reminders (gems, winning), a button to the Fossils panel, and the fine print (judgment calls) folded under "The fine print". Under 110 words on the first screen, and it fits without scrolling on an iPad.
 - **Housekeeping (no change to play):** removed dead code (an always-true peek flag, an unused footer, an unused style, the archived two-rule-set report) and a 30-second wasted wait in the sound test.
 - **The Tabletop Library shelf is now a shelf of board-game boxes.** Each game is a tall box with its own cover art (Fossil Frenzy: the real board of fossil tiles, a few turned up in the players' colours, with its title) and a small info band (players, time) — no paragraph of text. Boxes sit slightly askew with a thick edge and press down when tapped. Each game supplies its own art (`art` in the catalogue); Dig Dig Boom has a placeholder cover.
