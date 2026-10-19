@@ -107,6 +107,40 @@ const LIBRARY = {
         <rect x="30" y="344" width="240" height="26" rx="13" fill="#1c0f08" fill-opacity=".85" stroke="#f5a524" stroke-opacity=".6"/>
         <text x="150" y="358" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="800" textLength="206" lengthAdjust="spacing" fill="#ffe3a0">PEEK · FLIP · MATCH · BANK</text></svg>`;
     },
+    // Advanced Counting: a felt table, a 3x3 grid of cards — the first three of the count turned up, the rest face down
+    'advanced-counting': () => {
+      const W = 47, H = 62, G = 8, x0 = 150 - (3 * W + 2 * G) / 2, y0 = 126, layout = [5, 8, 2, 9, 1, 6, 3, 7, 4], up = { 1: 0, 2: 1, 3: 2 };
+      let cards = '';
+      layout.forEach((n, i) => {
+        const x = x0 + (i % 3) * (W + G), y = y0 + Math.floor(i / 3) * (H + G), u = up[n] !== undefined;
+        cards += u
+          ? `<g transform="rotate(${[-3, 2, -2][up[n]]} ${x + W / 2} ${y + H / 2})"><rect x="${x}" y="${y}" width="${W}" height="${H}" rx="7" fill="#fbf3dc" stroke="#d9c58f" stroke-width="2"/><rect x="${x - 3}" y="${y - 3}" width="${W + 6}" height="${H + 6}" rx="9" fill="none" stroke="#ffd36a" stroke-width="3" opacity=".9"/><text x="${x + W / 2}" y="${y + H / 2 + 2}" text-anchor="middle" dominant-baseline="central" font-size="36" font-weight="900" fill="${['#2b3a8f', '#b3261e', '#1f7a4a'][up[n]]}">${n}</text></g>`
+          : `<rect x="${x}" y="${y}" width="${W}" height="${H}" rx="7" fill="#2d2f86" stroke="#16174a" stroke-width="2"/><rect x="${x + 5}" y="${y + 5}" width="${W - 10}" height="${H - 10}" rx="4" fill="none" stroke="#8d90e8" stroke-width="1.5"/><path d="M${x + W / 2} ${y + 14} L${x + W - 12} ${y + H / 2} L${x + W / 2} ${y + H - 14} L${x + 12} ${y + H / 2}Z" fill="#8d90e8" fill-opacity=".55"/>`;
+      });
+      const title = (t, y) => `<text x="150" y="${y}" text-anchor="middle" font-size="45" font-weight="900" letter-spacing="1" fill="#fff6d8" stroke="#0a2a1d" stroke-width="9" stroke-linejoin="round" paint-order="stroke">${t}</text>`;
+      return `<svg viewBox="0 0 300 380" role="img" aria-label="Advanced Counting"><defs>
+        <radialGradient id="acB" cx="50%" cy="58%" r="80%"><stop offset="0" stop-color="#2f8a5f"/><stop offset=".6" stop-color="#155238"/><stop offset="1" stop-color="#082a1c"/></radialGradient></defs>
+        <rect width="300" height="380" fill="url(#acB)"/><ellipse cx="150" cy="250" rx="118" ry="122" fill="#000" opacity=".12"/>
+        ${title('ADVANCED', 56)}${title('COUNTING', 104)}${cards}
+        <rect x="26" y="344" width="248" height="26" rx="13" fill="#082a1c" fill-opacity=".88" stroke="#ffd36a" stroke-opacity=".7"/>
+        <text x="150" y="358" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="800" textLength="216" lengthAdjust="spacing" fill="#fff0c0">HOW HIGH CAN YOU COUNT?</text></svg>`;
+    },
+    // One More…: a dark mine, a glowing heap of cut gems and a lit boom card
+    'one-more': () => {
+      const gem = (cx, cy, s, c) => `<g transform="translate(${cx} ${cy})"><polygon points="${-s},${-s * .35} ${-s * .55},${-s * .8} ${s * .55},${-s * .8} ${s},${-s * .35}" fill="${c[0]}"/><polygon points="${-s},${-s * .35} ${s},${-s * .35} 0,${s}" fill="${c[1]}"/><polygon points="${-s * .55},${-s * .8} 0,${-s * .35} ${s * .55},${-s * .8}" fill="${c[2]}" opacity=".7"/><polygon points="${-s},${-s * .35} 0,${-s * .35} 0,${s}" fill="#fff" opacity=".14"/><polygon points="${-s},${-s * .35} ${-s * .55},${-s * .8} ${s * .55},${-s * .8} ${s},${-s * .35} 0,${s}" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.5" stroke-linejoin="round"/></g>`;
+      const teal = ['#2ee6c8', '#0b8f86', '#c9fff5'], pink = ['#ff5fb7', '#a3196f', '#ffd0ea'], amber = ['#ffc542', '#c2740a', '#fff0b8'], blue = ['#5aa2ff', '#2646b8', '#d3e5ff'], violet = ['#b58cff', '#5a2fb0', '#ecdcff'];
+      const title = (t, y, sz) => `<text x="150" y="${y}" text-anchor="middle" font-size="${sz}" font-weight="900" letter-spacing="1" fill="url(#omT)" stroke="#12062e" stroke-width="9" stroke-linejoin="round" paint-order="stroke">${t}</text>`;
+      return `<svg viewBox="0 0 300 380" role="img" aria-label="One More…"><defs>
+        <radialGradient id="omB" cx="50%" cy="68%" r="85%"><stop offset="0" stop-color="#5b2aa8"/><stop offset=".55" stop-color="#241056"/><stop offset="1" stop-color="#0b0620"/></radialGradient>
+        <radialGradient id="omG" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#7affe6" stop-opacity=".55"/><stop offset="1" stop-color="#7affe6" stop-opacity="0"/></radialGradient>
+        <linearGradient id="omT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2a8"/><stop offset=".5" stop-color="#ff8fd2"/><stop offset="1" stop-color="#9a6bff"/></linearGradient></defs>
+        <rect width="300" height="380" fill="url(#omB)"/><circle cx="150" cy="262" r="150" fill="url(#omG)"/>
+        <g transform="rotate(14 214 214)"><rect x="170" y="140" width="88" height="124" rx="10" fill="#17151f" stroke="#ff8a1d" stroke-width="4"/><circle cx="214" cy="212" r="26" fill="#2a2833"/><ellipse cx="205" cy="203" rx="8" ry="5" fill="#fff" opacity=".2"/><path d="M220 188 Q228 170 244 172" fill="none" stroke="#c9a46a" stroke-width="4" stroke-linecap="round"/><polygon points="246,160 249,168 258,169 251,175 253,184 246,179 239,184 241,175 234,169 243,168" fill="#ffd24a" stroke="#ff8a1d" stroke-width="2"/></g>
+        ${gem(88, 278, 32, violet)}${gem(214, 284, 28, blue)}${gem(150, 272, 38, teal)}${gem(112, 308, 27, amber)}${gem(188, 310, 28, pink)}${gem(60, 316, 21, teal)}${gem(244, 316, 21, amber)}
+        ${title('ONE', 66, 62)}${title('MORE…', 128, 62)}
+        <rect x="52" y="346" width="196" height="24" rx="12" fill="#0b0620" fill-opacity=".88" stroke="#7affe6" stroke-opacity=".6"/>
+        <text x="150" y="359" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="800" textLength="164" lengthAdjust="spacing" fill="#d9fff7">JUST ONE MORE…</text></svg>`;
+    },
     // Dig Dig Boom (placeholder cover until its own site is listed): a fizzing bomb in the dirt
     'dig-dig-boom': () => `<svg viewBox="0 0 300 380" role="img" aria-label="Dig Dig Boom"><defs>
         <linearGradient id="dbB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a2f1a"/><stop offset="1" stop-color="#2a0f0a"/></linearGradient>
