@@ -69,6 +69,7 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
   display: flex; flex-direction: column; gap: 6px; box-shadow: 0 12px 30px rgba(0,0,0,.55); }
 .menu button { padding: 14px 16px; border-radius: 12px; background: var(--panel2); text-align: left; font-weight: 700; font-size: 17px; }
 .menu button.danger { background: #5a2a1e; }
+.big.danger { background: #8a3524; color: #fff; }
 .menu .mq { margin: 4px 6px 6px; line-height: 1.4; }
 
 /* ---------- board ---------- */
@@ -167,6 +168,7 @@ h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spac
 .big { display: block; width: 100%; margin-top: 22px; padding: 16px; border-radius: 14px; background: var(--accent); color: #2b1b10; font-weight: 800; font-size: 20px; }
 .settings .warn { background: var(--panel); border: 2px solid var(--accent); border-radius: 16px; padding: 4px 16px 16px; }
 .settings .warn p { line-height: 1.45; font-size: 16px; }
+.settings .warn p.warn-h { font-weight: 800; font-size: 19px; color: var(--accent); margin-bottom: 0; }
 .settings .ok { color: var(--good); font-weight: 700; }
 .big.alt { background: var(--panel2); color: var(--text); border: 2px solid var(--line); margin-top: 12px; }
 .ghost { margin-top: 10px; padding: 12px 16px; border-radius: 12px; background: var(--panel); font-weight: 700; }
@@ -314,6 +316,30 @@ const GAME_DATA = {
   // An opponent's turn is shown one move at a time: its peek appears at once, and the next move follows after this
   // long (each move stays on screen that many ms before the next appears). A tap on the board skips ahead.
   pace: { peek: 650, flip: 600, bank: 0 },
+
+  // ---- SOUND ------------------------------------------------------------
+  // Every sound is built from a few synthesised voices (no audio files, so the game stays one file and works offline).
+  // A voice: w = wave ('sine' | 'triangle' | 'square' | 'sawtooth' | 'noise'), f = pitch in Hz (or [from, to] for a glide),
+  // at = start (s), d = length (s), g = loudness (0-1), lp / hp = low-/high-pass filter (Hz), a = attack (s, default 0.006).
+  // Kept short, soft and in a pleasant range; the table makes a "tak" for a flip, a chime for a match, a coin for a bank.
+  sound: {
+    master: 0.5,              // overall level (the device volume still rules)
+    maxVoices: 24,            // never more than this many voices sounding at once
+    minGapMs: 40,             // the same sound is not retriggered faster than this
+    sounds: {
+      peek:   [{ w: 'sine', f: [392, 523], at: 0, d: 0.14, g: 0.13 }, { w: 'sine', f: 784, at: 0.04, d: 0.12, g: 0.045 }],
+      flip:   [{ w: 'noise', f: 0, at: 0, d: 0.05, g: 0.2, hp: 1800, lp: 7000 }, { w: 'triangle', f: [230, 130], at: 0, d: 0.09, g: 0.2 }],
+      miss:   [{ w: 'sine', f: [330, 247], at: 0.02, d: 0.24, g: 0.17 }, { w: 'triangle', f: 165, at: 0.02, d: 0.22, g: 0.1 }],
+      match:  [{ w: 'triangle', f: 659, at: 0, d: 0.24, g: 0.22 }, { w: 'triangle', f: 988, at: 0.09, d: 0.36, g: 0.22 }, { w: 'sine', f: 1976, at: 0.09, d: 0.22, g: 0.05 }],
+      gem:    [{ w: 'sine', f: 1175, at: 0, d: 0.26, g: 0.14 }, { w: 'sine', f: 1568, at: 0.07, d: 0.26, g: 0.14 }, { w: 'sine', f: 2093, at: 0.14, d: 0.26, g: 0.13 }, { w: 'sine', f: 2637, at: 0.21, d: 0.34, g: 0.11 }, { w: 'triangle', f: 392, at: 0, d: 0.45, g: 0.1 }],
+      bank:   [{ w: 'noise', f: 0, at: 0, d: 0.1, g: 0.05, hp: 6000 }, { w: 'sine', f: 988, at: 0, d: 0.1, g: 0.14 }, { w: 'sine', f: 1319, at: 0.07, d: 0.4, g: 0.16 }, { w: 'sine', f: 1760, at: 0.15, d: 0.3, g: 0.08 }],
+      slip:   [{ w: 'sine', f: [520, 310], at: 0, d: 0.2, g: 0.13 }, { w: 'sine', f: [430, 250], at: 0.13, d: 0.24, g: 0.12 }],
+      win:    [{ w: 'triangle', f: 523, at: 0, d: 0.3, g: 0.2 }, { w: 'triangle', f: 659, at: 0.12, d: 0.3, g: 0.2 }, { w: 'triangle', f: 784, at: 0.24, d: 0.3, g: 0.2 }, { w: 'triangle', f: 1047, at: 0.36, d: 0.7, g: 0.22 }, { w: 'sine', f: 2093, at: 0.36, d: 0.6, g: 0.05 }],
+      lose:   [{ w: 'triangle', f: 392, at: 0, d: 0.34, g: 0.15 }, { w: 'triangle', f: 330, at: 0.22, d: 0.34, g: 0.15 }, { w: 'triangle', f: 262, at: 0.44, d: 0.7, g: 0.15 }],
+      unlock: [{ w: 'triangle', f: 523, at: 0, d: 0.26, g: 0.2 }, { w: 'triangle', f: 659, at: 0.1, d: 0.26, g: 0.2 }, { w: 'triangle', f: 784, at: 0.2, d: 0.26, g: 0.2 }, { w: 'triangle', f: 1047, at: 0.3, d: 0.5, g: 0.22 }, { w: 'sine', f: 1319, at: 0.5, d: 0.3, g: 0.12 }, { w: 'sine', f: 1568, at: 0.6, d: 0.3, g: 0.12 }, { w: 'sine', f: 2093, at: 0.7, d: 0.7, g: 0.12 }],
+      tick:   [{ w: 'sine', f: 880, at: 0, d: 0.04, g: 0.1 }],
+    },
+  },
 
 };
 </script>
@@ -1052,6 +1078,83 @@ const Bots = (() => {
 })();
 </script>
 
+<script id="sound">
+/* =====================================================================
+   SOUND — synthesised with Web Audio from the recipes in GAME_DATA.sound; no files, no network.
+   Good manners built in: the audio context is only created/resumed inside a tap (iPad Safari insists), nothing plays while
+   it is switched off, sounds are short and soft behind one master level and a gentle limiter, the same sound is not stacked
+   on itself, the number of voices is capped, and it stops when the page is hidden. The iPad's silent switch still mutes it.
+   ===================================================================== */
+const Sound = (() => {
+  function create({ data, AudioContext, now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now()) } = {}) {
+    let ctx = null, master = null, noise = null, enabled = true, voices = 0;
+    const lastAt = {}, played = [];
+
+    function build() {
+      if (ctx || !AudioContext) return;
+      try { ctx = new AudioContext({ latencyHint: 'interactive' }); } catch (e) { try { ctx = new AudioContext(); } catch (e2) { ctx = null; return; } }
+      try { wire(); } catch (e) { ctx = null; }                    // a browser with a half-working audio system just stays silent
+    }
+    function wire() {
+      master = ctx.createGain(); master.gain.value = data.master;
+      const limiter = ctx.createDynamicsCompressor();
+      limiter.threshold.value = -14; limiter.knee.value = 24; limiter.ratio.value = 6; limiter.attack.value = 0.003; limiter.release.value = 0.2;
+      master.connect(limiter); limiter.connect(ctx.destination);
+      const len = Math.floor(ctx.sampleRate * 0.25), buf = ctx.createBuffer(1, len, ctx.sampleRate), ch = buf.getChannelData(0);
+      let seed = 1; for (let i = 0; i < len; i++) { seed = (seed * 16807) % 2147483647; ch[i] = (seed / 2147483647) * 2 - 1; }     // fixed noise: the same "tak" every time
+      noise = buf;
+    }
+
+    // Call from inside a tap/click: creates the context the first time and wakes it if the browser put it to sleep.
+    function unlock() {
+      if (!AudioContext) return false;
+      build();
+      if (ctx && ctx.state !== 'running' && ctx.resume) { try { const r = ctx.resume(); if (r && r.catch) r.catch(() => {}); } catch (e) { /* ignore */ } }
+      return !!ctx;
+    }
+    function suspend() { if (ctx && ctx.state === 'running' && ctx.suspend) { try { const r = ctx.suspend(); if (r && r.catch) r.catch(() => {}); } catch (e) { /* ignore */ } } }
+
+    function voice(v, t0) {
+      const t = t0 + (v.at || 0), a = v.a || 0.006, d = Math.max(0.02, v.d), peak = Math.min(1, v.g);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), t + a);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      let src;
+      if (v.w === 'noise') { src = ctx.createBufferSource(); src.buffer = noise; src.loop = true; }
+      else {
+        src = ctx.createOscillator(); src.type = v.w;
+        const f = Array.isArray(v.f) ? v.f : [v.f, v.f];
+        src.frequency.setValueAtTime(f[0], t);
+        if (f[1] !== f[0]) src.frequency.exponentialRampToValueAtTime(f[1], t + d);
+      }
+      let node = src;
+      if (v.hp) { const h = ctx.createBiquadFilter(); h.type = 'highpass'; h.frequency.value = v.hp; node.connect(h); node = h; }
+      if (v.lp) { const l = ctx.createBiquadFilter(); l.type = 'lowpass'; l.frequency.value = v.lp; node.connect(l); node = l; }
+      node.connect(g); g.connect(master);
+      voices++;
+      src.onended = () => { voices--; try { g.disconnect(); } catch (e) { /* ignore */ } };
+      src.start(t); src.stop(t + d + 0.03);
+    }
+
+    function play(name) {
+      played.push(name); if (played.length > 200) played.shift();
+      const recipe = data.sounds[name];
+      if (!enabled || !recipe || !ctx || ctx.state !== 'running') return false;
+      const ms = now();
+      if (lastAt[name] !== undefined && ms - lastAt[name] < data.minGapMs) return false;
+      if (voices + recipe.length > data.maxVoices) return false;
+      lastAt[name] = ms;
+      const t0 = ctx.currentTime + 0.005;
+      try { recipe.forEach(v => voice(v, t0)); } catch (e) { return false; }
+      return true;
+    }
+    return { create, unlock, suspend, play, setEnabled: v => { enabled = !!v; }, isEnabled: () => enabled, played, get ready() { return !!ctx; } };
+  }
+  return { create };
+})();
+</script>
+
 <!-- =====================================================================
      CAMPAIGN — pure unlock logic (no DOM, no storage).  The UI keeps the list of beaten levels.
      ===================================================================== -->
@@ -1101,7 +1204,7 @@ const Campaign = (() => {
   // Everything this game stores lives under the Tabletop Library's name, then the game's.
   const NS = 'tabletop-library-fossil-frenzy-';
   const PASS_KEY = NS + 'passplay', CAMPAIGN_KEY = NS + 'campaign', SAVE_KEY = NS + 'save';
-  const HINTS_KEY = NS + 'hints', DONE_KEY = NS + 'games-finished', UNLOCKALL_KEY = NS + 'unlock-everything';
+  const SOUND_KEY = NS + 'sound', HINTS_KEY = NS + 'hints', DONE_KEY = NS + 'games-finished', UNLOCKALL_KEY = NS + 'unlock-everything';
   const LEGACY_KEYS = ['fossil-frenzy-setup-v1', 'fossil-frenzy-passplay-v2', 'fossil-frenzy-campaign-v1', 'fossil-frenzy-save-v1', 'fossil-frenzy-save-v2', 'fossil-frenzy-hints', 'fossil-frenzy-games-finished'];
   const pref = {
     get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -1130,7 +1233,14 @@ const Campaign = (() => {
                showPeek: true, help: false, menu: null, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '',
                countedOver: false, outcome: null, turnCard: false, lastEvent: '', say: '',
                steps: null, stage: 0, base: null, animTimer: null, liftKey: '', prevPts: null };
-  ui.settings = null;                                   // null | 'open' | 'unlock' (the warning before unlocking everything)
+  ui.settings = null;                                   // null | 'open' | 'unlock' (the warning before unlocking everything) | 'reset'
+  ui.sound = pref.get(SOUND_KEY) !== 'off';             // sound effects: on unless switched off (Menu or Settings), remembered on this device
+  ui.endSounded = false;
+  const audio = Sound.create({ data: D.sound, AudioContext: window.AudioContext || window.webkitAudioContext });
+  audio.setEnabled(ui.sound);
+  // (a sound can follow another after a short gap: e.g. the flip's tap, then its chime)
+  const sfx = (name, afterMs = 0) => { const go = () => { try { audio.play(name); } catch (e) { /* sound is never allowed to break the game */ } }; if (afterMs) setTimeout(go, afterMs); else go(); };
+  document.addEventListener('visibilitychange', () => { if (document.hidden) audio.suspend(); });
   ui.unlockAll = pref.get(UNLOCKALL_KEY) === '1';       // Settings → Unlock everything (kept on this device)
   ui.hints = ['auto', 'on', 'off'].includes(pref.get(HINTS_KEY)) ? pref.get(HINTS_KEY) : 'auto';
   // Prompts above the board: shown until this device has finished one game, then quiet. Help panel: Auto / On / Off.
@@ -1149,7 +1259,7 @@ const Campaign = (() => {
     ui.bots = Bots.attach(ui.st, campaign ? [null, Campaign.botSpec(LV[ui.levelIdx])] : Array(n).fill(null), seed);
     ui.names = campaign ? ['You', LV[ui.levelIdx].name] : ui.pass.names.slice(0, n);
     Object.assign(ui, { screen: 'play', showPeek: true, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '', countedOver: false, outcome: null,
-                        menu: null, help: false, lastEvent: '', prevPts: null, liftKey: '' });
+                        menu: null, help: false, lastEvent: '', prevPts: null, liftKey: '', endSounded: false });
     nextTurnStarts(true);
   }
   function beginTurn() {
@@ -1161,14 +1271,34 @@ const Campaign = (() => {
   const animating = () => !!ui.steps && ui.stage < ui.steps.length;
   const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   function clearAnim() { if (ui.animTimer) clearTimeout(ui.animTimer); ui.animTimer = null; }
+  // The sound for the opponent move now being shown (steps[k-1]).
+  function playStep(k) {
+    const a = ui.steps[k - 1].a;
+    if (a.type === 'peek') sfx('peek');
+    else if (a.type === 'bank') sfx('bank');
+    else if (a.type === 'flipOther' || a.type === 'flipSecond') {
+      let T = null; for (let j = 0; j < k; j++) if (ui.steps[j].a.type === 'peek') T = ui.steps[j].a.tid;
+      sfx('flip'); const o = flipOutcome(T, a.tid); if (o) sfx(o, 110);
+    }
+  }
+  // After a public flip of `f` with my peeked fossil `t`: which sound follows the flip.
+  function flipOutcome(t, f) {
+    if (t === null || t === undefined) return '';
+    const A = ui.st.tokens[t], B = ui.st.tokens[f];
+    if (A.gem && B.gem) return 'gem';
+    return !A.gem && !B.gem && A.value === B.value ? 'match' : 'miss';
+  }
   function stepMs(a) { const P = D.pace; return a.type === 'peek' ? P.peek : a.type === 'bank' ? P.bank : P.flip; }
   function startAnim() {
     clearAnim();
     if (!animating()) return;
     if (reducedMotion()) { finishAnim(false); return; }
-    if (ui.stage === 0) ui.stage = 1;                          // its peek shows at once
+    if (ui.stage === 0) { ui.stage = 1; playStep(1); }         // its peek shows at once
     if (!animating()) return;
-    ui.animTimer = setTimeout(() => { ui.animTimer = null; ui.stage++; render(); startAnim(); }, stepMs(ui.steps[ui.stage - 1].a));
+    ui.animTimer = setTimeout(() => {
+      ui.animTimer = null; ui.stage++; if (animating()) playStep(ui.stage); else if (ui.say) sfx('slip', 150);
+      render(); startAnim();
+    }, stepMs(ui.steps[ui.stage - 1].a));
   }
   function finishAnim(redraw = true) { clearAnim(); if (ui.steps) ui.stage = ui.steps.length; if (redraw) render(); }
 
@@ -1255,6 +1385,7 @@ const Campaign = (() => {
     ui.lastEvent = '';
     const tid = st.tokenAt[id];
     if (st.turn.T !== null && st.turn.T !== undefined && tid === st.turn.T && st.phase !== 'action') return;   // the fossil I peeked at: tapping it does nothing (no hiding, no animation)
+    const phase0 = st.phase, pop0 = st.matchedCount;
     try {
       if (st.phase === 'action') {
         if (tid >= 0) { Engine.peek(st, tid); ui.showPeek = true; }                 // first tap: a private peek
@@ -1274,6 +1405,12 @@ const Campaign = (() => {
         if (tid >= 0 && tid !== st.turn.T && tid !== st.turn.F) Engine.flipSecond(st, tid);
       }
     } catch (e) { console.warn(e.message); }
+    if (phase0 === 'action' && st.phase === 'peeked') sfx('peek');
+    else if (st.phase !== phase0 && phase0 !== 'action') {                        // a public flip happened
+      sfx('flip');
+      const popped = st.matchedCount > pop0, gems = st.turn.T !== null && st.tokens[st.turn.T].gem && st.tokens[st.turn.F].gem;
+      sfx(popped ? (gems ? 'gem' : 'match') : gems ? 'gem' : 'miss', 110);
+    }
     render();
   }
 
@@ -1285,7 +1422,7 @@ const Campaign = (() => {
     takeOverFromOpponent();
     if (st.over || ui.botWaiting || isBot(st.current)) { render(); return; }
     try {
-      if (Engine.canBank(st)) { Engine.bank(st, i); ui.lastEvent = `${seatName(st.current)} banked ${bankText(st.lastBank)}`; endTurn(); }
+      if (Engine.canBank(st)) { Engine.bank(st, i); sfx('bank'); ui.lastEvent = `${seatName(st.current)} banked ${bankText(st.lastBank)}`; endTurn(); }
     } catch (e) { console.warn(e.message); }
     render();
   }
@@ -1293,6 +1430,7 @@ const Campaign = (() => {
   // While the opponent's bank banner is up, a tap anywhere (not just on the banner) sends it away and starts my turn.
   const bankBannerUp = () => ui.screen === 'play' && !!ui.st && ui.botWaiting && !animating() && !ui.turnCard && !ui.st.over && !!ui.st.turn.banked && !!ui.st.lastBank;
   function onClick(e) {
+    audio.unlock();                                    // sound can only start from inside a tap; this wakes it
     const el = e.target.closest('[data-act]');
     if (!el) { if (bankBannerUp() && !ui.menu && !ui.help) { takeOverFromOpponent(); render(); } return; }
     const d = el.dataset, st = ui.st;
@@ -1313,13 +1451,16 @@ const Campaign = (() => {
         if (ui.botWaiting || Engine.status(st).canEnd) endTurn();
         break;
       case 'hints': ui.hints = d.v; pref.set(HINTS_KEY, d.v); break;
+      case 'sound': ui.sound = d.v ? d.v === 'on' : !ui.sound; pref.set(SOUND_KEY, ui.sound ? 'on' : 'off'); audio.setEnabled(ui.sound); sfx('tick'); break;
       case 'help': ui.help = true; ui.menu = null; break;
       case 'settings': ui.settings = 'open'; ui.menu = null; break;
       case 'closesettings': ui.settings = null; break;
       case 'unlock-ask': ui.settings = 'unlock'; break;
       case 'unlock-no': ui.settings = 'open'; break;
       case 'unlock-yes': ui.unlockAll = true; pref.set(UNLOCKALL_KEY, '1'); ui.settings = 'open'; break;
-      case 'relock': ui.unlockAll = false; pref.del(UNLOCKALL_KEY); break;
+      case 'reset-ask': ui.settings = 'reset'; break;
+      case 'reset-yes': ui.unlockAll = false; pref.del(UNLOCKALL_KEY); ui.beaten = []; pref.del(CAMPAIGN_KEY); ui.settings = 'open'; break;       // forgets every win and any "unlock all"
+      case 'reset-no': ui.settings = 'open'; break;
       case 'closehelp': ui.help = false; break;
       // the in-game menu: rules, retry, back to the start. Retry and quit ask first; retry deals a fresh game at once, same setup.
       case 'menu': ui.menu = ui.menu ? null : 'open'; break;
@@ -1480,7 +1621,7 @@ const Campaign = (() => {
     const m = ui.menu, sure = (q, yes, act) => `<p class="mq">${q}</p><button class="danger" data-act="${act}">${yes}</button><button data-act="menu-close">No, keep playing</button>`;
     const body = m === 'retry' ? sure('Start this game over with a fresh deal? The current game will be lost.', 'Yes, start over', 'retry')
       : m === 'quit' ? sure('Leave this game and go to the Main Menu? The current game will be lost.', 'Yes, leave', 'quit')
-      : `<button data-act="menu-ask" data-v="retry">Retry</button><button data-act="help">How to play</button><button data-act="settings">Settings</button><button data-act="menu-ask" data-v="quit">Main Menu</button>`;
+      : `<button data-act="menu-ask" data-v="retry">Retry</button><button data-act="help">How to play</button><button data-act="settings">Settings</button><button data-act="sound" aria-pressed="${ui.sound}">Sound: ${ui.sound ? 'On' : 'Off'}</button><button data-act="menu-ask" data-v="quit">Main Menu</button>`;
     return `<div class="backdrop" data-act="menu-close"></div><div class="menu" role="menu">${body}</div>`;
   }
 
@@ -1630,25 +1771,34 @@ const Campaign = (() => {
   function settingsHTML() {
     const seg = `<span class="seg">${['auto', 'on', 'off'].map(v => `<button class="${ui.hints === v ? 'on' : ''}" data-act="hints" data-v="${v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</span>`;
     const unlock = ui.settings === 'unlock'
-      ? `<div class="warn"><p>Just so you know, the way we recommend playing is to work through the whole campaign, beating each opponent to unlock the next.</p>
-           <p>But you're very welcome to unlock everything the game has to offer.</p>
-           <button class="big" data-act="unlock-yes">Unlock everything</button><button class="big alt" data-act="unlock-no">Never mind</button></div>`
-      : ui.unlockAll ? `<p class="ok">✓ Everything is unlocked.</p><button class="ghost" data-act="relock">Go back to unlocking by winning</button>`
-      : `<button class="ghost" data-act="unlock-ask">Unlock everything…</button>`;
+      ? `<div class="warn"><p class="warn-h">Unlock all opponents?</p>
+           <p>This opens every level right away. Playing through the campaign — beating each opponent to unlock the next — is the intended way to learn the game, and unlocking skips that. You can lock them again here at any time.</p>
+           <button class="big" data-act="unlock-yes">Unlock all</button><button class="big alt" data-act="unlock-no">Keep the campaign as is</button></div>`
+      : ui.settings === 'reset'
+        ? `<div class="warn"><p class="warn-h">Reset the campaign?</p><p>Every opponent you have beaten goes back to locked, except Beginner, and unlocking all opponents is switched off. Games in progress are not affected.</p>
+             <button class="big danger" data-act="reset-yes">Reset campaign</button><button class="big alt" data-act="reset-no">Keep my progress</button></div>`
+      : `${ui.unlockAll ? '<p class="ok">✓ All opponents are unlocked.</p>' : '<button class="ghost" data-act="unlock-ask">Unlock all opponents…</button>'}<button class="ghost" data-act="reset-ask">Reset campaign…</button>`;
+    const soundSeg = `<span class="seg">${[['on', 'On'], ['off', 'Off']].map(([v, t]) => `<button class="${(ui.sound ? 'on' : 'off') === v ? 'on' : ''}" data-act="sound" data-v="${v}">${t}</button>`).join('')}</span>`;
     return `<div class="screen help settings" style="z-index:6"><div class="sheet"><h1>Settings</h1>
       <h3>Prompts above the board</h3><p>${seg}</p><p class="dim">Auto shows them until you have finished one game on this device.</p>
+      <h3>Sound effects</h3><p>${soundSeg}</p>
       <h3>Campaign</h3>${unlock}
-      ${ui.settings === 'unlock' ? '' : '<button class="big" data-act="closesettings">Done</button>'}</div></div>`;
+      ${ui.settings === 'unlock' || ui.settings === 'reset' ? '' : '<button class="big" data-act="closesettings">Done</button>'}</div></div>`;
   }
 
   function render() {
     if (ui.st && ui.st.over && !ui.countedOver) gameFinished();     // count the game (and record a campaign result) before drawing the end screen
+    if (ui.screen === 'play' && ui.st && ui.st.over && !animating() && !ui.endSounded) {      // the end screen appears now: its sound goes with it
+      ui.endSounded = true;
+      const o = ui.outcome;
+      sfx(ui.mode === 'campaign' && o ? (o.won ? (o.completed || o.newlyUnlocked ? 'unlock' : 'win') : 'lose') : 'win', 200);
+    }
     const html = { home: homeHTML, pass: passHTML, campaign: campaignHTML, play: gameHTML }[ui.screen]();
     root.innerHTML = html + (ui.help ? helpHTML() : '') + (ui.settings ? settingsHTML() : '');
     saveGame();
   }
 
-  window.FossilFrenzyUI = { ui, render, onClick };
+  window.FossilFrenzyUI = { ui, render, onClick, audio };
   resumeGame();
   render();
 })();

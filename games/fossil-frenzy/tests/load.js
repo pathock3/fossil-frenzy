@@ -7,12 +7,12 @@ let cache = null;
 function load() {
   if (cache) return cache;
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  for (const id of ['data', 'engine', 'bots', 'campaign']) {
+  for (const id of ['data', 'engine', 'sound', 'bots', 'campaign']) {
     const m = html.match(new RegExp('<script id="' + id + '">([\\s\\S]*?)</script>'));
     if (!m) throw new Error('missing <script id="' + id + '"> in index.html');
     vm.runInThisContext(m[1], { filename: 'index.html#' + id });
   }
-  cache = vm.runInThisContext('({ GAME_DATA, Engine, Bots, Campaign })');
+  cache = vm.runInThisContext('({ GAME_DATA, Engine, Sound, Bots, Campaign })');
   return cache;
 }
 module.exports = load();

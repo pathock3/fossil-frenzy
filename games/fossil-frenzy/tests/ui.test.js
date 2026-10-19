@@ -679,7 +679,7 @@ test('menu: a ☰ button opens rules, retry and back-to-start; retry and leaving
     assert.equal(await page.locator('[data-act=menu]').count(), 1);
     assert.equal(await page.locator('.q').count(), 1, 'one small system button, nothing else competing for attention');
     await page.tap('[data-act=menu]');
-    assert.deepEqual(await page.locator('.menu button').allInnerTexts(), ['Retry', 'How to play', 'Settings', 'Main Menu']);
+    assert.deepEqual(await page.locator('.menu button').allInnerTexts(), ['Retry', 'How to play', 'Settings', 'Sound: On', 'Main Menu']);
     await page.tap('.backdrop[data-act=menu-close]', { force: true });      // tap away to close
     assert.equal(await page.locator('.menu').count(), 0);
     await page.tap('[data-act=menu]'); await page.tap('[data-act=help]');   // rules from the menu
@@ -907,6 +907,98 @@ test('end of game: the choices are plain buttons — play again (or the next lev
   } finally { await browser.close(); }
 });
 
+test('settings: Reset campaign is always there — it forgets wins (and any unlock-all) after asking first', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await page.evaluate(() => localStorage.setItem('tabletop-library-fossil-frenzy-campaign', JSON.stringify({ beaten: ['beginner', 'novice'] })));
+    await page.reload();
+    await page.tap('[data-act=mode][data-v=campaign]');
+    assert.equal(await page.locator('.lvl.done').count(), 2);
+    await page.tap('[data-act=home]'); await page.tap('[data-act=settings]');
+    assert.equal(await page.locator('[data-act=reset-ask]').count(), 1, 'offered although nothing was unlocked from the menu');
+    await page.tap('[data-act=reset-ask]');
+    assert.match(await page.locator('.settings .warn').innerText(), /Reset the campaign\?/);
+    await page.tap('[data-act=reset-no]');
+    await page.tap('[data-act=closesettings]'); await page.tap('[data-act=mode][data-v=campaign]');
+    assert.equal(await page.locator('.lvl.done').count(), 2, 'keeping progress changes nothing');
+    await page.tap('[data-act=home]'); await page.tap('[data-act=settings]'); await page.tap('[data-act=reset-ask]'); await page.tap('[data-act=reset-yes]');
+    await page.tap('[data-act=closesettings]'); await page.tap('[data-act=mode][data-v=campaign]');
+    assert.equal(await page.locator('.lvl.done').count(), 0);
+    assert.equal(await page.locator('.lvl.locked').count(), 4);
+    assert.equal(await page.evaluate(() => localStorage.getItem('tabletop-library-fossil-frenzy-campaign')), null);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+// ---------- sound ----------
+test('sound: a peek, a flip and its outcome, and a bank each make their sound — and the ☰ menu switches sound off and on, remembered', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await passAndPlay(page, 2);
+    const played = () => page.evaluate(() => window.FossilFrenzyUI.audio.played.slice());
+    const n0 = (await played()).length;
+    await page.tap(await firstFree(page));                                   // peek
+    await page.tap(await otherFree(page));                                   // public flip (a miss: the board is shuffled, a random pair is unlikely)
+    await page.waitForTimeout(200);
+    const heard = (await played()).slice(n0);
+    assert.equal(heard[0], 'peek');
+    assert.equal(heard[1], 'flip');
+    assert.ok(['miss', 'match', 'gem'].includes(heard[2]), 'the outcome follows the flip: ' + heard);
+    await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI; ui.st.players[ui.st.current].sets = [{ value: 7, gem: false, size: 2, ids: [] }]; render(); });
+    // (end the turn first so the bank is a fresh action)
+    await page.tap('[data-act=end]'); await page.tap('[data-act=begin]');
+    await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI; ui.st.players[ui.st.current].sets = [{ value: 7, gem: false, size: 2, ids: [] }]; render(); });
+    const b0 = (await played()).length;
+    await page.tap('[data-act=set]');
+    assert.equal((await played()).slice(b0)[0], 'bank');
+    // the menu: Sound: On -> Off
+    await page.tap('[data-act=begin]').catch(() => {});
+    await page.tap('[data-act=menu]');
+    assert.equal(await page.locator('.menu [data-act=sound]').innerText(), 'Sound: On');
+    await page.tap('[data-act=sound]');
+    assert.equal(await page.locator('.menu [data-act=sound]').innerText(), 'Sound: Off', 'the menu stays open and shows the new state');
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.audio.isEnabled()), false);
+    assert.equal(await page.evaluate(() => localStorage.getItem('tabletop-library-fossil-frenzy-sound')), 'off');
+    await page.reload();                                                     // remembered after a reload (the game resumes)
+    await openSettings(page);
+    assert.equal(await page.locator('.settings [data-act=sound].on').innerText(), 'Off');
+    await page.tap('[data-act=sound][data-v=on]');
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.audio.isEnabled()), true);
+    assert.equal(await page.evaluate(() => localStorage.getItem('tabletop-library-fossil-frenzy-sound')), 'on');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('sound: an opponent\'s moves are heard as they are shown — its peek, its flip and what came of it', SKIP, async () => {
+  const { browser, page, errors } = await open({ animated: true });
+  try {
+    await campaign(page, 0);
+    await page.evaluate(() => { window.FossilFrenzyUI.audio.played.length = 0; });
+    // play a few turns; whenever an opponent's turn is shown its moves must be heard
+    let heardOpp = false;
+    for (let i = 0; i < 12 && !heardOpp; i++) {
+      if (await page.locator('.bankcard').count()) await page.tap('.bankcard');
+      await takeATurn(page);
+      await page.waitForTimeout(1600);                                       // let its turn play out
+      heardOpp = await page.evaluate(() => window.FossilFrenzyUI.ui.botWaiting && window.FossilFrenzyUI.audio.played.length >= 5);
+    }
+    assert.ok(heardOpp, 'sounds for both players\' moves were requested');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('sound: the end of a game has its own sound, played when the end screen appears', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await passAndPlay(page, 2);
+    await page.evaluate(() => { window.FossilFrenzyUI.audio.played.length = 0; });
+    await forceFinish(page, [11, 3]);
+    await page.waitForTimeout(400);
+    assert.ok((await page.evaluate(() => window.FossilFrenzyUI.audio.played)).includes('win'));
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
 test('privacy: an opponent\'s peek is never shown — at any moment of any turn, animated or not, across whole games', SKIP, async () => {
   for (const animated of [false, true]) {
     const { browser, page, errors } = await open({ animated });
@@ -1041,7 +1133,7 @@ test('settings: reachable from the main menu and from the in-game menu; holds th
   } finally { await browser.close(); }
 });
 
-test('settings: "Unlock everything" warns first (recommended: play the campaign), then opens every level — and it sticks', SKIP, async () => {
+test('settings: "Unlock all opponents" warns first (recommended: play the campaign), then opens every level — and it sticks', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     await page.tap('[data-act=mode][data-v=campaign]');
@@ -1050,16 +1142,17 @@ test('settings: "Unlock everything" warns first (recommended: play the campaign)
     await page.tap('[data-act=settings]');
     await page.tap('[data-act=unlock-ask]');
     const warning = await page.locator('.settings .warn').innerText();
-    assert.match(warning, /recommend/i);
-    assert.match(warning, /whole campaign/i);
-    assert.match(warning, /welcome to unlock everything/i);
-    await page.tap('[data-act=unlock-no]');                               // "Never mind" changes nothing
+    assert.match(warning, /Unlock all opponents\?/);
+    assert.match(warning, /intended way/i);
+    assert.match(warning, /lock them again/i, 'it says it can be undone');
+    assert.doesNotMatch(warning, /you're very welcome|just so you know/i);
+    await page.tap('[data-act=unlock-no]');                               // keeping the campaign as is changes nothing
     await page.tap('[data-act=closesettings]');
     await page.tap('[data-act=mode][data-v=campaign]');
-    assert.equal(await page.locator('.lvl.locked').count(), 4, 'still locked after "Never mind"');
+    assert.equal(await page.locator('.lvl.locked').count(), 4, 'still locked after keeping the campaign as is');
     await page.tap('[data-act=home]');
     await page.tap('[data-act=settings]'); await page.tap('[data-act=unlock-ask]'); await page.tap('[data-act=unlock-yes]');
-    assert.match(await page.locator('.settings').innerText(), /Everything is unlocked/);
+    assert.match(await page.locator('.settings').innerText(), /All opponents are unlocked/);
     await page.tap('[data-act=closesettings]');
     await page.tap('[data-act=mode][data-v=campaign]');
     assert.equal(await page.locator('.lvl.locked').count(), 0, 'every level is open');
@@ -1072,7 +1165,7 @@ test('settings: "Unlock everything" warns first (recommended: play the campaign)
     assert.equal(await page.locator('.lvl.locked').count(), 0);
     assert.equal(await page.locator('.lvl.done').count(), 0, 'and nothing is marked beaten');
     // and it can be switched back
-    await page.tap('[data-act=home]'); await page.tap('[data-act=settings]'); await page.tap('[data-act=relock]');
+    await page.tap('[data-act=home]'); await page.tap('[data-act=settings]'); await page.tap('[data-act=reset-ask]'); await page.tap('[data-act=reset-yes]');
     await page.tap('[data-act=closesettings]'); await page.tap('[data-act=mode][data-v=campaign]');
     assert.equal(await page.locator('.lvl.locked').count(), 4);
     assert.deepEqual(errors, []);
