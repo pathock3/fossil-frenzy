@@ -679,7 +679,7 @@ test('menu: a ☰ button opens rules, retry and back-to-start; retry and leaving
     assert.equal(await page.locator('[data-act=menu]').count(), 1);
     assert.equal(await page.locator('.q').count(), 1, 'one small system button, nothing else competing for attention');
     await page.tap('[data-act=menu]');
-    assert.deepEqual(await page.locator('.menu button').allInnerTexts(), ['Retry', 'How to play', 'Settings', 'Sound: On', 'Main Menu']);
+    assert.deepEqual(await page.locator('.menu button').allInnerTexts(), ['Retry', 'How to play', 'Settings', 'Main Menu']);
     await page.tap('.backdrop[data-act=menu-close]', { force: true });      // tap away to close
     assert.equal(await page.locator('.menu').count(), 0);
     await page.tap('[data-act=menu]'); await page.tap('[data-act=help]');   // rules from the menu
@@ -931,7 +931,7 @@ test('settings: Reset campaign is always there — it forgets wins (and any unlo
 });
 
 // ---------- sound ----------
-test('sound: a peek, a flip and its outcome, and a bank each make their sound — and the ☰ menu switches sound off and on, remembered', SKIP, async () => {
+test('sound: a peek, a flip and its outcome, and a bank each make their sound — and Settings switches sound off and on, remembered', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     await passAndPlay(page, 2);
@@ -951,12 +951,12 @@ test('sound: a peek, a flip and its outcome, and a bank each make their sound �
     const b0 = (await played()).length;
     await page.tap('[data-act=set]');
     assert.equal((await played()).slice(b0)[0], 'bank');
-    // the menu: Sound: On -> Off
-    await page.tap('[data-act=begin]').catch(() => {});
-    await page.tap('[data-act=menu]');
-    assert.equal(await page.locator('.menu [data-act=sound]').innerText(), 'Sound: On');
-    await page.tap('[data-act=sound]');
-    assert.equal(await page.locator('.menu [data-act=sound]').innerText(), 'Sound: Off', 'the menu stays open and shows the new state');
+    // Settings (opened from the ☰ menu): Sound On -> Off, remembered
+    await page.tap('[data-act=end]').catch(() => {});
+    await openSettings(page);
+    assert.equal(await page.locator('.settings [data-act=sound].on').innerText(), 'On');
+    await page.tap('[data-act=sound][data-v=off]');
+    assert.equal(await page.locator('.settings [data-act=sound].on').innerText(), 'Off', 'the panel shows the new state');
     assert.equal(await page.evaluate(() => window.FossilFrenzyUI.audio.isEnabled()), false);
     assert.equal(await page.evaluate(() => localStorage.getItem('tabletop-library-fossil-frenzy-sound')), 'off');
     await page.reload();                                                     // remembered after a reload (the game resumes)

@@ -1620,7 +1620,7 @@ const Campaign = (() => {
     const m = ui.menu, sure = (q, yes, act) => `<p class="mq">${q}</p><button class="danger" data-act="${act}">${yes}</button><button data-act="menu-close">No, keep playing</button>`;
     const body = m === 'retry' ? sure('Start this game over with a fresh deal? The current game will be lost.', 'Yes, start over', 'retry')
       : m === 'quit' ? sure('Leave this game and go to the Main Menu? The current game will be lost.', 'Yes, leave', 'quit')
-      : `<button data-act="menu-ask" data-v="retry">Retry</button><button data-act="help">How to play</button><button data-act="settings">Settings</button><button data-act="sound" aria-pressed="${ui.sound}">Sound: ${ui.sound ? 'On' : 'Off'}</button><button data-act="menu-ask" data-v="quit">Main Menu</button>`;
+      : `<button data-act="menu-ask" data-v="retry">Retry</button><button data-act="help">How to play</button><button data-act="settings">Settings</button><button data-act="menu-ask" data-v="quit">Main Menu</button>`;
     return `<div class="backdrop" data-act="menu-close"></div><div class="menu" role="menu">${body}</div>`;
   }
 
