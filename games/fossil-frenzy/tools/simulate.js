@@ -28,7 +28,8 @@ function spearman(x, y) {
   return dx && dy ? num / Math.sqrt(dx * dy) : 0;
 }
 
-// A player of the perfect strategy with a given memory — stands in for a human of that skill (who plays well but forgets).
+// A player of the perfect strategy with a given memory skill (0-10; 8 = a memory that survives a turn 90% of the time, 4 = 70%, 0 = 50%) —
+// stands in for a human of that skill (who plays well but forgets).
 const EXPERT = GAME_DATA.ai.profiles.expert;
 const player = memory => ({ ...EXPERT, memory });
 const level = i => Campaign.botSpec(LEVELS[i]);
@@ -153,32 +154,32 @@ function headToHead(a, b) {
 const t0 = Date.now();
 const R = { games: GAMES, seed: BASE_SEED, levels: LEVELS.map(l => l.name) };
 console.error('baseline …');
-R.equal4 = summary(runMany(() => [0.9, 0.9, 0.9, 0.9].map(player), 'equal4'));
+R.equal4 = summary(runMany(() => [8, 8, 8, 8].map(player), 'equal4'));
 R.byPlayers = {};
-for (let n = 2; n <= 4; n++) R.byPlayers[n] = summary(runMany(() => Array(n).fill(0.9).map(player), 'players' + n));
+for (let n = 2; n <= 4; n++) R.byPlayers[n] = summary(runMany(() => Array(n).fill(8).map(player), 'players' + n));
 R.equalMemory = {};
-for (const m of [0.5, 0.7, 0.9, 1.0]) R.equalMemory[m] = summary(runMany(() => Array(4).fill(m).map(player), 'eq' + m));
+for (const m of [10, 8, 4, 0]) R.equalMemory[m] = summary(runMany(() => Array(4).fill(m).map(player), 'eq' + m));
 console.error('memory skill …');
-R.mixedWide = mixed([0.3, 0.55, 0.8, 1.0].map(player));
+R.mixedWide = mixed([0, 2, 6, 10].map(player));
 R.mixedTiers = mixed([0, 2, 3, 4].map(i => level(i)));                  // four seats: Beginner, Normal, Challenging, Master
-R.curve = skillCurve(0.7, [0.3, 0.5, 0.7, 0.9, 1.0]);
+R.curve = skillCurve(4, [0, 2, 4, 8, 10]);
 console.error('campaign ladder …');
 R.ladder = LEVELS.map((_, i) => LEVELS.map((__, j) => (i === j ? null : headToHead(level(i), level(j)))));
-const REFS = [0.5, 0.7, 0.9, 1.0];
+const REFS = [0, 4, 6, 8, 10];
 R.vsReference = LEVELS.map((_, i) => REFS.map(m => headToHead(player(m), level(i))));   // a player of memory m against each level
 R.refs = REFS;
 console.error('what each ability is worth …');
 const ABILITIES = [
-  ['memory 0.8 (instead of perfect)', { memory: 0.8 }],
-  ['memory 0.8, and overconfident about it (overconfidence 10)', { memory: 0.8, overconfidence: 10 }],
-  ['no feel for set values (valueSense 0)', { valueSense: 0 }],
-  ['no eye on the win (leadSense 0)', { leadSense: 0 }],
-  ['no sense of the game ending (endSense 0, banks at 3 sets)', { endSense: 0, bankAt: 3 }],
-  ['does not track which sets are left (setsSense 0)', { setsSense: 0 }],
-  ['always goes for the third gem (gemSense 0)', { gemSense: 0 }],
-  ['plays a random move 10% of the time (mistakes 0.1)', { mistakes: 0.1 }],
-  ['plays a random move 25% of the time (mistakes 0.25)', { mistakes: 0.25 }],
-  ['all of the weak settings (memory 0.8, overconfident, every skill 0, mistakes 0.2, banks at 3 sets)', { memory: 0.8, overconfidence: 10, valueSense: 0, leadSense: 0, endSense: 0, setsSense: 0, gemSense: 0, mistakes: 0.2, bankAt: 3 }],
+  ['Memory 6 (a memory survives a turn 80% of the time) instead of 10', { memory: 6 }],
+  ['Memory 6, and unaware of it — overconfident (Self-awareness 0)', { memory: 6, selfAwareness: 0 }],
+  ['no Value sense (0)', { valueSense: 0 }],
+  ['no Lead sense (0)', { leadSense: 0 }],
+  ['no Endgame sense (0: it banks as soon as it holds 2 sets)', { endSense: 0 }],
+  ['no Set tracking (0)', { setsSense: 0 }],
+  ['no Gem sense (0: always goes for the third gem)', { gemSense: 0 }],
+  ['Focus 8 (a random move 10% of the time)', { focus: 8 }],
+  ['Focus 5 (a random move 25% of the time)', { focus: 5 }],
+  ['all of the Beginner\'s weak settings (Memory 4, every sense 0, Focus 6)', { memory: 4, selfAwareness: 0, valueSense: 0, leadSense: 0, endSense: 0, setsSense: 0, gemSense: 0, focus: 6 }],
 ];
 R.abilities = ABILITIES.map(([name, o]) => ({ name, ...headToHead(EXPERT, { ...EXPERT, ...o }) }));
 R.tutorial = LEVELS.map((_, i) => headToHead(level(i), GAME_DATA.ai.profiles.random));
@@ -193,7 +194,7 @@ const f2 = x => (Number.isFinite(x) ? x.toFixed(2) : '–');
 const P = x => (Number.isFinite(x) ? (100 * x).toFixed(1) + '%' : '–');
 const L = [];
 const a = R.equal4;
-L.push(`## Table 1 — 4 players, everyone at memory 0.90, ${GAMES} games`, '', '| metric | value |', '|---|---|');
+L.push(`## Table 1 — 4 players, everyone at Memory 8, ${GAMES} games`, '', '| metric | value |', '|---|---|');
 L.push(`| turns per game (mean / median) | ${f1(a.turns.mean)} / ${a.turns.median} |`);
 L.push(`| turns per game (10th–90th pct) | ${a.turns.p10}–${a.turns.p90} |`);
 L.push(`| rounds per player | ${f1(a.rounds)} |`);
@@ -211,18 +212,18 @@ for (const fr of [0.25, 0.5, 0.75]) {
 L.push(`| win share by turn order (1st / 2nd / 3rd / 4th) | ${a.seatOrderWinShare.map(P).join(' / ')} |`);
 L.push('', `Fair win share with 4 players is 25.0%; the 95% half-width of a win share over ${GAMES} games is about ±2.7%.`, '');
 
-L.push('## Table 2 — game length and early leader by player count (everyone at memory 0.90)', '', '| players | turns | rounds/player | leader at 50% goes on to win (fair share) | win share by turn order |', '|---|---|---|---|---|');
+L.push('## Table 2 — game length and early leader by player count (everyone at Memory 8)', '', '| players | turns | rounds/player | leader at 50% goes on to win (fair share) | win share by turn order |', '|---|---|---|---|---|');
 for (let n = 2; n <= 4; n++) { const x = R.byPlayers[n]; L.push(`| ${n} | ${f1(x.turns.mean)} | ${f1(x.rounds)} | ${P(x.early[0.5].tieAwareWinRate)} (${P(1 / n)}) | ${x.seatOrderWinShare.map(P).join(' / ')} |`); }
 L.push('');
 
-for (const [key, title] of [['mixedWide', 'Table 3 — memory skill: four players of very different memory (0.30 / 0.55 / 0.80 / 1.00), random seats'], ['mixedTiers', 'Table 4 — memory skill: the memory of Beginner / Normal / Challenging / Master, random seats']]) {
+for (const [key, title] of [['mixedWide', 'Table 3 — memory: four players of very different Memory skill (0 / 2 / 6 / 10), random seats'], ['mixedTiers', 'Table 4 — memory: the Memory of Beginner / Normal / Challenging / Master, random seats']]) {
   const m = R[key];
-  L.push(`## ${title}`, '', '| memory | win share | mean score | mean rank |', '|---|---|---|---|');
+  L.push(`## ${title}`, '', '| Memory skill | win share | mean score | mean rank |', '|---|---|---|---|');
   m.rows.forEach(x => L.push(`| ${x.memory} | ${P(x.winShare)} ±${P(x.ci)} | ${f1(x.meanScore)} | ${f2(x.meanRank)} |`));
   L.push('', `Spearman correlation between a seat's memory and its final score (per game, averaged): ${f2(m.spearman)}.`, '');
 }
 
-L.push('## Table 5 — one player of memory m against three players at 0.70 (fair share 25%)', '', '| focal memory | win share | mean score |', '|---|---|---|');
+L.push('## Table 5 — one player of Memory m against three players at Memory 4 (fair share 25%)', '', '| focal Memory skill | win share | mean score |', '|---|---|---|');
 R.curve.forEach(x => L.push(`| ${x.memory} | ${P(x.winShare)} ±${P(x.ci)} | ${f1(x.meanScore)} |`));
 L.push('');
 
@@ -230,21 +231,21 @@ L.push('## Table 6 — the campaign ladder: each level against each other level 
 R.ladder.forEach((row, i) => L.push(`| **${R.levels[i]}** | ${row.map(c => (c ? P(c.winShare) : '—')).join(' | ')} |`));
 L.push('');
 
-L.push('## Table 7 — how hard is each level? Win rate of the perfect strategy at a given memory against each level', '', `| level | ${R.refs.map(m => 'player memory ' + m).join(' | ')} |`, `|---|${R.refs.map(() => '---').join('|')}|`);
+L.push('## Table 7 — how hard is each level? Win rate of the perfect strategy at a given Memory skill against each level', '', `| level | ${R.refs.map(m => 'perfect play, Memory ' + m).join(' | ')} |`, `|---|${R.refs.map(() => '---').join('|')}|`);
 R.vsReference.forEach((row, i) => L.push(`| ${R.levels[i]} | ${row.map(c => `${P(c.outright)}${c.draws > 0.005 ? ` (+${P(c.draws)} draws)` : ''}`).join(' | ')} |`));
 L.push('', 'Outright wins only, since the campaign counts only an outright win as a defeat (a draw leaves the level locked).', '');
 
 L.push('## Table 9 — what each ability is worth: the perfect player against itself with one ability taken away (2 players; the perfect player wins this often, a draw counts half)', '', '| the other player lacks… | perfect player wins |', '|---|---|');
 R.abilities.forEach(x => L.push(`| ${x.name} | ${P(x.winShare)} ±${P(x.ci)} |`));
 L.push('');
-L.push('## Table 10 — the five campaign opponents\' settings', '', '| level | memory | overconfidence | valueSense | leadSense | endSense | setsSense | gemSense | mistakes | bank habit |', '|---|---|---|---|---|---|---|---|---|---|');
-R.levelSettings.forEach(x => L.push(`| ${x.name} | ${x.memory} | ${x.overconfidence} | ${x.valueSense} | ${x.leadSense} | ${x.endSense} | ${x.setsSense} | ${x.gemSense} | ${P(x.mistakes)} | ${x.bankAt ? 'at ' + x.bankAt + ' sets' : 'none'}${x.endgameTiles ? ', and when ≤ ' + x.endgameTiles + ' fossils left' : ''} |`));
-L.push('', 'Skills run from 0 (none) to 10 (perfect); memory is the chance a remembered fact is still recalled exactly, per turn that passes; mistakes is the chance of a random move (see `docs/AI.md`).', '');
+L.push('## Table 10 — the five campaign opponents\' skills (0 = none, 10 = perfect)', '', `| level | ${GAME_DATA.skills.map(k => k.name).join(' | ')} |`, `|---|${GAME_DATA.skills.map(() => '---').join('|')}|`);
+R.levelSettings.forEach(x => L.push(`| ${x.name} | ${GAME_DATA.skills.map(k => x[k.id]).join(' | ')} |`));
+L.push('', 'Memory 8 = a memory that survives a turn 90% of the time; 4 = 70%; 0 = 50%. Focus 8 = a random move 10% of the time; 5 = 25%. See `docs/AI.md`.', '');
 L.push('## Table 11 — the tutorial opponent (plays at random): how often each campaign level beats it (2 players)', '', '| level | wins |', '|---|---|');
 R.tutorial.forEach((x, i) => L.push(`| ${R.levels[i]} | ${P(x.winShare)} |`));
 L.push('');
 
-L.push('## Table 8 — everyone has the same memory (4 players)', '', '| memory | turns | leader at 50% goes on to win |', '|---|---|---|');
+L.push('## Table 8 — everyone has the same Memory skill (4 players)', '', '| Memory skill | turns | leader at 50% goes on to win |', '|---|---|---|');
 for (const m of Object.keys(R.equalMemory)) L.push(`| ${m} | ${f1(R.equalMemory[m].turns.mean)} | ${P(R.equalMemory[m].early[0.5].tieAwareWinRate)} |`);
 L.push('');
 const md = L.join('\n');

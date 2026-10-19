@@ -12,60 +12,60 @@
   "games": 1000,
   "players": 4,
   "turns": {
-   "mean": 52.118,
-   "median": 51,
-   "sd": 6.488457135560045,
+   "mean": 52.878,
+   "median": 52,
+   "sd": 6.557523617952129,
    "p10": 45,
-   "p90": 61
+   "p90": 62
   },
-  "rounds": 13.0295,
+  "rounds": 13.2195,
   "finalScore": {
-   "meanPerPlayer": 17.2555,
-   "meanWinning": 26.19
+   "meanPerPlayer": 17.27575,
+   "meanWinning": 26.266
   },
   "spread": {
-   "sdWithinGame": 6.683036298470876,
-   "rangeWithinGame": 17.239,
-   "cvWithinGame": 0.3875739134926012,
-   "meanMargin": 6.758,
-   "marginPctOfWinner": 0.25803741886216114
+   "sdWithinGame": 6.69077578281904,
+   "rangeWithinGame": 17.227,
+   "cvWithinGame": 0.3873831464419192,
+   "meanMargin": 6.797,
+   "marginPctOfWinner": 0.25877560344171174
   },
-  "sharedWinPct": 0.009,
+  "sharedWinPct": 0.011,
   "scoreTiePct": 0.06,
   "early": {
    "0.25": {
-    "games": 911,
-    "share": 0.911,
-    "winRate": 0.4094401756311745,
-    "anyGames": 978,
-    "anyShare": 0.978,
-    "tieAwareWinRate": 0.40576005453306063
+    "games": 903,
+    "share": 0.903,
+    "winRate": 0.40919158361018826,
+    "anyGames": 979,
+    "anyShare": 0.979,
+    "tieAwareWinRate": 0.4021109976166156
    },
    "0.5": {
-    "games": 917,
-    "share": 0.917,
-    "winRate": 0.5185387131952017,
+    "games": 895,
+    "share": 0.895,
+    "winRate": 0.5636871508379888,
     "anyGames": 1000,
     "anyShare": 1,
-    "tieAwareWinRate": 0.5029999999999999
+    "tieAwareWinRate": 0.5391666666666667
    },
    "0.75": {
-    "games": 928,
-    "share": 0.928,
-    "winRate": 0.6831896551724138,
+    "games": 941,
+    "share": 0.941,
+    "winRate": 0.6843783209351754,
     "anyGames": 1000,
     "anyShare": 1,
-    "tieAwareWinRate": 0.66425
+    "tieAwareWinRate": 0.668
    }
   },
   "seatOrderWinShare": [
+   0.265,
    0.242,
-   0.257,
-   0.25,
-   0.251
+   0.2455,
+   0.2475
   ],
   "stranded": {
-   "mean": 2.494,
+   "mean": 2.467,
    "gamesWithAny": 1
   }
  },
@@ -74,55 +74,55 @@
    "games": 1000,
    "players": 2,
    "turns": {
-    "mean": 51.752,
-    "median": 51,
-    "sd": 6.2631059387495585,
-    "p10": 45,
-    "p90": 60
+    "mean": 52.418,
+    "median": 52,
+    "sd": 6.765890628734692,
+    "p10": 44,
+    "p90": 62
    },
-   "rounds": 25.876,
+   "rounds": 26.209,
    "finalScore": {
-    "meanPerPlayer": 37.2035,
-    "meanWinning": 44.338
+    "meanPerPlayer": 37.196,
+    "meanWinning": 44.127
    },
    "spread": {
-    "sdWithinGame": 7.1345,
-    "rangeWithinGame": 14.269,
-    "cvWithinGame": 0.19214316156813788,
-    "meanMargin": 14.269,
-    "marginPctOfWinner": 0.3218232667238035
+    "sdWithinGame": 6.931,
+    "rangeWithinGame": 13.862,
+    "cvWithinGame": 0.1870476457290022,
+    "meanMargin": 13.862,
+    "marginPctOfWinner": 0.314138735921318
    },
    "sharedWinPct": 0,
-   "scoreTiePct": 0.017,
+   "scoreTiePct": 0.02,
    "early": {
     "0.25": {
-     "games": 950,
-     "share": 0.95,
-     "winRate": 0.6442105263157895,
-     "anyGames": 997,
-     "anyShare": 0.997,
-     "tieAwareWinRate": 0.6374122367101304
+     "games": 948,
+     "share": 0.948,
+     "winRate": 0.619198312236287,
+     "anyGames": 999,
+     "anyShare": 0.999,
+     "tieAwareWinRate": 0.6131131131131131
     },
     "0.5": {
-     "games": 970,
-     "share": 0.97,
-     "winRate": 0.7484536082474227,
+     "games": 955,
+     "share": 0.955,
+     "winRate": 0.7225130890052356,
      "anyGames": 1000,
      "anyShare": 1,
-     "tieAwareWinRate": 0.741
+     "tieAwareWinRate": 0.7125
     },
     "0.75": {
-     "games": 973,
-     "share": 0.973,
-     "winRate": 0.817060637204522,
+     "games": 974,
+     "share": 0.974,
+     "winRate": 0.8151950718685832,
      "anyGames": 1000,
      "anyShare": 1,
-     "tieAwareWinRate": 0.8085
+     "tieAwareWinRate": 0.807
     }
    },
    "seatOrderWinShare": [
-    0.507,
-    0.493
+    0.504,
+    0.496
    ],
    "stranded": {
     "mean": 1.774,
@@ -133,59 +133,59 @@
    "games": 1000,
    "players": 3,
    "turns": {
-    "mean": 52.069,
+    "mean": 52.19,
     "median": 51,
-    "sd": 6.069286531380774,
-    "p10": 45,
-    "p90": 60
+    "sd": 6.757950872860798,
+    "p10": 44,
+    "p90": 61
    },
-   "rounds": 17.356333333333335,
+   "rounds": 17.396666666666665,
    "finalScore": {
-    "meanPerPlayer": 23.791000000000015,
-    "meanWinning": 32.333
+    "meanPerPlayer": 23.73933333333339,
+    "meanWinning": 32.265
    },
    "spread": {
-    "sdWithinGame": 7.133493972694692,
-    "rangeWithinGame": 16.687,
-    "cvWithinGame": 0.3001472324429069,
-    "meanMargin": 8.939,
-    "marginPctOfWinner": 0.2764667676986361
+    "sdWithinGame": 7.1604573498668165,
+    "rangeWithinGame": 16.735,
+    "cvWithinGame": 0.3018325392895825,
+    "meanMargin": 8.842,
+    "marginPctOfWinner": 0.27404308073764144
    },
-   "sharedWinPct": 0.003,
-   "scoreTiePct": 0.04,
+   "sharedWinPct": 0.007,
+   "scoreTiePct": 0.05,
    "early": {
     "0.25": {
-     "games": 929,
-     "share": 0.929,
-     "winRate": 0.5102260495156081,
+     "games": 927,
+     "share": 0.927,
+     "winRate": 0.48813376483279397,
      "anyGames": 994,
      "anyShare": 0.994,
-     "tieAwareWinRate": 0.5035211267605634
+     "tieAwareWinRate": 0.48390342052313884
     },
     "0.5": {
-     "games": 936,
-     "share": 0.936,
-     "winRate": 0.6159188034188035,
+     "games": 927,
+     "share": 0.927,
+     "winRate": 0.6073354908306364,
      "anyGames": 1000,
      "anyShare": 1,
-     "tieAwareWinRate": 0.6033333333333334
+     "tieAwareWinRate": 0.5972500000000001
     },
     "0.75": {
-     "games": 945,
-     "share": 0.945,
-     "winRate": 0.717989417989418,
+     "games": 946,
+     "share": 0.946,
+     "winRate": 0.7156448202959831,
      "anyGames": 1000,
      "anyShare": 1,
-     "tieAwareWinRate": 0.7013333333333334
+     "tieAwareWinRate": 0.7003333333333334
     }
    },
    "seatOrderWinShare": [
-    0.3455,
-    0.2855,
-    0.369
+    0.3415,
+    0.324,
+    0.3345
    ],
    "stranded": {
-    "mean": 2.166,
+    "mean": 2.188,
     "gamesWithAny": 1
    }
   },
@@ -193,66 +193,249 @@
    "games": 1000,
    "players": 4,
    "turns": {
-    "mean": 52.118,
-    "median": 51,
-    "sd": 6.488457135560045,
+    "mean": 52.878,
+    "median": 52,
+    "sd": 6.557523617952129,
     "p10": 45,
-    "p90": 61
+    "p90": 62
    },
-   "rounds": 13.0295,
+   "rounds": 13.2195,
    "finalScore": {
-    "meanPerPlayer": 17.2555,
-    "meanWinning": 26.19
+    "meanPerPlayer": 17.27575,
+    "meanWinning": 26.266
    },
    "spread": {
-    "sdWithinGame": 6.683036298470876,
-    "rangeWithinGame": 17.239,
-    "cvWithinGame": 0.3875739134926012,
-    "meanMargin": 6.758,
-    "marginPctOfWinner": 0.25803741886216114
+    "sdWithinGame": 6.69077578281904,
+    "rangeWithinGame": 17.227,
+    "cvWithinGame": 0.3873831464419192,
+    "meanMargin": 6.797,
+    "marginPctOfWinner": 0.25877560344171174
    },
-   "sharedWinPct": 0.009,
+   "sharedWinPct": 0.011,
    "scoreTiePct": 0.06,
    "early": {
     "0.25": {
-     "games": 911,
-     "share": 0.911,
-     "winRate": 0.4094401756311745,
-     "anyGames": 978,
-     "anyShare": 0.978,
-     "tieAwareWinRate": 0.40576005453306063
+     "games": 903,
+     "share": 0.903,
+     "winRate": 0.40919158361018826,
+     "anyGames": 979,
+     "anyShare": 0.979,
+     "tieAwareWinRate": 0.4021109976166156
     },
     "0.5": {
-     "games": 917,
-     "share": 0.917,
-     "winRate": 0.5185387131952017,
+     "games": 895,
+     "share": 0.895,
+     "winRate": 0.5636871508379888,
      "anyGames": 1000,
      "anyShare": 1,
-     "tieAwareWinRate": 0.5029999999999999
+     "tieAwareWinRate": 0.5391666666666667
     },
     "0.75": {
-     "games": 928,
-     "share": 0.928,
-     "winRate": 0.6831896551724138,
+     "games": 941,
+     "share": 0.941,
+     "winRate": 0.6843783209351754,
      "anyGames": 1000,
      "anyShare": 1,
-     "tieAwareWinRate": 0.66425
+     "tieAwareWinRate": 0.668
     }
    },
    "seatOrderWinShare": [
+    0.265,
     0.242,
-    0.257,
-    0.25,
-    0.251
+    0.2455,
+    0.2475
    ],
    "stranded": {
-    "mean": 2.494,
+    "mean": 2.467,
     "gamesWithAny": 1
    }
   }
  },
  "equalMemory": {
-  "1": {
+  "0": {
+   "games": 1000,
+   "players": 4,
+   "turns": {
+    "mean": 136.69,
+    "median": 133,
+    "sd": 35.36959004568759,
+    "p10": 94,
+    "p90": 185
+   },
+   "rounds": 34.1725,
+   "finalScore": {
+    "meanPerPlayer": 17.3365,
+    "meanWinning": 28.177
+   },
+   "spread": {
+    "sdWithinGame": 7.957874148995578,
+    "rangeWithinGame": 20.484,
+    "cvWithinGame": 0.45932111387255564,
+    "meanMargin": 8.609,
+    "marginPctOfWinner": 0.30553288142811513
+   },
+   "sharedWinPct": 0.009,
+   "scoreTiePct": 0.044,
+   "early": {
+    "0.25": {
+     "games": 938,
+     "share": 0.938,
+     "winRate": 0.44136460554371004,
+     "anyGames": 996,
+     "anyShare": 0.996,
+     "tieAwareWinRate": 0.4382530120481928
+    },
+    "0.5": {
+     "games": 929,
+     "share": 0.929,
+     "winRate": 0.5807319698600646,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.5662500000000001
+    },
+    "0.75": {
+     "games": 952,
+     "share": 0.952,
+     "winRate": 0.6990546218487395,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.6826666666666668
+    }
+   },
+   "seatOrderWinShare": [
+    0.2495,
+    0.26,
+    0.254,
+    0.2365
+   ],
+   "stranded": {
+    "mean": 2.135,
+    "gamesWithAny": 1
+   }
+  },
+  "4": {
+   "games": 1000,
+   "players": 4,
+   "turns": {
+    "mean": 90.494,
+    "median": 88,
+    "sd": 19.328682417588627,
+    "p10": 68,
+    "p90": 116
+   },
+   "rounds": 22.6235,
+   "finalScore": {
+    "meanPerPlayer": 17.27825,
+    "meanWinning": 27.564
+   },
+   "spread": {
+    "sdWithinGame": 7.6121271044790975,
+    "rangeWithinGame": 19.498,
+    "cvWithinGame": 0.4394497175207795,
+    "meanMargin": 7.858,
+    "marginPctOfWinner": 0.2850819910027572
+   },
+   "sharedWinPct": 0.012,
+   "scoreTiePct": 0.058,
+   "early": {
+    "0.25": {
+     "games": 921,
+     "share": 0.921,
+     "winRate": 0.3973941368078176,
+     "anyGames": 994,
+     "anyShare": 0.994,
+     "tieAwareWinRate": 0.38992287055667335
+    },
+    "0.5": {
+     "games": 932,
+     "share": 0.932,
+     "winRate": 0.5488197424892703,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.5359166666666666
+    },
+    "0.75": {
+     "games": 936,
+     "share": 0.936,
+     "winRate": 0.6757478632478633,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.6595
+    }
+   },
+   "seatOrderWinShare": [
+    0.236,
+    0.2525,
+    0.2725,
+    0.239
+   ],
+   "stranded": {
+    "mean": 2.26,
+    "gamesWithAny": 1
+   }
+  },
+  "8": {
+   "games": 1000,
+   "players": 4,
+   "turns": {
+    "mean": 52.878,
+    "median": 52,
+    "sd": 6.557523617952129,
+    "p10": 45,
+    "p90": 62
+   },
+   "rounds": 13.2195,
+   "finalScore": {
+    "meanPerPlayer": 17.27575,
+    "meanWinning": 26.266
+   },
+   "spread": {
+    "sdWithinGame": 6.69077578281904,
+    "rangeWithinGame": 17.227,
+    "cvWithinGame": 0.3873831464419192,
+    "meanMargin": 6.797,
+    "marginPctOfWinner": 0.25877560344171174
+   },
+   "sharedWinPct": 0.011,
+   "scoreTiePct": 0.06,
+   "early": {
+    "0.25": {
+     "games": 903,
+     "share": 0.903,
+     "winRate": 0.40919158361018826,
+     "anyGames": 979,
+     "anyShare": 0.979,
+     "tieAwareWinRate": 0.4021109976166156
+    },
+    "0.5": {
+     "games": 895,
+     "share": 0.895,
+     "winRate": 0.5636871508379888,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.5391666666666667
+    },
+    "0.75": {
+     "games": 941,
+     "share": 0.941,
+     "winRate": 0.6843783209351754,
+     "anyGames": 1000,
+     "anyShare": 1,
+     "tieAwareWinRate": 0.668
+    }
+   },
+   "seatOrderWinShare": [
+    0.265,
+    0.242,
+    0.2455,
+    0.2475
+   ],
+   "stranded": {
+    "mean": 2.467,
+    "gamesWithAny": 1
+   }
+  },
+  "10": {
    "games": 1000,
    "players": 4,
    "turns": {
@@ -312,355 +495,172 @@
     "mean": 2.766,
     "gamesWithAny": 1
    }
-  },
-  "0.5": {
-   "games": 1000,
-   "players": 4,
-   "turns": {
-    "mean": 130.747,
-    "median": 128,
-    "sd": 31.085382272058368,
-    "p10": 93,
-    "p90": 174
-   },
-   "rounds": 32.68675,
-   "finalScore": {
-    "meanPerPlayer": 17.214,
-    "meanWinning": 27.924
-   },
-   "spread": {
-    "sdWithinGame": 7.929204393069766,
-    "rangeWithinGame": 20.337,
-    "cvWithinGame": 0.46084690029453607,
-    "meanMargin": 8.218,
-    "marginPctOfWinner": 0.2942988110585876
-   },
-   "sharedWinPct": 0.01,
-   "scoreTiePct": 0.044,
-   "early": {
-    "0.25": {
-     "games": 915,
-     "share": 0.915,
-     "winRate": 0.42513661202185793,
-     "anyGames": 991,
-     "anyShare": 0.991,
-     "tieAwareWinRate": 0.41801210898082747
-    },
-    "0.5": {
-     "games": 936,
-     "share": 0.936,
-     "winRate": 0.5528846153846154,
-     "anyGames": 1000,
-     "anyShare": 1,
-     "tieAwareWinRate": 0.5415833333333334
-    },
-    "0.75": {
-     "games": 948,
-     "share": 0.948,
-     "winRate": 0.680379746835443,
-     "anyGames": 1000,
-     "anyShare": 1,
-     "tieAwareWinRate": 0.6653333333333332
-    }
-   },
-   "seatOrderWinShare": [
-    0.249,
-    0.2605,
-    0.241,
-    0.2495
-   ],
-   "stranded": {
-    "mean": 2.169,
-    "gamesWithAny": 1
-   }
-  },
-  "0.7": {
-   "games": 1000,
-   "players": 4,
-   "turns": {
-    "mean": 88.943,
-    "median": 87,
-    "sd": 17.49844995992501,
-    "p10": 68,
-    "p90": 113
-   },
-   "rounds": 22.23575,
-   "finalScore": {
-    "meanPerPlayer": 17.3155,
-    "meanWinning": 27.661
-   },
-   "spread": {
-    "sdWithinGame": 7.634592253976047,
-    "rangeWithinGame": 19.573,
-    "cvWithinGame": 0.4409937640320924,
-    "meanMargin": 8.02,
-    "marginPctOfWinner": 0.2899389031488377
-   },
-   "sharedWinPct": 0.012,
-   "scoreTiePct": 0.052,
-   "early": {
-    "0.25": {
-     "games": 920,
-     "share": 0.92,
-     "winRate": 0.42717391304347824,
-     "anyGames": 993,
-     "anyShare": 0.993,
-     "tieAwareWinRate": 0.42002349781805975
-    },
-    "0.5": {
-     "games": 923,
-     "share": 0.923,
-     "winRate": 0.5585048754062839,
-     "anyGames": 1000,
-     "anyShare": 1,
-     "tieAwareWinRate": 0.5423333333333332
-    },
-    "0.75": {
-     "games": 938,
-     "share": 0.938,
-     "winRate": 0.6609808102345416,
-     "anyGames": 1000,
-     "anyShare": 1,
-     "tieAwareWinRate": 0.6475833333333334
-    }
-   },
-   "seatOrderWinShare": [
-    0.265,
-    0.256,
-    0.254,
-    0.225
-   ],
-   "stranded": {
-    "mean": 2.244,
-    "gamesWithAny": 1
-   }
-  },
-  "0.9": {
-   "games": 1000,
-   "players": 4,
-   "turns": {
-    "mean": 52.118,
-    "median": 51,
-    "sd": 6.488457135560045,
-    "p10": 45,
-    "p90": 61
-   },
-   "rounds": 13.0295,
-   "finalScore": {
-    "meanPerPlayer": 17.2555,
-    "meanWinning": 26.19
-   },
-   "spread": {
-    "sdWithinGame": 6.683036298470876,
-    "rangeWithinGame": 17.239,
-    "cvWithinGame": 0.3875739134926012,
-    "meanMargin": 6.758,
-    "marginPctOfWinner": 0.25803741886216114
-   },
-   "sharedWinPct": 0.009,
-   "scoreTiePct": 0.06,
-   "early": {
-    "0.25": {
-     "games": 911,
-     "share": 0.911,
-     "winRate": 0.4094401756311745,
-     "anyGames": 978,
-     "anyShare": 0.978,
-     "tieAwareWinRate": 0.40576005453306063
-    },
-    "0.5": {
-     "games": 917,
-     "share": 0.917,
-     "winRate": 0.5185387131952017,
-     "anyGames": 1000,
-     "anyShare": 1,
-     "tieAwareWinRate": 0.5029999999999999
-    },
-    "0.75": {
-     "games": 928,
-     "share": 0.928,
-     "winRate": 0.6831896551724138,
-     "anyGames": 1000,
-     "anyShare": 1,
-     "tieAwareWinRate": 0.66425
-    }
-   },
-   "seatOrderWinShare": [
-    0.242,
-    0.257,
-    0.25,
-    0.251
-   ],
-   "stranded": {
-    "mean": 2.494,
-    "gamesWithAny": 1
-   }
   }
  },
  "mixedWide": {
   "levels": [
-   0.3,
-   0.55,
-   0.8,
-   1
+   0,
+   2,
+   6,
+   10
   ],
   "rows": [
    {
-    "memory": 0.3,
+    "memory": 0,
     "winShare": 0.004,
     "ci": 0.00391215214428069,
-    "meanScore": 6.763,
-    "meanRank": 3.235
+    "meanScore": 7.127,
+    "meanRank": 3.203
    },
    {
-    "memory": 0.55,
-    "winShare": 0.004,
-    "ci": 0.00391215214428069,
-    "meanScore": 7.859,
-    "meanRank": 3.057
+    "memory": 2,
+    "winShare": 0.002,
+    "ci": 0.0027690853363520596,
+    "meanScore": 8.213,
+    "meanRank": 3.037
    },
    {
-    "memory": 0.8,
-    "winShare": 0.0175,
-    "ci": 0.008127208007673975,
-    "meanScore": 12.292,
-    "meanRank": 2.557
+    "memory": 6,
+    "winShare": 0.01,
+    "ci": 0.006166996027240491,
+    "meanScore": 11.893,
+    "meanRank": 2.604
    },
    {
-    "memory": 1,
-    "winShare": 0.9745,
-    "ci": 0.00977050661941334,
-    "meanScore": 36.706,
-    "meanRank": 1.025
+    "memory": 10,
+    "winShare": 0.984,
+    "ci": 0.007777027092662083,
+    "meanScore": 36.144,
+    "meanRank": 1.021
    }
   ],
   "fairShare": 0.25,
-  "spearman": 0.7309103284947136
+  "spearman": 0.7132734330591826
  },
  "mixedTiers": {
   "levels": [
-   0.7,
-   0.84,
-   0.89,
-   0.94
+   4,
+   6.8,
+   7.7,
+   8.5
   ],
   "rows": [
    {
-    "memory": 0.7,
-    "winShare": 0.025,
-    "ci": 0.009676724652484434,
-    "meanScore": 8.032,
-    "meanRank": 3.484
+    "memory": 4,
+    "winShare": 0.027,
+    "ci": 0.010046027752300906,
+    "meanScore": 8.948,
+    "meanRank": 3.426
    },
    {
-    "memory": 0.84,
-    "winShare": 0.0915,
-    "ci": 0.017870186467969493,
-    "meanScore": 14.36,
-    "meanRank": 2.726
+    "memory": 6.8,
+    "winShare": 0.125,
+    "ci": 0.02049817065008485,
+    "meanScore": 14.864,
+    "meanRank": 2.67
    },
    {
-    "memory": 0.89,
+    "memory": 7.7,
     "winShare": 0.242,
     "ci": 0.026545955202252565,
-    "meanScore": 19.127,
-    "meanRank": 2.149
+    "meanScore": 19.036,
+    "meanRank": 2.202
    },
    {
-    "memory": 0.94,
-    "winShare": 0.6415,
-    "ci": 0.02972343392678578,
-    "meanScore": 26.781,
-    "meanRank": 1.48
+    "memory": 8.5,
+    "winShare": 0.606,
+    "ci": 0.030285900719641802,
+    "meanScore": 25.83,
+    "meanRank": 1.542
    }
   ],
   "fairShare": 0.25,
-  "spearman": 0.6641296510330076
+  "spearman": 0.6174748802676671
  },
  "curve": [
   {
-   "memory": 0.3,
-   "winShare": 0.0545,
-   "ci": 0.014069708156177228,
-   "meanScore": 10.699
+   "memory": 0,
+   "winShare": 0.099,
+   "ci": 0.01851126355492785,
+   "meanScore": 12.492
   },
   {
-   "memory": 0.5,
-   "winShare": 0.1,
-   "ci": 0.018594192641790068,
-   "meanScore": 12.687
+   "memory": 2,
+   "winShare": 0.144,
+   "ci": 0.02176076704530426,
+   "meanScore": 14.116
   },
   {
-   "memory": 0.7,
-   "winShare": 0.273,
-   "ci": 0.02761242824526666,
-   "meanScore": 17.852
+   "memory": 4,
+   "winShare": 0.257,
+   "ci": 0.027084264095596177,
+   "meanScore": 17.464
   },
   {
-   "memory": 0.9,
-   "winShare": 0.7543333333333334,
-   "ci": 0.026681536624081865,
-   "meanScore": 30.198
+   "memory": 8,
+   "winShare": 0.774,
+   "ci": 0.025922732078235887,
+   "meanScore": 30.805
   },
   {
-   "memory": 1,
+   "memory": 10,
    "winShare": 0.974,
    "ci": 0.009863299569616653,
-   "meanScore": 35.137
+   "meanScore": 35.528
   }
  ],
  "ladder": [
   [
    null,
    {
-    "winShare": 0.326,
-    "ci": 0.029053256588547866,
-    "outright": 0.326,
+    "winShare": 0.324,
+    "ci": 0.02900694052119251,
+    "outright": 0.324,
     "draws": 0
    },
    {
-    "winShare": 0.143,
-    "ci": 0.021697740011346802,
-    "outright": 0.143,
+    "winShare": 0.163,
+    "ci": 0.022893521563970887,
+    "outright": 0.163,
     "draws": 0
    },
    {
-    "winShare": 0.055,
-    "ci": 0.014130363052660749,
-    "outright": 0.055,
+    "winShare": 0.06,
+    "ci": 0.014719586950726572,
+    "outright": 0.06,
     "draws": 0
    },
    {
-    "winShare": 0.012,
-    "ci": 0.006748778378343743,
-    "outright": 0.012,
+    "winShare": 0.032,
+    "ci": 0.010908593016516843,
+    "outright": 0.032,
     "draws": 0
    }
   ],
   [
    {
-    "winShare": 0.66,
-    "ci": 0.02936077383176404,
-    "outright": 0.66,
+    "winShare": 0.666,
+    "ci": 0.029232531029659406,
+    "outright": 0.666,
     "draws": 0
    },
    null,
    {
-    "winShare": 0.31,
-    "ci": 0.028665628198244666,
-    "outright": 0.31,
+    "winShare": 0.306,
+    "ci": 0.028562519888833335,
+    "outright": 0.306,
     "draws": 0
    },
    {
-    "winShare": 0.126,
-    "ci": 0.02056823663807863,
-    "outright": 0.126,
+    "winShare": 0.157,
+    "ci": 0.022548605313854782,
+    "outright": 0.157,
     "draws": 0
    },
    {
-    "winShare": 0.046,
-    "ci": 0.012984019963016076,
-    "outright": 0.046,
+    "winShare": 0.057,
+    "ci": 0.014369754402911694,
+    "outright": 0.057,
     "draws": 0
    }
   ],
@@ -672,75 +672,75 @@
     "draws": 0
    },
    {
-    "winShare": 0.715,
-    "ci": 0.027978957092786715,
-    "outright": 0.715,
+    "winShare": 0.708,
+    "ci": 0.0281815013368699,
+    "outright": 0.708,
     "draws": 0
    },
    null,
    {
-    "winShare": 0.287,
-    "ci": 0.028037661271939213,
-    "outright": 0.287,
+    "winShare": 0.297,
+    "ci": 0.028321220058464994,
+    "outright": 0.297,
     "draws": 0
    },
    {
-    "winShare": 0.117,
-    "ci": 0.01992183569854947,
-    "outright": 0.117,
+    "winShare": 0.136,
+    "ci": 0.0212462553500611,
+    "outright": 0.136,
     "draws": 0
    }
   ],
   [
    {
-    "winShare": 0.939,
-    "ci": 0.014833846648796131,
-    "outright": 0.939,
+    "winShare": 0.929,
+    "ci": 0.015918168688640027,
+    "outright": 0.929,
     "draws": 0
    },
    {
-    "winShare": 0.868,
-    "ci": 0.020979875156921218,
-    "outright": 0.868,
+    "winShare": 0.85,
+    "ci": 0.022131515989646983,
+    "outright": 0.85,
     "draws": 0
    },
    {
-    "winShare": 0.737,
-    "ci": 0.02728774760950416,
-    "outright": 0.737,
+    "winShare": 0.704,
+    "ci": 0.028293603065003937,
+    "outright": 0.704,
     "draws": 0
    },
    null,
    {
-    "winShare": 0.263,
-    "ci": 0.02728774760950416,
-    "outright": 0.263,
+    "winShare": 0.266,
+    "ci": 0.027387028871347106,
+    "outright": 0.266,
     "draws": 0
    }
   ],
   [
    {
-    "winShare": 0.983,
-    "ci": 0.008012301641850489,
-    "outright": 0.983,
+    "winShare": 0.968,
+    "ci": 0.010908593016516846,
+    "outright": 0.968,
     "draws": 0
    },
    {
-    "winShare": 0.963,
-    "ci": 0.011699574761503092,
-    "outright": 0.963,
+    "winShare": 0.935,
+    "ci": 0.015279831150899535,
+    "outright": 0.935,
     "draws": 0
    },
    {
-    "winShare": 0.897,
-    "ci": 0.018839566491827775,
-    "outright": 0.897,
+    "winShare": 0.862,
+    "ci": 0.02137712257531401,
+    "outright": 0.862,
     "draws": 0
    },
    {
-    "winShare": 0.749,
-    "ci": 0.026874094559631214,
-    "outright": 0.749,
+    "winShare": 0.699,
+    "ci": 0.028430068561296155,
+    "outright": 0.699,
     "draws": 0
    },
    null
@@ -749,53 +749,65 @@
  "vsReference": [
   [
    {
-    "winShare": 0.29,
-    "ci": 0.028124463372658327,
-    "outright": 0.29,
+    "winShare": 0.282,
+    "ci": 0.027889636096586127,
+    "outright": 0.282,
     "draws": 0
    },
    {
-    "winShare": 0.628,
-    "ci": 0.02995762383100502,
-    "outright": 0.628,
+    "winShare": 0.597,
+    "ci": 0.03040155235510187,
+    "outright": 0.597,
     "draws": 0
    },
    {
-    "winShare": 0.951,
-    "ci": 0.01337963820138647,
-    "outright": 0.951,
+    "winShare": 0.812,
+    "ci": 0.024216591205204745,
+    "outright": 0.812,
     "draws": 0
    },
    {
-    "winShare": 0.994,
-    "ci": 0.00478657522661036,
-    "outright": 0.994,
+    "winShare": 0.96,
+    "ci": 0.012145675773706465,
+    "outright": 0.96,
+    "draws": 0
+   },
+   {
+    "winShare": 0.996,
+    "ci": 0.003912152144280691,
+    "outright": 0.996,
     "draws": 0
    }
   ],
   [
    {
-    "winShare": 0.175,
-    "ci": 0.023550605087767913,
-    "outright": 0.175,
+    "winShare": 0.167,
+    "ci": 0.02311728395811238,
+    "outright": 0.167,
     "draws": 0
    },
    {
-    "winShare": 0.45,
-    "ci": 0.030834980136202457,
-    "outright": 0.45,
+    "winShare": 0.433,
+    "ci": 0.030710829646885148,
+    "outright": 0.433,
     "draws": 0
    },
    {
-    "winShare": 0.886,
-    "ci": 0.01969814626811366,
-    "outright": 0.886,
+    "winShare": 0.62,
+    "ci": 0.030084563483620635,
+    "outright": 0.62,
     "draws": 0
    },
    {
-    "winShare": 0.981,
-    "ci": 0.008461890001648572,
-    "outright": 0.981,
+    "winShare": 0.91,
+    "ci": 0.017737729279702064,
+    "outright": 0.91,
+    "draws": 0
+   },
+   {
+    "winShare": 0.991,
+    "ci": 0.005853480195575965,
+    "outright": 0.991,
     "draws": 0
    }
   ],
@@ -807,172 +819,185 @@
     "draws": 0
    },
    {
-    "winShare": 0.249,
-    "ci": 0.02680252522431422,
-    "outright": 0.249,
+    "winShare": 0.232,
+    "ci": 0.026162586294172067,
+    "outright": 0.232,
     "draws": 0
    },
    {
-    "winShare": 0.792,
-    "ci": 0.025156506466518753,
-    "outright": 0.792,
+    "winShare": 0.457,
+    "ci": 0.030875506175607872,
+    "outright": 0.457,
     "draws": 0
    },
    {
-    "winShare": 0.971,
-    "ci": 0.010400750665216434,
-    "outright": 0.971,
+    "winShare": 0.786,
+    "ci": 0.02541992302112656,
+    "outright": 0.786,
+    "draws": 0
+   },
+   {
+    "winShare": 0.97,
+    "ci": 0.010573105504060768,
+    "outright": 0.97,
     "draws": 0
    }
   ],
   [
    {
-    "winShare": 0.029,
-    "ci": 0.010400750665216429,
-    "outright": 0.029,
+    "winShare": 0.028,
+    "ci": 0.010225115432111269,
+    "outright": 0.028,
     "draws": 0
    },
    {
-    "winShare": 0.113,
-    "ci": 0.019622624941633065,
-    "outright": 0.113,
+    "winShare": 0.125,
+    "ci": 0.02049817065008485,
+    "outright": 0.125,
     "draws": 0
    },
    {
-    "winShare": 0.56,
-    "ci": 0.03076638165270658,
-    "outright": 0.56,
+    "winShare": 0.257,
+    "ci": 0.027084264095596177,
+    "outright": 0.257,
     "draws": 0
    },
    {
-    "winShare": 0.913,
-    "ci": 0.017468317881238593,
-    "outright": 0.913,
+    "winShare": 0.612,
+    "ci": 0.030202830489872965,
+    "outright": 0.612,
+    "draws": 0
+   },
+   {
+    "winShare": 0.927,
+    "ci": 0.016123427476811496,
+    "outright": 0.927,
     "draws": 0
    }
   ],
   [
    {
-    "winShare": 0.005,
-    "ci": 0.0043717227725463105,
-    "outright": 0.005,
+    "winShare": 0.012,
+    "ci": 0.006748778378343743,
+    "outright": 0.012,
     "draws": 0
    },
    {
-    "winShare": 0.027,
-    "ci": 0.010046027752300906,
-    "outright": 0.027,
+    "winShare": 0.05,
+    "ci": 0.013508367777048417,
+    "outright": 0.05,
     "draws": 0
    },
    {
-    "winShare": 0.29,
-    "ci": 0.028124463372658327,
-    "outright": 0.29,
+    "winShare": 0.115,
+    "ci": 0.01977318487244784,
+    "outright": 0.115,
     "draws": 0
    },
    {
-    "winShare": 0.82,
-    "ci": 0.023812185116028308,
-    "outright": 0.82,
+    "winShare": 0.377,
+    "ci": 0.03003798318129897,
+    "outright": 0.377,
+    "draws": 0
+   },
+   {
+    "winShare": 0.86,
+    "ci": 0.021506479023773277,
+    "outright": 0.86,
     "draws": 0
    }
   ]
  ],
  "refs": [
-  0.5,
-  0.7,
-  0.9,
-  1
+  0,
+  4,
+  6,
+  8,
+  10
  ],
  "abilities": [
   {
-   "name": "memory 0.8 (instead of perfect)",
-   "winShare": 0.972,
-   "ci": 0.010225115432111274,
-   "outright": 0.972,
+   "name": "Memory 6 (a memory survives a turn 80% of the time) instead of 10",
+   "winShare": 0.983,
+   "ci": 0.008012301641850489,
+   "outright": 0.983,
    "draws": 0
   },
   {
-   "name": "memory 0.8, and overconfident about it (overconfidence 10)",
-   "winShare": 0.976,
-   "ci": 0.009486076027525823,
-   "outright": 0.976,
+   "name": "Memory 6, and unaware of it — overconfident (Self-awareness 0)",
+   "winShare": 0.98,
+   "ci": 0.008677289899502035,
+   "outright": 0.98,
    "draws": 0
   },
   {
-   "name": "no feel for set values (valueSense 0)",
+   "name": "no Value sense (0)",
    "winShare": 0.507,
    "ci": 0.030987283869355186,
    "outright": 0.507,
    "draws": 0
   },
   {
-   "name": "no eye on the win (leadSense 0)",
+   "name": "no Lead sense (0)",
    "winShare": 0.481,
    "ci": 0.03096793797462143,
    "outright": 0.481,
    "draws": 0
   },
   {
-   "name": "no sense of the game ending (endSense 0, banks at 3 sets)",
-   "winShare": 0.556,
-   "ci": 0.03079533637419796,
-   "outright": 0.556,
+   "name": "no Endgame sense (0: it banks as soon as it holds 2 sets)",
+   "winShare": 0.522,
+   "ci": 0.03096030790544564,
+   "outright": 0.522,
    "draws": 0
   },
   {
-   "name": "does not track which sets are left (setsSense 0)",
+   "name": "no Set tracking (0)",
    "winShare": 0.511,
    "ci": 0.030982820504273006,
    "outright": 0.511,
    "draws": 0
   },
   {
-   "name": "always goes for the third gem (gemSense 0)",
+   "name": "no Gem sense (0: always goes for the third gem)",
    "winShare": 0.667,
    "ci": 0.029210642197664876,
    "outright": 0.667,
    "draws": 0
   },
   {
-   "name": "plays a random move 10% of the time (mistakes 0.1)",
+   "name": "Focus 8 (a random move 10% of the time)",
    "winShare": 0.572,
    "ci": 0.030667330265283937,
    "outright": 0.572,
    "draws": 0
   },
   {
-   "name": "plays a random move 25% of the time (mistakes 0.25)",
+   "name": "Focus 5 (a random move 25% of the time)",
    "winShare": 0.762,
    "ci": 0.026395022439846493,
    "outright": 0.762,
    "draws": 0
   },
   {
-   "name": "all of the weak settings (memory 0.8, overconfident, every skill 0, mistakes 0.2, banks at 3 sets)",
-   "winShare": 0.982,
-   "ci": 0.008240395718653325,
-   "outright": 0.982,
+   "name": "all of the Beginner's weak settings (Memory 4, every sense 0, Focus 6)",
+   "winShare": 0.996,
+   "ci": 0.003912152144280691,
+   "outright": 0.996,
    "draws": 0
   }
  ],
  "tutorial": [
   {
-   "winShare": 0.871,
-   "ci": 0.020775907546964106,
-   "outright": 0.871,
+   "winShare": 0.886,
+   "ci": 0.01969814626811366,
+   "outright": 0.886,
    "draws": 0
   },
   {
-   "winShare": 0.945,
-   "ci": 0.014130363052660754,
-   "outright": 0.945,
-   "draws": 0
-  },
-  {
-   "winShare": 0.986,
-   "ci": 0.007282131995507912,
-   "outright": 0.986,
+   "winShare": 0.954,
+   "ci": 0.012984019963016081,
+   "outright": 0.954,
    "draws": 0
   },
   {
@@ -982,71 +1007,74 @@
    "draws": 0
   },
   {
-   "winShare": 0.998,
-   "ci": 0.002769085336352061,
-   "outright": 0.998,
+   "winShare": 0.999,
+   "ci": 0.0019590197548774242,
+   "outright": 0.999,
+   "draws": 0
+  },
+  {
+   "winShare": 1,
+   "ci": 0,
+   "outright": 1,
    "draws": 0
   }
  ],
  "levelSettings": [
   {
    "name": "Beginner",
-   "memory": 0.7,
-   "overconfidence": 10,
+   "memory": 4,
+   "selfAwareness": 0,
    "valueSense": 0,
    "leadSense": 0,
    "endSense": 0,
    "setsSense": 0,
    "gemSense": 0,
-   "mistakes": 0.2,
-   "bankAt": 2
+   "focus": 6
   },
   {
    "name": "Novice",
-   "memory": 0.78,
-   "overconfidence": 8,
+   "memory": 5.6,
+   "selfAwareness": 3,
    "valueSense": 3,
-   "leadSense": 0,
-   "endSense": 0,
-   "setsSense": 0,
-   "gemSense": 0,
-   "mistakes": 0.12,
-   "bankAt": 3,
-   "endgameTiles": 4
+   "leadSense": 3,
+   "endSense": 3,
+   "setsSense": 3,
+   "gemSense": 3,
+   "focus": 7.2
   },
   {
    "name": "Normal",
-   "memory": 0.84,
-   "overconfidence": 5,
-   "valueSense": 7,
-   "leadSense": 3,
-   "endSense": 4,
-   "setsSense": 10,
-   "gemSense": 5,
-   "mistakes": 0.08
+   "memory": 6.8,
+   "selfAwareness": 5,
+   "valueSense": 6,
+   "leadSense": 6,
+   "endSense": 6,
+   "setsSense": 6,
+   "gemSense": 6,
+   "focus": 8.1
   },
   {
    "name": "Challenging",
-   "memory": 0.89,
-   "overconfidence": 3,
-   "valueSense": 10,
-   "leadSense": 6,
-   "endSense": 7,
-   "setsSense": 10,
-   "gemSense": 10,
-   "mistakes": 0.05
+   "memory": 7.7,
+   "selfAwareness": 7,
+   "valueSense": 8,
+   "leadSense": 8,
+   "endSense": 8,
+   "setsSense": 8,
+   "gemSense": 8,
+   "focus": 8.9
   },
   {
    "name": "Master",
-   "memory": 0.94,
-   "overconfidence": 1,
+   "memory": 8.5,
+   "selfAwareness": 9,
    "valueSense": 10,
    "leadSense": 10,
    "endSense": 10,
    "setsSense": 10,
    "gemSense": 10,
-   "mistakes": 0.02
+   "focus": 9.5
   }
  ],
- "seconds": 236.622
+ "seconds": 270.676
 }

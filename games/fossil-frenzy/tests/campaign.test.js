@@ -10,13 +10,13 @@ test('campaign: five difficulty levels, in order — Beginner, Novice, Normal, C
   assert.equal(new Set(GAME_DATA.campaign.levels.map(l => l.id)).size, 5);
 });
 
-test('campaign: each level remembers better than the last (and the abilities behind them only grow)', () => {
+test('campaign: every skill rises (or stays) from one level to the next — a smooth climb — and nobody is perfect', () => {
   const ai = GAME_DATA.campaign.levels.map(l => l.ai);
   for (let i = 1; i < ai.length; i++) {
     assert.ok(ai[i].memory > ai[i - 1].memory, `${NAMES[i]} should remember more than ${NAMES[i - 1]}`);
-    for (const k of ['valueSense', 'leadSense', 'endSense', 'setsSense', 'gemSense']) assert.ok(ai[i][k] >= ai[i - 1][k], `${NAMES[i]}: ${k}`);
+    for (const { id } of GAME_DATA.skills) assert.ok(ai[i][id] >= ai[i - 1][id], `${NAMES[i]}: ${id}`);
   }
-  assert.ok(ai.every(a => a.memory >= 0.6 && a.memory < 1), 'the opponents forget now and then, and are never perfect');
+  assert.ok(ai.every(a => a.memory < 10 && a.focus < 10), 'the opponents forget now and then, and slip now and then');
 });
 
 test('campaign: only the easiest level is open at the start', () => {
@@ -64,5 +64,5 @@ test('campaign: beating Master completes the campaign (there is nothing further 
 
 test('campaign: an opponent\'s settings come from the level data', () => {
   assert.equal(Campaign.botSpec(GAME_DATA.campaign.levels[2]), GAME_DATA.campaign.levels[2].ai);
-  assert.equal(Campaign.botSpec(GAME_DATA.campaign.levels[2]).memory, 0.84);
+  assert.equal(Campaign.botSpec(GAME_DATA.campaign.levels[2]).memory, 6.8);
 });

@@ -859,7 +859,7 @@ test('the opponent banks: a clear banner says what it banked, what it scored and
     await campaign(page, 0);
     await page.evaluate(() => {                                            // make the opponent hold a 7 and want to bank it
       const { ui } = window.FossilFrenzyUI;
-      ui.st.players[1].sets = [{ value: 7, gem: false, size: 2, ids: [] }]; ui.bots[1].profile.bankAt = 1; ui.st.rng = () => 0.01;
+      ui.st.players[1].sets = [{ value: 7, gem: false, size: 2, ids: [] }, { value: 3, gem: false, size: 2, ids: [] }]; ui.bots[1].profile.endSense = 0; ui.st.rng = () => 0.01;
     });
     for (let i = 0; i < 6 && !(await page.evaluate(() => window.FossilFrenzyUI.ui.botWaiting && window.FossilFrenzyUI.ui.st.turn.banked)); i++) {
       if (await page.evaluate(() => window.FossilFrenzyUI.ui.botWaiting)) { await page.tap(await firstFree(page)); await page.tap(await otherFree(page)); await page.tap('[data-act=end]'); }
@@ -897,7 +897,7 @@ test('the opponent\'s bank banner goes away on a tap anywhere: on the map it als
   try {
     for (const where of ['map', 'header']) {
       await campaign(page, 0);
-      await page.evaluate(() => { const { ui } = window.FossilFrenzyUI; ui.st.players[1].sets = [{ value: 7, gem: false, size: 2, ids: [] }]; ui.bots[1].profile.bankAt = 1; ui.st.rng = () => 0.01; });
+      await page.evaluate(() => { const { ui } = window.FossilFrenzyUI; ui.st.players[1].sets = [{ value: 7, gem: false, size: 2, ids: [] }, { value: 3, gem: false, size: 2, ids: [] }]; ui.bots[1].profile.endSense = 0; ui.st.rng = () => 0.01; });
       for (let i = 0; i < 8 && !(await page.evaluate(() => window.FossilFrenzyUI.ui.botWaiting && window.FossilFrenzyUI.ui.st.turn.banked)); i++) await takeATurn(page);
       assert.equal(await page.locator('.bankcard').count(), 1);
       if (where === 'map') {
@@ -1021,6 +1021,26 @@ test('settings: "Unlock everything" warns first (recommended: play the campaign)
     await page.tap('[data-act=home]'); await page.tap('[data-act=settings]'); await page.tap('[data-act=relock]');
     await page.tap('[data-act=closesettings]'); await page.tap('[data-act=mode][data-v=campaign]');
     assert.equal(await page.locator('.lvl.locked').count(), 4);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('a visible tell: when an opponent slips (taps the wrong spot, or plays a random move) it mutters something on its chip until you act', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await campaign(page, 0);                                               // Beginner slips a lot
+    let said = '';
+    for (let i = 0; i < 60 && !said; i++) {
+      if (await page.locator('.bankcard').count()) await page.tap('.bankcard');
+      await takeATurn(page);
+      said = await page.evaluate(() => (window.FossilFrenzyUI.ui.botWaiting ? window.FossilFrenzyUI.ui.say : ''));
+    }
+    assert.ok(said, 'saw the opponent slip');
+    assert.ok(['Hm…', 'Oops!', 'Wait — no.'].includes(said));
+    assert.equal(await page.locator('.chip.cur .say').innerText(), said);
+    assert.equal(await page.locator('.chip:not(.cur) .say').count(), 0, 'only the one that slipped');
+    await page.tap(await firstFree(page));                                 // my first tap starts my turn: the remark goes
+    assert.equal(await page.locator('.say').count(), 0);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

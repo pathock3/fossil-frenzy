@@ -55,15 +55,15 @@ const aged = (profile, turns) => {
 };
 
 test('overconfidence: a bot with a fading memory that is realistic about it explores rather than trust an old memory; an overconfident one goes for the match', () => {
-  const faded = { ...EXPERT, memory: 0.8 };
-  const calm = aged({ ...faded, overconfidence: 0 }, 8).weigh(), rash = aged({ ...faded, overconfidence: 10 }, 8).weigh();
+  const faded = { ...EXPERT, memory: 6 };                                    // (memory 6 = a memory that survives a turn 80% of the time)
+  const calm = aged({ ...faded, selfAwareness: 10 }, 8).weigh(), rash = aged({ ...faded, selfAwareness: 0 }, 8).weigh();
   assert.equal(best(calm).kind, 'explore', 'a pair it saw 8 turns ago is mostly a guess: it looks for something surer');
   assert.equal(best(rash).kind, 'match', 'the overconfident bot is sure it remembers');
-  assert.equal(best(aged({ ...faded, overconfidence: 0 }, 0).weigh()).kind, 'match', 'a fresh memory is trusted by everyone');
+  assert.equal(best(aged({ ...faded, selfAwareness: 10 }, 0).weigh()).kind, 'match', 'a fresh memory is trusted by everyone');
 });
 
 test('overconfidence: going for a match it cannot reliably make, it often taps the wrong spot', () => {
-  const p = aged({ ...EXPERT, memory: 0.8, overconfidence: 10 }, 8);
+  const p = aged({ ...EXPERT, memory: 6, selfAwareness: 0 }, 8);
   let right = 0, N = 1500;
   for (let i = 0; i < N; i++) { const a = p.decide(); if (a.type === 'peek' && a.tid === 20) right++; }
   assert.ok(right / N < 0.3, `right ${right / N}`);
@@ -87,16 +87,17 @@ test('gems: a bot with no feel for them always goes for the third gem; the perfe
   assert.equal(turn(EXPERT), 'endTurn', 'the perfect AI keeps the two positions to itself');
 });
 
-test('mistakes: a bot with a mistake rate plays a random move that often instead of the best one', () => {
-  const rate = m => {
-    const p = position({ held: [[9], []], profile: { ...EXPERT, mistakes: m } });
+test('focus: a bot that is not fully focused plays a random move now and then instead of the best one', () => {
+  const rate = focus => {
+    const p = position({ held: [[9], []], profile: { ...EXPERT, focus } });
     let banked = 0, N = 2000;
     for (let i = 0; i < N; i++) if (p.decide().type === 'bank') banked++;
     return banked / N;
   };
-  assert.equal(rate(0), 1, 'the best move here is to bank');
-  assert.ok(Math.abs(rate(0.3) - 0.7) < 0.04);
-  assert.ok(rate(1) < 0.01, 'a bot that only makes mistakes never banks on purpose');
+  const slip = GAME_DATA.ai.tuning.slipAtZero;
+  assert.equal(rate(10), 1, 'fully focused: it always plays the best move (here, bank)');
+  assert.ok(Math.abs(rate(4) - (1 - slip * 0.6)) < 0.04, 'focus 4: it slips ' + (slip * 0.6 * 100) + '% of the time');
+  assert.ok(Math.abs(rate(0) - (1 - slip)) < 0.04, 'focus 0: it slips as often as it ever does');
 });
 
 // ---------------------------------------------------------------- what the easier opponents lack
@@ -119,15 +120,10 @@ test('easier AI: not tracking the sets means it guesses what is left from the nu
 });
 
 test('levels: the five opponents\' abilities never go down from one level to the next', () => {
-  for (const key of ['memory', 'valueSense', 'leadSense', 'endSense', 'setsSense', 'gemSense']) {
-    for (let i = 1; i < LEVELS.length; i++) assert.ok(LEVELS[i][key] >= LEVELS[i - 1][key], `${key} drops at level ${i + 1}`);
+  for (const { id } of GAME_DATA.skills) {
+    for (let i = 1; i < LEVELS.length; i++) assert.ok(LEVELS[i][id] >= LEVELS[i - 1][id], `${id} drops at level ${i + 1}`);
   }
-  for (const key of ['overconfidence', 'mistakes']) {
-    for (let i = 1; i < LEVELS.length; i++) assert.ok(LEVELS[i][key] <= LEVELS[i - 1][key], `${key} rises at level ${i + 1}`);
-  }
-  assert.deepEqual(Object.keys(EXPERT).sort(), ['endSense', 'gemSense', 'leadSense', 'memory', 'mistakes', 'overconfidence', 'setsSense', 'valueSense']);
-  for (const k of ['valueSense', 'leadSense', 'endSense', 'setsSense', 'gemSense']) assert.equal(EXPERT[k], 10, k);
-  assert.deepEqual([EXPERT.memory, EXPERT.overconfidence, EXPERT.mistakes], [1, 0, 0], 'the perfect AI never forgets, is never overconfident, never slips');
+  assert.ok(LEVELS.every(l => l.memory < 10 && l.focus < 10), 'no opponent in the campaign is perfect');
 });
 
 // ---------------------------------------------------------------- strength follows ability (fixed seeds: deterministic)
@@ -150,4 +146,25 @@ test('strength: the perfect AI beats the same AI with worse memory, and beats on
 test('strength: each campaign level beats the one before it, and Master beats Beginner every time', () => {
   for (let i = 1; i < LEVELS.length; i++) assert.ok(share(LEVELS[i], LEVELS[i - 1]) > 0.55, `${GAME_DATA.campaign.levels[i].name} should beat ${GAME_DATA.campaign.levels[i - 1].name}`);
   assert.ok(share(LEVELS[4], LEVELS[0]) > 0.9);
+});
+
+test('skills: every skill has a name and a description, every profile scores every skill 0-10, and the perfect AI scores 10 on all of them', () => {
+  const ids = GAME_DATA.skills.map(k => k.id);
+  assert.deepEqual(ids.slice().sort(), ['endSense', 'focus', 'gemSense', 'leadSense', 'memory', 'selfAwareness', 'setsSense', 'valueSense']);
+  for (const k of GAME_DATA.skills) { assert.ok(k.name && k.name.length > 2, k.id); assert.ok(k.blurb && k.blurb.length > 20, k.id); }
+  for (const [name, prof] of [['expert', EXPERT], ...GAME_DATA.campaign.levels.map(l => [l.name, l.ai])]) {
+    assert.deepEqual(Object.keys(prof).sort(), ids.slice().sort(), `${name} scores exactly the registered skills`);
+    for (const id of ids) assert.ok(prof[id] >= 0 && prof[id] <= 10, `${name}.${id} = ${prof[id]}`);
+  }
+  for (const id of ids) assert.equal(EXPERT[id], 10, id);
+});
+
+test('skills: when memory slips, half the time it is a near miss — the fossil next to the right one', () => {
+  const p = position({ known: [{ tid: 15, value: 9, pub: true }, { tid: 16, value: 9, pub: true }], profile: { ...EXPERT, memory: 3, selfAwareness: 0 } });
+  for (let i = 0; i < 12; i++) p.bot.onEvent({ type: 'turn', actor: 1 });
+  const cell = tid => p.s.tokens[tid].cell, cells = p.s.cells, d = (a, b) => { const A = cells[cell(a)], B = cells[cell(b)], dq = A.q - B.q, dr = A.r - B.r; return Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr)); };
+  let slips = 0, near = 0;
+  for (let i = 0; i < 4000; i++) { const a = p.decide(); if (a.type === 'peek' && a.tid !== 15 && a.tid !== 16) { slips++; if (d(a.tid, 15) === 1 || d(a.tid, 16) === 1) near++; } }
+  assert.ok(slips > 1500);
+  assert.ok(near / slips > 0.45, `near misses ${near}/${slips}`);   // far more than the ~20% a uniformly random tap would give
 });
