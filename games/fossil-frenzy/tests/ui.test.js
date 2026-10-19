@@ -257,7 +257,7 @@ test('Campaign: winning outright unlocks the next level, remembers it, and offer
     await page.tap('[data-act=home]'); await page.tap('[data-act=mode][data-v=campaign]');
     assert.equal(await page.locator('.lvl.locked').count(), 3);
     assert.match(await page.locator('.lvl').nth(0).innerText(), /Beaten/);
-    assert.match(await page.locator('.lvl').nth(1).innerText(), /Ready/);
+    assert.doesNotMatch(await page.locator('.lvl').nth(1).innerText(), /Ready|Beaten|🔒/, 'an open level shows nothing on the right');
     await page.reload();                                                   // progress survives a reload
     await page.tap('[data-act=mode][data-v=campaign]');
     assert.equal(await page.locator('.lvl.locked').count(), 3);
@@ -752,6 +752,7 @@ test('home: a few tiles on the board flip over by themselves, on a loop (no demo
   try {
     assert.equal(await page.locator('.hero-board .h-flipper').count(), 7, 'seven tiles take turns flipping');
     assert.equal(await page.locator('.hero-board .h-front').count(), 7);
+    assert.equal(await page.locator('.hero-board .ring.peekring').count(), 0, 'no dotted peek ring on the title board');
     const anim = await page.evaluate(() => { const el = document.querySelector('.hero-board .h-flipper'); return getComputedStyle(el).animationName; });
     assert.equal(anim, 'hback', 'the flip is a looping CSS animation');
     assert.equal(await page.evaluate(() => typeof window.FossilFrenzyUI.demo), 'undefined', 'there is no scripted demo game any more');

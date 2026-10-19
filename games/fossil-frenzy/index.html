@@ -132,9 +132,7 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .h-front { animation: hfront 7s ease-in-out infinite; animation-delay: var(--d); }
 @keyframes hback { 0%, 52% { transform: scaleX(1); } 56%, 78% { transform: scaleX(0); } 82%, 100% { transform: scaleX(1); } }
 @keyframes hfront { 0%, 52% { transform: scaleX(0); } 56%, 78% { transform: scaleX(1); } 82%, 100% { transform: scaleX(0); } }
-.h-peek { animation: hpulse 2.4s ease-in-out infinite; }
-@keyframes hpulse { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .h-cell, .h-flipper, .h-front, .h-peek { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .h-cell, .h-flipper, .h-front { animation: none; } }
 .hero-menu { position: relative; display: flex; flex-direction: column; align-items: stretch; min-height: 0; }
 .logo { margin: 0 0 6px; font-size: clamp(40px, min(11vw, 10.5vh), 96px); line-height: .9; font-weight: 900; letter-spacing: -2px; text-align: left;
   background: linear-gradient(180deg, #ffe3a0 10%, #f5a524 55%, #c8650f 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 0 rgba(0,0,0,.4)); animation: logoin .7s ease-out .2s backwards; }
@@ -148,8 +146,9 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .mode.primary { background: linear-gradient(180deg, #f7b13a, #d9791a); border-color: #ffd37e; color: #2b1b10; box-shadow: 0 6px 0 #8a4a0e, 0 14px 24px rgba(0,0,0,.4); }
 .mode.primary span { color: #4a2a10; }
 .mode.primary:active { box-shadow: 0 2px 0 #8a4a0e; }
-.mode .pips { display: flex; gap: 6px; margin-top: 4px; }
-.mode .pips i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(43,27,16,.55); }
+.mode.row { flex-direction: row; align-items: center; justify-content: space-between; gap: 16px; }
+.mode .pips { display: flex; gap: 7px; }
+.mode .pips i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(43,27,16,.55); }
 .mode .pips i.on { background: #2b1b10; border-color: #2b1b10; }
 @media (max-height: 520px) { .hero-menu .sub, .hero-menu .mode span:not(.pips) { display: none; } .hero-menu .ver { display: none; } }
 @media (prefers-reduced-motion: reduce) { .h-cell, .logo { animation: none; } .h-tile, .h-back, .h-front { transition: none; } }
@@ -176,7 +175,7 @@ h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spac
 .mode:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.35); }
 .mode b { font-size: 22px; }
 .mode span { color: var(--dim); font-size: 15px; }
-.levels { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.levels { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; max-width: 440px; }   /* narrow, so a level's name and its state sit close together */
 .lvl { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 18px; text-align: left; border-radius: 14px; background: var(--panel); border: 2px solid var(--line); box-shadow: 0 4px 0 rgba(0,0,0,.35); }
 .lvl b { font-size: 21px; }
 .lvl .n { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #2b1b10; font-weight: 800; display: grid; place-items: center; flex: none; }
@@ -1513,7 +1512,6 @@ const Campaign = (() => {
       out += `<g class="h-cell" style="--i:${k}"><polygon class="bg" points="${hexPts(x, y, S)}"/>
         <g class="h-back${fl ? ' h-flipper' : ''}"${fl ? ` style="--d:-${flippers.get(k)}s"` : ''}><polygon class="face" points="${hexPts(x, y, S * 0.8)}"/><circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.3}"/><circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.13}"/></g>`;
       if (fl) out += `<g class="h-front" style="--d:-${flippers.get(k)}s"><polygon class="face up" points="${hexPts(x, y, S * 0.8)}"/>${v.gem ? `<text class="gem" x="${x}" y="${y + 1}">💎</text>` : `<text class="num" x="${x}" y="${y + 1}">${v.v}</text>`}<polygon class="ring" style="stroke:#f5a524" points="${hexPts(x, y, S * 0.9)}"/></g>`;
-      if (k === 21) out += `<polygon class="ring peekring h-peek" style="stroke:#ff5a5f" points="${hexPts(x, y, S * 0.9)}"/>`;
       out += '</g>';
     });
     const pad = 6;
@@ -1528,8 +1526,8 @@ const Campaign = (() => {
       <div class="hero-menu">
         ${libraryLink()}
         <h1 class="logo">Fossil<br>Frenzy</h1>
-        <p class="sub">Peek. Flip. Match. Bank. A memory game of fossils and rivals.</p>
-        <button class="mode primary" data-act="mode" data-v="campaign"><b>Campaign</b><span>${LV.length} opponents, easiest to hardest</span><span class="pips" aria-label="${beaten} of ${LV.length} beaten">${pips}</span></button>
+        <p class="sub">Peek. Flip. Match. Bank.</p>
+        <button class="mode primary row" data-act="mode" data-v="campaign"><b>Campaign</b><span class="pips" role="img" aria-label="${beaten} of ${LV.length} opponents beaten">${pips}</span></button>
         <button class="mode" data-act="mode" data-v="pass"><b>Pass &amp; Play</b><span>${D.players.min}–${D.players.max} people, one device</span></button>
         <div class="ghostrow"><button class="ghost" data-act="help">How to play</button><button class="ghost" data-act="settings">Settings</button></div>
         ${ui.notice ? `<p class="dim" style="margin:8px 0 0">${esc(ui.notice)}</p>` : ''}<p class="dim ver">Version ${esc(BUILD)}</p>
@@ -1554,7 +1552,7 @@ const Campaign = (() => {
     const rows = LV.map((l, i) => {
       const open = unlocked(i), done = Campaign.isBeaten(i, ui.beaten);
       return `<button class="lvl${open ? '' : ' locked'}${done ? ' done' : ''}" data-act="level" data-i="${i}"${open ? '' : ' aria-disabled="true"'}>
-        <span class="n">${i + 1}</span><b>${esc(l.name)}</b><span class="state">${open ? (done ? '✓ Beaten' : 'Ready') : '🔒'}</span></button>`;
+        <span class="n">${i + 1}</span><b>${esc(l.name)}</b><span class="state">${open ? (done ? '✓ Beaten' : '') : '🔒'}</span></button>`;
     }).join('');
     const all = LV.every((l, i) => Campaign.isBeaten(i, ui.beaten));
     return `<div class="screen"><div class="sheet">

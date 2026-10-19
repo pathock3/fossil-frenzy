@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **Menus:** the title board no longer has the red dotted ring; the title line is just "Peek. Flip. Match. Bank."; the Campaign button drops its subtitle and shows only the progress dots; the Campaign level list is narrower so each name sits next to its "Beaten"/lock, and an open level shows nothing on the right (no "Ready").
 - **No bonus die:** banking now scores the set once — the d6 chain (+1 for every 6) is gone from the rules, the AI and the screens. Saved games from before this change are cleared.
 - **Quieter table:** the colour key (concealed / public) above the board is gone. **Menu:** "Back to the start" is now "Main Menu", and "Resume" is removed — tap anywhere outside the menu to close it.
 - **Home screen:** back to the original picture — the real board with a few tiles flipping over by themselves on a loop. The scripted demo game (and its small scores) is gone. The home screen is still one screen with no scrolling.
