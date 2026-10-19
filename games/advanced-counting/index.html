@@ -300,7 +300,7 @@ const GAME_DATA = {
       'Flip turns every card face down. A correct tap leaves the card face up. A wrong tap counts one mistake and deals the identical layout face up again; Flip starts the next try from 1. Only finishing a level deals a new layout.',
       'The clock starts when a level is dealt (your tap on Start or OK) and stops on the last correct tap, so it includes studying and every retry. It is not shown during play, and it never runs while a results sheet is up.',
       'The climb: Start begins at A. After each level the results wait for your OK; the next level’s clock starts on that tap. After M, OK returns to the main menu. Menu → Main Menu leaves the round without asking; finished levels are already saved.',
-      'Practice (tap a level in High scores): cards can be turned over freely while you look; Start begins a try and starts the clock. Practice never changes your records and never shows NEW RECORD!.',
+      'Studying: before you press Flip (or Start), tap any card to turn it face down or face up again — turn some down and test yourself. This works in every round. Practice (tap a level in High scores): the same, and Start begins a try and starts the clock. Practice never changes your records and never shows NEW RECORD!.',
       'Records, per profile: highest level completed in the climb, and for each level the best time and the fewest mistakes (kept separately). NEW RECORD! under LEVEL when you complete a level above your previous highest; under MISTAKES or TIME when you beat your earlier best for that level. The first time you complete a level only sets the mark to beat. Times are kept to a tenth of a second and a tie is not a record.',
       'Profiles: you start as Player 1. A new profile is named Player N (the lowest free number). Rename profile… keeps your records; a blank name is refused. Up to 6 profiles; names up to 16 letters.',
       'High scores lists all 13 levels with — for levels not yet completed, and a star on your highest level.',
@@ -410,8 +410,7 @@ const Engine = (() => {
   function tapCard(r, pos, now) {
     if (r.phase === 'done' || !Number.isInteger(pos) || pos < 0 || pos >= r.layout.length) return { type: 'ignored' };
     if (r.phase === 'study') {
-      if (!r.practice) return { type: 'ignored' };
-      r.faceUp[pos] = !r.faceUp[pos];                           // practice: free card flips while you look
+      r.faceUp[pos] = !r.faceUp[pos];                           // free card flips while you study (every round, practice or climb): turn cards down and up to test yourself
       return { type: 'toggle', pos, up: r.faceUp[pos] };
     }
     if (r.faceUp[pos]) return { type: 'ignored' };              // already turned over correctly

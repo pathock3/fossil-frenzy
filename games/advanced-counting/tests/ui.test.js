@@ -176,6 +176,26 @@ test('play: a complete level A by taps, then OK deals level B (2x3), whose clock
   assert.deepEqual(t.errors, []); await t.close();
 });
 
+test('play: before Flip, tapping any card turns it face down or up again (free flips in every round) — so you can test yourself, in order', SKIP, async () => {
+  const t = await open({ viewport: IPAD_L });
+  const { page } = t;
+  try {
+    await page.tap('[data-act=start]');
+    const lay = (await S(page)).round.layout;
+    const up = n => page.evaluate(p => window.AdvancedCountingUI.ui.round.faceUp[p], lay.indexOf(n));
+    for (let n = 1; n <= lay.length; n++) await tapNumber(page, lay, n);        // turn 1, 2, 3, 4 face down by tapping them
+    for (let n = 1; n <= lay.length; n++) assert.equal(await up(n), false, 'card ' + n + ' is face down');
+    for (let n = 1; n <= lay.length; n++) { await tapNumber(page, lay, n); assert.equal(await up(n), true, 'tapping ' + n + ' again turns it face up'); }
+    const s = await S(page);
+    assert.equal(s.round.phase, 'study'); assert.equal(s.round.mistakes, 0, 'testing yourself costs nothing');
+    await page.tap('[data-act=flip]');                                           // Flip still starts the real count
+    assert.equal((await S(page)).round.phase, 'recall');
+    await tapAll(page, lay, 1, lay.length);
+    assert.ok((await S(page)).results, 'and the level completes as usual');
+    assert.deepEqual(t.errors, []);
+  } finally { await t.close(); }
+});
+
 test('play: a wrong tap re-deals the identical layout face up, counts a mistake, and only completion deals a new layout', SKIP, async () => {
   const t = await open();
   await t.page.tap('[data-act=start]'); await t.page.tap('[data-act=flip]');

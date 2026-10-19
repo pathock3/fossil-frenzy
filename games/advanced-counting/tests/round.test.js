@@ -78,7 +78,9 @@ test('retry rule: a wrong tap counts a mistake and re-deals the IDENTICAL layout
   assert.deepEqual(r.layout, layout, 'same cards in the same places');
   assert.ok(r.faceUp.every(Boolean), 'every card, including those already found, is face up again');
   assert.equal(r.phase, 'study'); assert.equal(r.next, 1); assert.equal(E.primaryLabel(r), 'Flip');
-  assert.equal(E.tapCard(r, 0, 6).type, 'ignored', 'cards cannot be tapped while studying');
+  assert.deepEqual(E.tapCard(r, 0, 6), { type: 'toggle', pos: 0, up: false }, 'while studying, a tap turns a card down (free flips, every round)');
+  assert.deepEqual(E.tapCard(r, 0, 6), { type: 'toggle', pos: 0, up: true });
+  assert.equal(r.mistakes, 1, 'free flips never count as mistakes'); assert.equal(r.phase, 'study');
   E.flip(r, 6);
   assert.ok(r.faceUp.every(f => !f), 'Flip starts the next try with everything face down');
   assert.equal(E.tapCard(r, posOf(r, 2), 7).type, 'wrong', 'the count restarted at 1: 2 is wrong now');
@@ -103,9 +105,16 @@ test('round: tapping a card that is already face up does nothing (not a mistake)
   assert.equal(E.tapCard(r, 99, 2).type, 'ignored'); assert.equal(E.tapCard(r, -1, 2).type, 'ignored');
 });
 
-test('round: in the climb, cards cannot be flipped freely while studying', () => {
+test('round: in the climb too, cards can be flipped freely while studying — then Flip turns everything down', () => {
   const r = round();
-  assert.equal(E.tapCard(r, 0, 1).type, 'ignored'); assert.ok(r.faceUp.every(Boolean));
+  assert.deepEqual(E.tapCard(r, 0, 1), { type: 'toggle', pos: 0, up: false });
+  assert.deepEqual(E.tapCard(r, 1, 1), { type: 'toggle', pos: 1, up: false });
+  assert.equal(r.faceUp[0] || r.faceUp[1], false);
+  assert.equal(r.mistakes, 0, 'testing yourself before Flip costs nothing'); assert.equal(r.phase, 'study');
+  assert.equal(E.isRunning(r), true, 'the climb clock keeps running while you study');
+  E.flip(r, 2);
+  assert.ok(r.faceUp.every(f => !f), 'Flip turns every card face down, including those already down');
+  assert.equal(r.phase, 'recall'); assert.equal(r.next, 1);
 });
 
 test('time: a climb round counts from the moment it is dealt, through study and every retry, to the last correct tap', () => {
