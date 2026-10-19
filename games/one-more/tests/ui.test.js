@@ -113,6 +113,47 @@ test('the table: a two-player game shows the target next to each score; a bigger
   } finally { await close(); }
 });
 
+test('thumb zone: the draw pile (the most-tapped thing) sits in the bottom-right corner at every size; Settings can mirror it to the left', SKIP, async () => {
+  for (const [name, viewport] of Object.entries(SIZES)) {
+    const { page, errors, close } = await open({ viewport });
+    try {
+      await setup(page, { n: 2, kinds: ['human', 'human'] });
+      const rect = sel => page.locator(sel).first().boundingBox();
+      const d = await rect('.zdraw'), b = await rect('.zboom'), t = await rect('.ztable');
+      const cx = d.x + d.width / 2, cy = d.y + d.height / 2;
+      assert.ok(cx > viewport.width * 0.6, `${name}: the draw pile is on the right (${Math.round(cx)} of ${viewport.width})`);
+      assert.ok(cy > viewport.height * 0.6, `${name}: and low on the screen (${Math.round(cy)} of ${viewport.height})`);
+      assert.ok(d.x + d.width <= viewport.width && d.y + d.height <= viewport.height, name + ': inside the screen');
+      assert.ok(b.x + b.width / 2 < cx || b.y + b.height / 2 < cy, name + ': the boom pile, which is only looked at, is out of the corner');
+      assert.ok(Math.max(d.width, d.height) >= 70, name + ': a pile big enough for a thumb');
+      // tapping near the pile still draws (generous target)
+      const nearTap = d.y + d.height - 4 < viewport.height ? [d.x + d.width / 2, Math.min(viewport.height - 2, d.y + d.height + 4)] : [d.x + d.width / 2, d.y + d.height - 2];
+      await page.touchscreen.tap(...nearTap);
+      assert.equal(await page.locator('.zdraw .zcount').innerText(), '43 cards', name + ': a tap just beside the pile still digs');
+      // left-handed: mirrored
+      await page.evaluate(() => { window.OneMoreUI.ui.hand = 'left'; window.OneMoreUI.render(); });
+      const l = await rect('.zdraw');
+      assert.ok(l.x + l.width / 2 < viewport.width * 0.4 && l.y + l.height / 2 > viewport.height * 0.6, `${name}: left-handed puts it bottom-left`);
+      assert.deepEqual(errorsOf(errors), [], name);
+    } finally { await close(); }
+  }
+});
+
+test('settings: "Draw pile" Right hand / Left hand is remembered on the device', SKIP, async () => {
+  const { page, errors, close } = await open();
+  try {
+    await page.tap('[data-act=settings]');
+    assert.equal(await page.locator('[data-act=hand].on').innerText(), 'Right hand');
+    await page.tap('[data-act=hand][data-v=left]');
+    assert.equal(await page.locator('[data-act=hand].on').innerText(), 'Left hand');
+    assert.equal(await page.evaluate(() => localStorage.getItem('tabletop-library-one-more-hand')), 'left');
+    await page.reload();
+    await page.tap('[data-act=settings]');
+    assert.equal(await page.locator('[data-act=hand].on').innerText(), 'Left hand');
+    assert.deepEqual(errorsOf(errors), []);
+  } finally { await close(); }
+});
+
 test('dig: tapping the draw pile turns a card onto the table; the pile shrinks and its edge gets thinner', SKIP, async () => {
   const { page, errors, close } = await open();
   try {

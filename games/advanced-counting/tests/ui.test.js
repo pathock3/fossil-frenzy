@@ -220,6 +220,16 @@ test('menu: Start begins at level A; Continue (shown once a level is beaten) pic
   } finally { await t.close(); }
 });
 
+test('cards show the number and nothing else — no corner numbers — in the biggest size possible', SKIP, async () => {
+  const t = await open({ viewport: PHONE });
+  try {
+    await t.page.tap('[data-act=start]');
+    assert.equal(await t.page.locator('.card .face').first().evaluate(f => f.children.length), 1, 'a face holds just the number');
+    assert.equal(await t.page.locator('.card .ix').count(), 0, 'no corner indices');
+    assert.deepEqual(t.errors, []);
+  } finally { await t.close(); }
+});
+
 test('play: a wrong tap re-deals the identical layout face up, counts a mistake, and only completion deals a new layout', SKIP, async () => {
   const t = await open();
   await t.page.tap('[data-act=start]'); await t.page.tap('[data-act=flip]');

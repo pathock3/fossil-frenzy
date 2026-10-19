@@ -108,10 +108,6 @@ input { font: inherit; }
 .face::before { content: ""; position: absolute; inset: calc(var(--cw) * .05); border: 1px solid rgba(120,98,48,.32); border-radius: calc(var(--rad) * .6); pointer-events: none; }
 .num { font-family: var(--serif); font-weight: 800; color: var(--ink); font-size: calc(var(--cw) * .66); line-height: 1; letter-spacing: -.02em; text-shadow: 0 1px 0 rgba(255,255,255,.7); font-variant-numeric: lining-nums; transform: translateY(calc(var(--cw) * -.02)); }
 .n2 .num { font-size: calc(var(--cw) * .52); letter-spacing: -.05em; }
-.ix { position: absolute; font-style: normal; font-family: var(--serif); font-weight: 700; font-size: calc(var(--cw) * .15); color: #5a4a8a; line-height: 1; display: none; }
-.board.big .ix, .fan.big .ix { display: block; }
-.ix.t { top: calc(var(--cw) * .09); left: calc(var(--cw) * .11); }
-.ix.b { bottom: calc(var(--cw) * .09); right: calc(var(--cw) * .11); transform: rotate(180deg); }
 .back { transform: rotateY(180deg); background: #f3ead0; border: 1px solid #c9bb90; }
 .back::before { content: ""; position: absolute; inset: calc(var(--cw) * .055); border-radius: calc(var(--rad) * .6); border: 1px solid rgba(232,196,106,.9);
   background-color: var(--indigo);
@@ -727,7 +723,7 @@ const Sound = (() => {
   // ---------------- the board ----------------
   let boardEl = null;
   const cardEls = () => (boardEl ? Array.from(boardEl.children) : []);
-  const cardInner = n => `<div class="lift"><div class="inner"><div class="face"><i class="ix t">${n}</i><b class="num">${n}</b><i class="ix b">${n}</i></div><div class="back"></div></div></div>`;
+  const cardInner = n => `<div class="lift"><div class="inner"><div class="face"><b class="num">${n}</b></div><div class="back"></div></div></div>`;
   const cardHTML = (n, i) => `<div class="card${n > 9 ? ' n2' : ''}" data-pos="${i}">${cardInner(n)}</div>`;
   function fitHero() {
     const hero = root.querySelector('.hero'), fan = root.querySelector('.fan');

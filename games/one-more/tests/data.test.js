@@ -67,7 +67,7 @@ test('the page is locked for touch: no scrolling, no rubber-banding, no zoom, no
 test('storage keys are namespaced under the Tabletop Library and this game', () => {
   const ui = scriptText('ui');
   const keys = [...ui.matchAll(/NS \+ '([\w-]+)'/g)].map(m => m[1]).sort();
-  assert.deepEqual(keys, ['games-finished', 'hints', 'save', 'setup', 'sound']);
+  assert.deepEqual(keys, ['games-finished', 'hand', 'hints', 'save', 'setup', 'sound']);
   assert.match(ui, /const NS = 'tabletop-library-one-more-'/);
 });
 
