@@ -72,14 +72,6 @@ test('bank: takes the whole turn — and is not available after a peek (a peek m
   Engine.peek(u, 0); Engine.flipOther(u, 1);
   assert.equal(Engine.status(u).canEnd, true, 'but yes once you have flipped');
 });
-  me(s).sets = held(2);
-  Engine.peek(s, 0);
-  assert.equal(Engine.canBank(s), true);
-  Engine.bank(s, 0);
-  assert.equal(s.turn.peeked, null);
-  assert.equal(s.phase, 'resolved');
-  assert.throws(() => Engine.peek(s, 0));
-});
 
 test('bank: the banked sets are remembered for the end screen', () => {
   const s = game({ rolls: [6, 5, 3] });
