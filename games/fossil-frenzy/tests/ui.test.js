@@ -367,10 +367,11 @@ test('gems: if the flipped fossil is not a gem, tapping another fossil just ends
   try {
     await passAndPlay(page, 2);
     await rig(page, { 0: 12, 1: 5, 2: 12 });
+    const first = await page.evaluate(() => window.FossilFrenzyUI.ui.st.current);
     await page.tap(await cellOf(page, 0)); await page.tap(await cellOf(page, 1));
     await page.tap(await cellOf(page, 2));
     const r = await page.evaluate(() => { const st = window.FossilFrenzyUI.ui.st; return [st.current, st.turnNo, st.tokens.filter(t => t.matched).length]; });
-    assert.deepEqual(r, [1, 1, 0], 'the turn passed to the other player; the third fossil was not flipped');
+    assert.deepEqual(r, [1 - first, 1, 0], 'the turn passed to the other player; the third fossil was not flipped');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -975,7 +976,6 @@ test('sound: a peek, a flip and its outcome, and a bank each make their sound �
     await page.tap('[data-act=set]');
     assert.equal((await played()).slice(b0)[0], 'bank');
     // Settings (opened from the ☰ menu): Sound On -> Off, remembered
-    await page.tap('[data-act=end]').catch(() => {});
     await openSettings(page);
     assert.equal(await page.locator('.settings [data-act=sound].on').innerText(), 'On');
     await page.tap('[data-act=sound][data-v=off]');
@@ -1057,6 +1057,21 @@ test('a gem always shows what it is worth: on its fossil, on the set you hold, a
     await page.tap('[data-act=menu]'); await page.tap('[data-act=settings]');
     const heads = await page.locator('.settings h3').allInnerTexts();
     assert.deepEqual(heads.slice(0, 2), ['Sound effects', 'Prompts above the board'], 'Sound effects come first in Settings');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('how to play: four little pictures with a line each, short, and the fine print folded away', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await page.tap('[data-act=help]');
+    assert.equal(await page.locator('.help .hcard svg').count(), 4, 'peek, flip, match, bank — each illustrated');
+    const words = await page.evaluate(() => { const c = document.querySelector('.help .sheet').cloneNode(true); c.querySelector('details').remove(); return c.innerText.split(/\s+/).filter(Boolean).length; });
+    assert.ok(words < 110, 'short: ' + words + ' words');
+    assert.equal(await page.locator('.help details').evaluate(d => d.open), false, 'the judgment calls are folded away');
+    await page.tap('.help summary');
+    assert.equal(await page.locator('.help details').evaluate(d => d.open), true, 'and open when asked');
+    assert.ok((await page.locator('.help details li').count()) >= 8, 'the judgment calls are all still there');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

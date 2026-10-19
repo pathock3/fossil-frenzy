@@ -23,18 +23,17 @@ main { max-width: 980px; margin: 0 auto; }
 header { text-align: center; margin: 14px 0 26px; }
 h1 { margin: 0; font-size: clamp(34px, 7vw, 54px); letter-spacing: .5px; }
 .tag { margin: 6px 0 0; color: var(--dim); font-size: clamp(15px, 2.4vw, 18px); }
-/* the shelf: each game is a box you pick up and open */
-.shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; list-style: none; margin: 0; padding: 0; }
-.box { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 230px; padding: 0 0 16px; border-radius: 16px; text-decoration: none; color: inherit; background: var(--panel);
-  border: 2px solid var(--line); box-shadow: 0 6px 0 rgba(0,0,0,.35), 0 10px 22px rgba(0,0,0,.35); overflow: hidden; transition: transform .12s ease, box-shadow .12s ease; touch-action: manipulation; }
-.box:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,.35), 0 4px 10px rgba(0,0,0,.35); }
-.lid { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; background: var(--accent-c); color: #1b130e; }
-.lid .icon { font-size: 54px; line-height: 1; }
-.lid .played { font-size: 12px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; background: rgba(0,0,0,.22); color: #fff; border-radius: 99px; padding: 3px 10px; }
-.box h2 { margin: 6px 18px 0; font-size: 24px; }
-.box p { margin: 0 18px; color: var(--dim); font-size: 15px; line-height: 1.4; }
-.box .meta { margin: auto 18px 0; display: flex; gap: 8px; flex-wrap: wrap; }
-.box .meta span { font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 99px; background: #32231a; color: var(--text); }
+/* the shelf: each game is a board-game box — its own cover art, a thick edge, and an info band (players, time) */
+.shelf { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 330px)); justify-content: center; gap: 34px 28px; list-style: none; margin: 0; padding: 0 0 12px; }
+.box { display: block; position: relative; border-radius: 14px; text-decoration: none; color: inherit; overflow: hidden; background: #120b07;
+  border: 3px solid rgba(255,255,255,.16); box-shadow: 0 9px 0 #0a0604, 0 9px 0 3px rgba(255,255,255,.07), 0 20px 30px rgba(0,0,0,.55);
+  transform: rotate(var(--tilt, 0deg)); transition: transform .14s ease, box-shadow .14s ease; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+.box:active { transform: translateY(6px) rotate(var(--tilt, 0deg)); box-shadow: 0 3px 0 #0a0604, 0 8px 14px rgba(0,0,0,.5); }
+.art svg { display: block; width: 100%; height: auto; }
+.strip { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 9px 12px 10px; background: linear-gradient(180deg, #2a1a10, #1a100a); border-top: 2px solid rgba(255,255,255,.12); }
+.strip .pill { font-size: 15px; font-weight: 800; padding: 4px 11px; border-radius: 99px; background: #3a281b; color: var(--text); white-space: nowrap; }
+.strip .played { margin-left: auto; font-size: 12px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; background: var(--accent-c); color: #1b130e; border-radius: 99px; padding: 4px 10px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 footer { margin-top: 34px; text-align: center; color: var(--dim); font-size: 12px; }
 </style>
 </head>
@@ -58,6 +57,7 @@ const LIBRARY = {
       players: '1–4 players',
       minutes: '15–20 min',
       icon: '🦖',
+      art: 'fossil-frenzy',        // which cover art to draw (see ART below)
       accent: '#d9953a',
       path: 'games/fossil-frenzy/index.html',
       listed: true,
@@ -69,6 +69,7 @@ const LIBRARY = {
       players: '',
       minutes: '',
       icon: '💣',
+      art: 'dig-dig-boom',
       accent: '#c4553b',
       url: null,
       listed: false,
@@ -91,15 +92,54 @@ const LIBRARY = {
   const showUnlisted = /[?&]unlisted\b/.test(location.search);
   const href = g => g.path || g.url || '';
 
+  // ---- the cover art: one picture per game, drawn as a toy-like scene (never text-heavy: the name, and what you get to play with) ----
+  const hex = (cx, cy, r) => Array.from({ length: 6 }, (_, i) => { const a = Math.PI / 180 * (60 * i - 30); return (cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1); }).join(' ');
+  const ART = {
+    // Fossil Frenzy: the real board of 31 fossil tiles — most face down (umber, with an ammonite spiral), a few turned up in the players' colours
+    'fossil-frenzy': () => {
+      const S = 18, W = Math.sqrt(3) * S, cx = 150, cy = 221, up = { 5: ['7', '#4f8cff'], 6: ['7', '#4f8cff'], 13: ['💎', '#ff5a5f'], 20: ['3', '#ff5a5f'], 25: ['10', '#3ecf8e'] };
+      const corners = new Set(['3,0', '-3,0', '0,3', '0,-3', '3,-3', '-3,3']);
+      let k = 0, tiles = '';
+      for (let r = -3; r <= 3; r++) for (let q = -3; q <= 3; q++) {
+        if (Math.abs(q + r) > 3 || corners.has(q + ',' + r)) continue;
+        const x = cx + W * (q + r / 2), y = cy + 1.5 * S * r, u = up[k++];
+        tiles += `<polygon points="${hex(x, y, S)}" fill="#2a1d14" stroke="#3d2b1d" stroke-width="1.5"/>` + (u
+          ? `<polygon points="${hex(x, y, S * 0.8)}" fill="#efe0b8" stroke="#c9ae6a" stroke-width="2"/><text x="${x.toFixed(1)}" y="${(y + 1).toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="${u[0].length > 1 && u[0] !== '💎' ? 13 : 16}" font-weight="800" fill="#2b1b10">${u[0]}</text><polygon points="${hex(x, y, S * 0.92)}" fill="none" stroke="${u[1]}" stroke-width="3"/>`
+          : `<polygon points="${hex(x, y, S * 0.8)}" fill="#6b4426" stroke="#3a2414" stroke-width="2"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(S * 0.3).toFixed(1)}" fill="none" stroke="#8a5c37" stroke-width="1.4"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(S * 0.13).toFixed(1)}" fill="none" stroke="#8a5c37" stroke-width="1.4"/>`);
+      }
+      const title = (t, y) => `<text x="150" y="${y}" text-anchor="middle" font-size="56" font-weight="900" letter-spacing="-1" fill="url(#ffT)" stroke="#24140a" stroke-width="9" stroke-linejoin="round" paint-order="stroke">${t}</text>`;
+      return `<svg viewBox="0 0 300 360" role="img" aria-label="Fossil Frenzy"><defs>
+        <radialGradient id="ffB" cx="50%" cy="62%" r="75%"><stop offset="0" stop-color="#7a4620"/><stop offset=".55" stop-color="#3a2110"/><stop offset="1" stop-color="#1c0f08"/></radialGradient>
+        <radialGradient id="ffG" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#f5a524" stop-opacity=".5"/><stop offset="1" stop-color="#f5a524" stop-opacity="0"/></radialGradient>
+        <linearGradient id="ffT" x1="0" y1="0" x2="0" y2="1"><stop offset=".1" stop-color="#ffe3a0"/><stop offset=".55" stop-color="#f5a524"/><stop offset="1" stop-color="#c8650f"/></linearGradient></defs>
+        <rect width="300" height="360" fill="url(#ffB)"/><circle cx="150" cy="221" r="140" fill="url(#ffG)"/>
+        ${tiles}${title('FOSSIL', 60)}${title('FRENZY', 112)}
+        <rect x="52" y="331" width="196" height="24" rx="12" fill="#1c0f08" fill-opacity=".85" stroke="#f5a524" stroke-opacity=".6"/>
+        <text x="150" y="344" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="800" letter-spacing="2" fill="#ffe3a0">PEEK · FLIP · MATCH · BANK</text></svg>`;
+    },
+    // Dig Dig Boom (placeholder cover until its own site is listed): a fizzing bomb in the dirt
+    'dig-dig-boom': () => `<svg viewBox="0 0 300 360" role="img" aria-label="Dig Dig Boom"><defs>
+        <linearGradient id="dbB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a2f1a"/><stop offset="1" stop-color="#2a0f0a"/></linearGradient>
+        <radialGradient id="dbG" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd24a" stop-opacity=".7"/><stop offset="1" stop-color="#ffd24a" stop-opacity="0"/></radialGradient></defs>
+        <rect width="300" height="360" fill="url(#dbB)"/>
+        <path d="M0 270 Q60 250 120 272 T240 268 T300 262 V360 H0Z" fill="#6b4426"/><path d="M0 305 Q70 288 130 308 T260 302 T300 300 V360 H0Z" fill="#4a2e18"/><path d="M0 338 Q80 326 150 340 T300 334 V360 H0Z" fill="#33200f"/>
+        <circle cx="208" cy="132" r="70" fill="url(#dbG)"/><circle cx="140" cy="212" r="68" fill="#17171c"/><ellipse cx="116" cy="186" rx="22" ry="14" fill="#fff" fill-opacity=".16" transform="rotate(-30 116 186)"/>
+        <rect x="126" y="134" width="28" height="18" rx="4" fill="#3a3a44"/><path d="M142 134 Q150 100 190 106 T208 132" fill="none" stroke="#c9a46a" stroke-width="6" stroke-linecap="round"/>
+        <polygon points="208,108 214,124 230,126 217,136 221,152 208,143 195,152 199,136 186,126 202,124" fill="#ffd24a" stroke="#ff8a1d" stroke-width="3"/>
+        <text x="150" y="62" text-anchor="middle" font-size="46" font-weight="900" fill="#ffd24a" stroke="#2a0f0a" stroke-width="8" stroke-linejoin="round" paint-order="stroke">DIG DIG</text>
+        <text x="150" y="304" text-anchor="middle" font-size="56" font-weight="900" fill="#ff8a1d" stroke="#2a0f0a" stroke-width="9" stroke-linejoin="round" paint-order="stroke">BOOM!</text></svg>`,
+  };
+  const art = g => (ART[g.art] ? ART[g.art]() : `<svg viewBox="0 0 300 360" role="img" aria-label="${esc(g.title)}"><rect width="300" height="360" fill="${esc(g.accent || '#d9953a')}"/><text x="150" y="190" text-anchor="middle" font-size="64">${esc(g.icon || '🎲')}</text></svg>`);
+
   const shown = L.games.filter(g => (g.listed || showUnlisted) && href(g));
+  const tilt = i => ['-.7deg', '.6deg', '-.4deg', '.8deg'][i % 4];            // boxes sit a little askew on the shelf
   document.getElementById('app').innerHTML = `
     <header><h1>🎲 ${esc(L.name)}</h1><p class="tag">${esc(L.tagline)}</p></header>
-    <ul class="shelf">${shown.map(g => `
-      <li><a class="box" data-id="${esc(g.id)}" href="${esc(href(g))}" style="--accent-c:${esc(g.accent || '#d9953a')}">
-        <div class="lid"><span class="icon">${esc(g.icon || '🎲')}</span>${store.get(PLAYED(g.id)) ? '<span class="played">Played</span>' : ''}</div>
-        <h2>${esc(g.title)}</h2>
-        <p>${esc(g.tagline || '')}</p>
-        <div class="meta">${[g.players, g.minutes].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('')}</div>
+    <ul class="shelf">${shown.map((g, i) => `
+      <li><a class="box" data-id="${esc(g.id)}" href="${esc(href(g))}" style="--accent-c:${esc(g.accent || '#d9953a')};--tilt:${tilt(i)}" aria-label="${esc(g.title)}. ${esc(g.tagline || '')}">
+        <div class="art">${art(g)}</div>
+        <div class="strip">${[g.players, g.minutes].filter(Boolean).map(x => `<span class="pill">${esc(x)}</span>`).join('')}${store.get(PLAYED(g.id)) ? '<span class="played">Played</span>' : ''}</div>
+        <h2 class="sr">${esc(g.title)}</h2>
       </a></li>`).join('')}</ul>
     <footer>Version ${esc(BUILD)}</footer>`;
 

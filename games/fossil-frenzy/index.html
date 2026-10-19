@@ -141,7 +141,10 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .hero-menu .ghostrow { display: flex; gap: 10px; margin-top: clamp(6px, 1.2vh, 10px); }
 .hero-menu .ghostrow .ghost { flex: 1; margin-top: 0; }
 .hero-menu .ver { margin: clamp(4px, 1vh, 12px) 0 0; font-size: 12px; }
-.hero-menu .back { margin: 0 0 4px; padding: 2px 0; }
+.libback { position: absolute; z-index: 2; top: max(10px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 10px 16px 10px 12px; min-height: 44px;
+  border-radius: 99px; background: var(--panel2); border: 2px solid var(--accent); color: var(--text); font-size: 16px; font-weight: 800; box-shadow: 0 4px 0 rgba(0,0,0,.35); }
+.libback span { font-size: 22px; line-height: 1; color: var(--accent); }
+.libback:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,.35); }
 .mode.primary { background: linear-gradient(180deg, #f7b13a, #d9791a); border-color: #ffd37e; color: #2b1b10; box-shadow: 0 6px 0 #8a4a0e, 0 14px 24px rgba(0,0,0,.4); }
 .mode.primary span { color: #4a2a10; }
 .mode.primary:active { box-shadow: 0 2px 0 #8a4a0e; }
@@ -150,7 +153,7 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .mode .pips i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(43,27,16,.55); }
 .mode .pips i.on { background: #2b1b10; border-color: #2b1b10; }
 @media (max-height: 520px) { .hero-menu .sub, .hero-menu .mode span:not(.pips) { display: none; } .hero-menu .ver { display: none; } }
-@media (prefers-reduced-motion: reduce) { .h-cell, .logo { animation: none; } .h-tile, .h-back, .h-front { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .h-cell, .logo { animation: none; } .h-back, .h-front { transition: none; } }
 
 .screen { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 22px 18px 30px; background: radial-gradient(ellipse at 50% 0%, #3a2616, var(--bg) 70%); }
 .sheet { max-width: 640px; margin: 0 auto; }
@@ -186,6 +189,15 @@ h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spac
 .lvl.locked .state { font-size: 22px; }
 .help p, .help li { line-height: 1.45; font-size: 15px; }
 .help li { margin: 4px 0; }
+.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 10px 0 8px; }
+.hcard { background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 4px; }
+.hcard svg { width: 100%; height: auto; max-height: 96px; }
+.hcard b { font-size: 20px; color: var(--accent); }
+.hcard p { margin: 0; font-size: 16px; line-height: 1.35; }
+.help .hline { font-size: 17px; margin: 8px 0; }
+.help .ghost { width: 100%; margin-top: 6px; }
+.fine { margin-top: 14px; color: var(--dim); }
+.fine summary { cursor: pointer; padding: 10px 0; font-weight: 700; }
 .help h3 { margin: 18px 0 4px; color: var(--accent); font-size: 16px; }
 .table { width: 100%; border-collapse: collapse; margin: 6px 0; }
 .table td, .table th { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); font-size: 16px; }
@@ -1237,7 +1249,7 @@ const Campaign = (() => {
   }
 
   const ui = { screen: 'home', mode: 'pass', pass: loadPass(), beaten: loadBeaten(), levelIdx: 0, names: [], st: null, bots: [],
-               showPeek: true, help: false, menu: null, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '',
+               help: false, menu: null, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '',
                countedOver: false, outcome: null, turnCard: false, lastEvent: '', say: '',
                steps: null, stage: 0, base: null, animTimer: null, liftKey: '', prevPts: null };
   ui.settings = null;                                   // null | 'open' | 'unlock' (the warning before unlocking everything) | 'reset'
@@ -1266,7 +1278,7 @@ const Campaign = (() => {
     ui.st = Engine.createGame({ players: n, seed });
     ui.bots = Bots.attach(ui.st, campaign ? [null, Campaign.botSpec(LV[ui.levelIdx])] : Array(n).fill(null), seed);
     ui.names = campaign ? ['You', LV[ui.levelIdx].name] : ui.pass.names.slice(0, n);
-    Object.assign(ui, { screen: 'play', showPeek: true, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '', countedOver: false, outcome: null,
+    Object.assign(ui, { screen: 'play', prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '', countedOver: false, outcome: null,
                         menu: null, help: false, fossils: false, lastEvent: '', prevPts: null, liftKey: '', endSounded: false });
     nextTurnStarts(true);
   }
@@ -1315,7 +1327,7 @@ const Campaign = (() => {
   function nextTurnStarts(first = false) {
     const st = ui.st;
     clearAnim();
-    Object.assign(ui, { showPeek: true, botWaiting: false, steps: null, stage: 0, base: null, say: '' });
+    Object.assign(ui, { botWaiting: false, steps: null, stage: 0, base: null, say: '' });
     const bot = ui.bots[st.current];
     ui.turnCard = first || (!bot && ui.mode === 'pass');          // pass & play: say whose turn it is before they tap
     if (!bot) return;
@@ -1369,7 +1381,7 @@ const Campaign = (() => {
       if (sv.mode === 'campaign' && !LV[sv.levelIdx]) throw new Error('unknown level');
       ui.st = st; ui.bots = Bots.restore(st, sv.bots); ui.names = sv.names; ui.mode = sv.mode === 'campaign' ? 'campaign' : 'pass'; ui.levelIdx = sv.levelIdx | 0;
       Object.assign(ui, { screen: 'play', turnCard: !!sv.turnCard || sv.screen === 'roll', botWaiting: !!sv.botWaiting,
-                          showPeek: true, prevUp: new Set(), popTurn: st.turn.matched ? st.turnNo : -1, steps: null, stage: 0, base: null, lastEvent: '', menu: null });
+                          prevUp: new Set(), popTurn: st.turn.matched ? st.turnNo : -1, steps: null, stage: 0, base: null, lastEvent: '', menu: null });
     } catch (e) {
       pref.del(SAVE_KEY);
       ui.notice = /rules changed/.test(e.message) ? 'A new version changed the rules, so your saved game was cleared.' : 'Your saved game could not be resumed, so it was cleared.';
@@ -1396,7 +1408,7 @@ const Campaign = (() => {
     const phase0 = st.phase, pop0 = st.matchedCount;
     try {
       if (st.phase === 'action') {
-        if (tid >= 0) { Engine.peek(st, tid); ui.showPeek = true; }                 // first tap: a private peek
+        if (tid >= 0) Engine.peek(st, tid);                 // first tap: a private peek
       } else if (st.phase === 'peeked') {
         if (tid >= 0) {
           Engine.flipOther(st, tid);                                                // second tap: a public flip
@@ -1523,7 +1535,7 @@ const Campaign = (() => {
       lift = ui.stage > 0 && ui.steps[ui.stage - 1].a.type === 'peek' && ui.liftKey !== key;
       ui.liftKey = key;
     }
-    const peekShown = peekTid !== null && human && ui.showPeek;
+    const peekShown = peekTid !== null && human;                  // my own peeked number stays showing until my turn ends
     const nowUp = new Set([...revealed, ...(peekShown ? [peekTid] : [])]);
     const flipped = tid => nowUp.has(tid) !== ui.prevUp.has(tid);
     let out = '';
@@ -1646,8 +1658,8 @@ const Campaign = (() => {
     return `<div class="backdrop" data-act="menu-close"></div><div class="menu" role="menu">${body}</div>`;
   }
 
-  const libraryLink = () => (D.library && /^https?:$/.test(location.protocol) ? `<a class="back" href="${esc(D.library.href)}">‹ ${esc(D.library.name)}</a>` : '');
-  const footer = () => `${ui.notice ? `<p class="dim" style="margin-top:14px">${esc(ui.notice)}</p>` : ''}<p class="dim" style="margin-top:18px">Version ${esc(BUILD)}</p>`;
+  // The way back to the shelf: a clear chip in the very top-left corner of the home screen.
+  const libraryLink = () => (D.library && /^https?:$/.test(location.protocol) ? `<a class="back libback" href="${esc(D.library.href)}"><span aria-hidden="true">‹</span> ${esc(D.library.name)}</a>` : '');
 
   // The home screen's picture: the real board, tiles flipping over by themselves to show numbers and gems. Decoration only.
   function heroSVG() {
@@ -1674,10 +1686,9 @@ const Campaign = (() => {
   function homeHTML() {
     const beaten = LV.filter((l, i) => Campaign.isBeaten(i, ui.beaten)).length;
     const pips = LV.map((l, i) => `<i class="${Campaign.isBeaten(i, ui.beaten) ? 'on' : ''}"></i>`).join('');
-    return `<div class="screen home"><div class="sheet hero">
+    return `<div class="screen home">${libraryLink()}<div class="sheet hero">
       <div class="hero-art">${heroSVG()}</div>
       <div class="hero-menu">
-        ${libraryLink()}
         <h1 class="logo">Fossil<br>Frenzy</h1>
         <p class="sub">Peek. Flip. Match. Bank.</p>
         <button class="mode primary row" data-act="mode" data-v="campaign"><b>Campaign</b><span class="pips" role="img" aria-label="${beaten} of ${LV.length} opponents beaten">${pips}</span></button>
@@ -1782,20 +1793,32 @@ const Campaign = (() => {
       ${rows}<p class="total">${total} fossils in all</p>
       <button class="big" data-act="closefossils">Close</button></div></div>`;
   }
+  // How to play: four little pictures and a line each; the fine print (judgment calls) is folded away underneath.
+  const howTile = (x, y, { text = '', ring = '', dash = false, back = false, top = '' } = {}) => {
+    const R = 24, pts = r => hexPts(x, y, r);
+    return `<polygon points="${pts(R)}" fill="#2a1d14" stroke="#3d2b1d" stroke-width="2"/>` + (back
+      ? `<polygon points="${pts(R * 0.8)}" fill="#6b4426" stroke="#3a2414" stroke-width="2.5"/><circle cx="${x}" cy="${y}" r="7" fill="none" stroke="#8a5c37" stroke-width="2"/><circle cx="${x}" cy="${y}" r="3" fill="none" stroke="#8a5c37" stroke-width="2"/>`
+      : `<polygon points="${pts(R * 0.8)}" fill="#f6e7b8" stroke="#c9ae6a" stroke-width="2.5"/><text x="${x}" y="${y + 1}" text-anchor="middle" dominant-baseline="central" font-size="${text.length > 1 ? 17 : 22}" font-weight="800" fill="#2b1b10">${text}</text>`)
+      + (ring ? `<polygon points="${pts(R * 0.92)}" fill="none" stroke="${ring}" stroke-width="4"${dash ? ` style="${dashStyle(R * 0.92)}"` : ''}/>` : '')
+      + (top ? `<text x="${x}" y="${y - 30}" text-anchor="middle" font-size="20">${top}</text>` : '');
+  };
+  const howArrow = x => `<path d="M${x - 12} 40 H${x + 8} M${x + 1} 32 L${x + 9} 40 L${x + 1} 48" fill="none" stroke="#a8957a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
   function helpHTML() {
+    const B = COLORS[0], M = D.matching;
+    const card = (title, svg, line) => `<div class="hcard"><svg viewBox="0 0 200 84" aria-hidden="true">${svg}</svg><b>${title}</b><p>${line}</p></div>`;
+    const bankChip = `<rect x="14" y="20" width="52" height="46" rx="11" fill="#f6e7b8" stroke="#3ecf8e" stroke-width="4"/><text x="40" y="44" text-anchor="middle" dominant-baseline="central" font-size="28" font-weight="800" fill="#2b1b10">7</text>`;
     return `<div class="screen help" style="z-index:5"><div class="sheet"><h1>How to play</h1>
-      <p>Match fossils from memory, bank your matches, and finish with the most points. <b>Menu → Fossils</b> shows how many of each number are in the game you are playing.</p>
-      <h3>Your turn</h3><ul>
-        <li><b>Peek</b> at any fossil — tap it. Only you should look.</li>
-        <li><b>Flip</b> another fossil — tap it. Everyone sees it.</li>
-        <li>If your peek and the flipped fossil match, they are yours. Otherwise tap <b>End turn</b> to flip them back — remember them!</li>
-        <li>The scores are at the top, and whose turn it is is lit up. Who goes first is decided at random.</li>
-        <li><b>Gems</b> (💎, worth ${GEM_VALUE}) match as a set of three: peek a gem, flip a gem, then tap a third fossil — that reveals your peeked gem too, and if the third is a gem, the set is yours.</li>
-        <li><b>Bank</b> instead of flipping: tap ONE of your held sets. It scores the number on its fossil (a gem is ${GEM_VALUE}). Banking takes the whole turn, so your turn ends the moment you bank.</li>
-      </ul>
-      <h3>End</h3><p>The game ends the moment every fossil is matched. Sets you have not banked are lost. Highest score wins; ties go to the most sets popped, then whoever popped the final pair.</p>
-      <h3>Judgment calls (where the rules were unclear)</h3><ul>${JUDGMENTS.map(j => `<li>${esc(j)}</li>`).join('')}</ul>
-      <p class="dim">The full list is in DECISIONS.md. Version ${esc(BUILD)}. Prompts and unlocking are in Settings.</p>
+      <div class="how">
+        ${card('1 · Peek', howTile(52, 48, { back: true, ring: B, dash: true, top: '👆' }) + howArrow(100) + howTile(148, 48, { text: '7', ring: B, dash: true, top: '👁' }), 'Tap a fossil. Only you see it.')}
+        ${card('2 · Flip', howTile(52, 48, { text: '7', ring: B, dash: true }) + howTile(148, 48, { text: '5', ring: B }), 'Tap another. Everyone sees it.')}
+        ${card('3 · Match', howTile(52, 48, { text: '7', ring: B }) + `<text x="100" y="49" text-anchor="middle" dominant-baseline="central" font-size="34" font-weight="800" fill="#3ecf8e">=</text>` + howTile(148, 48, { text: '7', ring: B }), 'Same number? They’re yours. If not, they flip back — remember them!')}
+        ${card('Or bank', bankChip + howArrow(100) + `<text x="152" y="46" text-anchor="middle" dominant-baseline="central" font-size="40" font-weight="900" fill="#f5a524">+7</text>`, 'Instead of peeking, tap one of your sets to score its number.')}
+      </div>
+      <p class="hline"><b>💎 Gems</b> match in threes and are worth ${GEM_VALUE}.</p>
+      <p class="hline"><b>🏆 Most points wins</b> once every fossil is matched. Sets you never bank score nothing.</p>
+      ${ui.st ? '<button class="ghost" data-act="fossils">How many fossils of each number?</button>' : ''}
+      <details class="fine"><summary>The fine print</summary><ul>${JUDGMENTS.map(j => `<li>${esc(j)}</li>`).join('')}</ul>
+        <p class="dim">The full list is in DECISIONS.md. Version ${esc(BUILD)}.</p></details>
       <button class="big" data-act="closehelp">Close</button></div></div>`;
   }
 

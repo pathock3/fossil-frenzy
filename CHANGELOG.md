@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+- **How to play is now mostly pictures:** four little illustrated cards (Peek, Flip, Match, Bank) with a line each, two one-line reminders (gems, winning), a button to the Fossils panel, and the fine print (judgment calls) folded under "The fine print". Under 110 words on the first screen, and it fits without scrolling on an iPad.
+- **Housekeeping (no change to play):** removed dead code (an always-true peek flag, an unused footer, an unused style, the archived two-rule-set report) and a 30-second wasted wait in the sound test.
+- **The Tabletop Library shelf is now a shelf of board-game boxes.** Each game is a tall box with its own cover art (Fossil Frenzy: the real board of fossil tiles, a few turned up in the players' colours, with its title) and a small info band (players, time) — no paragraph of text. Boxes sit slightly askew with a thick edge and press down when tapped. Each game supplies its own art (`art` in the catalogue); Dig Dig Boom has a placeholder cover.
+- **Way back to the library** from Fossil Frenzy's home screen is now a clear, tappable chip in the very top-left corner.
 - **A turn is a peek and a flip.** Once you peek you must flip another fossil: there is no End turn (and no banking) after a peek, and no End turn at the start of a turn. After you flip, **a tap anywhere ends your turn** (the End turn button stays as a cue). Opponents follow the same rule.
 - **The dashed ring on a peeked space is neat now:** three equal dashes per side, with the gaps on the corners, so nothing piles up.
 - **Gems show what they are worth** (12): under the gem on its fossil, under it on the set you hold (the thing you tap to bank) and on the end screen — the same number that banking scores. **☰ menu button is bigger.** In Settings, **Sound effects** now come before Prompts.

@@ -35,7 +35,7 @@ test('library: every game folder is in the catalogue, and every local catalogue 
 
 test('library: every entry has what the shelf shows; entries without an address are never listed', () => {
   for (const g of LIBRARY.games) {
-    assert.ok(g.title && g.tagline && g.icon && g.accent, g.id);
+    assert.ok(g.title && g.tagline && g.icon && g.accent && g.art, g.id);
     if (g.listed) assert.ok(g.path || g.url, `${g.id} is listed but has no address`);
   }
   assert.ok(LIBRARY.games.find(g => g.id === 'fossil-frenzy').listed);
@@ -74,7 +74,16 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     await page.goto(base + '/index.html');
     assert.equal(await page.title(), 'Tabletop Library');
     assert.equal(await page.locator('a.box').count(), 1, 'only listed games with an address are on the shelf');
-    assert.match(await page.locator('a.box').innerText(), /Fossil Frenzy/);
+    assert.match(await page.locator('a.box').getAttribute('aria-label'), /Fossil Frenzy/);
+    // a box is a picture first: cover art (an SVG) and a small info band, not a paragraph of text
+    assert.equal(await page.locator('a.box .art svg').count(), 1, 'cover art');
+    assert.match(await page.locator('a.box .art svg').getAttribute('aria-label'), /Fossil Frenzy/);
+    const box = await page.locator('a.box').boundingBox();
+    assert.ok(box.width >= 240 && box.height >= box.width, 'a box is a big, upright rectangle: ' + JSON.stringify(box));
+    assert.equal(await page.locator('a.box p').count(), 0, 'no paragraph of text on the box');
+    assert.ok((await page.locator('a.box .strip').innerText()).trim().length < 40, 'only a small info band');
+    assert.ok(await page.locator('.strip .pill').evaluateAll(els => els.every(e => parseFloat(getComputedStyle(e).fontSize) >= 14)), 'the info band is legible');
+    assert.match(await page.locator('.strip').innerText(), /1–4 players/);
     assert.equal(await page.locator('.played').count(), 0);
     await page.goto(base + '/index.html?unlisted');
     assert.equal(await page.locator('a.box').count(), 1, 'an unlisted placeholder without an address still does not render a dead link');
@@ -82,6 +91,9 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     await page.tap('a.box');
     await page.waitForURL('**/games/fossil-frenzy/index.html');
     assert.match(await page.locator('h1').first().innerText(), /Fossil\s+Frenzy/);
+    const back = await page.locator('a.back').boundingBox();
+    assert.ok(back.x < 40 && back.y < 40, 'the way back is in the very top-left corner: ' + JSON.stringify(back));
+    assert.ok(back.height >= 44, 'and big enough to tap: ' + JSON.stringify(back));
     await page.tap('a.back');
     await page.waitForURL(base + '/index.html');
     assert.equal(await page.title(), 'Tabletop Library');
