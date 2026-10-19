@@ -52,6 +52,10 @@ input { font: inherit; }
 /* ---------- main menu ---------- */
 .snd { position: absolute; top: max(10px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: var(--dim); opacity: .7; z-index: 3; }
 .snd:active { opacity: 1; }
+.libback { position: absolute; z-index: 3; top: max(10px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px 10px 12px; min-height: 44px; border-radius: 99px;
+  background: rgba(8,42,28,.72); border: 2px solid #ffd36a; color: #fff6d8; font-size: 16px; font-weight: 800; text-decoration: none; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
+.libback span { font-size: 22px; line-height: 1; color: #ffd36a; }
+.libback:active { transform: translateY(2px); }
 .snd svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .head { flex: none; text-align: center; padding-top: 4px; }
 @media (max-width: 600px) { .head { padding-top: 40px; } }
@@ -224,6 +228,7 @@ input { font: inherit; }
 <script id="data">
 const GAME_DATA = {
   title: 'Advanced Counting',
+  library: { name: 'Tabletop Library', href: '../../index.html' },     // the way back to the shelf (shown only when served from a web address)
 
   // ---- LEVELS: A to M, the grid grows by one row or column at a time, square whenever possible. Cards are numbered 1..rows x cols. ----
   levels: [
@@ -774,10 +779,11 @@ const Sound = (() => {
     }
     return `${open ? '<div class="scrim" data-act="closeprofile"></div>' : ''}<div class="profile"><button class="pbtn" data-act="profile" aria-label="Profile"><span class="who">☺</span><span class="pname">${esc(cur.name)}</span><span class="chev">▴</span></button>${drop}</div>`;
   }
+  const libraryLink = () => (D.library && /^https?:$/.test(location.protocol) ? `<a class="libback" href="${esc(D.library.href)}"><span aria-hidden="true">‹</span> ${esc(D.library.name)}</a>` : '');
   function menuHTML() {
     const fan = [3, 1, 4, 2].map((n, i) => `<div class="card" style="--i:${i}">${cardInner(n)}</div>`).join('');
     return `<div class="screen menu">
-      <button class="snd" data-act="sound" aria-label="Sound ${ui.sound ? 'on' : 'off'}" aria-pressed="${ui.sound}">${soundIcon(ui.sound)}</button>
+      ${libraryLink()}<button class="snd" data-act="sound" aria-label="Sound ${ui.sound ? 'on' : 'off'}" aria-pressed="${ui.sound}">${soundIcon(ui.sound)}</button>
       <header class="head"><h1 class="title">${esc(D.title)}</h1><p class="tag">${esc(T.tagline)}</p></header>
       <div class="buttons"><button class="btn" data-act="scores">${esc(T.highScores)}</button><button class="btn" data-act="howto">${esc(T.howToPlay)}</button></div>
       <div class="hero"><div class="fan" aria-hidden="true">${fan}</div></div>

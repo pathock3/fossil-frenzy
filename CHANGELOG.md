@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **New game: Advanced Counting** (solo, 13 levels A–M from a 2×2 grid of cards to 8×8). Memorise the face-up cards, tap Flip to turn them down, then tap them 1, 2, 3… in order; a wrong tap re-deals the identical layout so you study and retry. Per-profile personal records (highest level, best time and fewest mistakes per level), a profile selector with rename, High scores with practice rounds, a results screen that waits for your OK, felt-table look with 3D card flips and synthesised sound. Built from Patrick's Meta Muse spec (`games/advanced-counting/SPEC.md`); every judgment call is in its How to play fine print and `DECISIONS.md`. On the library shelf with its own box art. Every game now has the way back to the library in its top-left corner.
 - **Library boxes are just cover art now:** the player count is gone from the box (it stays as the box's spoken label for screen readers), and the art is a little taller, with a slightly bigger board, title and tagline ribbon to use the room.
 - **Library boxes:** no play time and no "Played" tag on the box (just the player count); the tagline on Fossil Frenzy's cover now fits inside its oval; the shelf no longer pull-to-refreshes or rubber-bands.
 - **How to play is now mostly pictures:** four little illustrated cards (Peek, Flip, Match, Bank) with a line each, two one-line reminders (gems, winning), a button to the Fossils panel, and the fine print (judgment calls) folded under "The fine print". Under 110 words on the first screen, and it fits without scrolling on an iPad.

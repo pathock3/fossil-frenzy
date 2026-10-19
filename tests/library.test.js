@@ -74,23 +74,32 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     await page.goto(base + '/index.html');
     assert.equal(await page.title(), 'Tabletop Library');
     assert.equal(await page.evaluate(() => getComputedStyle(document.body).overscrollBehaviorY), 'none', 'no pull-to-refresh on the shelf');
-    assert.equal(await page.locator('a.box').count(), 1, 'only listed games with an address are on the shelf');
-    assert.match(await page.locator('a.box').getAttribute('aria-label'), /Fossil Frenzy/);
+    const listed = LIBRARY.games.filter(g => g.listed && (g.path || g.url));
+    assert.equal(await page.locator('a.box').count(), listed.length, 'only listed games with an address are on the shelf');
+    assert.deepEqual(await page.locator('a.box').evaluateAll(els => els.map(e => e.dataset.id)), Array.from(listed, g => g.id), 'in catalogue order');
+    for (const g of listed) {                                                 // every box is its own cover art, and the art is the game's
+      const art = page.locator(`a.box[data-id="${g.id}"] .art svg`);
+      assert.equal(await art.count(), 1, g.id + ' cover art');
+      assert.equal(await art.getAttribute('aria-label'), g.title);
+      assert.ok(g.art && (await art.evaluate(el => el.querySelectorAll('rect,polygon,path,circle').length)) > 10, g.id + ' art is a real picture');
+    }
+    const ids = await page.locator('a.box .art svg').evaluateAll(els => els.map(e => e.innerHTML));
+    assert.equal(new Set(ids).size, ids.length, 'each game is visually distinct');
+    const ff = 'a.box[data-id="fossil-frenzy"]';
+    assert.match(await page.locator(ff).getAttribute('aria-label'), /Fossil Frenzy/);
     // a box is a picture first: cover art (an SVG) only, not a paragraph of text
-    assert.equal(await page.locator('a.box .art svg').count(), 1, 'cover art');
-    assert.match(await page.locator('a.box .art svg').getAttribute('aria-label'), /Fossil Frenzy/);
-    const box = await page.locator('a.box').boundingBox();
+    const box = await page.locator(ff).boundingBox();
     assert.ok(box.width >= 240 && box.height >= box.width * 1.2, 'a box is a big, upright rectangle: ' + JSON.stringify(box));
     assert.equal(await page.locator('a.box p').count(), 0, 'no paragraph of text on the box');
     assert.equal(await page.locator('a.box .strip, a.box .pill, a.box .played').count(), 0, 'nothing but the cover art: no players, no time, no Played tag');
-    assert.match(await page.locator('a.box').getAttribute('aria-label'), /1–4 players/, 'the player count is still there for screen readers');
+    assert.match(await page.locator(ff).getAttribute('aria-label'), /1–4 players/, 'the player count is still there for screen readers');
     // the tagline in the ribbon fits inside its oval
-    const fit = await page.evaluate(() => { const svg = document.querySelector('a.box .art svg'), t = [...svg.querySelectorAll('text')].find(x => /PEEK/.test(x.textContent)), r = [...svg.querySelectorAll('rect')].find(x => x.getAttribute('rx') === '13'); const tb = t.getBBox(), rb = r.getBBox(); return { tx: tb.x, tr: tb.x + tb.width, rx: rb.x, rr: rb.x + rb.width }; });
+    const fit = await page.evaluate(() => { const svg = document.querySelector('a.box[data-id="fossil-frenzy"] .art svg'), t = [...svg.querySelectorAll('text')].find(x => /PEEK/.test(x.textContent)), r = [...svg.querySelectorAll('rect')].find(x => x.getAttribute('rx') === '13'); const tb = t.getBBox(), rb = r.getBBox(); return { tx: tb.x, tr: tb.x + tb.width, rx: rb.x, rr: rb.x + rb.width }; });
     assert.ok(fit.tx >= fit.rx + 10 && fit.tr <= fit.rr - 10, 'the words sit inside the oval: ' + JSON.stringify(fit));
     await page.goto(base + '/index.html?unlisted');
-    assert.equal(await page.locator('a.box').count(), 1, 'an unlisted placeholder without an address still does not render a dead link');
+    assert.equal(await page.locator('a.box').count(), listed.length, 'an unlisted placeholder without an address still does not render a dead link');
     await page.goto(base + '/index.html');
-    await page.tap('a.box');
+    await page.tap(ff);
     await page.waitForURL('**/games/fossil-frenzy/index.html');
     assert.match(await page.locator('h1').first().innerText(), /Fossil\s+Frenzy/);
     const back = await page.locator('a.back').boundingBox();
@@ -98,6 +107,12 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     assert.ok(back.height >= 44, 'and big enough to tap: ' + JSON.stringify(back));
     await page.tap('a.back');
     await page.waitForURL(base + '/index.html');
+    for (const g of listed.filter(g => g.path && g.id !== 'fossil-frenzy')) {      // every other game links back too, from the top-left
+      await page.goto(base + '/' + g.path);
+      const link = await page.locator('a.libback').boundingBox();
+      assert.ok(link && link.x < 40 && link.y < 40 && link.height >= 44, g.id + ' has the way back in the top-left: ' + JSON.stringify(link));
+    }
+    await page.goto(base + '/index.html');
     assert.equal(await page.title(), 'Tabletop Library');
     assert.equal(await page.locator('.played').count(), 0, 'boxes carry no Played tag');
     assert.deepEqual(errors, []);
