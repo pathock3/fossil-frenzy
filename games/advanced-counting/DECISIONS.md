@@ -1,0 +1,34 @@
+# DECISIONS — Advanced Counting
+
+Judgment calls where the build spec (`SPEC.md`) and the rulebook are silent. The owner can overrule any of them; the numbers are in the data block (`GAME_DATA` in `index.html`) and every one has a test. The in-game *How to play* panel lists them under "Fine print".
+
+## From the first reading of the spec (SPEC.md, numbered reading)
+1. **Levels:** A 2×2 (cards 1–4), B 2×3, C 3×3, D 3×4, E 4×4, F 4×5, G 5×5, H 5×6, I 6×6, J 6×7, K 7×7, L 7×8, M 8×8 (cards 1–64): "an additional row or column, making a square whenever possible". Every level is a fresh shuffle of 1..N.
+2. **The round:** dealt face up (study); the primary button **Flip** turns every card face down (staggered); the player taps 1, 2, 3…; a correct card stays face up; a wrong tap counts one mistake and re-deals the identical layout face up, and Flip starts the next try from 1.
+3. **Time:** from the moment the level is dealt (Start / OK tap) to the last correct tap, including study and every retry. No live clock. Never runs while the results screen is up.
+4. **Climb:** Start → A; each completed level → results → OK → next level dealt. After M, OK returns to the main menu. Menu → Main Menu abandons the round with no confirmation; finished levels are already saved.
+5. **Practice** (tap a level in High scores): dealt face up, cards flip freely while looking, the button reads **Start**, a try begins on Start. Practice never changes records, never shows NEW RECORD!, and OK returns to High scores.
+6. **Records:** highest level = highest level completed in the climb; per level, best time and fewest mistakes (kept separately). NEW RECORD! under LEVEL when the level is above the previous highest; under MISTAKES / TIME when this round beat an existing record for that level. A first completion of a level only sets the baseline.
+7. **Profiles:** selector above Start; upward dropdown lists profiles, "+ New profile", and quietly at the very bottom "Rename profile…" (inline edit, blank refused, records untouched). New profiles are "Player N" (lowest free number). The selected profile is remembered.
+8. **High scores:** 13 rows (letter, grid, best time, fewest mistakes), "—" for levels not completed, a star on the highest level, every row tappable (practice).
+9. **Main menu** as specced plus a small quiet sound icon in the top-right corner; sound is synthesised (Web Audio) and remembered on the device.
+10. **How to play** (menu) and **Rules** (in-game ☰ Menu) are the same short visual panel with the judgment calls folded under "Fine print".
+11. In-game: a tiny level label ("C", plus "Practice"), the ☰ Menu button in the corner; no next-number hint, no mistake counter, no live clock.
+
+## Calls made while building (beyond that reading)
+12. **The clock pauses** while the Rules panel is open and while the page is hidden (app switch). Reading the rules should not cost time.
+13. **Practice clock:** starts at the first Start tap and runs through retries (same accounting as the climb). A practice round's results show LEVEL / MISTAKES / TIME with no badges.
+14. **Flip during counting:** the button keeps its place but disappears (and cannot be tapped) while the player is counting, so the board never resizes. In practice it reads Start whenever the cards are face up.
+15. **Cards that are already face up** do nothing when tapped (not a mistake). Correct cards keep a soft gold edge; the wrong card gets a red glow that fades. These marks only show what has been done, never what is next.
+16. **Tapping a card while the ☰ menu is open** only closes the menu (no accidental mistake).
+17. **Results sheet** appears the instant the last card is turned (fades in after the last flip; nothing waits on a timer). Fanfare on completion; the NEW RECORD sparkle follows if any badge was earned.
+18. **Times** are kept to a tenth of a second so a record is always visibly better; a tie is not a record. The first ever completion of level A earns the LEVEL badge (it is above "nothing").
+19. **Time display:** `7.3s`, `1:05.3`, `1:02:05`.
+20. **Names:** up to 16 characters, whitespace tidied; duplicates allowed (profiles are told apart by an id); at most 6 profiles; no delete.
+21. **No mid-round save:** closing or reloading the page returns to the main menu. Records are saved at each level completion (`localStorage`, key prefix `tabletop-library-advanced-counting-`). Damaged stored data is discarded.
+22. **Wide screens:** the High scores / How to play buttons span the full screen width as specced; Start is 72% of the screen width. On landscape tablets the Flip button sits in a column beside the board; High scores lists the levels in two columns.
+23. **"Small phone"** (Start 112px): a screen at most 430px wide or 520px tall.
+24. **Card sizing:** the cards fill the space (portrait-leaning cards, never wider than 0.8 of their height, capped at 180px wide so level A is not silly). Small corner indices appear only on cards wide enough to carry them.
+25. **Sound design:** a card-flip click for practice flips, a riffle for flip-all/re-deal/deal, a chime per correct card whose pitch climbs across the level on a pentatonic scale over about two octaves, a soft low note on a mistake, a fanfare on completion, a sparkle for NEW RECORD!. No sound for menu taps beyond a faint tick.
+26. **Reduced motion:** instant flips, no stagger, no shake, no glow animation, no hero animation.
+27. **`?seed=N`** on the page address makes every deal repeatable (for testing only; nothing in the game links to it).
