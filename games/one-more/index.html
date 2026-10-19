@@ -1,0 +1,1479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="One More…">
+<meta name="build" content="__BUILD__">
+<meta name="theme-color" content="#07051a">
+<title>One More…</title>
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
+<style>
+:root {
+  --bg0: #05040f; --bg1: #0b0824; --bg2: #15103a;
+  --violet: #7d5cff; --violet2: #a58bff; --line: rgba(150,128,255,.22);
+  --text: #efeaff; --dim: #9d93c9; --faint: #6f66a3;
+  --spark: #ff7a1c; --spark2: #ffb347; --teal: #3df2d0; --magenta: #ff5cc4; --amber: #ffc24a;
+  --panel: rgba(24,18,66,.78);
+  --cw: 100px; --ch: 140px; --sc: 44px; --pw: 56px; --ph: 78px;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+html, body { margin: 0; height: 100%; width: 100%; position: fixed; inset: 0; overflow: hidden; overscroll-behavior: none; background: var(--bg0); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, Segoe UI, Roboto, sans-serif; touch-action: manipulation; }
+#app { position: absolute; inset: 0; overflow: hidden; }
+button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
+input { font: inherit; }
+
+/* ---------- the cave ---------- */
+#bg { position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -8%, rgba(120,80,255,.34), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 8% 104%, rgba(61,242,208,.13), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 95% 100%, rgba(255,92,196,.13), transparent 70%),
+    linear-gradient(#0b0825, #05040f 80%); }
+#bg svg { position: absolute; left: 0; width: 100%; display: block; }
+#bg .teeth { top: -2px; height: 15%; min-height: 60px; fill: #04030c; filter: drop-shadow(0 6px 14px rgba(125,92,255,.28)); }
+#bg .floor { bottom: -2px; height: 11%; min-height: 40px; fill: #04030c; }
+#bg .dust i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #c9b8ff; opacity: .0; animation: dust 9s ease-in-out infinite; }
+@keyframes dust { 0%,100% { opacity: 0; transform: translateY(0); } 35% { opacity: .5; } 70% { opacity: .15; transform: translateY(-34px); } }
+.rm #bg .dust i, .rm * { animation: none !important; }
+.rm .card, .rm .flipper { transition-duration: .01s !important; transition-delay: 0s !important; }
+
+#world { position: absolute; inset: 0; }
+#view { position: absolute; inset: 0; }
+#cards { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+#fx { position: absolute; inset: 0; pointer-events: none; z-index: 7; overflow: hidden; }
+#overlay { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
+#overlay > * { pointer-events: auto; }
+#world.shake { animation: shake .55s cubic-bezier(.36,.07,.19,.97); }
+@keyframes shake { 10%,90% { transform: translate(-2px,1px); } 20%,80% { transform: translate(5px,-3px); } 30%,50%,70% { transform: translate(-9px,4px); } 40%,60% { transform: translate(9px,-4px); } }
+
+/* ---------- the table ---------- */
+.stage { position: absolute; inset: 0; display: grid; grid-template-rows: auto auto minmax(0,1fr); gap: 8px;
+  padding: calc(env(safe-area-inset-top) + 8px) calc(env(safe-area-inset-right) + 10px) calc(env(safe-area-inset-bottom) + 10px) calc(env(safe-area-inset-left) + 10px); }
+.topbar { position: relative; display: flex; align-items: center; min-height: 34px; }
+.menu { width: 36px; height: 36px; border-radius: 50%; background: rgba(30,22,80,.7); border: 1px solid var(--line); color: var(--dim); font-size: 18px; line-height: 1; display: grid; place-items: center; z-index: 2; }
+.seats.tight .seat { padding: 6px 7px; gap: 6px; }
+.seats.tight .nm { font-size: 11px; }
+.seats.tight .sub { display: none; }
+.hint { position: absolute; left: 50px; right: 50px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; color: var(--dim); letter-spacing: .2px; pointer-events: none; }
+.hint b { color: var(--spark2); font-weight: 600; }
+
+.seats { display: grid; gap: 8px; grid-template-columns: repeat(var(--cols), minmax(0,1fr)); }
+.seats.n2 { --cols: 2; } .seats.n3 { --cols: 3; } .seats.n4 { --cols: 4; } .seats.n5 { --cols: 5; } .seats.n6 { --cols: 6; }
+@media (max-aspect-ratio: 1/1) { .seats.n4 { --cols: 2; } .seats.n5, .seats.n6 { --cols: 3; } }
+.seat { position: relative; display: flex; align-items: center; gap: 10px; padding: 8px 10px; min-width: 0; border-radius: 16px;
+  background: linear-gradient(160deg, rgba(36,28,92,.82), rgba(14,10,42,.9)); border: 1.5px solid rgba(150,128,255,.16);
+  opacity: .78; transition: border-color .3s, box-shadow .3s, opacity .3s; }
+.seat.cur { opacity: 1; border-color: var(--c); box-shadow: 0 0 0 1px var(--c), 0 0 26px -2px var(--c), inset 0 0 22px -8px var(--c); }
+.pilezone { flex: none; width: var(--pw); height: var(--ph); border-radius: 10px; border: 1.5px dashed rgba(150,128,255,.2); }
+.seat.can .pilezone { border-color: var(--c); border-style: solid; box-shadow: 0 0 14px -2px var(--c); animation: cue 1.6s ease-in-out infinite; }
+@keyframes cue { 50% { box-shadow: 0 0 22px 0 var(--c); } }
+.sinfo { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.nm { font-weight: 700; font-size: 14px; color: var(--c); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; }
+.sub { font-size: 11px; color: var(--dim); line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.score { font-weight: 800; font-size: var(--sc); line-height: .95; color: #fff; font-variant-numeric: tabular-nums; font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+  text-shadow: 0 0 20px var(--c), 0 2px 0 rgba(0,0,0,.4); white-space: nowrap; }
+.score small { font-size: .34em; font-weight: 700; color: var(--dim); text-shadow: none; margin-left: 3px; }
+.score.bump { animation: bump .32s ease-out; }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.22); } 100% { transform: scale(1); } }
+
+.felt { position: relative; min-height: 0; display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 10px; padding: 12px; border-radius: 26px;
+  background: radial-gradient(ellipse at 50% 45%, rgba(74,52,170,.34), rgba(10,8,34,.6) 72%); border: 1px solid var(--line);
+  box-shadow: inset 0 0 70px rgba(0,0,0,.55), 0 0 44px rgba(90,60,220,.16); }
+@media (max-aspect-ratio: 1/1) { .felt { grid-template-columns: 1fr 1fr; grid-template-rows: auto minmax(0,1fr); } .ztable { grid-column: 1 / 3; grid-row: 2; } .zboom { grid-column: 2; grid-row: 1; justify-self: end; } .zdraw { grid-column: 1; grid-row: 1; justify-self: start; } }
+.zone { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.zdraw, .zboom { padding: 2px 6px; }
+.zboom { min-width: calc(var(--cw) * 1.6); }
+.zboom .well { margin: calc(var(--ch) * .1) 0 calc(var(--ch) * .14); }
+.zdraw { min-width: calc(var(--cw) * 1.25); }
+.well { position: relative; width: var(--cw); height: var(--ch); border-radius: calc(var(--cw) * .1); border: 2px dashed rgba(150,128,255,.25); }
+.zdraw .well { border-color: rgba(150,128,255,.35); }
+.zdraw.can .well { border-style: solid; border-color: rgba(255,179,71,.75); box-shadow: 0 0 22px -2px rgba(255,150,40,.4); }
+.stackedge { position: absolute; left: 3%; right: 3%; top: calc(100% - 2px); height: var(--t, 0px); border-radius: 0 0 5px 5px;
+  background: repeating-linear-gradient(180deg, #2a2070 0 1px, #120d3b 1px 2.5px); box-shadow: 0 6px 12px rgba(0,0,0,.5); transition: height .3s; }
+.zdraw .zcount { margin-top: 14px; }
+.zcount { font-size: 15px; color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.zcount b { font-size: 24px; color: var(--text); font-weight: 800; }
+.zboom .zcount b { color: var(--spark2); }
+.pips { display: flex; gap: 5px; }
+.pips i { width: 9px; height: 9px; border-radius: 50%; background: rgba(150,128,255,.18); transition: background .3s, box-shadow .3s; }
+.pips i.on { background: var(--spark); box-shadow: 0 0 9px 1px var(--spark); }
+.riffle .well { animation: riffle .6s ease-in-out; }
+@keyframes riffle { 25% { transform: rotate(-3deg) scale(1.04); } 60% { transform: rotate(3deg) scale(1.04); } }
+.ztable { align-self: stretch; min-height: 0; border-radius: 20px; }
+.ztable.has { box-shadow: inset 0 0 40px -10px rgba(255,194,74,.28); }
+.risk { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 13px; color: var(--amber); opacity: .9; letter-spacing: .3px; pointer-events: none; }
+.risk b { font-size: 17px; margin-right: 3px; }
+
+/* ---------- cards ---------- */
+.card { position: absolute; left: 0; top: 0; width: var(--cw); height: var(--ch); will-change: transform; transform-origin: 50% 50%;
+  transition: transform var(--dur, .42s) cubic-bezier(.2,.85,.25,1.06) var(--delay, 0s), opacity .25s linear var(--delay, 0s); }
+.notrans .card, .notrans .card .flipper { transition: none !important; }
+.lift { width: 100%; height: 100%; }
+.lift.hop { animation: hop .52s ease-out var(--delay, 0s) backwards; }
+@keyframes hop { 0% { transform: scale(1); } 35% { transform: scale(1.16) translateY(-10px); } 70% { transform: scale(.97); } 100% { transform: scale(1); } }
+.flipper { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; transition: transform .42s ease var(--delay, 0s); transform: perspective(700px) rotateY(180deg); }
+.card.up .flipper { transform: perspective(700px) rotateY(0deg); }
+.face { position: absolute; inset: 0; border-radius: calc(var(--cw) * .1); overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: 0 2px 0 rgba(0,0,0,.45), 0 8px 16px rgba(0,0,0,.5); }
+.face.back { transform: rotateY(180deg); background: linear-gradient(155deg, #30237c, #130e3c 75%); border: calc(var(--cw) * .03) solid #4a3a9e; }
+.face.back::before { content: ""; position: absolute; inset: 7%; border-radius: calc(var(--cw) * .06); border: 1.5px solid rgba(165,139,255,.5);
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,.045) 0 5px, transparent 5px 10px), repeating-linear-gradient(-45deg, rgba(255,255,255,.045) 0 5px, transparent 5px 10px); }
+.face.back svg { position: absolute; left: 22%; top: 24%; width: 56%; opacity: .9; }
+.face.front { background: radial-gradient(ellipse at 50% 42%, var(--gl) 0, transparent 66%), linear-gradient(165deg, #261c60, #0e0a2d 78%); border: calc(var(--cw) * .03) solid var(--edge); }
+.face.front svg.gem { position: absolute; left: 12%; top: 15%; width: 76%; filter: drop-shadow(0 0 calc(var(--cw) * .07) var(--edge)); }
+.face.front .sparkle { position: absolute; left: 20%; top: 18%; width: 18%; height: 18%; background: radial-gradient(circle, #fff, transparent 70%); opacity: .0; animation: glint 4.4s ease-in-out infinite; }
+@keyframes glint { 0%,70%,100% { opacity: 0; transform: scale(.4); } 82% { opacity: .95; transform: scale(1.1); } }
+.c0 { --gl: rgba(61,242,208,.4); --edge: #3df2d0; }
+.c1 { --gl: rgba(255,92,196,.4); --edge: #ff5cc4; }
+.c2 { --gl: rgba(255,194,74,.4); --edge: #ffc24a; }
+.c3 { --gl: rgba(94,170,255,.42); --edge: #5eaaff; }
+.boom .face.front { background: radial-gradient(circle at 50% 46%, #ffd37a 0, #ff7a1c 34%, #8f2200 74%, #2b0700 100%); border: calc(var(--cw) * .03) solid #ffcf8a; }
+.boom .face.front svg.bomb { position: absolute; left: 8%; top: 12%; width: 84%; }
+.boom .face.front .lbl { position: absolute; left: 0; right: 0; bottom: 5%; text-align: center; font-weight: 900; font-size: calc(var(--cw) * .15); letter-spacing: 1.5px; color: #3a0d00; text-shadow: 0 1px 0 rgba(255,220,160,.6); }
+.bomb .spark { transform-origin: 79px 10px; animation: fuse .5s ease-in-out infinite alternate; }
+@keyframes fuse { from { transform: scale(.8) rotate(-12deg); opacity: .8; } to { transform: scale(1.25) rotate(14deg); opacity: 1; } }
+.ash { position: absolute; inset: 0; background: rgba(12,9,32,.62); opacity: 0; transition: opacity .3s; pointer-events: none; }
+.card.lost .ash { opacity: 1; }
+.card.lost .face.front svg.gem { filter: grayscale(1) brightness(.7); }
+.card.atrisk .face.front { box-shadow: 0 0 0 2px rgba(255,194,74,.55), 0 0 20px rgba(255,194,74,.38), 0 8px 16px rgba(0,0,0,.5); }
+.card.bang .lift { animation: bang .75s cubic-bezier(.2,1.3,.4,1) backwards; }
+@keyframes bang { 0% { transform: scale(.6); } 38% { transform: scale(1.38); } 100% { transform: scale(1.08); } }
+.card.boom.up .face.front { box-shadow: 0 0 0 2px rgba(255,160,60,.6), 0 0 34px rgba(255,110,20,.75), 0 8px 16px rgba(0,0,0,.5); }
+
+/* ---------- banners, effects ---------- */
+#banner { position: absolute; text-align: center; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+#banner .big { animation-delay: .28s; font-size: clamp(40px, 10vmin, 104px); font-weight: 900; letter-spacing: 3px; line-height: 1; color: #fff3da; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+  background: linear-gradient(#fff3c4, #ffa43a 55%, #ff5a10); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 22px rgba(255,110,20,.8)) drop-shadow(0 4px 0 rgba(60,10,0,.6)); animation: boomtext .6s cubic-bezier(.2,1.4,.4,1) backwards; }
+@keyframes boomtext { 0% { transform: scale(.3) rotate(-6deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+#banner .lostn { font-size: clamp(15px, 3vmin, 24px); font-weight: 700; color: var(--spark2); text-shadow: 0 2px 8px #000; }
+#banner .saved { font-size: clamp(20px, 4.2vmin, 38px); font-weight: 800; color: var(--c); text-shadow: 0 0 18px var(--c), 0 2px 8px #000; animation: boomtext .5s cubic-bezier(.2,1.4,.4,1) backwards; }
+#banner .go { font-size: 13px; color: var(--dim); text-shadow: 0 2px 8px #000; animation: breathe 1.8s ease-in-out infinite; margin-top: 6px; }
+@keyframes breathe { 50% { opacity: .45; } }
+@media (max-height: 520px) { #banner { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 14px; } #banner .big { font-size: 34px; } #banner .go { margin: 0; } }
+.flash { position: absolute; inset: 0; background: radial-gradient(circle at var(--fx, 50%) var(--fy, 50%), rgba(255,246,214,.95), rgba(255,140,40,.55) 28%, transparent 68%); animation: flash .65s ease-out forwards; }
+@keyframes flash { from { opacity: 1; } to { opacity: 0; } }
+.sp { position: absolute; width: 8px; height: 8px; margin: -4px; border-radius: 50%; background: radial-gradient(circle, #fff6c8, #ff8a1f 60%, transparent 72%); animation: spark .8s cubic-bezier(.1,.7,.3,1) forwards; }
+@keyframes spark { from { transform: translate(0,0) scale(1.3); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) scale(.1); opacity: 0; } }
+
+/* ---------- screens ---------- */
+.screen { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain;
+  padding: calc(env(safe-area-inset-top) + 22px) calc(env(safe-area-inset-right) + 18px) calc(env(safe-area-inset-bottom) + 28px) calc(env(safe-area-inset-left) + 18px); }
+.sheet { max-width: 680px; margin: 0 auto; }
+h1 { margin: 0 0 6px; font-size: 34px; letter-spacing: .3px; }
+h2 { margin: 20px 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 1.4px; color: var(--dim); font-weight: 700; }
+h3 { margin: 18px 0 4px; color: var(--spark2); font-size: 16px; }
+p.lead { color: var(--dim); margin: 0 0 12px; }
+.back { display: inline-block; margin: -6px 0 10px; padding: 8px 0; color: var(--dim); font-size: 14px; text-decoration: none; }
+.dim { color: var(--dim); font-size: 13px; }
+.seg { display: inline-flex; background: rgba(24,18,66,.8); border: 1px solid var(--line); border-radius: 12px; padding: 3px; gap: 3px; flex-wrap: wrap; }
+.seg button { padding: 10px 16px; border-radius: 9px; font-weight: 700; color: var(--dim); min-width: 44px; }
+.seg button.on { background: linear-gradient(135deg, #8e6cff, #c55cff); color: #fff; box-shadow: 0 0 14px -2px rgba(150,100,255,.8); }
+.seg.small button { padding: 7px 11px; font-size: 14px; }
+.seatrow { display: flex; gap: 10px; align-items: center; margin: 10px 0; flex-wrap: wrap; padding: 10px 12px; border-radius: 16px; background: rgba(24,18,66,.55); border: 1px solid var(--line); }
+.seatrow .dot { width: 20px; height: 20px; border-radius: 50%; flex: none; background: var(--c); box-shadow: 0 0 14px var(--c); }
+.seatrow input { flex: 1 1 90px; min-width: 0; font-size: 16px; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--line); background: rgba(8,6,28,.7); color: var(--text); user-select: text; -webkit-user-select: text; }
+.seatrow .kinds { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.bigbtn { display: block; width: 100%; margin-top: 22px; padding: 17px; border-radius: 16px; background: linear-gradient(135deg, #8e6cff, #d25cff 70%, #ff5cc4); color: #fff; font-weight: 800; font-size: 20px; letter-spacing: .3px;
+  box-shadow: 0 0 28px -4px rgba(170,100,255,.8), 0 5px 0 rgba(30,10,80,.7); }
+.bigbtn:active { transform: translateY(3px); box-shadow: 0 0 22px -4px rgba(170,100,255,.8), 0 2px 0 rgba(30,10,80,.7); }
+.bigbtn.alt { background: rgba(30,22,80,.8); border: 1px solid var(--line); box-shadow: 0 5px 0 rgba(0,0,0,.35); color: var(--text); }
+.bigbtn.danger { background: linear-gradient(135deg, #ff7a1c, #e0261c); }
+.ghost { margin-top: 10px; padding: 12px 18px; border-radius: 13px; background: rgba(30,22,80,.7); border: 1px solid var(--line); font-weight: 700; color: var(--text); }
+
+/* home */
+.home { display: flex; align-items: center; justify-content: center; }
+.hero { width: 100%; max-width: 560px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.fan { position: relative; width: 300px; height: calc(var(--hh, 150px) + 30px); margin-bottom: 4px; }
+.fan .hc { position: absolute; left: 50%; top: 18px; width: var(--hw, 108px); height: var(--hh, 150px); margin-left: calc(var(--hw, 108px) / -2); transform-origin: 50% 120%; transform: rotate(var(--r)) translateX(var(--x)); animation: floaty 5s ease-in-out infinite; animation-delay: var(--d); }
+@keyframes floaty { 50% { translate: 0 -8px; } }
+.fan .hc .face { backface-visibility: visible; -webkit-backface-visibility: visible; --cw: var(--hw, 108px); }
+.logo { margin: 8px 0 0; font-size: clamp(54px, 13vmin, 110px); line-height: .95; font-weight: 900; letter-spacing: -1px; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; white-space: nowrap; }
+.logo .w { background: linear-gradient(95deg, #b8fff5, #b79bff 50%, #ff8ad6); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 24px rgba(125,92,255,.6)); }
+.logo .dots { color: var(--spark); text-shadow: 0 0 18px var(--spark); animation: fusepulse 1.2s ease-in-out infinite; margin-left: 2px; }
+@keyframes fusepulse { 50% { opacity: .55; text-shadow: 0 0 6px var(--spark); } }
+.tag { color: var(--dim); font-size: 17px; margin: 10px 0 20px; }
+.mode { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 360px; margin-top: 12px; padding: 17px 20px; border-radius: 18px; background: rgba(30,22,80,.75); border: 1.5px solid var(--line); font-weight: 800; font-size: 22px; box-shadow: 0 5px 0 rgba(0,0,0,.4); }
+.mode.primary { background: linear-gradient(135deg, #8e6cff, #d25cff 70%, #ff5cc4); border-color: transparent; box-shadow: 0 0 34px -4px rgba(170,100,255,.85), 0 5px 0 rgba(30,10,80,.7); }
+.mode:active { transform: translateY(3px); }
+.ghostrow { display: flex; gap: 10px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+.ver { margin-top: 18px; color: var(--faint); font-size: 12px; }
+.libback { position: absolute; left: calc(env(safe-area-inset-left) + 14px); top: calc(env(safe-area-inset-top) + 12px); margin: 0; }
+.soundtog { position: absolute; right: calc(env(safe-area-inset-right) + 14px); top: calc(env(safe-area-inset-top) + 10px); width: 40px; height: 40px; border-radius: 50%; background: rgba(30,22,80,.7); border: 1px solid var(--line); color: var(--dim); font-size: 18px; display: grid; place-items: center; }
+@media (max-height: 560px) { .fan { transform: scale(.7); margin: -24px 0; } .tag { margin: 4px 0 8px; } .mode { padding: 11px 16px; font-size: 19px; } .ver { display: none; } }
+
+/* overlays */
+.scrim { position: absolute; inset: 0; background: rgba(4,3,18,.74); display: grid; place-items: center; padding: 16px; }
+.scrim.clear { background: transparent; place-items: start start; }
+.menupanel { margin: calc(env(safe-area-inset-top) + 52px) 0 0 calc(env(safe-area-inset-left) + 10px); min-width: 230px; padding: 8px; border-radius: 18px; background: rgba(18,13,54,.97); border: 1px solid var(--line); box-shadow: 0 14px 40px rgba(0,0,0,.6), 0 0 30px -6px rgba(125,92,255,.5); }
+.menupanel button { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 14px 14px; border-radius: 11px; font-weight: 700; font-size: 17px; text-align: left; }
+.menupanel button:active { background: rgba(125,92,255,.25); }
+.menupanel button span { color: var(--dim); font-size: 14px; font-weight: 600; }
+.menupanel p { margin: 6px 12px 10px; font-size: 15px; }
+.menupanel .row { display: flex; gap: 8px; padding: 0 4px 4px; }
+.menupanel .row button { justify-content: center; background: rgba(40,30,100,.8); }
+.menupanel .row button.hot { background: linear-gradient(135deg, #ff7a1c, #e0261c); }
+.panel { width: 100%; max-width: 640px; max-height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain; padding: 22px 22px 24px; border-radius: 24px; background: linear-gradient(170deg, rgba(34,26,96,.97), rgba(12,9,38,.98)); border: 1px solid var(--line); box-shadow: 0 20px 60px rgba(0,0,0,.7), 0 0 50px -10px rgba(125,92,255,.5); }
+.how { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin: 10px 0 6px; }
+@media (max-width: 520px) { .how { grid-template-columns: 1fr; } }
+.hcard { background: rgba(10,8,36,.6); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+.hcard svg { width: 100%; height: 76px; display: block; }
+.hcard b { display: block; margin-top: 4px; }
+.hcard p { margin: 3px 0 0; font-size: 14px; color: var(--dim); line-height: 1.35; }
+.panel p, .panel li { line-height: 1.45; font-size: 15px; }
+.panel li { margin: 5px 0; }
+details.fine { margin-top: 14px; } details.fine summary { color: var(--dim); font-size: 14px; padding: 6px 0; }
+
+/* game over */
+.over { text-align: center; }
+.over h1 { font-size: clamp(30px, 6vmin, 46px); margin-bottom: 4px; }
+.over .why { color: var(--dim); margin: 0 0 14px; font-size: 15px; }
+.places { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 8px 0 4px; }
+.place { position: relative; padding: 14px 10px 12px; border-radius: 16px; background: rgba(10,8,36,.65); border: 1.5px solid var(--line); display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.place.win { border-color: var(--c); box-shadow: 0 0 0 1px var(--c), 0 0 30px -2px var(--c); background: linear-gradient(170deg, rgba(60,44,140,.55), rgba(12,9,38,.7)); }
+.place .pn { font-weight: 700; color: var(--c); font-size: 16px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.place .ps { font-size: 54px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 0 22px var(--c); font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
+.place .crown { font-size: 22px; height: 24px; line-height: 24px; }
+.place .pl { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+.next { color: var(--dim); font-size: 14px; margin: 12px 0 0; }
+.confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.confetti i { position: absolute; top: -30px; width: 14px; height: 18px; background: var(--c); clip-path: polygon(50% 0, 100% 32%, 50% 100%, 0 32%); opacity: .9; animation: fall var(--t) linear var(--d) infinite; }
+@keyframes fall { to { transform: translateY(110vh) rotate(var(--rot)); } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- =====================================================================
+     DATA BLOCK — every rule, point value, the deck, the computer styles, the texts and the sound recipes live here.
+     The logic below (engine / bots / sound / ui) reads this object and nothing else.
+     ===================================================================== -->
+<script id="data">
+const GAME_DATA = {
+  // Where the Tabletop Library's front page is (relative to this file). Shown only when hosted over http(s).
+  library: { name: 'Tabletop Library', href: '../../index.html' },
+  title: 'One More…',
+
+  // 2-6 people on one device; each seat is a person or a computer.
+  players: { min: 2, max: 6 },
+
+  // ---- THE DECK ---------------------------------------------------------
+  // 38 gem cards (one gem each) and 6 boom cards, shuffled together face down. A card is just a number:
+  // 0 .. gems-1 are gems, the rest are booms. 'colours' only picks how a gem is drawn - every gem is worth 1.
+  deck: { gems: 38, booms: 6, colours: 4 },
+
+  // ---- RULES ------------------------------------------------------------
+  // With exactly 'race.players' players the first to SAVE 'race.target' gems wins (all gems saved with neither there = a tie).
+  // With more players the game ends when every gem is saved; most gems wins. The refresh needs no number: it happens when
+  // the last boom is drawn (every boom is out), or when only booms are left in the draw pile.
+  rules: {
+    race: { players: 2, target: 20 },
+  },
+
+  // The "Booby Prizes" expansion (16 prize cards) is not built: the rulebook does not say what the cards do.
+  // This is where a prize deck would be described if it ever is.
+  expansions: { boobyPrizes: { available: false, cards: 0 } },
+
+  // ---- COMPUTER OPPONENTS -----------------------------------------------
+  // A computer keeps digging while the odds beat the risk: with G gems and B booms left in the draw pile and g gems at
+  // risk this turn, it draws again if G/(G+B) > g'/(g'+1), where g' = g / risk. A higher 'risk' number = bolder.
+  styles: [
+    { id: 'careful', name: 'Careful', risk: 0.75, blurb: 'Saves early' },
+    { id: 'steady',  name: 'Steady',  risk: 1,    blurb: 'Plays the odds' },
+    { id: 'daring',  name: 'Daring',  risk: 1.3,  blurb: 'Digs for one more' },
+  ],
+  bots: {
+    defaultStyle: 'steady',
+    // In a two-player race: bolder when the opponent is within 'near' gems of the target, calmer when it is 'far' or more away.
+    race: { near: 4, nearRisk: 1.35, far: 12, farRisk: 0.85 },
+  },
+
+  // ---- SEATS & PACE -----------------------------------------------------
+  // Each person keeps their colour for the whole evening.
+  seatColours: ['#3df2d0', '#ff5cc4', '#ffc24a', '#5eaaff', '#b79bff', '#b7f24a'],
+  defaultNames: ['You', 'Player 2', 'Player 3', 'Player 4', 'Player 5', 'Player 6'],
+  setup: { defaultSeats: [{ kind: 'human' }, { kind: 'computer', style: 'steady' }], maxName: 12 },
+
+  // Milliseconds. Only animations and a computer's moves use these; nothing else moves on its own.
+  pace: {
+    botStart: 500,        // a computer starts its turn this long after the turn reaches it
+    botDraw: 820,         // between a computer's draws
+    botSave: 760,         // from its last draw to saving
+    afterSave: 650,       // after a person saves, before a computer next to them starts
+    boomGuardMs: 450,     // taps this soon after a boom are ignored, so a fast digger does not skip the boom by accident
+    overDelay: 1100,      // from the last save to the game-over screen
+    countStep: 85,        // between gems landing in a pile (the score counts up with them)
+  },
+
+  // ---- TEXT -------------------------------------------------------------
+  texts: {
+    tagline: 'Push your luck. Dig for just one more…',
+    hintDig: 'Tap the pile to dig.',
+    hintMore: 'Dig again — or tap your gems to save.',
+    hintBoom: 'Tap anywhere to go on.',
+    hintWait: 'Tap anywhere to go on.',
+    judgments: [
+      'Who starts: the seat order is shuffled at random when a game begins (the rulebook says "randomly determine a turn order"). A rematch uses the rulebook’s order instead: fewest gems first, then second fewest, and so on; in a two-player game the loser goes first (after a tie, the one who went second).',
+      'Refresh when only booms remain: the rulebook lets you refresh when you notice every card left is a boom. Here it happens by itself at that moment, because declining is never better. The gems you have at risk stay on the table and are not shuffled in; it only happens if the shuffle brings at least one gem back.',
+      'Every refresh shuffles all cards nobody has saved (the boom pile, lost gems, the draw pile) but never the cards on the table in the current turn.',
+      'When the 6th (final) boom is drawn it stays on the table until you tap; the refresh happens as the turn passes.',
+      'A boom stays on the table until you tap, so everyone sees it. Taps in the first moment after a boom are ignored so a quick digger cannot skip it by accident.',
+      'The game end is checked after every save: in a two-player game when someone has saved 20 gems (or all 38 are saved at 19–19, a tie); with 3–6 players when all 38 gems are saved.',
+      'Ties: a tie for the most gems with 3–6 players is a shared win. In a two-player game 19–19 is a tie.',
+      'You may draw as many cards in a turn as you like; there is no limit. Saving with nothing drawn is not possible.',
+      'Computers see only what players at a table can: how many cards are in the draw pile, how many booms are out, their own gems at risk and everyone’s saved gems. Careful saves earlier, Daring digs longer, Steady plays the odds; in a two-player race they take more risk when the other side is close to 20 and less when it is far away.',
+      'Not included: the drinking variant, and the Booby Prizes expansion (the rulebook does not list what its 16 cards do).',
+    ],
+  },
+
+  // ---- SOUND ------------------------------------------------------------
+  // Every sound is built from a few synthesised voices (no audio files, so the game stays one file and works offline).
+  // A voice: w = wave ('sine' | 'triangle' | 'square' | 'sawtooth' | 'noise'), f = pitch in Hz (or [from, to] for a glide),
+  // at = start (s), d = length (s), g = loudness (0-1), lp / hp = low-/high-pass filter (Hz), a = attack (s, default 0.006).
+  // 'rate' on a play call multiplies pitch: 'clink' climbs through run.scale (semitones) with each gem of a run.
+  sound: {
+    master: 0.5,              // overall level (the device volume still rules)
+    maxVoices: 28,            // never more than this many voices sounding at once
+    minGapMs: 40,             // the same sound is not retriggered faster than this
+    run: { scale: [0, 2, 4, 7, 9, 12, 14, 16] },     // pentatonic steps, in semitones, for a run of gems (the top step repeats)
+    sounds: {
+      draw:   [{ w: 'noise', f: 0, at: 0, d: 0.06, g: 0.16, hp: 1500, lp: 6000 }, { w: 'triangle', f: [260, 150], at: 0, d: 0.09, g: 0.16 }],
+      glint:  [{ w: 'sine', f: 523, at: 0, d: 0.3, g: 0.15 }, { w: 'sine', f: 785, at: 0.025, d: 0.24, g: 0.07 }, { w: 'triangle', f: 262, at: 0, d: 0.12, g: 0.05 }],
+      clink:  [{ w: 'sine', f: 659, at: 0, d: 0.22, g: 0.1 }, { w: 'sine', f: 988, at: 0.02, d: 0.18, g: 0.05 }],
+      save:   [{ w: 'noise', f: 0, at: 0, d: 0.16, g: 0.05, hp: 6500 }, { w: 'triangle', f: 784, at: 0, d: 0.3, g: 0.14 }, { w: 'triangle', f: 1047, at: 0.07, d: 0.34, g: 0.14 }, { w: 'sine', f: 1568, at: 0.14, d: 0.5, g: 0.1 }, { w: 'sine', f: 2093, at: 0.2, d: 0.5, g: 0.05 }],
+      boom:   [{ w: 'noise', f: 0, at: 0, d: 0.12, g: 0.14, hp: 2500 }, { w: 'noise', f: 0, at: 0, d: 0.9, g: 0.26, lp: 1400 }, { w: 'sine', f: [170, 45], at: 0, d: 0.7, g: 0.26 }, { w: 'sawtooth', f: [220, 60], at: 0, d: 0.35, g: 0.08, lp: 700 }],
+      rumble: [{ w: 'noise', f: 0, at: 0.05, d: 1.3, g: 0.2, lp: 220, a: 0.15 }, { w: 'triangle', f: [62, 40], at: 0.05, d: 1.2, g: 0.2, a: 0.1 }],
+      refresh: [0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => ({ w: 'noise', f: 0, at: i * 0.045, d: 0.05, g: 0.09, hp: 2200, lp: 6500 })).concat([{ w: 'triangle', f: [200, 420], at: 0, d: 0.42, g: 0.06 }]),
+      win:    [{ w: 'triangle', f: 523, at: 0, d: 0.3, g: 0.2 }, { w: 'triangle', f: 659, at: 0.13, d: 0.3, g: 0.2 }, { w: 'triangle', f: 784, at: 0.26, d: 0.3, g: 0.2 }, { w: 'triangle', f: 1047, at: 0.4, d: 0.9, g: 0.2 }, { w: 'sine', f: 1319, at: 0.4, d: 0.9, g: 0.1 }, { w: 'sine', f: 1568, at: 0.4, d: 0.9, g: 0.08 }, { w: 'sine', f: 2093, at: 0.55, d: 0.7, g: 0.05 }],
+      tie:    [{ w: 'triangle', f: 392, at: 0, d: 0.3, g: 0.16 }, { w: 'triangle', f: 392, at: 0.2, d: 0.3, g: 0.16 }, { w: 'triangle', f: 523, at: 0.4, d: 0.7, g: 0.18 }],
+      lose:   [{ w: 'triangle', f: 392, at: 0, d: 0.34, g: 0.15 }, { w: 'triangle', f: 330, at: 0.22, d: 0.34, g: 0.15 }, { w: 'triangle', f: 262, at: 0.44, d: 0.7, g: 0.15 }],
+      tick:   [{ w: 'sine', f: 880, at: 0, d: 0.04, g: 0.1 }],
+    },
+  },
+};
+</script>
+
+<!-- =====================================================================
+     ENGINE — pure rules, no DOM.  Reads GAME_DATA (or a copy passed in).
+     ===================================================================== -->
+<script id="engine">
+const Engine = (() => {
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const fail = msg => { throw new Error('Illegal: ' + msg); };
+
+  // Seeded RNG whose position can be saved and restored (so a saved game continues exactly where it stopped).
+  function mulberry32(seed) {
+    let a = seed >>> 0;
+    const next = function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    next.getState = () => a;
+    next.setState = v => { a = v >>> 0; };
+    return next;
+  }
+
+  function shuffle(arr, rng) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  // ---------------- the deck ----------------
+  // Card ids 0 .. gems-1 are gems, gems .. gems+booms-1 are booms. The draw pile is an array whose LAST card is the top.
+  const isBoom = (s, id) => id >= s.data.deck.gems;
+  const gemTotal = s => s.data.deck.gems;
+  const boomTotal = s => s.data.deck.booms;
+  const colourOf = (s, id) => id % s.data.deck.colours;           // how a gem is drawn; no effect on play
+  const cardCount = s => s.data.deck.gems + s.data.deck.booms;
+
+  // ---------------- creation ----------------
+  function createGame(opts = {}) {
+    const data = clone(opts.data || GAME_DATA);
+    const n = opts.players || data.players.min;
+    if (n < data.players.min || n > data.players.max) fail('player count ' + n);
+    const rng = opts.rng || (opts.seed !== undefined ? mulberry32(opts.seed) : Math.random);
+    const total = data.deck.gems + data.deck.booms;
+    const s = {
+      data, rules: data.rules, rng, n,
+      draw: shuffle(Array.from({ length: total }, (_, i) => i), rng),   // face-down draw pile
+      boomPile: [],                          // cards from busted turns; the booms are face up, so how many are out is public
+      table: [],                             // the gems the current player has drawn this turn (at risk)
+      safe: Array.from({ length: n }, () => []),   // each player's saved gems
+      current: 0, turnNo: 0,
+      phase: 'turn',                         // 'turn' (dig or save) | 'boomed' (a boom is showing; the next step is to pass) | 'over'
+      lastBoom: null,                        // { card, lost: [gem ids] } while phase is 'boomed'
+      refreshes: 0, over: false, result: null,
+    };
+    return s;
+  }
+
+  // Seat order for a new game: the rulebook says to randomly determine a turn order.
+  function randomOrder(n, rng) { return shuffle(Array.from({ length: n }, (_, i) => i), rng || Math.random); }
+
+  // ---------------- queries ----------------
+  const scores = s => s.safe.map(p => p.length);
+  const savedTotal = s => s.safe.reduce((k, p) => k + p.length, 0);
+  const boomsOut = s => s.boomPile.filter(c => isBoom(s, c)).length;
+  const counts = s => {
+    const boomsInDraw = s.draw.filter(c => isBoom(s, c)).length;
+    return { drawCount: s.draw.length, boomsInDraw, gemsInDraw: s.draw.length - boomsInDraw, boomsOut: boomsOut(s), atRisk: s.table.length, saved: savedTotal(s) };
+  };
+  const race = s => !!s.rules.race && s.n === s.rules.race.players;
+  const canDraw = s => !s.over && s.phase === 'turn' && s.draw.length > 0;
+  const canSave = s => !s.over && s.phase === 'turn' && s.table.length > 0;
+  const canPass = s => !s.over && s.phase === 'boomed';
+
+  // ---------------- refresh ----------------
+  // Shuffle every card nobody has saved (boom pile + draw pile) into a new draw pile. The cards on the table stay there.
+  function refresh(s) {
+    s.draw = shuffle(s.boomPile.concat(s.draw), s.rng);
+    s.boomPile = [];
+    s.refreshes++;
+  }
+  // The draw pile holds nothing but booms (or nothing): refresh at once, provided that brings at least one gem back.
+  function autoRefresh(s) {
+    if (s.over) return null;
+    if (s.draw.some(c => !isBoom(s, c))) return null;
+    if (!s.boomPile.some(c => !isBoom(s, c))) return null;
+    refresh(s);
+    return 'auto';
+  }
+
+  // ---------------- actions ----------------
+  // Draw the top card. A gem joins the table; a boom ends the turn and loses this turn's gems (they go to the boom pile with it).
+  function draw(s) {
+    if (s.over) fail('the game is over');
+    if (s.phase !== 'turn') fail('draw in phase ' + s.phase);
+    if (!s.draw.length) fail('the draw pile is empty');
+    const card = s.draw.pop();
+    if (isBoom(s, card)) {
+      const lost = s.table.slice();
+      s.boomPile.push(...lost, card);
+      s.table = [];
+      s.lastBoom = { card, lost };
+      s.phase = 'boomed';
+      return { type: 'boom', seat: s.current, card, lost, final: boomsOut(s) === boomTotal(s) };
+    }
+    s.table.push(card);
+    return { type: 'gem', seat: s.current, card, refreshed: autoRefresh(s) };
+  }
+
+  function checkOver(s) {
+    const sc = scores(s);
+    let reason = null;
+    if (race(s) && sc.some(x => x >= s.rules.race.target)) reason = 'target';
+    else if (savedTotal(s) === gemTotal(s)) reason = 'all-saved';
+    if (!reason) return false;
+    s.over = true; s.phase = 'over';
+    s.result = computeResult(s, reason);
+    return true;
+  }
+
+  // Save: the gems on the table become permanent and the turn ends.
+  function save(s) {
+    if (s.over) fail('the game is over');
+    if (s.phase !== 'turn') fail('save in phase ' + s.phase);
+    if (!s.table.length) fail('nothing to save');
+    const seat = s.current, gems = s.table.slice();
+    s.safe[seat].push(...gems);
+    s.table = [];
+    if (checkOver(s)) return { type: 'save', seat, gems, over: true, refreshed: null };
+    return { type: 'save', seat, gems, over: false, refreshed: pass(s) };
+  }
+
+  // After a boom: pass the turn. If that was the last boom, refresh as the turn passes.
+  function endTurn(s) {
+    if (s.over) fail('the game is over');
+    if (s.phase !== 'boomed') fail('there is nothing to pass');
+    const final = boomsOut(s) === boomTotal(s);
+    if (final) refresh(s);
+    const refreshed = pass(s);
+    return { type: 'pass', refreshed: final ? 'final' : refreshed };
+  }
+
+  function pass(s) {
+    s.lastBoom = null;
+    s.current = (s.current + 1) % s.n;
+    s.turnNo++;
+    s.phase = 'turn';
+    return autoRefresh(s);
+  }
+
+  // ---------------- result, rematch ----------------
+  function computeResult(s, reason) {
+    const sc = scores(s), best = Math.max(...sc);
+    const winners = sc.map((v, i) => (v === best ? i : -1)).filter(i => i >= 0);
+    const order = sc.map((v, i) => i).sort((a, b) => sc[b] - sc[a] || a - b);
+    const ranking = [];
+    order.forEach((idx, k) => {
+      const place = k > 0 && sc[idx] === ranking[k - 1].score ? ranking[k - 1].place : k + 1;
+      ranking.push({ idx, score: sc[idx], place });
+    });
+    return { reason: reason || 'all-saved', scores: sc, winners, tie: winners.length > 1, ranking };
+  }
+
+  // Who sits where in the next game: fewest gems first, then second fewest, and so on (equal scores keep their order).
+  // Two players: the loser first; after a tie, the player who went second goes first. Returns old seat numbers in the new turn order.
+  function rematchOrder(result) {
+    const sc = result.scores, n = sc.length;
+    const idx = Array.from({ length: n }, (_, i) => i);
+    if (n === 2 && sc[0] === sc[1]) return [1, 0];
+    return idx.sort((a, b) => sc[a] - sc[b] || a - b);
+  }
+
+  // ---------------- views ----------------
+  // What a player at the table may legitimately know. The ORDER of the draw pile is never in here - only how many cards
+  // are in it, which follows from what is public (saved gems, the boom pile, the table) - and nothing about a hidden card.
+  function publicView(s, idx) {
+    const c = counts(s);
+    return {
+      n: s.n, me: idx, current: s.current, phase: s.phase, over: s.over, turnNo: s.turnNo,
+      gemTotal: gemTotal(s), boomTotal: boomTotal(s),
+      race: race(s), target: race(s) ? s.rules.race.target : null,
+      drawCount: c.drawCount, gemsInDraw: c.gemsInDraw, boomsInDraw: c.boomsInDraw, boomsOut: c.boomsOut,
+      table: s.table.length,
+      scores: scores(s),
+    };
+  }
+
+  // ---------------- save / resume ----------------
+  const SAVE_SCHEMA = 1;
+  // Identifies the rules a save was made under; a save from different rules (an updated data block) is not resumed.
+  function fingerprint(s) {
+    const str = JSON.stringify([s.data.deck, s.data.rules, s.data.players]);
+    let h = 5381;
+    for (let i = 0; i < str.length; i++) h = ((h * 33) ^ str.charCodeAt(i)) >>> 0;
+    return h.toString(36);
+  }
+
+  // A plain-JSON snapshot of a game in progress (works at any moment, including with a boom showing).
+  function serialize(s) {
+    if (!s.rng.getState) fail('this game uses an RNG that cannot be saved');
+    if (s.over) fail('a finished game is not saved');
+    return JSON.parse(JSON.stringify({
+      schema: SAVE_SCHEMA, fingerprint: fingerprint(s), n: s.n,
+      draw: s.draw, boomPile: s.boomPile, table: s.table, safe: s.safe,
+      current: s.current, turnNo: s.turnNo, phase: s.phase, lastBoom: s.lastBoom, refreshes: s.refreshes,
+      rngState: s.rng.getState(),
+    }));
+  }
+
+  // Rebuilds a game from serialize(); throws if the save is from another schema or other rules or is not a sensible game.
+  function restore(saved, opts = {}) {
+    if (!saved || saved.schema !== SAVE_SCHEMA) throw new Error('unknown save format');
+    const s = createGame({ data: opts.data, players: saved.n, seed: 1 });
+    if (fingerprint(s) !== saved.fingerprint) throw new Error('the rules changed since this game was saved');
+    for (const k of ['draw', 'boomPile', 'table', 'safe', 'current', 'turnNo', 'phase', 'lastBoom', 'refreshes']) s[k] = saved[k];
+    s.rng.setState(saved.rngState);
+    const all = s.draw.concat(s.boomPile, s.table, ...s.safe).sort((a, b) => a - b);
+    if (all.length !== cardCount(s) || all.some((c, i) => c !== i)) throw new Error('save does not match the game');
+    if (s.safe.length !== s.n || !(s.current >= 0 && s.current < s.n) || !['turn', 'boomed'].includes(s.phase)) throw new Error('save does not match the game');
+    return s;
+  }
+
+  return { createGame, randomOrder, draw, save, endTurn, refresh, autoRefresh, canDraw, canSave, canPass,
+           scores, savedTotal, boomsOut, counts, isBoom, colourOf, computeResult, rematchOrder, publicView,
+           serialize, restore, mulberry32, shuffle };
+})();
+</script>
+
+<!-- =====================================================================
+     BOTS — computer opponents.  They are given Engine.publicView only: never the order of the draw pile.
+     ===================================================================== -->
+<script id="bots">
+const Bots = (() => {
+  const styleOf = (id, data = GAME_DATA) => data.styles.find(x => x.id === id) || data.styles.find(x => x.id === data.bots.defaultStyle);
+
+  // The whole decision, from the public view only (Engine.publicView): keep digging while the odds beat the risk.
+  //   p = chance the next card is a gem = gemsInDraw / drawCount
+  //   dig again if p > g' / (g' + 1), where g' = (gems at risk) / risk, risk being the style's boldness (higher = bolder).
+  // Returns 'draw' or 'save'; it never returns an illegal move.
+  function decide(view, styleId, data = GAME_DATA) {
+    const me = view.me, g = view.table;
+    if (g <= 0) return 'draw';                              // nothing to save yet: digging is the only move
+    if (view.drawCount <= 0) return 'save';
+    const style = styleOf(styleId, data), mine = view.scores[me];
+    const others = view.scores.filter((v, i) => i !== me);
+    const bestOther = others.length ? Math.max(...others) : 0;
+
+    // Saving wins on the spot: the target is reached, or it ends the game with me in front.
+    if (view.race && mine + g >= view.target) return 'save';
+    const saved = view.scores.reduce((a, b) => a + b, 0);
+    if (saved + g >= view.gemTotal && mine + g > bestOther) return 'save';
+
+    const p = view.drawCount > 0 ? view.gemsInDraw / view.drawCount : 0;
+    if (p <= 0) return 'save';                              // only booms are left: the next card is certain to be one
+
+    let risk = style.risk;
+    if (view.race) {                                        // a two-player race: how close is the other side to the target?
+      const R = data.bots.race, need = view.target - bestOther;
+      if (need <= R.near) risk *= R.nearRisk;
+      else if (need >= R.far) risk *= R.farRisk;
+    }
+    const gEff = g / risk;
+    return p > gEff / (gEff + 1) ? 'draw' : 'save';
+  }
+
+  function create({ style, data = GAME_DATA } = {}) {
+    const id = styleOf(style, data).id;
+    return { style: id, decide: view => decide(view, id, data) };
+  }
+
+  // Plays a whole game between computers (for the simulations and the tests). styles: one style id per seat.
+  function playGame({ styles, seed = 1, data = GAME_DATA, maxSteps = 20000 } = {}) {
+    const s = Engine.createGame({ data, players: styles.length, seed });
+    let steps = 0, booms = 0;
+    while (!s.over) {
+      if (++steps > maxSteps) throw new Error('game did not finish');
+      if (s.phase === 'boomed') { Engine.endTurn(s); continue; }
+      const a = decide(Engine.publicView(s, s.current), styles[s.current], data);
+      if (a === 'draw') { const r = Engine.draw(s); if (r.type === 'boom') booms++; } else Engine.save(s);
+    }
+    return { state: s, result: s.result, steps, booms, turns: s.turnNo };
+  }
+
+  return { decide, create, styleOf, playGame };
+})();
+</script>
+
+<script id="sound">
+/* =====================================================================
+   SOUND — synthesised with Web Audio from the recipes in GAME_DATA.sound; no files, no network.
+   Good manners built in: the audio context is only created/resumed inside a tap (iPad Safari insists), nothing plays while
+   it is switched off, sounds are short and soft behind one master level and a gentle limiter, the same sound is not stacked
+   on itself, the number of voices is capped, and it stops when the page is hidden. The iPad's silent switch still mutes it.
+   ===================================================================== */
+const Sound = (() => {
+  function create({ data, AudioContext, now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now()) } = {}) {
+    let ctx = null, master = null, noise = null, enabled = true, voices = 0;
+    const lastAt = {}, played = [];
+
+    function build() {
+      if (ctx || !AudioContext) return;
+      try { ctx = new AudioContext({ latencyHint: 'interactive' }); } catch (e) { try { ctx = new AudioContext(); } catch (e2) { ctx = null; return; } }
+      try { wire(); } catch (e) { ctx = null; }                    // a browser with a half-working audio system just stays silent
+    }
+    function wire() {
+      master = ctx.createGain(); master.gain.value = data.master;
+      const limiter = ctx.createDynamicsCompressor();
+      limiter.threshold.value = -14; limiter.knee.value = 24; limiter.ratio.value = 6; limiter.attack.value = 0.003; limiter.release.value = 0.2;
+      master.connect(limiter); limiter.connect(ctx.destination);
+      const len = Math.floor(ctx.sampleRate * 0.25), buf = ctx.createBuffer(1, len, ctx.sampleRate), ch = buf.getChannelData(0);
+      let seed = 1; for (let i = 0; i < len; i++) { seed = (seed * 16807) % 2147483647; ch[i] = (seed / 2147483647) * 2 - 1; }     // fixed noise: the same "tak" every time
+      noise = buf;
+    }
+
+    // Call from inside a tap/click: creates the context the first time and wakes it if the browser put it to sleep.
+    function unlock() {
+      if (!AudioContext) return false;
+      build();
+      if (ctx && ctx.state !== 'running' && ctx.resume) { try { const r = ctx.resume(); if (r && r.catch) r.catch(() => {}); } catch (e) { /* ignore */ } }
+      return !!ctx;
+    }
+    function suspend() { if (ctx && ctx.state === 'running' && ctx.suspend) { try { const r = ctx.suspend(); if (r && r.catch) r.catch(() => {}); } catch (e) { /* ignore */ } } }
+
+    function voice(v, t0, rate) {
+      const t = t0 + (v.at || 0), a = v.a || 0.006, d = Math.max(0.02, v.d), peak = Math.min(1, v.g);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), t + a);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      let src;
+      if (v.w === 'noise') { src = ctx.createBufferSource(); src.buffer = noise; src.loop = true; }
+      else {
+        src = ctx.createOscillator(); src.type = v.w;
+        const f = (Array.isArray(v.f) ? v.f : [v.f, v.f]).map(x => x * rate);
+        src.frequency.setValueAtTime(f[0], t);
+        if (f[1] !== f[0]) src.frequency.exponentialRampToValueAtTime(f[1], t + d);
+      }
+      let node = src;
+      if (v.hp) { const h = ctx.createBiquadFilter(); h.type = 'highpass'; h.frequency.value = v.hp; node.connect(h); node = h; }
+      if (v.lp) { const l = ctx.createBiquadFilter(); l.type = 'lowpass'; l.frequency.value = v.lp; node.connect(l); node = l; }
+      node.connect(g); g.connect(master);
+      voices++;
+      src.onended = () => { voices--; try { g.disconnect(); } catch (e) { /* ignore */ } };
+      src.start(t); src.stop(t + d + 0.03);
+    }
+
+    // opts.rate multiplies the pitch (1 = as written): a run of gems climbs by playing 'clink' at a rising rate.
+    function play(name, opts) {
+      const rate = opts && opts.rate > 0 ? opts.rate : 1;
+      played.push(name); if (played.length > 200) played.shift();
+      const recipe = data.sounds[name];
+      if (!enabled || !recipe || !ctx || ctx.state !== 'running') return false;
+      const ms = now();
+      if (lastAt[name] !== undefined && ms - lastAt[name] < data.minGapMs) return false;
+      if (voices + recipe.length > data.maxVoices) return false;
+      lastAt[name] = ms;
+      const t0 = ctx.currentTime + 0.005;
+      try { recipe.forEach(v => voice(v, t0, rate)); } catch (e) { return false; }
+      return true;
+    }
+    return { create, unlock, suspend, play, setEnabled: v => { enabled = !!v; }, isEnabled: () => enabled, played, get ready() { return !!ctx; } };
+  }
+  return { create };
+})();
+</script>
+
+<script id="ui">
+/* =====================================================================
+   UI — a table for touch.  The table is the UI: tap the pile to dig, tap your gems to save them, tap anywhere to go on.
+   Nothing advances on a timer except animations and a computer's moves (a tap skips ahead); a boom stays until tapped.
+   ===================================================================== */
+(() => {
+  'use strict';
+  const D = GAME_DATA, T = D.texts;
+  const root = document.getElementById('app');
+  const BUILD = (() => { const m = document.querySelector('meta[name=build]'); const v = m ? m.content : ''; return !v || v.startsWith('__') ? 'local file' : v; })();
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const clamp = (lo, v, hi) => Math.max(lo, Math.min(hi, v));
+  const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const isBoomId = id => id >= D.deck.gems;
+  const colourOf = id => id % D.deck.colours;
+  const hash = (id, k) => { let h = (id * 2654435761 + k * 40503) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13; return (h >>> 0) / 4294967296; };
+  const SEED = (() => { const m = /[?&]seed=(\d+)/.exec(location.search); return m ? +m[1] : null; })();
+
+  // ---------------- remembered between visits (if the browser allows) ----------------
+  const NS = 'tabletop-library-one-more-';
+  const SETUP_KEY = NS + 'setup', SAVE_KEY = NS + 'save', SOUND_KEY = NS + 'sound', HINTS_KEY = NS + 'hints', DONE_KEY = NS + 'games-finished';
+  const pref = {
+    get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: (k, v) => { try { localStorage.setItem(k, String(v)); } catch (e) { /* storage unavailable: fine */ } },
+    del: k => { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } },
+    json: k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } },
+  };
+
+  // ---------------- setup (who is sitting where) ----------------
+  const styleName = id => Bots.styleOf(id).name;
+  function autoNames(cfg) {                                   // names nobody typed: "You", "Player 2", or the computer's style (numbered if repeated)
+    const used = {};
+    for (let i = 0; i < cfg.n; i++) {
+      const s = cfg.seats[i];
+      if (s.custom) continue;
+      const base = s.kind === 'computer' ? styleName(s.style) : D.defaultNames[i];
+      used[base] = (used[base] || 0) + 1;
+      s.name = used[base] > 1 ? base + ' ' + used[base] : base;
+    }
+  }
+  function loadSetup() {
+    const cfg = { n: D.players.min, seats: Array.from({ length: D.players.max }, (_, i) => {
+      const d = D.setup.defaultSeats[i] || { kind: 'human' };
+      return { kind: d.kind, style: d.style || D.bots.defaultStyle, name: '', custom: false };
+    }) };
+    const s = pref.json(SETUP_KEY);
+    if (s && s.n >= D.players.min && s.n <= D.players.max && Array.isArray(s.seats)) {
+      cfg.n = s.n;
+      s.seats.slice(0, D.players.max).forEach((x, i) => {
+        if (!x) return;
+        const seat = cfg.seats[i];
+        if (x.kind === 'human' || x.kind === 'computer') seat.kind = x.kind;
+        if (D.styles.some(st => st.id === x.style)) seat.style = x.style;
+        if (x.custom && typeof x.name === 'string' && x.name.trim()) { seat.custom = true; seat.name = x.name.slice(0, D.setup.maxName); }
+      });
+    }
+    autoNames(cfg);
+    return cfg;
+  }
+  const saveSetup = () => pref.set(SETUP_KEY, JSON.stringify(ui.setup));
+
+  const ui = { screen: 'home', setup: loadSetup(), seats: [], st: null, hold: null, botBusy: false, botTimer: null,
+               menu: null, help: false, settings: false, showOver: false, overHandled: false, shown: [], countTimers: [], zc: 0,
+               boomAt: -1e9, fxBoom: -1, built: null, bannerKey: '', ovSig: null, pace: Object.assign({}, D.pace), cw: 100, ch: 140, notice: '', gameNo: 0 };
+  ui.sound = pref.get(SOUND_KEY) !== 'off';
+  ui.hints = ['auto', 'on', 'off'].includes(pref.get(HINTS_KEY)) ? pref.get(HINTS_KEY) : 'auto';
+  const hintsVisible = () => ui.hints === 'on' || (ui.hints === 'auto' && !(+pref.get(DONE_KEY) > 0));
+  const reducedQuery = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+  const reduced = () => !!(reducedQuery && reducedQuery.matches);
+  const audio = Sound.create({ data: D.sound, AudioContext: window.AudioContext || window.webkitAudioContext });
+  audio.setEnabled(ui.sound);
+  // (sounds can follow an action after a short gap: the card's tick, then its glint)
+  const sfx = (name, opts, afterMs = 0) => { const go = () => { try { audio.play(name, opts); } catch (e) { /* sound is never allowed to break the game */ } }; if (afterMs) setTimeout(go, afterMs); else go(); };
+  const runRate = k => { const sc = D.sound.run.scale; return Math.pow(2, sc[Math.min(k, sc.length - 1)] / 12); };
+  document.addEventListener('visibilitychange', () => { if (document.hidden) audio.suspend(); });
+
+  // ---------------- the cards' pictures ----------------
+  const TONES = [['#c9fff6', '#3df2d0', '#12b39c', '#08766f'], ['#ffd1f0', '#ff5cc4', '#c8179a', '#800a62'],
+                 ['#fff0bd', '#ffc24a', '#e08a0f', '#94520a'], ['#d3e8ff', '#5eaaff', '#2b6fe0', '#173f9c']];
+  const gemInner = c => {
+    const [a, b, d, e] = TONES[c % TONES.length];
+    return `<polygon points="25,20 75,20 62,42 38,42" fill="${a}"/><polygon points="25,20 38,42 5,42" fill="${b}"/><polygon points="75,20 95,42 62,42" fill="${d}"/>` +
+      `<polygon points="5,42 38,42 50,92" fill="${d}"/><polygon points="38,42 62,42 50,92" fill="${b}"/><polygon points="62,42 95,42 50,92" fill="${e}"/>` +
+      `<path d="M50 20 L38 42 M50 20 L62 42 M50 42 L50 92" stroke="rgba(255,255,255,.4)" stroke-width="1.2" fill="none"/>` +
+      `<polygon points="25,20 75,20 95,42 50,92 5,42" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.6" stroke-linejoin="round"/>` +
+      `<polygon points="30,24 40,24 34,36" fill="rgba(255,255,255,.7)"/>`;
+  };
+  const gemSVG = (c, cls = 'gem') => `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true">${gemInner(c)}</svg>`;
+  const bombInner = `<circle cx="46" cy="60" r="31" fill="#171029"/><circle cx="41" cy="55" r="23" fill="#261a45"/><ellipse cx="35" cy="47" rx="9" ry="6" fill="rgba(255,255,255,.35)" transform="rotate(-30 35 47)"/>` +
+    `<rect x="55" y="22" width="16" height="13" rx="3" fill="#4a3a63" transform="rotate(35 63 28)"/><path d="M68 24 Q80 20 79 10" stroke="#e8c27a" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
+  const bombSVG = `<svg class="bomb" viewBox="0 0 100 100" aria-hidden="true">${bombInner}` +
+    `<g class="spark"><circle cx="79" cy="10" r="8" fill="#ffb347" opacity=".55"/><polygon points="79,1 82,8 90,10 82,12 79,19 76,12 68,10 76,8" fill="#fff6c8"/></g></svg>`;
+  const backEmblem = `<svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="25,28 75,28 92,48 50,92 8,48" fill="none" stroke="#a58bff" stroke-width="3.5" stroke-linejoin="round"/><path d="M8 48 H92 M25 28 L38 48 L50 92 L62 48 L75 28" fill="none" stroke="#a58bff" stroke-width="2" opacity=".6"/></svg>`;
+  const frontHTML = id => isBoomId(id)
+    ? `<div class="face front">${bombSVG}<div class="lbl">BOOM</div><div class="ash"></div></div>`
+    : `<div class="face front">${gemSVG(colourOf(id))}<i class="sparkle"></i><div class="ash"></div></div>`;
+  const cardHTML = id => `<div class="lift"><div class="flipper">${frontHTML(id)}<div class="face back">${backEmblem}</div></div></div>`;
+
+  // ---------------- small helpers about the game ----------------
+  const seatOf = i => ui.seats[i];
+  const isBot = i => !!ui.seats[i] && ui.seats[i].kind === 'computer';
+  const overlayOpen = () => !!(ui.menu || ui.help || ui.settings || (ui.st && ui.st.over && ui.showOver));
+  const humanTurn = () => !!ui.st && ui.screen === 'play' && !ui.st.over && !isBot(ui.st.current) && !ui.hold && !ui.botBusy;
+
+  // ---------------- screens ----------------
+  const libraryLink = () => (D.library && /^https?:$/.test(location.protocol) ? `<a class="back libback" href="${esc(D.library.href)}"><span aria-hidden="true">‹</span> ${esc(D.library.name)}</a>` : '');
+  const soundIcon = () => (ui.sound ? '🔊' : '🔇');
+
+  function homeHTML() {
+    const hc = (cls, inner, r, x, d) => `<div class="hc ${cls}" style="--r:${r}deg;--x:${x}px;--d:${d}s">${inner}</div>`;
+    const fan = hc('c0', `<div class="face front">${gemSVG(0)}<i class="sparkle"></i></div>`, -17, -62, 0) +
+                hc('c1', `<div class="face front">${gemSVG(1)}<i class="sparkle"></i></div>`, -3, -4, -1.2) +
+                hc('boom', `<div class="face front">${bombSVG}<div class="lbl">BOOM</div></div>`, 13, 56, -2.4);
+    return `<div class="screen home">${libraryLink()}<button class="soundtog" data-act="soundtog" aria-label="Sound">${soundIcon()}</button>
+      <div class="hero"><div class="fan">${fan}</div>
+        <h1 class="logo"><span class="w">One More</span><span class="dots">…</span></h1>
+        <p class="tag">${esc(T.tagline)}</p>
+        <button class="mode primary" data-act="play">Play</button>
+        <div class="ghostrow"><button class="ghost" data-act="help">How to play</button><button class="ghost" data-act="settings">Settings</button></div>
+        ${ui.notice ? `<p class="dim" style="margin:12px 0 0">${esc(ui.notice)}</p>` : ''}<p class="ver">Version ${esc(BUILD)}</p>
+      </div></div>`;
+  }
+
+  function setupHTML() {
+    const cfg = ui.setup;
+    const counts = Array.from({ length: D.players.max - D.players.min + 1 }, (_, k) => k + D.players.min)
+      .map(n => `<button class="${cfg.n === n ? 'on' : ''}" data-act="n" data-v="${n}">${n}</button>`).join('');
+    const rows = Array.from({ length: cfg.n }, (_, i) => {
+      const s = cfg.seats[i];
+      const styles = s.kind === 'computer'
+        ? `<span class="seg small" aria-label="Computer style">${D.styles.map(st => `<button class="${s.style === st.id ? 'on' : ''}" data-act="style" data-i="${i}" data-v="${st.id}">${esc(st.name)}</button>`).join('')}</span>` : '';
+      return `<div class="seatrow" style="--c:${D.seatColours[i]}"><i class="dot"></i>
+        <input value="${esc(s.name)}" maxlength="${D.setup.maxName}" data-act="name" data-i="${i}" aria-label="Name of seat ${i + 1}" autocomplete="off" autocapitalize="words" spellcheck="false">
+        <span class="seg small"><button class="${s.kind === 'human' ? 'on' : ''}" data-act="kind" data-i="${i}" data-v="human">Human</button><button class="${s.kind === 'computer' ? 'on' : ''}" data-act="kind" data-i="${i}" data-v="computer">Computer</button></span>${styles}</div>`;
+    }).join('');
+    return `<div class="screen"><div class="sheet">
+      <button class="back" data-act="home">‹ One More…</button>
+      <h1>Who’s digging?</h1>
+      <p class="lead">${D.players.min}–${D.players.max} seats. Each is a person or a computer.</p>
+      <span class="seg" aria-label="Number of seats">${counts}</span>
+      ${rows}
+      <button class="bigbtn" data-act="deal">Start digging</button>
+    </div></div>`;
+  }
+
+  // The table: seats along the top (the loudest thing on it is each score), the draw pile, the gems drawn this turn, the boom pile.
+  function stageHTML() {
+    const n = ui.seats.length;
+    const seats = ui.seats.map((s, i) => `<div class="seat" data-seat="${i}" style="--c:${s.colour}">
+        <div class="pilezone"></div>
+        <div class="sinfo"><div class="nm">${esc(s.name)}</div><div class="score"></div><div class="sub">${s.kind === 'computer' ? 'computer' : '&nbsp;'}</div></div></div>`).join('');
+    const pips = Array.from({ length: D.deck.booms }, () => '<i></i>').join('');
+    return `<div class="stage">
+      <div class="topbar"><button class="menu" data-act="menu" aria-label="Menu">☰</button><div class="hint"></div></div>
+      <div class="seats n${n}">${seats}</div>
+      <div class="felt">
+        <div class="zone zdraw" data-act="draw" role="button" aria-label="Draw pile"><div class="well"><div class="stackedge"></div></div><div class="zcount"><b></b> <span class="cw">cards</span></div></div>
+        <div class="zone ztable" data-act="save"><div class="risk"></div></div>
+        <div class="zone zboom"><div class="well"></div><div class="zcount"><b></b> / ${D.deck.booms} booms</div><div class="pips">${pips}</div></div>
+      </div></div>`;
+  }
+
+  // ---------------- overlays: menu, how to play, settings, game over ----------------
+  function helpHTML() {
+    const pile = `<rect x="14" y="14" width="40" height="56" rx="7" fill="#2c2178" stroke="#a58bff" stroke-width="3"/><rect x="20" y="8" width="40" height="56" rx="7" fill="#30237c" stroke="#a58bff" stroke-width="3"/>`;
+    const arrow = x => `<path d="M${x} 42 H${x + 20} M${x + 13} 34 L${x + 21} 42 L${x + 13} 50" fill="none" stroke="#9d93c9" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const mini = (c, x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><rect width="44" height="60" rx="7" fill="#1c1450" stroke="${TONES[c][1]}" stroke-width="3"/><g transform="translate(5 10) scale(.34)">${gemInner(c)}</g></g>`;
+    const card = (title, svg, line) => `<div class="hcard"><svg viewBox="0 0 200 80" aria-hidden="true">${svg}</svg><b>${title}</b><p>${line}</p></div>`;
+    const bomb = `<g transform="translate(112 4) scale(.7)"><circle cx="50" cy="52" r="46" fill="#ff7a1c" opacity=".55"/>${bombInner}<polygon points="79,1 82,8 90,10 82,12 79,19 76,12 68,10 76,8" fill="#fff6c8"/></g>`;
+    return `<div class="scrim" data-act="scrimhelp"><div class="panel help"><h1>How to play</h1>
+      <div class="how">
+        ${card('1 · Dig', pile + arrow(70) + mini(0, 110, 8), 'Tap the pile to turn over a card. A gem is yours… for now.')}
+        ${card('2 · Save', mini(0, 14, 10) + mini(2, 40, 10) + mini(3, 66, 10) + arrow(118) + `<text x="172" y="50" text-anchor="middle" font-size="34" font-weight="900" fill="#3df2d0">+3</text>`, 'Tap your gems to keep them for good. Your turn ends.')}
+        ${card('3 · Boom', mini(1, 12, 10) + mini(0, 38, 10) + bomb, 'Draw a boom and you lose this turn’s gems. Dig for just one more…?')}
+      </div>
+      <p><b>${D.players.min} players:</b> first to save ${D.rules.race.target} gems wins (${D.rules.race.target - 1}–${D.rules.race.target - 1} is a tie).<br>
+         <b>${D.players.min + 1}–${D.players.max} players:</b> when all ${D.deck.gems} gems are saved, the most gems wins.</p>
+      <p class="dim">There are ${D.deck.gems} gems and ${D.deck.booms} booms. When the last boom is drawn, everything nobody has saved is shuffled back in.</p>
+      <details class="fine"><summary>The fine print</summary><ul>${T.judgments.map(j => `<li>${esc(j)}</li>`).join('')}</ul>
+        <p class="dim">The full list is in DECISIONS.md. Version ${esc(BUILD)}.</p></details>
+      <button class="bigbtn" data-act="closehelp">Close</button></div></div>`;
+  }
+
+  function settingsHTML() {
+    const seg = (key, cur, opts) => `<span class="seg">${opts.map(([v, t]) => `<button class="${cur === v ? 'on' : ''}" data-act="${key}" data-v="${v}">${t}</button>`).join('')}</span>`;
+    return `<div class="scrim"><div class="panel"><h1>Settings</h1>
+      <h3>Sound</h3><p>${seg('sound', ui.sound ? 'on' : 'off', [['on', 'On'], ['off', 'Off']])}</p>
+      <h3>Prompts above the table</h3><p>${seg('hints', ui.hints, [['auto', 'Auto'], ['on', 'On'], ['off', 'Off']])}</p>
+      <p class="dim">Auto shows them until you have finished one game on this device.</p>
+      <button class="bigbtn" data-act="closesettings">Done</button></div></div>`;
+  }
+
+  function menuHTML() {
+    const inGame = ui.st && !ui.st.over;
+    if (ui.menu === 'restart' || ui.menu === 'leave') {
+      const word = ui.menu === 'restart' ? 'Start a new game?' : 'Leave this game?';
+      return `<div class="scrim clear" data-act="scrimmenu"><div class="menupanel"><p>${word} The one in progress will be lost.</p>
+        <div class="row"><button class="hot" data-act="${ui.menu === 'restart' ? 'restart-yes' : 'leave-yes'}">${ui.menu === 'restart' ? 'Restart' : 'Leave'}</button><button data-act="menu-back">Keep playing</button></div></div></div>`;
+    }
+    return `<div class="scrim clear" data-act="scrimmenu"><div class="menupanel">
+      <button data-act="menu-help">How to play</button>
+      <button data-act="menu-sound">Sound <span>${ui.sound ? 'On' : 'Off'}</span></button>
+      <button data-act="menu-settings">Settings</button>
+      <button data-act="${inGame ? 'menu-restart' : 'restart-yes'}">Restart</button>
+      <button data-act="${inGame ? 'menu-leave' : 'leave-yes'}">Main menu</button></div></div>`;
+  }
+
+  const youName = n => (/^you$/i.test(n) ? 'You' : n);
+  function overHTML() {
+    const st = ui.st, r = st.result, n = ui.seats.length;
+    const names = r.winners.map(i => ui.seats[i].name);
+    let head, why;
+    if (r.tie && n === 2) { head = 'A tie!'; why = `${r.scores[0]} gems each — every gem is saved.`; }
+    else if (r.tie) { head = 'Shared win'; why = names.join(' & ') + ' tie with ' + r.scores[r.winners[0]] + '.'; }
+    else { head = /^you$/i.test(names[0]) ? 'You win!' : `${esc(names[0])} wins!`; why = r.reason === 'target' ? `First to save ${st.rules.race.target} gems.` : `All ${D.deck.gems} gems are saved.`; }
+    const places = r.ranking.map(x => {
+      const s = ui.seats[x.idx], win = r.winners.includes(x.idx);
+      return `<div class="place${win ? ' win' : ''}" style="--c:${s.colour}"><span class="crown">${win ? '👑' : ''}</span><span class="pn">${esc(s.name)}</span><span class="ps">${x.score}</span><span class="pl">${win ? (r.tie ? 'tied' : 'winner') : ordinal(x.place)}</span></div>`;
+    }).join('');
+    const first = ui.seats[Engine.rematchOrder(r)[0]].name;
+    const colours = r.winners.map(i => ui.seats[i].colour);
+    const confetti = reduced() ? '' : `<div class="confetti">${Array.from({ length: 26 }, (_, k) => `<i style="left:${(hash(k, 1) * 100).toFixed(1)}%;--d:${(hash(k, 2) * 2.5).toFixed(2)}s;--t:${(3 + hash(k, 3) * 2.5).toFixed(2)}s;--rot:${Math.round(180 + hash(k, 4) * 540)}deg;--c:${colours[k % colours.length]}"></i>`).join('')}</div>`;
+    return `<div class="scrim">${confetti}<div class="panel over"><h1>${head}</h1><p class="why">${esc(why)}</p>
+      <div class="places">${places}</div>
+      <p class="next">${/^you$/i.test(first) ? 'You go' : esc(first) + ' goes'} first next time.</p>
+      <button class="bigbtn" data-act="again">Play again</button><button class="bigbtn alt" data-act="tohome">Main menu</button></div></div>`;
+  }
+  const ordinal = p => ['', '1st', '2nd', '3rd'][p] || p + 'th';
+
+  function overlayHTML() {
+    if (ui.settings) return settingsHTML();
+    if (ui.help) return helpHTML();
+    if (ui.menu) return menuHTML();
+    if (ui.st && ui.st.over && ui.showOver && ui.screen === 'play') return overHTML();
+    return '';
+  }
+
+  // ---------------- scaffold ----------------
+  root.innerHTML = '<div id="bg"></div><div id="world"><div id="view"></div><div id="cards"></div><div id="fx"><div id="banner"></div></div></div><div id="overlay"></div>';
+  const $bg = document.getElementById('bg'), $world = document.getElementById('world'), view = document.getElementById('view');
+  const cardsEl = document.getElementById('cards'), fxEl = document.getElementById('fx'), bannerEl = document.getElementById('banner'), overlayEl = document.getElementById('overlay');
+  (function buildCave() {
+    // jagged stalactites along the top, a rough floor, and a little drifting dust
+    const teeth = [], rnd = k => hash(k, 9);
+    let x = 0, k = 0, pts = 'M0 0 ';
+    while (x < 1000) { const w = 26 + rnd(k) * 46, h = 14 + rnd(k + 50) * 70; pts += `L${x.toFixed(0)} 0 L${(x + w * 0.5).toFixed(0)} ${h.toFixed(0)} `; x += w; k++; }
+    pts += 'L1000 0 Z';
+    let floor = 'M0 100 L0 60 ', fx0 = 0; k = 100;
+    while (fx0 < 1000) { const w = 40 + rnd(k) * 80, h = 20 + rnd(k + 70) * 40; floor += `L${(fx0 + w * 0.5).toFixed(0)} ${h.toFixed(0)} L${(fx0 + w).toFixed(0)} 60 `; fx0 += w; k++; }
+    floor += 'L1000 100 Z';
+    const dust = Array.from({ length: 18 }, (_, i) => `<i style="left:${(hash(i, 21) * 100).toFixed(1)}%;top:${(hash(i, 22) * 100).toFixed(1)}%;animation-delay:${(hash(i, 23) * 9).toFixed(1)}s;animation-duration:${(7 + hash(i, 24) * 6).toFixed(1)}s"></i>`).join('');
+    $bg.innerHTML = `<svg class="teeth" viewBox="0 0 1000 100" preserveAspectRatio="none"><path d="${pts}"/></svg><svg class="floor" viewBox="0 0 1000 100" preserveAspectRatio="none"><path d="${floor}"/></svg><div class="dust">${dust}</div>`;
+  })();
+
+  // ---------------- sizing ----------------
+  function fit() {
+    const W = innerWidth, H = innerHeight, land = W > H, n = ui.seats.length || ui.setup.n;
+    let cw = land ? Math.min(128, H / 6, W / 8) : Math.min(124, W / 6.2, H / 8.4);
+    cw = Math.max(46, Math.round(cw));
+    const ch = Math.round(cw * 1.4);
+    const cols = land ? n : (n <= 3 ? n : n === 4 ? 2 : 3);
+    const panelW = (W - 20 - (cols - 1) * 8) / cols;
+    const pw = Math.round(cw * 0.56), ph = Math.round(ch * 0.56);
+    const infoW = panelW - pw - 36;
+    const sc = Math.round(clamp(24, infoW / 1.25, 72));
+    ui.cw = cw; ui.ch = ch; ui.tight = panelW < 150;
+    const st = root.style;
+    st.setProperty('--cw', cw + 'px'); st.setProperty('--ch', ch + 'px'); st.setProperty('--pw', pw + 'px'); st.setProperty('--ph', ph + 'px'); st.setProperty('--sc', sc + 'px');
+    document.documentElement.classList.toggle('rm', reduced());
+  }
+
+  // ---------------- cards on the table ----------------
+  const TOTAL = D.deck.gems + D.deck.booms;
+  ui.cardEls = [];
+  function ensureCards() {
+    if (ui.cardEls.length === TOTAL) return;
+    cardsEl.innerHTML = '';
+    for (let id = 0; id < TOTAL; id++) {
+      const el = document.createElement('div');
+      el.className = 'card ' + (isBoomId(id) ? 'boom' : 'c' + colourOf(id));
+      el.dataset.id = id;
+      el.innerHTML = cardHTML(id);
+      el._zone = null; el._rest = 0;
+      cardsEl.appendChild(el); ui.cardEls[id] = el;
+    }
+  }
+
+  // The gems of this turn in one or more rows, overlapping when there are many.
+  function rowPositions(k, zone, cw, ch) {
+    const out = [];
+    if (!k) return out;
+    const span = Math.max(0, zone.w - cw - 14), maxSp = cw * 1.12, minSp = cw * 0.52;
+    const perFor = r => Math.ceil(k / r);
+    const spFor = r => { const per = perFor(r); return per <= 1 ? maxSp : Math.min(maxSp, span / (per - 1)); };
+    const room = r => (r <= 1 ? Infinity : (zone.h - ch - 40) / (r - 1));
+    let rows = 1;
+    while (rows < 5 && spFor(rows) < minSp && room(rows + 1) >= ch * 0.42) rows++;
+    const per = perFor(rows), sp = Math.max(spFor(rows), cw * 0.16), vgap = rows > 1 ? Math.min(ch * 1.04, room(rows)) : 0;
+    const cy0 = zone.cy - 6;
+    for (let i = 0; i < k; i++) {
+      const row = Math.floor(i / per), col = i % per, cnt = Math.min(per, k - row * per), m = col - (cnt - 1) / 2;
+      out.push({ x: zone.cx + m * sp, y: cy0 + (row - (rows - 1) / 2) * vgap + Math.abs(m) * 1.2, r: cnt > 1 ? m * 1.4 : 0 });
+    }
+    return out;
+  }
+
+  function layoutCards(fresh) {
+    const st = ui.st;
+    if (!st || ui.screen !== 'play') return;
+    ensureCards();
+    const q = sel => view.querySelector(sel);
+    const wellD = q('.zdraw .well');
+    if (!wellD) return;
+    const base = cardsEl.getBoundingClientRect();
+    const R = el => { const r = el.getBoundingClientRect(); const x = r.left - base.left, y = r.top - base.top; return { x, y, w: r.width, h: r.height, cx: x + r.width / 2, cy: y + r.height / 2 }; };
+    const zd = R(wellD), zb = R(q('.zboom .well')), zt = R(q('.ztable'));
+    const zp = ui.seats.map((s, i) => R(q(`.seat[data-seat="${i}"] .pilezone`)));
+    const cw = ui.cw, ch = ui.ch, u = cw / 112;
+    const tableIds = st.phase === 'boomed' && st.lastBoom ? st.lastBoom.lost.concat([st.lastBoom.card]) : st.table;
+    const onTable = new Set(tableIds), lostSet = new Set(st.phase === 'boomed' && st.lastBoom ? st.lastBoom.lost : []);
+    const T = new Array(TOTAL);
+
+    // the draw pile: a stack whose edge thickens with the cards in it
+    const nD = st.draw.length, thick = Math.min(22 * u, nD * 0.5 * u);
+    q('.stackedge').style.setProperty('--t', thick.toFixed(1) + 'px');
+    st.draw.forEach((id, i) => {
+      const depth = nD - 1 - i;
+      T[id] = { zone: 'draw', x: zd.cx, y: zd.cy + (nD > 1 ? thick * depth / (nD - 1) : 0), z: i, up: false, op: depth < 6 ? 1 : 0 };
+    });
+    // the boom pile: booms face up, fanned so they can be counted; lost gems face down underneath
+    const pileBooms = st.boomPile.filter(id => isBoomId(id) && !onTable.has(id)), pileGems = st.boomPile.filter(id => !isBoomId(id) && !onTable.has(id));
+    pileBooms.forEach((id, b) => { T[id] = { zone: 'boom', x: zb.cx + b * 0.1 * cw - 0.22 * cw, y: zb.cy + b * 0.055 * ch - 0.14 * ch, r: (b - 2) * 3.2, z: 60 + b, up: true, op: 1 }; });
+    pileGems.forEach((id, j) => { T[id] = { zone: 'boom', x: zb.cx + (hash(id, 1) - 0.5) * 6, y: zb.cy + (hash(id, 2) - 0.5) * 6, r: (hash(id, 3) - 0.5) * 14, z: 20 + j, up: false, op: j >= pileGems.length - 3 ? 1 : 0 }; });
+    // this turn's gems
+    // while a boom is showing, its banner takes the top of the table area and the cards sit below it
+    const bandH = st.phase === 'boomed' ? Math.min(zt.h * 0.45, innerHeight < 520 ? 56 : clamp(40, 0.1 * Math.min(innerWidth, innerHeight), 104) + 72) : 0;
+    const pos = rowPositions(tableIds.length, { x: zt.x, w: zt.w, y: zt.y + bandH, h: zt.h - bandH, cx: zt.cx, cy: zt.y + bandH + (zt.h - bandH) / 2 }, cw, ch);
+    tableIds.forEach((id, i) => { T[id] = { zone: 'table', x: pos[i].x, y: pos[i].y, r: pos[i].r, z: 200 + i, up: true, op: 1 }; });
+    ui.gemBox = tableIds.length ? { ox: base.left, oy: base.top, l: Math.min(...pos.map(p => p.x)) - cw / 2, r: Math.max(...pos.map(p => p.x)) + cw / 2, t: Math.min(...pos.map(p => p.y)) - ch / 2, b: Math.max(...pos.map(p => p.y)) + ch / 2 } : null;
+    // saved gems: a loose heap in each seat's pile
+    st.safe.forEach((ids, seat) => {
+      const z = zp[seat], s = Math.min(z.w / cw, z.h / ch) * 0.8;
+      ids.forEach((id, j) => {
+        T[id] = { zone: 'safe' + seat, x: z.cx + (hash(id, 1) - 0.5) * z.w * 0.18, y: z.cy + (hash(id, 2) - 0.5) * z.h * 0.16, r: (hash(id, 3) - 0.5) * 26, s, z: 100 + j, up: true, op: 1 };
+      });
+    });
+
+    // put them there (cards that change place fly, with a small hop; a pile being saved cascades)
+    const moved = [], cnt = { save: 0, bury: 0 };
+    const step = ui.pace.countStep, quick = reduced();
+    for (let id = 0; id < TOTAL; id++) {
+      const t = T[id], el = ui.cardEls[id];
+      if (!t) continue;
+      const changed = !fresh && el._zone !== null && el._zone !== t.zone;
+      let delay = 0, dur = 0.34;
+      if (changed) {
+        if (t.zone === 'draw') { delay = hash(id, 5) * 0.32; dur = 0.7; }
+        else if (t.zone.startsWith('safe')) { delay = cnt.save++ * step / 1000; dur = 0.55; }
+        else if (t.zone === 'boom') { delay = cnt.bury++ * 0.035; dur = 0.5; }
+        else { dur = 0.42; }
+        if (quick) { delay = 0; dur = 0.01; }
+        moved.push(el);
+      }
+      el.style.setProperty('--delay', delay.toFixed(3) + 's');
+      el.style.setProperty('--dur', dur + 's');
+      el.style.opacity = t.op;
+      el.style.transform = `translate(${(t.x - cw / 2).toFixed(1)}px, ${(t.y - ch / 2).toFixed(1)}px) rotate(${(t.r || 0).toFixed(1)}deg) scale(${(t.s || 1).toFixed(3)})`;
+      el._rest = t.z;
+      el.style.zIndex = changed ? 500 + (++ui.zc) : t.z;
+      el.classList.toggle('up', t.up);
+      el.classList.toggle('lost', lostSet.has(id));
+      el.classList.toggle('atrisk', t.zone === 'table' && st.phase === 'turn');
+      el.classList.toggle('bang', id === ui.fxBoom && st.phase === 'boomed');
+      el._zone = t.zone;
+    }
+    if (moved.length && !quick) {
+      const lifts = moved.map(el => el.firstChild);
+      lifts.forEach(l => l.classList.remove('hop'));
+      void cardsEl.offsetWidth;
+      lifts.forEach((l, i) => { if (moved[i]._zone !== 'draw') l.classList.add('hop'); });
+      setTimeout(() => moved.forEach(el => { el.style.zIndex = el._rest; }), 1100);
+    }
+
+    // the banner sits at the top of the table area
+    bannerEl.style.left = zt.x + 'px'; bannerEl.style.top = (zt.y + 4) + 'px'; bannerEl.style.width = zt.w + 'px';
+    if (ui.boomPending && T[ui.fxBoom]) { const t = T[ui.fxBoom]; ui.boomPending = false; boomFx(t.x, t.y, base); }
+  }
+
+  // ---------------- effects ----------------
+  function boomFx(x, y, base) {
+    const go = () => {
+      sfx('boom'); sfx('rumble', {}, 50);
+      if (reduced()) return;
+      $world.classList.remove('shake'); void $world.offsetWidth; $world.classList.add('shake');
+      const flash = document.createElement('div');
+      flash.className = 'flash'; flash.style.setProperty('--fx', (x / base.width * 100).toFixed(1) + '%'); flash.style.setProperty('--fy', (y / base.height * 100).toFixed(1) + '%');
+      fxEl.appendChild(flash);
+      const sparks = [];
+      for (let i = 0; i < 18; i++) {
+        const a = hash(i, 31) * Math.PI * 2, d = ui.cw * (0.7 + hash(i, 32) * 1.5), sp = document.createElement('i');
+        sp.className = 'sp'; sp.style.left = x + 'px'; sp.style.top = y + 'px';
+        sp.style.setProperty('--dx', (Math.cos(a) * d).toFixed(0) + 'px'); sp.style.setProperty('--dy', (Math.sin(a) * d).toFixed(0) + 'px');
+        fxEl.appendChild(sp); sparks.push(sp);
+      }
+      setTimeout(() => { flash.remove(); sparks.forEach(s => s.remove()); }, 1000);
+    };
+    if (reduced()) go(); else setTimeout(go, 250);
+  }
+  function riffle() {
+    sfx('refresh', {}, 120);
+    const z = view.querySelector('.zdraw');
+    if (z && !reduced()) { z.classList.remove('riffle'); void z.offsetWidth; z.classList.add('riffle'); }
+  }
+
+  // ---------------- patching the table (the table is built once per game; this keeps it current) ----------------
+  function canDrawNow() { return humanTurn() && ui.st.phase === 'turn' && Engine.canDraw(ui.st); }
+  function bannerHTML() {
+    const st = ui.st;
+    if (!st || st.over) return '';
+    if (st.phase === 'boomed' && st.lastBoom) {
+      const who = ui.seats[st.current], lost = st.lastBoom.lost.length, you = !isBot(st.current);
+      const line = lost ? `${you ? 'You lose' : esc(who.name) + ' loses'} ${lost} ${lost === 1 ? 'gem' : 'gems'}` : (you ? 'Nothing lost' : esc(who.name) + ' loses nothing');
+      return `<div class="big">BOOM!</div><div class="lostn">${line}</div><div class="go">Tap to go on</div>`;
+    }
+    if (ui.hold) {
+      const s = ui.seats[ui.hold.seat];
+      return `<div class="saved" style="--c:${s.colour}">${esc(s.name)} saved ${ui.hold.n}</div><div class="go">Tap to go on</div>`;
+    }
+    return '';
+  }
+  function hintHTML() {
+    const st = ui.st;
+    if (!hintsVisible() || !st || st.over || !humanTurn() || st.phase !== 'turn') return '';
+    return esc(st.table.length ? T.hintMore : T.hintDig);
+  }
+  function seatScoreHTML(i) {
+    const st = ui.st;
+    return String(ui.shown[i]) + (st.rules.race && st.n === st.rules.race.players ? `<small>/${st.rules.race.target}</small>` : '');
+  }
+  function patchScores(bumpSeat) {
+    view.querySelectorAll('.seat').forEach((el, i) => {
+      const sc = el.querySelector('.score');
+      if (sc.dataset.v !== String(ui.shown[i])) { sc.innerHTML = seatScoreHTML(i); sc.dataset.v = String(ui.shown[i]); }
+      if (bumpSeat === i) { sc.classList.remove('bump'); void sc.offsetWidth; sc.classList.add('bump'); }
+    });
+  }
+  function patchStage() {
+    const st = ui.st, can = humanTurn() && st.phase === 'turn';
+    view.querySelectorAll('.seat').forEach((el, i) => {
+      const cur = i === st.current && !st.over;
+      el.classList.toggle('cur', cur);
+      el.classList.toggle('can', cur && can && st.table.length > 0);
+      const pz = el.querySelector('.pilezone');
+      if (cur && !isBot(i)) pz.setAttribute('data-act', 'save'); else pz.removeAttribute('data-act');
+    });
+    view.querySelector('.seats').classList.toggle('tight', !!ui.tight);
+    patchScores();
+    const zd = view.querySelector('.zdraw');
+    zd.classList.toggle('can', can && Engine.canDraw(st));
+    zd.querySelector('.zcount b').textContent = st.draw.length; zd.querySelector('.cw').textContent = st.draw.length === 1 ? 'card' : 'cards';
+    const out = Engine.boomsOut(st);
+    view.querySelector('.zboom .zcount b').textContent = out;
+    view.querySelectorAll('.zboom .pips i').forEach((p, i) => p.classList.toggle('on', i < out));
+    const zt = view.querySelector('.ztable');
+    zt.classList.toggle('has', st.table.length > 0);
+    view.querySelector('.risk').innerHTML = st.table.length ? `<b>${st.table.length}</b>at risk` : '';
+    view.querySelector('.hint').innerHTML = hintHTML();
+    const bh = bannerHTML();
+    if (bh !== ui.bannerKey) { bannerEl.innerHTML = bh; ui.bannerKey = bh; }
+  }
+
+  function patchOverlay() {
+    const sig = [ui.menu, ui.help, ui.settings, ui.sound, ui.hints, ui.screen, ui.st && ui.st.over && ui.showOver ? 'over' + ui.gameNo : ''].join('|');
+    if (sig === ui.ovSig) return;
+    ui.ovSig = sig;
+    overlayEl.innerHTML = overlayHTML();
+  }
+
+  // ---------------- game flow ----------------
+  function clearTimers() {
+    clearTimeout(ui.botTimer); ui.botTimer = null; ui.botBusy = false;
+    clearTimeout(ui.overTimer); ui.overTimer = null;
+    ui.countTimers.forEach(clearTimeout); ui.countTimers = [];
+  }
+  function settleScores() {                              // show the true scores now (a tap skips the counting-up)
+    ui.countTimers.forEach(clearTimeout); ui.countTimers = [];
+    if (ui.st) ui.shown = Engine.scores(ui.st);
+  }
+
+  function makeSeats(order) {
+    const seats = order.map(i => {
+      const s = ui.setup.seats[i];
+      return { id: i, name: (s.name || '').trim() || D.defaultNames[i], kind: s.kind, style: s.style, colour: D.seatColours[i] };
+    });
+    const seen = {};
+    seats.forEach(s => { seen[s.name] = (seen[s.name] || 0) + 1; if (seen[s.name] > 1) s.name = s.name + ' ' + seen[s.name]; });
+    return seats;
+  }
+  // A new game. 'seats' (already in turn order) is given for a rematch; otherwise the setup is shuffled into a random turn order.
+  function newGame(seats) {
+    clearTimers();
+    const seedBase = SEED !== null ? SEED + ui.gameNo : Math.floor(Math.random() * 2147483647);
+    const rng = SEED !== null ? Engine.mulberry32(seedBase + 7) : Math.random;
+    ui.seats = seats || makeSeats(Engine.randomOrder(ui.setup.n, rng));
+    ui.st = Engine.createGame({ players: ui.seats.length, seed: seedBase });
+    Object.assign(ui, { screen: 'play', hold: null, menu: null, help: false, settings: false, showOver: false, overHandled: false, fxBoom: -1, boomPending: false,
+                        shown: Engine.scores(ui.st), gameNo: ui.gameNo + 1, boomAt: -1e9, bannerKey: '' });
+    fit();
+    render();
+    startTurnFlow(ui.pace.botStart);
+  }
+  function toHome() {
+    clearTimers();
+    Object.assign(ui, { screen: 'home', st: null, hold: null, menu: null, help: false, settings: false, showOver: false, built: null });
+    pref.del(SAVE_KEY);
+    render();
+  }
+  function gameFinished() {
+    ui.overHandled = true;
+    pref.set(DONE_KEY, (+pref.get(DONE_KEY) || 0) + 1);
+    const r = ui.st.result, humanWon = r.winners.some(i => !isBot(i));
+    const show = () => { ui.showOver = true; sfx(humanWon ? (r.tie ? 'tie' : 'win') : (r.tie ? 'tie' : 'lose')); };
+    if (reduced()) show(); else ui.overTimer = setTimeout(() => { show(); render(); }, ui.pace.overDelay + (ui.lastSaved || 0) * ui.pace.countStep);   // let the last gems land first
+  }
+
+  // ---------------- one move ----------------
+  function doDraw() {
+    const st = ui.st, k = st.table.length;
+    const r = Engine.draw(st);
+    if (r.type === 'gem') {
+      sfx('draw'); sfx('glint', { rate: runRate(k) }, 140);
+      if (r.refreshed) riffle();
+    } else {
+      sfx('draw');
+      ui.boomAt = nowMs(); ui.fxBoom = r.card; ui.boomPending = true;
+    }
+    render();
+    return r;
+  }
+  function doSave() {
+    const st = ui.st, seat = st.current, n = st.table.length;
+    settleScores();
+    ui.lastSaved = n;
+    const before = Engine.scores(st)[seat];
+    const r = Engine.save(st);
+    const after = Engine.scores(st)[seat];
+    const step = ui.pace.countStep, land = reduced() ? 40 : 560;
+    ui.shown[seat] = reduced() ? after : before;
+    for (let k = 1; k <= n; k++) {
+      const at = land + (k - 1) * step;
+      sfx('clink', { rate: runRate(k - 1) }, at);
+      if (!reduced()) ui.countTimers.push(setTimeout(() => { ui.shown[seat] = before + k; patchScores(seat); }, at));
+    }
+    sfx('save', {}, land + n * step + 30);
+    if (r.refreshed) riffle();
+    render();
+    return r;
+  }
+  function passAfterBoom() {
+    const st = ui.st;
+    const r = Engine.endTurn(st);
+    ui.fxBoom = -1; ui.boomPending = false;
+    if (r.refreshed) riffle();
+    render();
+    startTurnFlow(ui.pace.botStart);
+  }
+
+  // ---------------- the computers ----------------
+  // A computer's turn is shown one draw at a time. A tap anywhere skips to its end; then it waits for a tap before the next player.
+  function startTurnFlow(delay) {
+    const st = ui.st;
+    if (!st || st.over || ui.hold || ui.botBusy || st.phase !== 'turn' || !isBot(st.current)) return;
+    if (reduced()) { botLoop(true); return; }
+    scheduleBot(delay === undefined ? ui.pace.botStart : delay);
+  }
+  function nextDecision() { const st = ui.st; return Bots.decide(Engine.publicView(st, st.current), ui.seats[st.current].style); }
+  function scheduleBot(delay) {
+    ui.botBusy = true;
+    clearTimeout(ui.botTimer);
+    ui.botTimer = setTimeout(() => botLoop(false), delay);
+  }
+  // One step (instant: all steps until the turn ends). Returns true while the computer is still digging.
+  function botAct() {
+    const st = ui.st, seat = st.current;
+    if (nextDecision() === 'draw') { const r = doDraw(); return r.type === 'gem'; }
+    const n = st.table.length;
+    doSave();
+    ui.hold = st.over ? null : { seat, n };
+    return false;
+  }
+  function botLoop(instant) {
+    ui.botTimer = null;
+    const st = ui.st;
+    if (!st || st.over || st.phase !== 'turn' || !isBot(st.current) || ui.screen !== 'play') { ui.botBusy = false; render(); return; }
+    if (!instant && overlayOpen()) { ui.botBusy = true; ui.botTimer = setTimeout(() => botLoop(false), 250); return; }
+    ui.botBusy = true;
+    let more = true, guard = 0;
+    do { more = botAct(); } while (instant && more && ++guard < 500);
+    if (more) {
+      ui.botTimer = setTimeout(() => botLoop(false), nextDecision() === 'save' ? ui.pace.botSave : ui.pace.botDraw);
+    } else { ui.botBusy = false; render(); }
+  }
+  function skipBot() {
+    clearTimeout(ui.botTimer); ui.botTimer = null;
+    botLoop(true);
+    settleScores();
+    render();
+  }
+
+  // ---------------- taps on the table ----------------
+  // kind: 'draw' (the pile), 'save' (the gems or your safe pile), 'bg' (anywhere else)
+  function tableTap(kind) {
+    const st = ui.st;
+    if (!st) return;
+    if (st.over) { if (!ui.showOver) { clearTimeout(ui.overTimer); settleScores(); ui.showOver = true; sfx(st.result.winners.some(i => !isBot(i)) ? 'win' : 'lose'); render(); } return; }
+    if (ui.botBusy) { skipBot(); return; }
+    if (st.phase === 'boomed') { if (nowMs() - ui.boomAt >= ui.pace.boomGuardMs) { settleScores(); passAfterBoom(); } return; }
+    if (ui.hold) { ui.hold = null; settleScores(); render(); startTurnFlow(ui.pace.botStart); return; }
+    if (isBot(st.current)) return;
+    if (kind === 'draw' && Engine.canDraw(st)) doDraw();
+    else if (kind === 'save' && Engine.canSave(st)) {
+      doSave();
+      startTurnFlow(ui.pace.afterSave);
+    }
+  }
+
+  // ---------------- save / resume: a game in progress survives a reload (or iPad Safari discarding the tab) ----------------
+  function saveGame() {
+    try {
+      if (!ui.st || ui.screen !== 'play' || ui.st.over) { pref.del(SAVE_KEY); return; }
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ schema: 1, build: BUILD, seats: ui.seats, hold: ui.hold, game: Engine.serialize(ui.st) }));
+    } catch (e) { /* storage unavailable or full: the game still plays, it just cannot be resumed */ }
+  }
+  function resumeGame() {
+    const sv = pref.json(SAVE_KEY);
+    if (!sv) { if (pref.get(SAVE_KEY) !== null) { pref.del(SAVE_KEY); ui.notice = 'Your saved game could not be resumed, so it was cleared.'; } return; }
+    try {
+      const st = Engine.restore(sv.game);
+      if (!Array.isArray(sv.seats) || sv.seats.length !== st.n) throw new Error('seats');
+      const seats = sv.seats.map(s => {
+        if (!s || (s.kind !== 'human' && s.kind !== 'computer') || !D.seatColours.includes(s.colour) || typeof s.name !== 'string') throw new Error('seats');
+        return { id: s.id | 0, name: s.name.slice(0, D.setup.maxName + 2), kind: s.kind, style: D.styles.some(x => x.id === s.style) ? s.style : D.bots.defaultStyle, colour: s.colour };
+      });
+      ui.st = st; ui.seats = seats; ui.screen = 'play'; ui.gameNo++;
+      ui.hold = sv.hold && sv.hold.seat >= 0 && sv.hold.seat < st.n && st.phase === 'turn' ? { seat: sv.hold.seat | 0, n: sv.hold.n | 0 } : null;
+      ui.shown = Engine.scores(st); ui.overHandled = false; ui.showOver = false; ui.fxBoom = st.phase === 'boomed' && st.lastBoom ? st.lastBoom.card : -1;
+    } catch (e) {
+      pref.del(SAVE_KEY);
+      ui.notice = /rules changed/.test(e.message) ? 'A new version changed the rules, so your saved game was cleared.' : 'Your saved game could not be resumed, so it was cleared.';
+    }
+  }
+
+  // A tap on the table saves only when it lands on the gems (or just beside them), so a stray tap on the empty felt never banks a turn.
+  function onGems(e) {
+    if (!e.clientX && !e.clientY) return true;                   // not a real touch (a script or the keyboard): take it at its word
+    const g = ui.gemBox;                                         // where the gems are going to be (not where they are mid-flight)
+    if (!g) return false;
+    const x = e.clientX - g.ox, y = e.clientY - g.oy, m = 18;
+    return x >= g.l - m && x <= g.r + m && y >= g.t - m && y <= g.b + m;
+  }
+
+  // ---------------- events ----------------
+  function setSound(on) { ui.sound = !!on; pref.set(SOUND_KEY, ui.sound ? 'on' : 'off'); audio.setEnabled(ui.sound); if (ui.sound) sfx('tick'); }
+  function onClick(e) {
+    audio.unlock();                                    // sound can only start from inside a tap; this wakes it
+    const el = e.target.closest('[data-act]');
+    if (!el) { if (ui.screen === 'play' && !overlayOpen()) tableTap('bg'); return; }
+    const d = el.dataset;
+    if (el.classList.contains('scrim') && e.target !== el) return;            // a tap inside a panel is not a tap outside it
+    switch (d.act) {
+      case 'draw': if (ui.screen === 'play' && !overlayOpen()) tableTap('draw'); return;
+      case 'save': if (ui.screen === 'play' && !overlayOpen()) tableTap(el.classList.contains('ztable') && !onGems(e) ? 'bg' : 'save'); return;
+      case 'play': ui.screen = 'setup'; break;
+      case 'home': ui.screen = 'home'; break;
+      case 'n': ui.setup.n = +d.v; autoNames(ui.setup); saveSetup(); break;
+      case 'kind': { const s = ui.setup.seats[+d.i]; s.kind = d.v; autoNames(ui.setup); saveSetup(); break; }
+      case 'style': { const s = ui.setup.seats[+d.i]; s.style = d.v; autoNames(ui.setup); saveSetup(); break; }
+      case 'deal': newGame(); return;
+      case 'menu': ui.menu = 'main'; break;
+      case 'scrimmenu': case 'menu-back': ui.menu = null; break;
+      case 'menu-help': ui.menu = null; ui.help = true; break;
+      case 'menu-settings': ui.menu = null; ui.settings = true; break;
+      case 'menu-sound': setSound(!ui.sound); break;
+      case 'menu-restart': ui.menu = 'restart'; break;
+      case 'menu-leave': ui.menu = 'leave'; break;
+      case 'restart-yes': ui.menu = null; newGame(Engine.randomOrder(ui.seats.length, SEED !== null ? Engine.mulberry32(SEED + ui.gameNo) : Math.random).map(i => ui.seats[i])); return;   // the same people, dealt in again
+      case 'leave-yes': ui.menu = null; toHome(); return;
+      case 'help': ui.help = true; break;
+      case 'closehelp': case 'scrimhelp': ui.help = false; break;
+      case 'settings': ui.settings = true; break;
+      case 'closesettings': ui.settings = false; break;
+      case 'soundtog': setSound(!ui.sound); break;
+      case 'sound': setSound(d.v === 'on'); break;
+      case 'hints': ui.hints = d.v; pref.set(HINTS_KEY, d.v); break;
+      case 'again': newGame(Engine.rematchOrder(ui.st.result).map(i => ui.seats[i])); return;
+      case 'tohome': toHome(); return;
+      default: return;
+    }
+    render();
+  }
+  root.addEventListener('click', onClick);
+  root.addEventListener('input', e => {
+    const t = e.target;
+    if (!t || t.dataset.act !== 'name') return;
+    const s = ui.setup.seats[+t.dataset.i], v = t.value.slice(0, D.setup.maxName);
+    s.custom = v.trim() !== ''; s.name = v;
+    if (!s.custom) { autoNames(ui.setup); }
+    saveSetup();
+  });
+  // the page never scrolls or zooms; only the panels and the setup list may scroll
+  document.addEventListener('touchmove', e => { if (!(e.target.closest && e.target.closest('.screen, .panel'))) e.preventDefault(); }, { passive: false });
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
+  let resizeTimer = null;
+  const onResize = () => { fit(); if (ui.screen === 'play' && ui.st && ui.built === ui.gameNo) { patchStage(); layoutCards(true); } };
+  addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(onResize, 60); });
+  addEventListener('orientationchange', () => setTimeout(onResize, 250));
+
+  // ---------------- drawing the page ----------------
+  function render() {
+    const st = ui.st;
+    if (ui.screen === 'play' && st) {
+      if (st.over && !ui.overHandled) gameFinished();
+      let fresh = false;
+      if (ui.built !== ui.gameNo) {
+        fit();
+        view.innerHTML = stageHTML(); ui.built = ui.gameNo; ui.bannerKey = ''; bannerEl.innerHTML = ''; fresh = true;
+        view.querySelectorAll('.seat .score').forEach(s => { s.dataset.v = ''; });
+        cardsEl.classList.add('notrans');
+        ui.cardEls.forEach(el => { el._zone = null; });
+      }
+      cardsEl.style.display = ''; fxEl.style.display = '';
+      patchStage();
+      layoutCards(fresh);
+      if (fresh) { void cardsEl.offsetWidth; cardsEl.classList.remove('notrans'); }
+    } else {
+      ui.built = null;
+      view.innerHTML = ui.screen === 'setup' ? setupHTML() : homeHTML();
+      cardsEl.style.display = 'none'; fxEl.style.display = 'none'; bannerEl.innerHTML = ''; ui.bannerKey = '';
+    }
+    patchOverlay();
+    saveGame();
+  }
+
+  window.OneMoreUI = { ui, render, onClick, audio, newGame };
+  fit();
+  resumeGame();
+  render();
+  startTurnFlow(ui.pace.botStart);
+})();
+</script>
+</body>
+</html>
