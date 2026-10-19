@@ -199,12 +199,9 @@ h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spac
 .mini.lost { opacity: .5; }
 .rowlab { font-size: 12px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--dim); margin-top: 2px; }
 .place .tiles { min-height: 30px; }
-/* celebration: a big card when a level is unlocked (or the campaign is finished), with confetti */
-.unlock { display: flex; align-items: center; gap: 16px; margin: 10px 0 16px; padding: 16px 20px; border-radius: 18px; background: linear-gradient(180deg, #f7b13a, #d9791a); color: #2b1b10; box-shadow: 0 6px 0 #8a4a0e, 0 14px 30px rgba(0,0,0,.45); animation: unlockin .6s cubic-bezier(.2,1.4,.4,1); }
-.unlock .ul-icon { font-size: 52px; line-height: 1; }
-.unlock .ul-big { font-size: clamp(26px, 5vw, 36px); font-weight: 900; line-height: 1.05; }
-.unlock .ul-sub { font-size: 16px; font-weight: 600; opacity: .8; margin-top: 2px; }
-@keyframes unlockin { 0% { transform: scale(.5) rotate(-4deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+/* the unlock is a quiet line under the headline (not a card: nothing there is tappable); the confetti does the celebrating */
+.unlock { margin: 2px 0 14px; font-size: 20px; font-weight: 800; color: var(--accent); animation: unlockin .6s cubic-bezier(.2,1.4,.4,1); }
+@keyframes unlockin { 0% { transform: scale(.7); opacity: 0; } 100% { transform: none; opacity: 1; } }
 .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 6; }
 .confetti i { position: absolute; top: -16px; width: 10px; height: 16px; border-radius: 2px; opacity: 0; animation: fall linear forwards; }
 @keyframes fall { 0% { transform: translateY(0) translateX(0) rotate(0); opacity: 1; } 100% { transform: translateY(105vh) translateX(var(--dx)) rotate(540deg); opacity: .9; } }
@@ -1416,7 +1413,7 @@ const Campaign = (() => {
       const bump = was && was[p.idx] !== undefined && was[p.idx] !== v.points;
       const matchedShown = p.idx === st.current && !!st.turn.matched && (!animating() || v.sets.length > ui.base.sets.length);
       const bankable = tappable && p.idx === who && v.sets.length > 0;
-      const sets = (bankable ? '<span class="bankcap">Tap to bank</span>' : '') + v.sets.map((x, i) => {
+      const sets = (bankable ? '<span class="bankcap">Tap to bank</span>' : '') + v.sets.map((x, i) => ({ x, i })).sort((a, b) => b.x.value - a.x.value || a.i - b.i).map(({ x, i }) => {   // held sets sit highest first; i stays the set's real index (that is what banking takes)
         const pop = ui.popTurn !== st.turnNo && matchedShown && i === v.sets.length - 1 ? ' pop' : '';
         return tappable && p.idx === who ? `<button class="setbtn act${pop}" data-act="set" data-i="${i}" aria-label="Bank this set">${setLabel(x)}</button>` : `<span class="setbtn${pop}">${setLabel(x)}</span>`;
       }).join('');
@@ -1570,7 +1567,7 @@ const Campaign = (() => {
     if (r.winners.length > 1) why = r.winners.length === st.n ? 'Dead heat.' : 'Shared win — every tie-break is level.';
     else if (r.ranking.length > 1) { const a = r.ranking[0], b = r.ranking[1]; const k = keys.find(k => a[k] !== b[k]); why = k === 'score' ? '' : `Tied on score — won on ${WHY[k]}.`; }
     let title = r.winners.length > 1 ? 'Shared win!' : esc(seatName(r.winners[0])) + ' wins!';
-    if (campaign && o) title = o.won ? `You beat ${esc(LV[ui.levelIdx].name)}!` : r.winners.length > 1 ? 'A draw — not a win.' : `${esc(LV[ui.levelIdx].name)} wins`;
+    if (campaign && o) title = o.won ? (o.completed ? 'Campaign complete!' : `You beat ${esc(LV[ui.levelIdx].name)}!`) : r.winners.length > 1 ? 'A draw — not a win.' : `${esc(LV[ui.levelIdx].name)} wins`;
     const extra = campaign && o && !o.won ? 'Win outright to unlock the next level.' : '';
     const tileHTML = (x, cls = '') => `<span class="mini ${cls}">${x.gem ? '💎' : x.value}</span>`;
     const places = r.ranking.map(x => {
@@ -1581,12 +1578,12 @@ const Campaign = (() => {
         <div class="rowlab">Banked</div>
         <div class="tiles">${p.banked.map(b => tileHTML(b)).join('') || '<span class="dim">none</span>'}</div>
         <div class="rowlab">Matched, not banked</div>
-        <div class="tiles lostrow">${p.sets.map(s => tileHTML(s, 'lost')).join('') || '<span class="dim">none</span>'}</div>
+        <div class="tiles lostrow">${p.sets.slice().sort((a, b) => b.value - a.value).map(s => tileHTML(s, 'lost')).join('') || '<span class="dim">none</span>'}</div>
       </div>`;
     }).join('');
     // Celebrate a win in the campaign where you can't miss it: a big card (and confetti) above the results.
     const celebrate = campaign && o && (o.completed || o.newlyUnlocked)
-      ? `<div class="unlock"><span class="ul-icon">${o.completed ? '🏆' : '🔓'}</span><div><div class="ul-big">${o.completed ? 'Campaign complete!' : `${esc(o.newlyUnlocked)} unlocked!`}</div><div class="ul-sub">${o.completed ? 'Every opponent beaten.' : 'A tougher opponent is waiting.'}</div></div></div>${confettiHTML()}` : '';
+      ? `<p class="unlock">${o.completed ? '🏆 Every opponent beaten' : `🔓 ${esc(o.newlyUnlocked)} unlocked`}</p>${confettiHTML()}` : '';
     // The choices: after a win, on to the next level; after a loss (or a pass & play game), play again — and always the main menu.
     const nextBtn = campaign && o && o.won && ui.levelIdx + 1 < LV.length && unlocked(ui.levelIdx + 1);
     const won = campaign && o && o.won;

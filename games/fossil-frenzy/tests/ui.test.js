@@ -300,7 +300,7 @@ test('Campaign: beating Master completes the campaign', SKIP, async () => {
     await page.reload();
     await campaign(page, 4);
     await forceFinish(page, [40, 1]);
-    assert.match(await page.locator('.unlock').innerText(), /Campaign complete/);
+    assert.match(await page.locator('h1').first().innerText(), /Campaign complete/);
     assert.equal(await page.locator('[data-act=next]').count(), 0);
     await page.tap('[data-act=home]'); await page.tap('[data-act=mode][data-v=campaign]');
     assert.equal(await page.locator('.lvl.done').count(), 5);
@@ -793,7 +793,7 @@ test('sets are shown in one place only — the scoreboard — and tapping them t
     await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI; ui.st.players[ui.st.current].sets = [{ value: 7, gem: false, size: 2, ids: [] }, { value: 12, gem: true, size: 3, ids: [] }]; ui.st.rng = () => 0.01; render(); });
     assert.equal(await page.locator('.chip.cur .setbtn[data-act=set]').count(), 2, 'the current player\'s sets are the tappable ones');
     assert.equal(await page.locator('.chip:not(.cur) [data-act=set]').count(), 0);
-    assert.deepEqual(await page.locator('.chip.cur .setbtn').allInnerTexts(), ['7', '💎']);
+    assert.deepEqual(await page.locator('.chip.cur .setbtn').allInnerTexts(), ['💎', '7']);
     assert.match(await page.locator('.bankcap').innerText(), /tap to bank/i, 'the sets say they can be tapped');
     const box = await page.locator('.chip.cur .setbtn').first().boundingBox();
     assert.ok(box.width >= 48 && box.height >= 48, 'big enough to be a button: ' + JSON.stringify(box));
@@ -899,14 +899,33 @@ test('end of game: the choices are plain buttons — play again (or the next lev
   } finally { await browser.close(); }
 });
 
-test('end screen: a win in the campaign celebrates the unlock big, with no replay button; a loss offers Try again', SKIP, async () => {
+test('held sets are shown highest to lowest, and a tap still banks the set you touched', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await passAndPlay(page, 2);
+    await page.evaluate(() => {
+      const { ui, render } = window.FossilFrenzyUI;
+      ui.st.players[ui.st.current].sets = [3, 12, 7, 5].map(v => ({ value: v, gem: v === 12, size: v === 12 ? 3 : 2, ids: [] }));
+      render();
+    });
+    const banker = await page.evaluate(() => window.FossilFrenzyUI.ui.st.current);
+    assert.deepEqual(await page.locator('.chip.cur .setbtn').allInnerTexts(), ['💎', '7', '5', '3'], 'gem (12) first, then 7, 5, 3');
+    await page.tap('.chip.cur .setbtn >> nth=2');                          // the "5"
+    assert.equal(await page.evaluate(b => window.FossilFrenzyUI.ui.st.players[b].points, banker), 5);
+    assert.deepEqual(await page.evaluate(b => window.FossilFrenzyUI.ui.st.players[b].sets.map(x => x.value), banker), [3, 12, 7]);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('end screen: a win says what happened once (the headline), the unlock is a quiet non-button line; no replay button; a loss offers Try again', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     await campaign(page, 0);
     await forceFinish(page, [30, 10]);
-    assert.match(await page.locator('.unlock').innerText(), /Novice unlocked!/);
+    assert.match(await page.locator('.unlock').innerText(), /Novice unlocked/);
     assert.ok(await page.evaluate(() => document.querySelector('.unlock').getBoundingClientRect().top < innerHeight / 2), 'in the top half of the screen, not tucked away');
-    assert.ok(await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.unlock .ul-big')).fontSize) >= 26), 'big type');
+    assert.ok(await page.evaluate(() => { const h = document.querySelector('h1'), u = document.querySelector('.unlock'); return parseFloat(getComputedStyle(h).fontSize) > parseFloat(getComputedStyle(u).fontSize); }), 'the headline outranks the unlock line');
+    assert.equal(await page.evaluate(() => { const st = getComputedStyle(document.querySelector('.unlock')); return [st.backgroundImage, st.boxShadow, document.querySelector('.unlock').tagName]; }).then(r => r.join()), 'none,none,P', 'it does not look like a button');
     assert.equal(await page.locator('[data-act=again]').count(), 0, 'no "play the same level again" after a win');
     assert.ok(await page.locator('.confetti').count());
     await page.tap('[data-act=home]'); await page.tap('[data-act=mode][data-v=campaign]'); await page.tap('[data-act=level][data-i="0"]'); await page.tap('[data-act=begin]');
@@ -930,7 +949,7 @@ test('end screen: each player\'s fossils are two labelled rows — Banked, and M
     const first = page.locator('.place').first();
     assert.deepEqual(await first.locator('.rowlab').evaluateAll(els => els.map(e => e.textContent)), ['Banked', 'Matched, not banked']);
     assert.deepEqual(await first.locator('.tiles:not(.lostrow) .mini').allInnerTexts(), ['7', '3']);
-    assert.deepEqual(await first.locator('.tiles.lostrow .mini').allInnerTexts(), ['5', '💎']);
+    assert.deepEqual(await first.locator('.tiles.lostrow .mini').allInnerTexts(), ['💎', '5']);
     assert.doesNotMatch(await page.locator('.results').innerText(), /\+/);
     assert.deepEqual(await page.locator('.place').nth(1).locator('.dim').allInnerTexts(), ['none', 'none']);
     assert.deepEqual(errors, []);

@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- **Sets you haven't banked are sorted highest to lowest**, both in your score box during play and on the end screen's "Matched, not banked" row.
+- **End screen:** one headline, not two. "You beat Novice!" stays the big message; "Normal unlocked" is now a quiet line beneath it (no longer an orange card that looked like a button). Beating Master reads "Campaign complete!" as the headline.
 - **End screen:** the final scores are much bigger (the winner's in green) and the names are larger.
 - **Opponent's bank banner** now says only who banked and how much ("Beginner banked +7"); the "Score now" line is gone. **Scores in the top bar are bigger** (the numbers and the names).
 - **Menus:** the title board no longer has the red dotted ring; the title line is just "Peek. Flip. Match. Bank."; the Campaign button drops its subtitle and shows only the progress dots; the Campaign level list is narrower so each name sits next to its "Beaten"/lock, and an open level shows nothing on the right (no "Ready").
