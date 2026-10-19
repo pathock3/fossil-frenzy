@@ -396,7 +396,6 @@ test('you bank ONE set, by tapping it, for the number on its fossil', SKIP, asyn
     await page.evaluate(() => {
       const { ui, render } = window.FossilFrenzyUI;
       ui.st.players[ui.st.current].sets = [{ value: 7, gem: false, size: 2, ids: [] }, { value: 3, gem: false, size: 2, ids: [] }];
-      ui.st.rng = () => 0.01;                                              // the bonus die shows a 1: no bonus
       render();
     });
     const banker = await page.evaluate(() => window.FossilFrenzyUI.ui.st.current);
@@ -923,7 +922,7 @@ test('end screen: each player\'s fossils are two labelled rows — Banked, and M
     await passAndPlay(page, 2);
     await page.evaluate(() => {
       const { ui } = window.FossilFrenzyUI, st = ui.st;
-      st.players[0].banked = [{ value: 7, gem: false, base: 7, bonus: 1 }, { value: 3, gem: false, base: 3, bonus: 0 }]; st.players[0].sets = [{ value: 5, gem: false, size: 2, ids: [] }, { value: 12, gem: true, size: 3, ids: [] }];
+      st.players[0].banked = [{ value: 7, gem: false, base: 7 }, { value: 3, gem: false, base: 3 }]; st.players[0].sets = [{ value: 5, gem: false, size: 2, ids: [] }, { value: 12, gem: true, size: 3, ids: [] }];
       st.players[1].banked = []; st.players[1].sets = [];
     });
     await forceFinish(page, [11, 0]);

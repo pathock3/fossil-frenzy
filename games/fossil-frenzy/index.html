@@ -105,7 +105,6 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 @keyframes bankin { 0% { transform: translate(-50%, -50%) scale(.6); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
 .bankcard .bk-who { font-size: clamp(18px, 3.6vw, 26px); font-weight: 800; color: var(--c); }
 .bankcard .bk-pts { font-size: clamp(54px, 11vw, 92px); font-weight: 900; line-height: 1; color: #fff; }
-.bankcard .bk-sub { font-size: 16px; color: var(--dim); margin-top: 2px; }
 .bankcard .bk-tap { font-size: 13px; color: var(--dim); margin-top: 10px; }
 .bankcard:active { filter: brightness(1.15); }
 .bankcard .bk-score { font-size: 22px; font-weight: 800; margin-top: 8px; color: var(--accent); }
@@ -228,7 +227,7 @@ const GAME_DATA = {
 
   // Pass & Play: 2-4 people on one device.
   players: { min: 2, max: 4 },
-  die: { sides: 6 },            // who goes first (highest roll), and the bank bonus die
+  die: { sides: 6 },            // who goes first (highest roll)
 
   // ---- BOARD ---------------------------------------------------------
   // A hexagon of hex spaces in axial (q, r) coordinates (radius 3 = 37 spaces) with the six corners removed:
@@ -257,9 +256,6 @@ const GAME_DATA = {
   rules: {
     scoring: {
       setPoints: 'tile-number',   // banking ONE held set scores the number on its fossil (a gem scores its own value); a number here = flat points instead
-      bonusDieSides: 6,           // then roll a d6: every 6 scores +1 and rolls again (0 = no bonus roll)
-      bonusFace: 6,
-      bonusPoints: 1,
     },
     tiebreaks: ['score', 'sets', 'finalPair'],   // highest score, then most sets popped, then who popped the final pair
   },
@@ -490,17 +486,15 @@ const Engine = (() => {
   // ---------------- banking ----------------
   const canBank = s => (s.phase === 'action' || s.phase === 'peeked') && cur(s).sets.length > 0;
 
-  // Bank ONE held set (the player's choice). It scores the number on its fossil, then the bonus d6 chain.
+  // Bank ONE held set (the player's choice). It scores the number on its fossil, once: no bonus roll.
   function bank(s, setIndex = 0) {
     if (!canBank(s)) fail('cannot bank');
     const sc = s.rules.scoring, p = cur(s), set = p.sets[setIndex];
     if (!set) fail('no such set');
     const base = sc.setPoints === 'tile-number' ? set.value : sc.setPoints;
-    const rolls = []; let bonus = 0, r;
-    if (sc.bonusDieSides) do { r = rollDie(s, sc.bonusDieSides); rolls.push(r); if (r === sc.bonusFace) bonus += sc.bonusPoints; } while (r === sc.bonusFace);
-    s.lastBank = { player: p.idx, value: set.value, gem: set.gem, base, rolls, bonus, total: base + bonus, setsLeft: p.sets.length - 1 };
-    p.points += base + bonus; p.sets.splice(setIndex, 1);
-    p.banked.push({ value: set.value, gem: set.gem, base, bonus });
+    s.lastBank = { player: p.idx, value: set.value, gem: set.gem, base, total: base, setsLeft: p.sets.length - 1 };
+    p.points += base; p.sets.splice(setIndex, 1);
+    p.banked.push({ value: set.value, gem: set.gem, base });
     s.turn.T = null; s.turn.peeked = null; s.turn.banked = true;
     s.phase = 'resolved';
     emit(s, { type: 'bank', actor: p.idx, info: s.lastBank });
@@ -663,7 +657,7 @@ const Bots = (() => {
     const pick = arr => arr[Math.floor(rnd() * arr.length)];
 
     // ---------- the fossil kinds and scoring (they arrive with the public view, so a bot works with any data block) ----------
-    let KINDS = [], TOTAL = 0, MEAN_VALUE = 0, BONUS = 0, SIZES = { pair: 2, gem: 3 }, seenKinds = null;
+    let KINDS = [], TOTAL = 0, MEAN_VALUE = 0, SIZES = { pair: 2, gem: 3 }, seenKinds = null;
     function learnRules(v) {
       if (seenKinds === v.kinds) return;
       seenKinds = v.kinds;
@@ -673,7 +667,6 @@ const Bots = (() => {
       const setsTotal = KINDS.reduce((n, k) => n + k.count / k.size, 0);
       MEAN_VALUE = KINDS.reduce((n, k) => n + k.value * k.count / k.size, 0) / setsTotal;
       const sc = v.rules.scoring;
-      BONUS = sc.bonusDieSides ? sc.bonusPoints * (1 / sc.bonusDieSides) / (1 - 1 / sc.bonusDieSides) : 0;      // expected bonus of a bank (a chain of sixes)
     }
     // abilities are scored 0-10 in the profile; the engine works with 0-1
     const sk = name => P[name] / 10;
@@ -762,7 +755,7 @@ const Bots = (() => {
     function worthOf(items, C) {                            // items: [{v, need}] — work to do (turns needed each); the time left limits how much gets done
       const arr = items.slice().sort((a, b) => ve(b.v) / b.need - ve(a.v) / a.need);
       let cum = 0, w = 0;
-      for (const it of arr) { w += (ve(it.v) + BONUS) * Phi((C - cum - it.need + 0.5) / T.sE); cum += it.need; }
+      for (const it of arr) { w += ve(it.v) * Phi((C - cum - it.need + 0.5) / T.sE); cum += it.need; }
       return { worth: w, need: cum };
     }
     function eqMine(s, U) {                                  // s: {pts, held:[v], priv:[v], singles:[{x,c}], C}
@@ -771,7 +764,7 @@ const Bots = (() => {
       const free = Math.max(0, s.C - need);
       const g = Phi((s.C - need - 2) / T.sE);
       let pot = 0;
-      for (const sg of s.singles) pot += g * Math.min(T.maxHit, T.hitRate * free * sg.c / Math.max(1, U)) * (ve(sg.x) + BONUS);
+      for (const sg of s.singles) pot += g * Math.min(T.maxHit, T.hitRate * free * sg.c / Math.max(1, U)) * ve(sg.x);
       return s.pts + worth + T.spareValue * softplus(s.C - need) + pot;
     }
     // how uncertain the final margin still is: mostly the sets still to be won
@@ -787,7 +780,7 @@ const Bots = (() => {
       }
       return best || { e: 0, pts: 0 };
     }
-    const denial = (X, value) => Phi((ve(value) + BONUS - T.spareValue) / T.denialSpread) * T.replyShare * (ve(value) + BONUS);   // what they take if I leave a public set
+    const denial = (X, value) => Phi((ve(value) - T.spareValue) / T.denialSpread) * T.replyShare * ve(value);   // what they take if I leave a public set
 
     function baseState(X) {
       return { pts: X.me.points, held: X.me.sets.map(s => s.value), priv: X.sure.filter(s => !s.pub).map(s => s.value), singles: X.singles.slice(), C: X.C };
@@ -819,7 +812,7 @@ const Bots = (() => {
       if (X.v.status && X.v.status.canBank && X.me.sets.length) {
         let bi = 0; X.me.sets.forEach((s, i) => { if (s.value > X.me.sets[bi].value) bi = i; });
         const val = X.me.sets[bi].value;
-        out.push({ kind: 'bank', set: bi, u: U({ ...base, pts: base.pts + val + BONUS, held: without(base.held, val) }, X.sets, pubPairs) + nudge(val) });
+        out.push({ kind: 'bank', set: bi, u: U({ ...base, pts: base.pts + val, held: without(base.held, val) }, X.sets, pubPairs) + nudge(val) });
       }
       // take a sure set (it only works if it recalls where the fossils are)
       const matchPlans = [];
@@ -1207,7 +1200,7 @@ const Campaign = (() => {
     ui.say = bot.slips > slips0 ? D.ai.slipSays[st.turnNo % D.ai.slipSays.length] : '';          // a visible tell: it slipped
     if (!ui.turnCard) startAnim();
   }
-  const bankText = b => `${b.gem ? 'a gem' : 'a ' + b.value}: +${b.base}` + (b.rolls.length ? (b.bonus ? `, +${b.bonus} bonus (rolled ${b.rolls.join(', ')})` : `, no bonus (rolled ${b.rolls[0]})`) : '');
+  const bankText = b => `${b.gem ? 'a gem' : 'a ' + b.value}: +${b.base}`;
 
   function endTurn() {
     const st = ui.st;
@@ -1471,9 +1464,8 @@ const Campaign = (() => {
   function bankBannerHTML() {
     const st = ui.st, b = st.lastBank;
     if (!ui.botWaiting || animating() || !st.turn.banked || !b) return '';
-    const what = b.rolls.length ? (b.bonus ? ` + ${b.bonus} bonus (rolled ${b.rolls.join(', ')})` : ` (rolled ${b.rolls[0]}, no bonus)`) : '';
     return `<button class="bankcard" data-act="dismissbank" style="--c:${COLORS[b.player]}"><div class="bk-who">${esc(seatName(b.player))} banked ${b.gem ? 'a gem' : 'a ' + b.value}</div>
-      <div class="bk-pts">+${b.total}</div><div class="bk-sub">${b.base}${what}</div><div class="bk-score">Score now ${st.players[b.player].points}</div><div class="bk-tap">Tap anywhere to go on</div></button>`;
+      <div class="bk-pts">+${b.total}</div><div class="bk-score">Score now ${st.players[b.player].points}</div><div class="bk-tap">Tap anywhere to go on</div></button>`;
   }
 
 
@@ -1619,7 +1611,7 @@ const Campaign = (() => {
     'Your first tap is a private peek (the board shows you the number — hold the device toward yourself); your second tap is a public flip. Fossils that do not match flip back at the end of your turn.',
     'A peek does not use up your turn: you may bank instead of flipping.',
     'Matches are pairs (a set of three for the gems). Only the fossil you peeked can be matched, against the one you flipped.',
-    `Banking takes one set of your choice, worth the number on its fossil (a gem is ${GEM_VALUE}), then a d6 chain adds +1 for every 6. Sets you never bank are worth nothing.`,
+    `Banking takes one set of your choice, worth the number on its fossil (a gem is ${GEM_VALUE}). Sets you never bank are worth nothing.`,
     'Banking is your whole turn, so it ends the moment you tap the set — there is no End turn tap afterwards.',
     'Who goes first is decided at random, without a screen for it; a card names whose turn it is before they tap (in Pass & Play, every turn).',
     'After you peek a gem and flip a gem, tapping a third fossil is your consent to reveal your peeked gem too.',
@@ -1637,7 +1629,7 @@ const Campaign = (() => {
         <li>If your peek and the flipped fossil match, they are yours. Otherwise tap <b>End turn</b> to flip them back — remember them!</li>
         <li>The scores are at the top, and whose turn it is is lit up. Who goes first is decided at random.</li>
         <li><b>Gems</b> (💎, worth ${GEM_VALUE}) match as a set of three: peek a gem, flip a gem, then tap a third fossil — that reveals your peeked gem too, and if the third is a gem, the set is yours.</li>
-        <li><b>Bank</b> instead of flipping: tap ONE of your held sets. It scores the number on its fossil (a gem is ${GEM_VALUE}), then a d6 chain: every 6 adds +1 and rolls again. Banking takes the whole turn, so your turn ends the moment you bank.</li>
+        <li><b>Bank</b> instead of flipping: tap ONE of your held sets. It scores the number on its fossil (a gem is ${GEM_VALUE}). Banking takes the whole turn, so your turn ends the moment you bank.</li>
       </ul>
       <h3>End</h3><p>The game ends the moment every fossil is matched. Sets you have not banked are lost. Highest score wins; ties go to the most sets popped, then whoever popped the final pair.</p>
       <h3>Judgment calls (where the rules were unclear)</h3><ul>${JUDGMENTS.map(j => `<li>${esc(j)}</li>`).join('')}</ul>

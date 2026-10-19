@@ -18,7 +18,7 @@ test('bank: takes ONE held set and scores the number on its fossil', () => {
   Engine.bank(s, 0);
   assert.equal(me(s).points, 7);
   assert.deepEqual(me(s).sets.map(x => x.value), [3], 'the other set stays in front of you');
-  assert.deepEqual([s.lastBank.value, s.lastBank.base, s.lastBank.bonus, s.lastBank.setsLeft], [7, 7, 0, 1]);
+  assert.deepEqual([s.lastBank.value, s.lastBank.base, s.lastBank.total, s.lastBank.setsLeft], [7, 7, 7, 1]);
 });
 
 test('bank: you choose which set to bank', () => {
@@ -37,12 +37,16 @@ test('bank: a gem set scores 12', () => {
   assert.equal(me(s).points, 12);
 });
 
-test('bank: afterwards a d6 chain — each 6 adds +1 and rolls again', () => {
+test('bank: no bonus roll — banking scores the set once and uses no die', () => {
   const s = game({ rolls: [6, 5, 6, 6, 2] });
   me(s).sets = held(5);
+  const orig = s.rng; let draws = 0; s.rng = () => { draws++; return orig(); };
   Engine.bank(s, 0);
-  assert.equal(me(s).points, 5 + 2);                // two 6s, then a 2
-  assert.deepEqual(s.lastBank.rolls, [6, 6, 2]);
+  assert.equal(me(s).points, 5, 'even if a 6 were rolled, nothing is added');
+  assert.equal(draws, 0, 'the random generator is untouched');
+  assert.equal(s.lastBank.rolls, undefined);
+  assert.equal(s.lastBank.bonus, undefined);
+  assert.equal(GAME_DATA.rules.scoring.bonusDieSides, undefined, 'the rule is gone from the data block');
 });
 
 test('bank: rejects a set that is not there', () => {
@@ -63,19 +67,17 @@ test('bank: takes the whole turn — and works right after a peek (the peeked fo
 });
 
 test('bank: the banked sets are remembered for the end screen', () => {
-  const s = game({ rolls: [6, 5, 6, 3] });
+  const s = game({ rolls: [6, 5, 3] });
   me(s).sets = held(5);
   Engine.bank(s, 0);
-  assert.deepEqual(me(s).banked, [{ value: 5, gem: false, base: 5, bonus: 1 }]);
+  assert.deepEqual(me(s).banked, [{ value: 5, gem: false, base: 5 }]);
 });
 
-test('bank: scoring comes from the data block (flat points, no bonus die)', () => {
+test('bank: scoring comes from the data block (flat points)', () => {
   const d = JSON.parse(JSON.stringify(GAME_DATA));
   d.rules.scoring.setPoints = 5;
-  d.rules.scoring.bonusDieSides = 0;
   const s = game({ data: d, rolls: [6, 5] });
   me(s).sets = held(9);
   Engine.bank(s, 0);
   assert.equal(me(s).points, 5);
-  assert.deepEqual(s.lastBank.rolls, []);
 });
