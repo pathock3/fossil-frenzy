@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **The opponents are rebuilt (AI).** One decision engine now plays every opponent, from the perfect player down to the Beginner, by turning abilities up or down: **memory** (fades every turn; a slip taps a random other spot), **valueSense**, **leadSense**, **endSense**, **setsSense**, and banking habits for the easy levels. Each campaign level is just a list of those abilities in the data block, and there is a `random` profile for a future tutorial. The levels are re-set so each beats the one below it (Master is the hardest by a clear margin). Simulations (REPORT.md) and the design notes (`docs/AI.md`) explain what mattered: memory most, then knowing how long the game has left. **Saved games from before this change are cleared** (the opponent's saved format changed).
 - **Home screen demo:** each turn now leaves its two tiles face up until the other colour flips its first tile — then a miss flips face down and a match vanishes — so the board never goes blank between turns.
 - **Fossil values:** the 10 and 11 are now a **9 and a 10**, and gems are worth **12** (was 16), so a couple of big fossils don't decide the game. Simulations re-run: scores are a little lower and closer together (REPORT.md). Saved games from before this change are cleared (the rules changed).
 - **Settings:** a new Settings panel (home screen and in-game ☰ menu) with the prompts choice and **Unlock everything** — it warns that playing through the campaign is the recommended way, then opens every level. Remembered on the device; can be switched back.

@@ -1,49 +1,50 @@
 # REPORT — Fossil Frenzy (one rule set), 1,000 bot games per row
 
-Reproduce: `npm run simulate -- --games 1000` from the repo root (about 20 s; deterministic — seeds are fixed). Raw numbers: `tools/results.json`; the tables below are `tools/tables.md` verbatim.
+Reproduce: `npm run simulate -- --games 1000` from the repo root (about 2½ minutes; deterministic — seeds are fixed). Raw numbers: `tools/results.json`; the tables below are `tools/tables.md` verbatim. How the opponents work: `docs/AI.md`.
 
-Rules simulated: 31 fossils on a hexagon, no pieces; a turn is *peek then flip* or *bank one set* (scored at the number on its fossil, gem 12, plus a d6 chain; fossils 2/3/5/6/7/9/10 and gems 12 — the top two values were 10/11 and gems 16 before the playtest change of 2026-10-18 of +1 per 6); up to 4 players. A bot's **memory** is the chance it remembers each revealed fossil (permanently); unless stated, bots bank as soon as they hold a set. "Level" rows use the campaign levels' own settings from the data block (memory *and* banking habits). ± values are 95% confidence half-widths. See `DECISIONS.md` (Bots and Simulation sections) for the bot and metric definitions. (The earlier comparison of the two retired rule sets is in `docs/archive/REPORT-on-vs-off.md`.)
+Rules simulated: 31 fossils on a hexagon (2/3/5/6/7/9/10 and three gems worth 12), no pieces; a turn is *peek then flip* or *bank one set* (scored at the number on its fossil plus a d6 chain of +1 per 6); up to 4 players. A player is the one decision engine in the `bots` script with a **profile** of abilities (`GAME_DATA.ai`): **memory** (each turn that passes, the chance a memory is still exact; acting on it succeeds with probability memory^age, otherwise a random other spot), **valueSense**, **leadSense**, **endSense**, **setsSense**, and banking habits. "Perfect" = every ability at 1; "memory m" in a table means the perfect strategy with that memory. "Level" rows use the campaign levels' own profiles from the data block. ± values are 95% confidence half-widths. See `DECISIONS.md` (items 55–59) for what was tried and dropped.
 
 ## Findings
 
-**1. Game length: about 42 turns whatever the player count.** Four bots at 0.90 memory: 41.6 turns (10.4 rounds each), 10th–90th percentile 39–44. Two and three players take 40.8 and 41.5 turns (Table 2): the limit is finding the 15 matches, so rounds per player scale as 1/players. Memory matters for length: everyone at 0.5 takes 46.8 turns, at 1.0, 40.9 (Table 8).
+**1. Memory decides most games.** Four players with very different memory (Table 3): the perfect memory wins 97.2%; 0.80 wins 2.1%, 0.55 0.4%, 0.30 0.3%. Even among the memories of the campaign levels (Table 4: 0.80 / 0.90 / 0.95 / 0.99) win share runs 2.3% → 9.0% → 25.1% → 63.6%. One perfect-memory player against three at 0.70 wins 97.7% (Table 5). Memory fades with every turn that passes, so even 0.95 forgets half of what it saw 14 turns ago — the gaps between neighbouring memories are large. If a level feels too hard, `memory` is the first lever.
 
-**2. Scores are well spread, and ties are rare.** Mean score 17.3 per player, winner 24.2; within-game SD 5.3 (coefficient of variation 0.31); the winner leads second place by 5.2 points (22% of the winner's score). 6.9% of games tie on score and 1.4% stay tied through every tie-break. *Effect of the value change (10/11 → 9/10, gems 16 → 12):* scores came down and bunched up — the gap between best and worst fell from 16.0 to 13.5 points and the winning margin from 6.6 to 5.2 — so one big set swings a game less than before. Bots lose only 2.6 points per game to unbanked sets, because banking is available on any turn.
+**2. Memory also sets how long a game lasts.** Everyone at 1.0: 40.8 turns; at 0.9: 51.6; at 0.7: 88.8; at 0.5: 124.0 (Table 8) — forgetful players waste turns on slips. Two, three and four players take about the same number of turns (49.3 / 51.0 / 51.6 at 0.90, Table 2).
 
-**3. The early leader wins about twice as often as chance.** After half the game's turns the leader (a tied lead shares credit) goes on to win 46.1% of four-player games (fair share 25%); after three quarters, 60.9%; after a quarter, 35.5%. By player count (Table 2) a half-time lead wins 68.5% with 2 players (fair 50%), 53.8% with 3 (fair 33.3%). *The smaller top values did not weaken the early leader's edge* (it was 42.7% / 59.2% / 32.8% before — a small rise, near the noise): that edge comes from tempo (matches made and banked early) more than from the size of the big fossils. A lead is hard to overturn because most matches are made in the middle of the game and the leader has already banked theirs.
+**3. Scores are well spread, and ties are rare.** Four players at 0.90: mean 16.5 per player, winner 24.3; within-game SD 6.1; the winner leads second place by 5.3 points (22% of the winner's score). 7.5% of games tie on score and 0.6% stay tied through every tie-break. Unbanked sets cost 3.6 points a game.
 
-**4. Memory skill matters a lot — until the players are all good.** Four players of very different memory (Table 3): the best (1.00) wins 52.0% — twice the 25% fair share — and the worst (0.30) wins 4.0%; the Spearman correlation between a seat's memory and its final score is 0.57. One perfect-memory player against three 0.70 players wins 43.4% (Table 5). Among players at the memory levels of Beginner to Master (Table 4) the effect is much milder: win share runs from 17.4% to 32.8% and the correlation drops to 0.14 — near-perfect memory does not make the top level unbeatable.
+**4. The early leader wins about twice as often as chance.** After half the game's turns the leader goes on to win 43.4% of four-player games (fair share 25%), 58.9% after three quarters, 33.0% after a quarter; with two players a half-time lead wins 58.8% (fair 50%) (Tables 1–2).
 
-**5. Turn order: a small first-seat edge.** Four players: 28.5 / 24.8 / 22.8 / 23.9% by turn order (fair 25%, ±2.7%). Two players: 54.5% for whoever starts (±3.1%) — slightly more than fair, and relevant to the campaign, where the die decides who starts.
+**5. There is no seat-order edge.** Four players: 24.8 / 24.7 / 26.9 / 23.6% by turn order (fair 25%, ±2.7%); two players: 50.0% / 50.0%.
 
-**6. The campaign ladder rises, unevenly.** Each level beats every easier one more often than not (Table 6), but the first three are close: Beginner, Novice and Normal are within a few points of each other head-to-head (Normal beats Beginner 57.7%, Novice beats Beginner 54.3%, and Novice–Normal is close to even). The real steps come at the top: Master beats Beginner 65.2% and Challenging 51.8%. Against a human-proxy (Table 7): a perfect-memory player beats Beginner outright 65.6% of the time and Master 48.9%; a player who forgets half of what they see beats Beginner 25.7% and Master 15.1% of the time. So **every level is beatable by a strong player, and the early levels are not much easier than the late ones for a weaker player**. If a gentler start is wanted, the data block's `memory` values for Beginner and Novice are the lever (for example 0.5 and 0.65 instead of 0.80 and 0.85).
+**6. The campaign ladder rises steadily (Table 6).** Each level beats the one below it: Novice beats Beginner 61.8%, Normal beats Novice 61.8%, Challenging beats Normal 77.6%, Master beats Challenging 74.2%; Master beats Beginner 98.5%. All five beat the random tutorial opponent at least 96.8% of the time (Table 11). Against players of the *perfect strategy with imperfect memory* (Table 7): memory 0.9 beats Beginner 75%, Normal 51%, Master 10%; only a player who never forgets beats Master more often than not (57%). A person is not a bot, so **how hard the levels feel is for playtesting to settle** — the data block's `memory` values are the lever.
+
+**7. What the abilities are worth (Table 9).** Against the perfect player: memory 0.8 loses 98% of games; having no sense of how long the game has left (and banking by habit) loses about 60% — so **memory first, then knowing when the game is ending**. Valuing sets by their number, watching the lead, and tracking which sets are left made **no measurable difference** against a perfect-memory opponent (52% / 48% / 46%, all within the noise of ±3%): they change *how* it plays (which sets it leaves, what it takes) more than whether it wins. Ideas that sounded right but lost in simulation are listed in `docs/AI.md` (flipping only already-public fossils, an explicit "leader rushes the end" push, searching ahead).
 
 ## Caveats
-- Bots are simple heuristics (DECISIONS, Bots section): they do not plan against the end of the game and do not model opponents. Absolute numbers are bot behaviour, not human behaviour. A human forgets positions as well as values and gets tired; this model treats all of that as one coin.
-- The "human proxy" in Table 7 is a bot of the given memory banking promptly. A real person will play differently, so treat Table 7 as an ordering of difficulty, not a promise of a win rate.
-- Campaign levels also differ in banking habits (from the design summary): they bank once holding three sets, and plan for the end of the game at different points (never for Beginner, with 2 / 6 / 4 / 4 fossils left for Novice to Master). The difference between levels in Table 6 is memory *and* those habits together.
+- Opponents are heuristics, calibrated bot against bot (and in particular on how fast memory fades). A human forgets differently — more by neighbouring spots and by interference than by a clean per-turn decay.
+- The "human proxy" in Table 7 is the perfect strategy with a given memory. Treat it as an ordering of difficulty, not a promise of a win rate.
 - ± values are normal-approximation intervals; the head-to-head cells are 1,000 games each, so differences under about 4 points are noise.
 
 ## Table 1 — 4 players, everyone at memory 0.90, 1000 games
 
 | metric | value |
 |---|---|
-| turns per game (mean / median) | 41.6 / 42 |
-| turns per game (10th–90th pct) | 39–44 |
-| rounds per player | 10.4 |
-| mean final score per player / mean winning score | 17.3 / 24.2 |
-| score SD within a game / range (max − min) | 5.3 / 13.5 |
-| coefficient of variation within a game | 0.31 |
-| mean winning margin (1st − 2nd), and as % of winner's score | 5.2, 21.6% |
-| games with a tie on score / a shared win after every tie-break | 6.9% / 1.4% |
-| points lost at the end in unbanked sets (mean) | 2.6 |
-| leader at 25% of the game: someone has scored / a sole leader exists | 97.8% / 92.5% |
-| leader at 25%: win rate counting tied leaders (credit shared) | 35.5% ±3.0% |
-| leader at 50% of the game: someone has scored / a sole leader exists | 100.0% / 90.7% |
-| leader at 50%: win rate counting tied leaders (credit shared) | 46.1% ±3.1% |
-| leader at 75% of the game: someone has scored / a sole leader exists | 100.0% / 93.0% |
-| leader at 75%: win rate counting tied leaders (credit shared) | 60.9% ±3.0% |
-| win share by turn order (1st / 2nd / 3rd / 4th) | 28.5% / 24.8% / 22.8% / 23.9% |
+| turns per game (mean / median) | 51.6 / 50 |
+| turns per game (10th–90th pct) | 44–60 |
+| rounds per player | 12.9 |
+| mean final score per player / mean winning score | 16.5 / 24.3 |
+| score SD within a game / range (max − min) | 6.1 / 15.5 |
+| coefficient of variation within a game | 0.37 |
+| mean winning margin (1st − 2nd), and as % of winner's score | 5.3, 21.7% |
+| games with a tie on score / a shared win after every tie-break | 7.5% / 0.6% |
+| points lost at the end in unbanked sets (mean) | 3.6 |
+| leader at 25% of the game: someone has scored / a sole leader exists | 62.5% / 60.2% |
+| leader at 25%: win rate counting tied leaders (credit shared) | 33.0% ±3.7% |
+| leader at 50% of the game: someone has scored / a sole leader exists | 92.4% / 85.9% |
+| leader at 50%: win rate counting tied leaders (credit shared) | 43.4% ±3.2% |
+| leader at 75% of the game: someone has scored / a sole leader exists | 99.8% / 92.5% |
+| leader at 75%: win rate counting tied leaders (credit shared) | 58.9% ±3.1% |
+| win share by turn order (1st / 2nd / 3rd / 4th) | 24.8% / 24.7% / 26.9% / 23.6% |
 
 Fair win share with 4 players is 25.0%; the 95% half-width of a win share over 1000 games is about ±2.7%.
 
@@ -51,69 +52,103 @@ Fair win share with 4 players is 25.0%; the 95% half-width of a win share over 1
 
 | players | turns | rounds/player | leader at 50% goes on to win (fair share) | win share by turn order |
 |---|---|---|---|---|
-| 2 | 40.8 | 20.4 | 68.5% (50.0%) | 54.5% / 45.5% |
-| 3 | 41.5 | 13.8 | 53.8% (33.3%) | 36.1% / 31.1% / 32.8% |
-| 4 | 41.6 | 10.4 | 46.1% (25.0%) | 28.5% / 24.8% / 22.8% / 23.9% |
+| 2 | 49.3 | 24.6 | 58.8% (50.0%) | 50.0% / 50.0% |
+| 3 | 51.0 | 17.0 | 47.5% (33.3%) | 33.8% / 32.1% / 34.2% |
+| 4 | 51.6 | 12.9 | 43.4% (25.0%) | 24.8% / 24.7% / 26.9% / 23.6% |
 
 ## Table 3 — memory skill: four players of very different memory (0.30 / 0.55 / 0.80 / 1.00), random seats
 
 | memory | win share | mean score | mean rank |
 |---|---|---|---|
-| 0.3 | 4.0% ±1.2% | 10.6 | 3.36 |
-| 0.55 | 12.2% ±2.0% | 15.3 | 2.71 |
-| 0.8 | 31.8% ±2.9% | 20.0 | 2.04 |
-| 1 | 52.0% ±3.1% | 22.7 | 1.69 |
+| 0.3 | 0.3% ±0.3% | 6.4 | 3.19 |
+| 0.55 | 0.4% ±0.4% | 7.1 | 3.11 |
+| 0.8 | 2.1% ±0.9% | 11.9 | 2.52 |
+| 1 | 97.2% ±1.0% | 32.2 | 1.03 |
 
-Spearman correlation between a seat's memory and its final score (per game, averaged): 0.57.
+Spearman correlation between a seat's memory and its final score (per game, averaged): 0.73.
 
 ## Table 4 — memory skill: the memory of Beginner / Normal / Challenging / Master, random seats
 
 | memory | win share | mean score | mean rank |
 |---|---|---|---|
-| 0.8 | 17.4% ±2.4% | 15.8 | 2.67 |
-| 0.9 | 25.4% ±2.7% | 17.1 | 2.43 |
-| 0.965 | 24.4% ±2.7% | 17.6 | 2.41 |
-| 0.99 | 32.8% ±2.9% | 18.5 | 2.24 |
+| 0.8 | 2.3% ±0.9% | 8.2 | 3.48 |
+| 0.9 | 9.0% ±1.8% | 14.0 | 2.76 |
+| 0.95 | 25.1% ±2.7% | 19.1 | 2.12 |
+| 0.99 | 63.6% ±3.0% | 24.2 | 1.49 |
 
-Spearman correlation between a seat's memory and its final score (per game, averaged): 0.14.
+Spearman correlation between a seat's memory and its final score (per game, averaged): 0.67.
 
 ## Table 5 — one player of memory m against three players at 0.70 (fair share 25%)
 
 | focal memory | win share | mean score |
 |---|---|---|
-| 0.3 | 4.8% ±1.3% | 10.7 |
-| 0.5 | 15.1% ±2.2% | 14.5 |
-| 0.7 | 25.7% ±2.7% | 17.3 |
-| 0.9 | 38.1% ±3.0% | 19.4 |
-| 1 | 43.4% ±3.1% | 20.5 |
+| 0.3 | 8.3% ±1.7% | 11.2 |
+| 0.5 | 13.4% ±2.1% | 12.6 |
+| 0.7 | 27.1% ±2.8% | 16.2 |
+| 0.9 | 70.3% ±2.8% | 24.1 |
+| 1 | 97.7% ±0.9% | 30.9 |
 
 ## Table 6 — the campaign ladder: each level against each other level (2 players, row beats column this often; a draw counts half)
 
 | | Beginner | Novice | Normal | Challenging | Master |
 |---|---|---|---|---|---|
-| **Beginner** | — | 47.5% | 42.8% | 36.2% | 34.4% |
-| **Novice** | 54.3% | — | 48.7% | 41.8% | 40.5% |
-| **Normal** | 57.7% | 52.4% | — | 40.3% | 38.3% |
-| **Challenging** | 62.9% | 58.6% | 57.7% | — | 48.6% |
-| **Master** | 65.2% | 60.2% | 59.1% | 51.8% | — |
+| **Beginner** | — | 36.9% | 25.4% | 6.3% | 1.9% |
+| **Novice** | 61.8% | — | 36.7% | 11.0% | 3.0% |
+| **Normal** | 72.0% | 61.8% | — | 23.7% | 10.1% |
+| **Challenging** | 93.6% | 88.3% | 77.6% | — | 24.9% |
+| **Master** | 98.5% | 96.3% | 90.4% | 74.2% | — |
 
-## Table 7 — how hard is each level? Win rate of a player of a given memory (banking promptly) against each level
+## Table 7 — how hard is each level? Win rate of the perfect strategy at a given memory against each level
 
 | level | player memory 0.5 | player memory 0.7 | player memory 0.9 | player memory 1 |
 |---|---|---|---|---|
-| Beginner | 25.7% | 42.1% | 59.9% | 65.6% |
-| Novice | 22.9% | 40.8% | 56.1% | 61.9% |
-| Normal | 21.6% | 35.0% | 50.2% | 57.0% |
-| Challenging | 16.0% | 29.6% | 44.5% | 50.2% |
-| Master | 15.1% | 29.0% | 42.8% | 48.9% |
+| Beginner | 7.1% | 21.3% | 75.4% | 98.1% |
+| Novice | 3.9% | 13.4% | 63.8% | 97.5% |
+| Normal | 3.8% | 10.5% | 50.5% | 92.5% |
+| Challenging | 0.9% | 2.3% | 25.6% | 78.8% |
+| Master | 0.1% | 0.9% | 10.1% | 57.4% |
 
 Outright wins only, since the campaign counts only an outright win as a defeat (a draw leaves the level locked).
+
+## Table 9 — what each ability is worth: the perfect player against itself with one ability taken away (2 players; the perfect player wins this often, a draw counts half)
+
+| the other player lacks… | perfect player wins |
+|---|---|
+| memory 0.8 (instead of perfect) | 98.3% ±0.8% |
+| no feel for set values (valueSense 0) | 52.0% ±3.1% |
+| no eye on the win (leadSense 0) | 48.2% ±3.1% |
+| no sense of the game ending (endSense 0, banks at 3 sets) | 59.7% ±3.0% |
+| does not track which sets are left (setsSense 0) | 46.2% ±3.1% |
+| all of those (memory 0.8, every sense 0, banks at 3 sets) | 98.1% ±0.8% |
+
+## Table 10 — the five campaign opponents' settings
+
+| level | memory | valueSense | leadSense | endSense | setsSense | bank habit |
+|---|---|---|---|---|---|---|
+| Beginner | 0.8 | 0 | 0 | 0 | 0 | at 3 sets |
+| Novice | 0.85 | 0.4 | 0 | 0 | 0 | at 3 sets, and when ≤ 4 fossils left |
+| Normal | 0.9 | 0.8 | 0.3 | 0.5 | 1 | none |
+| Challenging | 0.95 | 1 | 0.7 | 0.8 | 1 | none |
+| Master | 0.99 | 1 | 1 | 1 | 1 | none |
+
+Senses run from 0 (none) to 1 (perfect); memory is the chance a remembered fact is still recalled exactly, per turn that passes (see `docs/AI.md`).
+
+## Table 11 — the tutorial opponent (plays at random): how often each campaign level beats it (2 players)
+
+| level | wins |
+|---|---|
+| Beginner | 96.8% |
+| Novice | 98.4% |
+| Normal | 99.0% |
+| Challenging | 99.5% |
+| Master | 99.9% |
 
 ## Table 8 — everyone has the same memory (4 players)
 
 | memory | turns | leader at 50% goes on to win |
 |---|---|---|
-| 1 | 40.9 | 48.6% |
-| 0.5 | 46.8 | 46.6% |
-| 0.7 | 43.7 | 49.5% |
-| 0.9 | 41.6 | 46.1% |
+| 1 | 40.8 | 45.4% |
+| 0.5 | 124.0 | 50.5% |
+| 0.7 | 88.8 | 44.4% |
+| 0.9 | 51.6 | 43.4% |
+

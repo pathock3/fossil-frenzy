@@ -62,6 +62,7 @@ Gaps closed (this is now the template for the next game):
 - ✅ Prompts above the board were instructional narration: now shown only until a device has finished one game; Auto / On / Off in the help panel.
 - ✅ The end screen was a stats table: now each player's banked fossils laid out with their score, the winner marked.
 - ✅ Ring colour is not an accessibility gap (only the current player's flips are shown). A peek is a dashed ring, a flip a solid one.
+- ✅ **The opponents** (owner brief): one decision engine, a perfect player and abilities that can be turned down to build the five levels (and a random tutorial opponent). See `games/fossil-frenzy/docs/AI.md`; still to consider there: a tutorial, human-like near-miss slips, reading what the human has peeked, personalities.
 - ✅ **Playtest round 2** (owner): no who-goes-first screen (random order + a turn card); big scores; the opponent's turn animated move by move (peek, then flip); a third tap after two gems is consent; banking ends the turn; a ☰ menu with rules, retry and back-to-start (see DECISIONS 33–38).
 - ✅ **One rule set** (owner decision, 2026-10-18): the original movement/delivery mode and the toggle were removed; Pass & Play (2–4) and a five-level Campaign were added.
 

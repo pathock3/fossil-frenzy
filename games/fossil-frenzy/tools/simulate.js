@@ -28,8 +28,9 @@ function spearman(x, y) {
   return dx && dy ? num / Math.sqrt(dx * dy) : 0;
 }
 
-// A bot for a given memory (the default banking habits) — stands in for a human of that skill.
-const player = memory => ({ memory });
+// A player of the perfect strategy with a given memory — stands in for a human of that skill (who plays well but forgets).
+const EXPERT = GAME_DATA.ai.profiles.expert;
+const player = memory => ({ ...EXPERT, memory });
 const level = i => Campaign.botSpec(LEVELS[i]);
 
 // ---------- one game ----------
@@ -107,10 +108,11 @@ function summary(games) {
 }
 
 // Mixed-memory table: win share and mean final-score rank per memory level, rotated randomly across seats.
-function mixed(levels) {
+function mixed(specs) {
+  const levels = specs.map(sp => sp.memory);                      // each seat is told apart by its (distinct) memory
   const rngSeat = Engine.mulberry32(4242);
   const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rngSeat() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
-  const games = runMany(() => shuffle(levels).map(player), 'mixed ' + levels);
+  const games = runMany(() => shuffle(specs), 'mixed ' + levels);
   const wins = levels.map(() => 0), scores = levels.map(() => []), ranks = levels.map(() => []), rhos = [];
   for (const g of games) {
     const mems = g.specs.map(s => s.memory);
@@ -157,14 +159,26 @@ for (let n = 2; n <= 4; n++) R.byPlayers[n] = summary(runMany(() => Array(n).fil
 R.equalMemory = {};
 for (const m of [0.5, 0.7, 0.9, 1.0]) R.equalMemory[m] = summary(runMany(() => Array(4).fill(m).map(player), 'eq' + m));
 console.error('memory skill …');
-R.mixedWide = mixed([0.3, 0.55, 0.8, 1.0]);
-R.mixedTiers = mixed([0, 2, 3, 4].map(i => LEVELS[i].memory));            // four seats: Beginner, Normal, Challenging, Master
+R.mixedWide = mixed([0.3, 0.55, 0.8, 1.0].map(player));
+R.mixedTiers = mixed([0, 2, 3, 4].map(i => level(i)));                  // four seats: Beginner, Normal, Challenging, Master
 R.curve = skillCurve(0.7, [0.3, 0.5, 0.7, 0.9, 1.0]);
 console.error('campaign ladder …');
 R.ladder = LEVELS.map((_, i) => LEVELS.map((__, j) => (i === j ? null : headToHead(level(i), level(j)))));
 const REFS = [0.5, 0.7, 0.9, 1.0];
 R.vsReference = LEVELS.map((_, i) => REFS.map(m => headToHead(player(m), level(i))));   // a player of memory m against each level
 R.refs = REFS;
+console.error('what each ability is worth …');
+const ABILITIES = [
+  ['memory 0.8 (instead of perfect)', { memory: 0.8 }],
+  ['no feel for set values (valueSense 0)', { valueSense: 0 }],
+  ['no eye on the win (leadSense 0)', { leadSense: 0 }],
+  ['no sense of the game ending (endSense 0, banks at 3 sets)', { endSense: 0, bankAt: 3 }],
+  ['does not track which sets are left (setsSense 0)', { setsSense: 0 }],
+  ['all of those (memory 0.8, every sense 0, banks at 3 sets)', { memory: 0.8, valueSense: 0, leadSense: 0, endSense: 0, setsSense: 0, bankAt: 3 }],
+];
+R.abilities = ABILITIES.map(([name, o]) => ({ name, ...headToHead(EXPERT, { ...EXPERT, ...o }) }));
+R.tutorial = LEVELS.map((_, i) => headToHead(level(i), GAME_DATA.ai.profiles.random));
+R.levelSettings = LEVELS.map(l => ({ name: l.name, ...l.ai }));
 R.seconds = (Date.now() - t0) / 1000;
 fs.writeFileSync(OUT, JSON.stringify(R, null, 1));
 console.error('done in', R.seconds, 's ->', OUT);
@@ -212,9 +226,19 @@ L.push('## Table 6 — the campaign ladder: each level against each other level 
 R.ladder.forEach((row, i) => L.push(`| **${R.levels[i]}** | ${row.map(c => (c ? P(c.winShare) : '—')).join(' | ')} |`));
 L.push('');
 
-L.push('## Table 7 — how hard is each level? Win rate of a player of a given memory (banking promptly) against each level', '', `| level | ${R.refs.map(m => 'player memory ' + m).join(' | ')} |`, `|---|${R.refs.map(() => '---').join('|')}|`);
+L.push('## Table 7 — how hard is each level? Win rate of the perfect strategy at a given memory against each level', '', `| level | ${R.refs.map(m => 'player memory ' + m).join(' | ')} |`, `|---|${R.refs.map(() => '---').join('|')}|`);
 R.vsReference.forEach((row, i) => L.push(`| ${R.levels[i]} | ${row.map(c => `${P(c.outright)}${c.draws > 0.005 ? ` (+${P(c.draws)} draws)` : ''}`).join(' | ')} |`));
 L.push('', 'Outright wins only, since the campaign counts only an outright win as a defeat (a draw leaves the level locked).', '');
+
+L.push('## Table 9 — what each ability is worth: the perfect player against itself with one ability taken away (2 players; the perfect player wins this often, a draw counts half)', '', '| the other player lacks… | perfect player wins |', '|---|---|');
+R.abilities.forEach(x => L.push(`| ${x.name} | ${P(x.winShare)} ±${P(x.ci)} |`));
+L.push('');
+L.push('## Table 10 — the five campaign opponents\' settings', '', '| level | memory | valueSense | leadSense | endSense | setsSense | bank habit |', '|---|---|---|---|---|---|---|');
+R.levelSettings.forEach(x => L.push(`| ${x.name} | ${x.memory} | ${x.valueSense} | ${x.leadSense} | ${x.endSense} | ${x.setsSense} | ${x.bankAt ? 'at ' + x.bankAt + ' sets' : 'none'}${x.endgameTiles ? ', and when ≤ ' + x.endgameTiles + ' fossils left' : ''} |`));
+L.push('', 'Senses run from 0 (none) to 1 (perfect); memory is the chance a remembered fact is still recalled exactly, per turn that passes (see `docs/AI.md`).', '');
+L.push('## Table 11 — the tutorial opponent (plays at random): how often each campaign level beats it (2 players)', '', '| level | wins |', '|---|---|');
+R.tutorial.forEach((x, i) => L.push(`| ${R.levels[i]} | ${P(x.winShare)} |`));
+L.push('');
 
 L.push('## Table 8 — everyone has the same memory (4 players)', '', '| memory | turns | leader at 50% goes on to win |', '|---|---|---|');
 for (const m of Object.keys(R.equalMemory)) L.push(`| ${m} | ${f1(R.equalMemory[m].turns.mean)} | ${P(R.equalMemory[m].early[0.5].tieAwareWinRate)} |`);

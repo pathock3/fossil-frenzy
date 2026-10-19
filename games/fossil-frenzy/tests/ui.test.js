@@ -87,7 +87,7 @@ const fingerprint = () => {
 async function playByTaps(page, humanSeats) {
   await page.evaluate(seats => {
     const { ui } = window.FossilFrenzyUI;
-    window.__helpers = seats.map(i => { const b = Bots.create({ seat: i, memory: 1, endgameTiles: 4, rng: Engine.mulberry32(i + 1) }); ui.st.observers.push(b); return b; });
+    window.__helpers = seats.map(i => { const b = Bots.create({ seat: i, profile: 'expert', rng: Engine.mulberry32(i + 1) }); ui.st.observers.push(b); return b; });
   }, humanSeats);
   for (let step = 0; step < 2000; step++) {
     const plan = await page.evaluate(() => {
@@ -859,7 +859,7 @@ test('the opponent banks: a clear banner says what it banked, what it scored and
     await campaign(page, 0);
     await page.evaluate(() => {                                            // make the opponent hold a 7 and want to bank it
       const { ui } = window.FossilFrenzyUI;
-      ui.st.players[1].sets = [{ value: 7, gem: false, size: 2, ids: [] }]; ui.bots[1].bankAt = 1; ui.st.rng = () => 0.01;
+      ui.st.players[1].sets = [{ value: 7, gem: false, size: 2, ids: [] }]; ui.bots[1].profile.bankAt = 1; ui.st.rng = () => 0.01;
     });
     for (let i = 0; i < 6 && !(await page.evaluate(() => window.FossilFrenzyUI.ui.botWaiting && window.FossilFrenzyUI.ui.st.turn.banked)); i++) {
       if (await page.evaluate(() => window.FossilFrenzyUI.ui.botWaiting)) { await page.tap(await firstFree(page)); await page.tap(await otherFree(page)); await page.tap('[data-act=end]'); }
@@ -897,7 +897,7 @@ test('the opponent\'s bank banner goes away on a tap anywhere: on the map it als
   try {
     for (const where of ['map', 'header']) {
       await campaign(page, 0);
-      await page.evaluate(() => { const { ui } = window.FossilFrenzyUI; ui.st.players[1].sets = [{ value: 7, gem: false, size: 2, ids: [] }]; ui.bots[1].bankAt = 1; ui.st.rng = () => 0.01; });
+      await page.evaluate(() => { const { ui } = window.FossilFrenzyUI; ui.st.players[1].sets = [{ value: 7, gem: false, size: 2, ids: [] }]; ui.bots[1].profile.bankAt = 1; ui.st.rng = () => 0.01; });
       for (let i = 0; i < 8 && !(await page.evaluate(() => window.FossilFrenzyUI.ui.botWaiting && window.FossilFrenzyUI.ui.st.turn.banked)); i++) await takeATurn(page);
       assert.equal(await page.locator('.bankcard').count(), 1);
       if (where === 'map') {

@@ -5,9 +5,9 @@ const { GAME_DATA, Engine, Bots } = require('./load');
 const snapshot = s => JSON.stringify(Engine.standings(s)) + '|' + s.turnNo + '|' + s.matchedCount;
 
 // Plays a bot game; at action number `cutAt`, saves, throws everything away and carries on from the JSON.
-function play({ seed, cutAt, memories = [0.4, 0.8, 1], bankAts = [1, 3, 2] }) {
+function play({ seed, cutAt, memories = [0.4, 0.8, 1], bankAts = [1, 3, 0] }) {
   let s = Engine.createGame({ players: 3, seed });
-  let bots = Bots.attach(s, memories.map((m, i) => ({ memory: m, bankAt: bankAts[i], endgameTiles: i * 2 })), seed);
+  let bots = Bots.attach(s, memories.map((m, i) => ({ ...GAME_DATA.ai.profiles.expert, memory: m, bankAt: bankAts[i], endgameTiles: i * 2 })), seed);
   for (let i = 0; !s.over; i++) {
     if (i === cutAt) {
       const json = JSON.stringify({ game: Engine.serialize(s), bots: bots.map(b => b.save()) });   // → localStorage
@@ -68,20 +68,26 @@ test('save: only games in progress with a saveable RNG can be saved', () => {
   const custom = Engine.createGame({ players: 2, rng: () => 0.5 });
   assert.throws(() => Engine.serialize(custom), /cannot be saved/);
   const s = Engine.createGame({ players: 2, seed: 8 });
-  const bots = Bots.attach(s, [{ memory: 1 }, { memory: 1 }], 8);
+  const bots = Bots.attach(s, ['expert', 'expert'], 8);
   Bots.playGame(s, bots);
   assert.throws(() => Engine.serialize(s), /finished/);
 });
 
-test('save: a bot keeps its memory and banking habits across a restore', () => {
+test('save: a bot keeps what it remembers, which sets are gone, how old its memories are, and its settings across a restore', () => {
   const s = Engine.createGame({ players: 2, seed: 9 });
-  const bots = Bots.attach(s, [{ memory: 1, bankAt: 3, endgameTiles: 4 }, null], 9);
+  const profile = { ...GAME_DATA.ai.profiles.expert, memory: 0.9, bankAt: 3, endgameTiles: 4 };
+  const bots = Bots.attach(s, [profile, null], 9);
   bots[0].onEvent({ type: 'reveal', actor: 1, tid: 4, cell: 4, value: 5, gem: false, step: 'other' });
+  bots[0].onEvent({ type: 'turn', actor: 1 }); bots[0].onEvent({ type: 'turn', actor: 0 });
+  bots[0].onEvent({ type: 'match', actor: 1, tids: [8, 9], value: 3, gem: false });
   const back = JSON.parse(JSON.stringify(bots.map(b => (b ? b.save() : null))));
   const s2 = Engine.restore(JSON.parse(JSON.stringify(Engine.serialize(s))));
   const bots2 = Bots.restore(s2, back);
-  assert.equal(bots2[0].mem.get(4).value, 5);
-  assert.deepEqual([bots2[0].bankAt, bots2[0].endgameTiles], [3, 4]);
+  assert.equal(bots2[0].facts.get(4).value, 5);
+  assert.equal(bots2[0].turnIx, 2, 'its memories keep their age');
+  assert.equal(bots2[0].gone.n3, 2);
+  assert.deepEqual([bots2[0].profile.memory, bots2[0].profile.bankAt, bots2[0].profile.endgameTiles], [0.9, 3, 4]);
   assert.equal(bots2[1], null, 'human seats stay human');
   assert.equal(s2.observers.length, 1);
+  assert.throws(() => Bots.restore(s2, [{ seat: 0, memory: 1, mem: [] }]), /unknown bot save format/, 'a bot saved by an older version is not resumed');
 });
