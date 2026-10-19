@@ -99,3 +99,5 @@ If the campaign grows (say 25 levels with different boards and sets) the engine 
 - **Adaptive difficulty** (nudge Memory between games) — optional, off by default so the ladder stays honest.
 - **Calibrate against people** with anonymous per-device counts (games played / won per level).
 - **A developer "why did it do that?" view** — the planner already produces its candidates and scores (`bot.weigh`).
+
+- **Table reading (idea, not built):** use the second, public flip on a fossil the opponent has already seen (one it peeked at — its dashed ring shows where) so the flip tells only *me* something. Needs a new skill and a record of what each player has seen. Memory stays the primary stat; this would be a minor behaviour skill like the others.

@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+- **Opponent no longer repeats a failed move.** When its memory slips it now taps somewhere it does not already know holds something else, and then drops the belief it just failed on — so Beginner can't try the same wrong match turn after turn. (Checked over 300 games: none repeat three turns running now.)
+- **Tapping the fossil you peeked at does nothing** — it no longer hides the number or animates.
+- **Win screen:** the winner's card uses that player's own colour for its border (no more green score).
+- **Privacy double-check:** a new test watches every change to the board across whole games, animated and not, and fails if an opponent's peeked number ever shows. (It also fails if the rule is deliberately broken, so it does detect leaks.) None found.
+- Levels re-tuned again after the slip fix: Memory 5.2 / 7.0 / 8.5 / 9.3 / 9.85; each level beats the one below about 70–80% of the time.
 - **Opponents retuned:** the Focus skill (random moves) is gone — opponents are weaker only through fading memory and weaker skills. Normal and up now remember what they have just seen much better, so they make the matches they should; the five levels climb in steps of about 70–78% head to head. The title board's flipping tiles are now never more than two face up at once.
 - **Sets you haven't banked are sorted highest to lowest**, both in your score box during play and on the end screen's "Matched, not banked" row.
 - **End screen:** one headline, not two. "You beat Novice!" stays the big message; "Normal unlocked" is now a quiet line beneath it (no longer an orange card that looked like a button). Beating Master reads "Campaign complete!" as the headline.

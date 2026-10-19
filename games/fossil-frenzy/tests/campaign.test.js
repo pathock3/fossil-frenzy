@@ -64,5 +64,5 @@ test('campaign: beating Master completes the campaign (there is nothing further 
 
 test('campaign: an opponent\'s settings come from the level data', () => {
   assert.equal(Campaign.botSpec(GAME_DATA.campaign.levels[2]), GAME_DATA.campaign.levels[2].ai);
-  assert.equal(Campaign.botSpec(GAME_DATA.campaign.levels[2]).memory, 8.6);
+  assert.equal(Campaign.botSpec(GAME_DATA.campaign.levels[2]).memory, 8.5);
 });

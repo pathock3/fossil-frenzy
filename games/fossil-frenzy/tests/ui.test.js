@@ -418,8 +418,9 @@ test('an opponent\'s peek shows as a dashed ring on a face-down space (number hi
       for (let i = 0; i < 40 && checked < 2 && !(await page.evaluate(() => window.FossilFrenzyUI.ui.st.over)); i++) {
         if (await page.evaluate(() => window.FossilFrenzyUI.ui.botWaiting)) {
           const t = await page.evaluate(() => { const s = window.FossilFrenzyUI.ui.st.turn; return { banked: !!s.banked, matched: !!s.matched }; });
-          if (!t.banked && !t.matched) {
-            assert.equal(await page.locator('.ring.peekring').count(), 1, 'one dashed ring where it peeked');
+          const dashed = await page.locator('.ring.peekring').count();       // (0 if it flipped the very fossil it peeked at: that one is solid)
+          if (!t.banked && !t.matched && dashed > 0) {
+            assert.equal(dashed, 1, 'one dashed ring where it peeked');
             assert.ok(await page.locator('.ring:not(.peekring)').count() >= 1, 'a solid ring on what it flipped');
             assert.equal(await page.locator('.tile.peek').count(), 0, 'the opponent\'s number is never shown');
             checked++;
@@ -902,6 +903,65 @@ test('end of game: the choices are plain buttons — play again (or the next lev
     await campaign(page, 0);
     await forceFinish(page, [30, 10]);
     assert.deepEqual((await page.locator('.sheet > button').allInnerTexts()).map(t => t.replace(/:.*/, '')), ['Next', 'Main menu'], 'after a win: on to the next level, or the main menu — no replay');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('privacy: an opponent\'s peek is never shown — at any moment of any turn, animated or not, across whole games', SKIP, async () => {
+  for (const animated of [false, true]) {
+    const { browser, page, errors } = await open({ animated });
+    try {
+      await campaign(page, 0);
+      // After every change to the page, every number showing on the board must be public (flipped this turn, or part of a match
+      // from this turn) — or be MY OWN peek on MY turn. An opponent's peeked fossil is never one of them.
+      await page.evaluate(() => {
+        window.__leaks = []; window.__audits = 0;
+        const audit = () => {
+          const U = window.FossilFrenzyUI, st = U.ui.st; if (!st || U.ui.screen !== 'play') return;
+          window.__audits++;
+          const mine = !U.ui.bots[st.current] && !U.ui.botWaiting;
+          document.querySelectorAll('.board .cell').forEach(el => {
+            if (!el.querySelector('.num, .gem')) return;
+            let tid = st.tokenAt[+el.dataset.id]; if (tid < 0) tid = (st.turn.matched || []).find(i => st.tokens[i].cell === +el.dataset.id);
+            const isPublic = (st.turn.revealed || []).includes(tid) || (st.turn.matched || []).includes(tid);
+            const myPeek = mine && tid === st.turn.peeked;
+            if (!isPublic && !myPeek) window.__leaks.push({ turn: st.turnNo, cur: st.current, tid, phase: st.phase, peeked: st.turn.peeked, botWaiting: U.ui.botWaiting });
+            if (!mine && el.querySelector('.tile.peek')) window.__leaks.push({ peekClassOnOpponent: tid });
+          });
+        };
+        new MutationObserver(audit).observe(document.getElementById('app') || document.body, { subtree: true, childList: true, attributes: true });
+      });
+      for (let t = 0; t < 14; t++) {
+        if (await page.evaluate(() => window.FossilFrenzyUI.ui.st.over)) break;
+        await takeATurn(page);
+        await page.waitForTimeout(animated ? 120 : 0);
+      }
+      const r = await page.evaluate(() => ({ leaks: window.__leaks, audits: window.__audits }));
+      assert.ok(r.audits > 20, 'the audit actually ran: ' + r.audits);
+      assert.deepEqual(r.leaks, [], 'an opponent\'s peek was shown');
+      assert.deepEqual(errors, []);
+    } finally { await browser.close(); }
+  }
+});
+
+test('tapping the fossil you peeked at does nothing: its number stays, nothing animates, the turn is unchanged', SKIP, async () => {
+  const { browser, page, errors } = await open({ animated: true });
+  try {
+    await passAndPlay(page, 2);
+    const first = await firstFree(page);
+    await page.tap(first);                                                  // peek
+    await page.waitForTimeout(700);
+    const snap = () => page.evaluate(() => { const U = window.FossilFrenzyUI, st = U.ui.st; return { phase: st.phase, T: st.turn.T, peekTiles: document.querySelectorAll('.tile.peek').length, board: document.querySelector('.boardwrap').innerHTML }; });
+    const before = await snap();
+    assert.equal(before.phase, 'peeked');
+    assert.equal(before.peekTiles, 1, 'my peeked number is showing');
+    await page.tap(first);                                                  // tap it again
+    const mid = await page.evaluate(() => document.querySelectorAll('.tile.lift, .ring.pulse, .tile.flipping').length);
+    const after = await snap();
+    assert.equal(after.phase, 'peeked'); assert.equal(after.T, before.T);
+    assert.equal(after.peekTiles, 1, 'the number is still showing: no hiding it');
+    assert.equal(mid, 0, 'no animation');
+    assert.equal(after.board, before.board, 'the board was not even redrawn');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

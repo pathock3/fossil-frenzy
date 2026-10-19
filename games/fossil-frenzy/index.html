@@ -190,11 +190,10 @@ h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spac
 .table td, .table th { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); font-size: 16px; }
 .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 6px 0 4px; }
 .place { background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
-.place.win { border-color: var(--good); box-shadow: 0 0 0 3px rgba(62,207,142,.22); }
+.place.win { border-color: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 30%, transparent); }   /* the winner's own colour */
 .place .pn { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 20px; }
 .place .pn .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--c); }
 .place .score { font-size: clamp(72px, 15vw, 112px); font-weight: 900; line-height: .95; letter-spacing: -2px; font-variant-numeric: tabular-nums; }
-.place.win .score { color: var(--good); }
 .place .tiles { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .mini.lost { opacity: .5; }
 .rowlab { font-size: 12px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--dim); margin-top: 2px; }
@@ -262,11 +261,11 @@ const GAME_DATA = {
   // harder, change its numbers: memory first, then the skills.
   campaign: {
     levels: [
-      { id: 'beginner',    name: 'Beginner',    ai: { memory: 4.8, selfAwareness: 0, valueSense: 0, leadSense: 0, endSense: 0, setsSense: 0, gemSense: 0 } },
-      { id: 'novice',      name: 'Novice',      ai: { memory: 7.4, selfAwareness: 3, valueSense: 3, leadSense: 3, endSense: 3, setsSense: 3, gemSense: 3 } },
-      { id: 'normal',      name: 'Normal',      ai: { memory: 8.6, selfAwareness: 5, valueSense: 5, leadSense: 5, endSense: 5, setsSense: 5, gemSense: 5 } },
-      { id: 'challenging', name: 'Challenging', ai: { memory: 9.2, selfAwareness: 7, valueSense: 8, leadSense: 8, endSense: 8, setsSense: 8, gemSense: 8 } },
-      { id: 'master',      name: 'Master',      ai: { memory: 9.8, selfAwareness: 9, valueSense: 10, leadSense: 10, endSense: 10, setsSense: 10, gemSense: 10 } },
+      { id: 'beginner',    name: 'Beginner',    ai: { memory: 5.2, selfAwareness: 0, valueSense: 0, leadSense: 0, endSense: 0, setsSense: 0, gemSense: 0 } },
+      { id: 'novice',      name: 'Novice',      ai: { memory: 7.0, selfAwareness: 3, valueSense: 3, leadSense: 3, endSense: 3, setsSense: 3, gemSense: 3 } },
+      { id: 'normal',      name: 'Normal',      ai: { memory: 8.5, selfAwareness: 5, valueSense: 5, leadSense: 5, endSense: 5, setsSense: 5, gemSense: 5 } },
+      { id: 'challenging', name: 'Challenging', ai: { memory: 9.3, selfAwareness: 7, valueSense: 8, leadSense: 8, endSense: 8, setsSense: 8, gemSense: 8 } },
+      { id: 'master',      name: 'Master',      ai: { memory: 9.85, selfAwareness: 9, valueSense: 10, leadSense: 10, endSense: 10, setsSense: 10, gemSense: 10 } },
     ],
   },
 
@@ -645,7 +644,7 @@ const Bots = (() => {
   function create(opts) {
     const P = profileOf(opts.profile !== undefined ? opts.profile : opts.spec);
     const T = { ...AI().tuning, ...(P.tuning || {}) };
-    const bot = { seat: opts.seat, profile: P, rng: opts.rng || Math.random, facts: new Map(), gone: {}, turnIx: 0, slips: 0 };
+    const bot = { seat: opts.seat, profile: P, rng: opts.rng || Math.random, facts: new Map(), gone: {}, turnIx: 0, slips: 0, lost: new Set() };
     const rnd = () => bot.rng();
     const pick = arr => arr[Math.floor(rnd() * arr.length)];
 
@@ -672,7 +671,7 @@ const Bots = (() => {
     // ---------- what it learns ----------
     bot.onEvent = ev => {
       switch (ev.type) {
-        case 'turn': bot.turnIx++; break;
+        case 'turn': bot.turnIx++; bot.lost.forEach(t => bot.facts.delete(t)); bot.lost.clear(); break;
         case 'reveal': bot.facts.set(ev.tid, { value: ev.value, gem: ev.gem, pub: true, t: bot.turnIx }); break;          // a public flip: everyone saw it
         case 'peek': {
           if (ev.actor !== bot.seat) break;                                                                                // other players' peeks are private
@@ -870,13 +869,17 @@ const Bots = (() => {
 
     const unmatchedIds = v => v.tokens.filter(t => !t.matched).map(t => t.id);
     const unknownIds = (X, except = []) => X.v.tokens.filter(t => !t.matched && !bot.facts.has(t.id) && !except.includes(t.id)).map(t => t.id);
-    // tap where I believe a fossil is — unless my memory slips, then a random other spot
-    // (a slip is often a near miss: the fossil next to the one it meant, as a person half-remembering would tap)
+    // tap where I believe a fossil is — unless my memory slips, then another spot. A person who has lost track of a fossil taps
+    // somewhere they do NOT already know holds something else, and (a slip is often a near miss: the fossil next to the one it meant).
+    // Having tapped wrong, it knows it has lost that fossil: the belief is dropped, so it does not try the same thing again next turn.
     function aim(X, fact, except = []) {
       if (recalls(fact)) return fact.tid;
       bot.slips++;
-      const others = X.v.tokens.filter(t => !t.matched && t.id !== fact.tid && !except.includes(t.id)).map(t => t.id);
+      let others = X.v.tokens.filter(t => !t.matched && t.id !== fact.tid && !except.includes(t.id)).map(t => t.id);
       if (!others.length) return fact.tid;
+      const notKnownElse = others.filter(id => { const f = bot.facts.get(id); return !f || f.value === fact.value; });   // not a spot it knows holds a different fossil
+      if (notKnownElse.length) others = notKnownElse;
+      bot.lost.add(fact.tid);                                  // (dropped when the turn ends, so deciding stays free of side effects)
       const here = X.v.cells[X.v.tokens[fact.tid].cell];
       const near = others.filter(id => { const c = X.v.cells[X.v.tokens[id].cell], dq = c.q - here.q, dr = c.r - here.r; return Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr)) === 1; });
       return near.length && rnd() < T.nearMiss ? pick(near) : pick(others);
@@ -990,7 +993,7 @@ const Bots = (() => {
     // For tests and the design notes: what the bot is weighing at an action-phase view, best first.
     bot.weigh = v => { const X = look(v); return { E: X.E, sets: X.sets, sure: X.sure.length, known: X.known.length, unknown: X.unknownN, plans: plans(X).map(p => ({ kind: p.kind, u: +p.u.toFixed(3), value: p.sure ? p.sure.value : p.set !== undefined ? X.me.sets[p.set].value : undefined })).sort((a, b) => b.u - a.u) }; };
 
-    bot.save = () => ({ v: 3, seat: bot.seat, profile: P, facts: [...bot.facts], gone: bot.gone, turnIx: bot.turnIx, rngState: bot.rng.getState ? bot.rng.getState() : null });
+    bot.save = () => ({ v: 3, seat: bot.seat, profile: P, facts: [...bot.facts], gone: bot.gone, lost: [...bot.lost], turnIx: bot.turnIx, rngState: bot.rng.getState ? bot.rng.getState() : null });
 
     bot.decide = v => {
       if (P.style === 'random') return randomDecide(v);
@@ -1023,7 +1026,7 @@ const Bots = (() => {
       if (!sv) return null;
       if (sv.v !== 3) throw new Error('unknown bot save format');
       const b = create({ seat: sv.seat, profile: sv.profile, rng: Engine.mulberry32(1) });
-      b.facts = new Map(sv.facts); b.gone = sv.gone || {}; b.turnIx = sv.turnIx | 0;
+      b.facts = new Map(sv.facts); b.gone = sv.gone || {}; b.lost = new Set(sv.lost || []); b.turnIx = sv.turnIx | 0;
       if (sv.rngState !== null) b.rng.setState(sv.rngState);
       state.observers.push(b);
       return b;
@@ -1251,27 +1254,24 @@ const Campaign = (() => {
     if (st.over || ui.botWaiting || isBot(st.current)) { render(); return; }
     ui.lastEvent = '';
     const tid = st.tokenAt[id];
+    if (st.turn.T !== null && st.turn.T !== undefined && tid === st.turn.T && st.phase !== 'action') return;   // the fossil I peeked at: tapping it does nothing (no hiding, no animation)
     try {
       if (st.phase === 'action') {
         if (tid >= 0) { Engine.peek(st, tid); ui.showPeek = true; }                 // first tap: a private peek
       } else if (st.phase === 'peeked') {
-        if (tid === st.turn.T) ui.showPeek = !ui.showPeek;
-        else if (tid >= 0) {
+        if (tid >= 0) {
           Engine.flipOther(st, tid);                                                // second tap: a public flip
           const T = st.tokens[st.turn.T], F = st.tokens[st.turn.F];
           if (!T.gem && !F.gem && T.value === F.value) Engine.flipOwn(st);          // a pair: you always take it
         }
       } else if (st.phase === 'flipped') {
         const T = st.tokens[st.turn.T], F = st.tokens[st.turn.F];
-        if (tid === st.turn.T) ui.showPeek = !ui.showPeek;
-        else if (tid >= 0 && tid !== st.turn.F && T.gem && F.gem) {                 // two gems: tapping a third IS the consent to reveal mine
+        if (tid >= 0 && tid !== st.turn.F && T.gem && F.gem) {                 // two gems: tapping a third IS the consent to reveal mine
           Engine.flipOwn(st);
           if (Engine.canFlipSecond(st)) Engine.flipSecond(st, tid);
         }
       } else if (st.phase === 'gemThird') {
         if (tid >= 0 && tid !== st.turn.T && tid !== st.turn.F) Engine.flipSecond(st, tid);
-      } else if (st.phase === 'resolved') {
-        if (tid === st.turn.T) ui.showPeek = !ui.showPeek;
       }
     } catch (e) { console.warn(e.message); }
     render();
