@@ -34,7 +34,7 @@ async function open({ viewport = IPAD_L, query = '?seed=11', animated = false, c
   if (clock) await fakeClock(page);
   return { ctx, page, errors, external, close: () => ctx.close() };
 }
-const fakeClock = page => page.evaluate(() => { window.__t = 0; window.AdvancedCountingUI.ui.now = () => window.__t; });
+const fakeClock = page => page.evaluate(() => { window.__t = 0; window.AdvancedCountingUI.ui.now = () => window.__t; window.AdvancedCountingUI.ui.lockMs = 0; });   // (tests tap Next level at once; one test restores the real lock)
 const advance = (page, ms) => page.evaluate(ms => { window.__t += ms; }, ms);
 const S = page => page.evaluate(() => {
   const { ui } = window.AdvancedCountingUI, r = ui.round;
@@ -270,6 +270,57 @@ test('play: no attempt switch — turn every card down by hand and count: a luck
     await tapAll(page, lay, 1, 4);                                       // ...and the lucky run, in order
     s = await S(page);
     assert.ok(s.results, 'that was enough to complete the level'); assert.equal(s.results.mistakes, 1);
+    assert.deepEqual(t.errors, []);
+  } finally { await t.close(); }
+});
+
+test('results: always seen first — a fast extra tap right after the last card cannot skip them (Next level ignores taps for a moment), and the sheet stays until Next level', SKIP, async () => {
+  const t = await open({ viewport: PHONE, animated: true });
+  const { page } = t;
+  try {
+    await page.evaluate(() => { window.AdvancedCountingUI.ui.lockMs = window.AdvancedCountingUI.ui.lockMs || 900; });
+    await page.evaluate(() => { window.AdvancedCountingUI.ui.lockMs = 900; });
+    await page.tap('[data-act=start]');
+    const lay = (await S(page)).round.layout;
+    await page.tap('[data-act=flip]');
+    await tapAll(page, lay, 1, 4);
+    assert.ok((await S(page)).results, 'the results exist the moment the last card is right');
+    await page.evaluate(() => window.AdvancedCountingUI.okTap());               // an immediate extra tap on Next level
+    assert.equal((await S(page)).round.level, 'A', 'ignored: the level did not skip ahead');
+    assert.ok((await S(page)).results);
+    await page.waitForTimeout(1600);                                           // the sheet has faded in and the button is ready
+    assert.equal(await page.locator('.results .ok').evaluate(e => e.classList.contains('wait')), false);
+    assert.match(await page.locator('.results').innerText(), /LEVEL[\s\S]*MISTAKES[\s\S]*TIME/);
+    await page.tap('[data-act=ok]');
+    assert.equal((await S(page)).round.level, 'B');
+    assert.deepEqual(t.errors, []);
+  } finally { await t.close(); }
+});
+
+test('results: beside every stat that is not a record, the best so far ("Best 4.2s") — and a stat that is a record shows NEW RECORD! instead', SKIP, async () => {
+  const t = await open();
+  const { page } = t;
+  try {
+    await page.tap('[data-act=start]');
+    let lay = (await S(page)).round.layout;
+    await page.tap('[data-act=flip]'); await advance(page, 4000); await tapAll(page, lay, 1, 4);        // level A in 4.0s, no mistakes
+    assert.equal(await page.locator('.results .best').count(), 0, 'a first completion has nothing to compare with');
+    assert.equal(await page.locator('.results .record').count(), 1, 'only the level is a new record');
+    await page.tap('[data-act=ok]'); await page.tap('[data-act=gamemenu]'); await page.tap('[data-act=mainmenu]');
+    await page.tap('[data-act=start]');                                                                   // again from level A: slower, with a mistake
+    lay = (await S(page)).round.layout;
+    await page.tap('[data-act=flip]'); await advance(page, 2000); await tapNumber(page, lay, 3);          // a mistake
+    await page.tap('[data-act=flip]'); await advance(page, 5000); await tapAll(page, lay, 1, 4);
+    const best = await texts(page, '.results .best');
+    assert.deepEqual(best, ['Best A', 'Best 0', 'Best 4.0s'], 'what the records are: ' + JSON.stringify(best));
+    assert.equal(await page.locator('.results .record').count(), 0);
+    assert.match((await page.locator('.results').innerText()).replace(/\s+/g, ' '), /MISTAKES 1 Best 0.*TIME 7.0s Best 4.0s/);
+    // practice shows how close you are too, and changes nothing
+    await page.tap('[data-act=ok]'); await page.tap('[data-act=gamemenu]'); await page.tap('[data-act=mainmenu]');
+    await page.tap('[data-act=scores]'); await page.tap('.row[data-i="0"]');
+    lay = (await S(page)).round.layout;
+    await page.tap('[data-act=flip]'); await advance(page, 100); await tapAll(page, lay, 1, 4);
+    assert.ok((await texts(page, '.results .best')).some(x => /Best 4\.0s/.test(x)), 'practice shows the best time too');
     assert.deepEqual(t.errors, []);
   } finally { await t.close(); }
 });

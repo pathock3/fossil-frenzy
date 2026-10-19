@@ -172,6 +172,8 @@ input { font: inherit; }
 .col .lab { font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--dim); }
 .col .val { font-family: var(--serif); font-weight: 800; font-size: clamp(38px, 10vw, 62px); line-height: 1.1; margin-top: 6px; color: var(--cream); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .col .slot { height: 34px; margin-top: 8px; display: flex; align-items: center; justify-content: center; }
+.best { font-size: clamp(13px, 3.6vw, 17px); font-weight: 700; letter-spacing: .3px; color: #e8c46a; opacity: .92; white-space: nowrap; }
+.ok.wait { opacity: .55; }
 .record { display: inline-block; padding: 5px 9px; border-radius: 99px; font-size: clamp(9px, 2.5vw, 12px); font-weight: 800; letter-spacing: .7px; color: #3a2a05; background: linear-gradient(180deg, #fff0b8, #e9b947); animation: glow 1.8s ease-in-out infinite; white-space: nowrap; }
 @keyframes glow { 0%, 100% { box-shadow: 0 0 6px rgba(255,214,102,.45), 0 0 14px rgba(255,214,102,.25); } 50% { box-shadow: 0 0 14px rgba(255,226,130,.95), 0 0 30px rgba(255,214,102,.6); } }
 .ok { width: min(60%, 280px); height: 72px; margin: 18px auto 0; border-radius: 22px; font-family: var(--serif); font-size: 30px; font-weight: 800; letter-spacing: 2px; }
@@ -265,6 +267,7 @@ const GAME_DATA = {
     staggerMaxMs: 650,         // ... but a whole wave never takes longer than this
     shakeMs: 380,              // the table shudders on a wrong tap
     resultsDelayMs: 480,       // the results sheet fades in after the last card has turned
+    resultsLockMs: 900,        // ... and its Next level button ignores taps for this long once the sheet is showing, so a fast double-tap on the last card can never skip the results
     boardPadding: 4,           // space kept free around the cards
   },
 
@@ -283,7 +286,7 @@ const GAME_DATA = {
     flip: 'Flip', start: 'Start', continueAt: 'Continue · Level {L}',
     settings: 'Settings', soundLabel: 'Sound', highScores: 'High scores ▸', howToPlay: 'How to play',
     menu: 'Menu', menuItems: ['Rules', 'Main Menu'],
-    nextLevel: 'Next level', mainMenu: 'Main menu', newRecord: 'NEW RECORD!',
+    best: 'Best', nextLevel: 'Next level', mainMenu: 'Main menu', newRecord: 'NEW RECORD!',
     columns: ['LEVEL', 'MISTAKES', 'TIME'],
     scoreColumns: ['LEVEL', 'BEST TIME', 'MISTAKES'],
     practice: 'Practice', highScoresTitle: 'High scores', noRecord: '—',
@@ -671,6 +674,7 @@ const Sound = (() => {
     rules: false, gameMenu: false,
     mode: 'climb',               // 'climb' | 'practice'
     settings: false,             // the Settings panel (main menu) is open
+    lockMs: D.ui.resultsLockMs, okReadyAt: 0,   // see resultsLockMs
     round: null, results: null, built: null,
     now: () => performance.now(),            // tests may replace this clock
     build: BUILD,
@@ -721,13 +725,23 @@ const Sound = (() => {
   });
 
   function finishRound(res) {
+    const p = profile(), prevRec = P.recordsFor(p, res.levelIndex), prevHi = P.highestIndex(p);       // what the records were BEFORE this round
     let badges = { level: false, mistakes: false, time: false };
-    if (!res.practice) { badges = P.applyResult(profile(), res).badges; saveStore(); }
-    ui.results = { level: res.levelId, mistakes: res.mistakes, time: E.formatTime(res.timeMs), badges, practice: res.practice };
+    if (!res.practice) { badges = P.applyResult(p, res).badges; saveStore(); }
+    // beside every stat that did not set a record, the record it was up against ("how close was I?")
+    const best = {
+      level: prevHi >= 0 && !badges.level ? E.levels[prevHi].id : null,
+      mistakes: prevRec && !badges.mistakes ? String(prevRec.mistakes) : null,
+      time: prevRec && !badges.time ? E.formatTime(prevRec.timeMs) : null,
+    };
+    ui.results = { level: res.levelId, mistakes: res.mistakes, time: E.formatTime(res.timeMs), badges, best, practice: res.practice };
+    ui.okReadyAt = ui.lockMs ? performance.now() + D.ui.resultsDelayMs + ui.lockMs : 0;
+    if (ui.lockMs) setTimeout(() => { const b = root.querySelector('.results .ok'); if (b) b.classList.remove('wait'); }, D.ui.resultsDelayMs + ui.lockMs + 20);
   }
   function okTap() {
     const r = ui.round;
     if (!r || !ui.results) return;
+    if (performance.now() < ui.okReadyAt) return;                  // the results always get seen first
     if (r.practice) { goScores(); return; }
     if (r.levelIndex + 1 < E.levelCount()) dealRound(r.levelIndex + 1, false); else goMenu();
   }
@@ -836,8 +850,8 @@ const Sound = (() => {
   }
   function resultsHTML() {
     const R = ui.results, vals = [R.level, R.mistakes, R.time], keys = ['level', 'mistakes', 'time'];
-    return `<div class="over results" data-act="noop"><div class="sheet"><div class="cols">${vals.map((v, i) => `<div class="col"><div class="lab">${T.columns[i]}</div><div class="val">${esc(v)}</div><div class="slot">${R.badges[keys[i]] ? `<span class="record">${T.newRecord}</span>` : ''}</div></div>`).join('')}</div>
-      <button class="btn gold ok" data-act="ok">${esc(R.practice ? T.done : R.level === E.levels[E.levels.length - 1].id ? T.mainMenu : T.nextLevel)}</button></div></div>`;
+    return `<div class="over results" data-act="noop"><div class="sheet"><div class="cols">${vals.map((v, i) => `<div class="col"><div class="lab">${T.columns[i]}</div><div class="val">${esc(v)}</div><div class="slot">${R.badges[keys[i]] ? `<span class="record">${T.newRecord}</span>` : R.best[keys[i]] !== null ? `<span class="best">${T.best} ${esc(R.best[keys[i]])}</span>` : ''}</div></div>`).join('')}</div>
+      <button class="btn gold ok${performance.now() < ui.okReadyAt ? ' wait' : ''}" data-act="ok">${esc(R.practice ? T.done : R.level === E.levels[E.levels.length - 1].id ? T.mainMenu : T.nextLevel)}</button></div></div>`;
   }
   function playSkeleton() {
     const r = ui.round;

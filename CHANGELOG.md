@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **Advanced Counting results:** the results screen can no longer be skipped by a fast extra tap — the Next level button waits a moment (and is dimmed) until the sheet has faded in. It now shows your **best** under every stat that wasn't a record ("Best 2.0s", "Best 0", "Best C"), so you can see how close you were; records still show NEW RECORD!. Practice rounds show the bests too.
 - **Advanced Counting — the board decides when you are counting:** the Flip button just turns every card face down; whenever every card is face down, your next tap begins counting (1, 2, 3…) without any "attempt" announcement. A mistake turns everything face up again. With some cards still up, tapping a card just flips it, so you can practise a few (10, 11, 12…) for free. Turn every card down by hand and count them in order and that counts too — a lucky run advances.
 - **Advanced Counting:** the results button now says **Next level** (it starts the next level and its clock), **Main menu** after the last level, or **Done** after a practice round, instead of "OK".
 - **Advanced Counting main menu:** the name-and-year credit line is gone (the library page credits the designer); the title is no longer clipped (the tail of the "g" shows); the "‹ Tabletop Library" chip now sits above the title instead of covering it (a test checks this for every game at four screen sizes); the mute icon in the corner is gone — **Sound On/Off is in Settings**, a quiet link under How to play.
