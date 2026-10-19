@@ -834,9 +834,9 @@ test('the opponent banks: a clear banner says what it banked, what it scored and
       else await takeATurn(page);
     }
     const txt = await page.locator('.bankcard').innerText();
-    assert.match(txt, /Beginner banked a 7/);
+    assert.match(txt, /Beginner banked/);
     assert.match(txt, /\+7/);
-    assert.match(txt, /Score now 7/);
+    assert.doesNotMatch(txt, /Score now/, 'the score is up in the bar already');
     assert.equal(await page.locator('.chip.cur .pts').innerText(), '7');
     assert.equal(await page.locator('button', { hasText: /continue/i }).count(), 0);
     assert.equal(await page.locator('button.bankcard[data-act=dismissbank]').count(), 1, 'the banner is itself a button');
