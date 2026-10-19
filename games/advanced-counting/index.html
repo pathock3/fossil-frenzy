@@ -58,10 +58,16 @@ input { font: inherit; }
 .libback:active { transform: translateY(2px); }
 .snd svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .head { flex: none; text-align: center; padding-top: 4px; }
-@media (max-width: 600px) { .head { padding-top: 40px; } }
-.title { margin: 0; font-family: var(--serif); font-weight: 800; font-size: clamp(30px, min(9.2vw, 9vh), 76px); line-height: 1.02; letter-spacing: .5px; white-space: nowrap;
+.haslib .head { padding-top: 58px; }                 /* the way-back chip sits above the title, never over it */
+.title { margin: 0; font-family: var(--serif); font-weight: 800; font-size: clamp(30px, min(9.2vw, 9vh), 76px); line-height: 1.22; padding-bottom: .06em;      /* tall enough that the tail of the g is not clipped by the gradient text */ letter-spacing: .5px; white-space: nowrap;
   background: linear-gradient(180deg, #fff1c2 8%, #f1cd7a 50%, #c9983c 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
-.tag { margin: 6px 0 0; font-family: var(--serif); font-style: italic; font-size: clamp(16px, 2.6vh, 22px); color: var(--dim); }
+.tag { margin: 0; font-family: var(--serif); font-style: italic; font-size: clamp(16px, 2.6vh, 22px); color: var(--dim); }
+.quiet { align-self: center; min-height: 44px; padding: 8px 22px; margin-top: -2px; color: var(--dim); font-size: 16px; font-weight: 600; letter-spacing: .3px; }
+.quiet:active { color: var(--text); }
+.setrow { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 10px 4px 18px; font-size: 19px; color: var(--text); }
+.seg { display: inline-flex; border-radius: 14px; overflow: hidden; border: 2px solid rgba(232,196,106,.6); }
+.seg button { min-width: 84px; height: 48px; font-size: 18px; font-weight: 700; color: var(--text); background: rgba(0,0,0,.25); }
+.seg button.on { background: var(--gold); color: #173a27; }
 .buttons { flex: none; display: flex; flex-direction: column; gap: 12px; margin-top: clamp(12px, 3vh, 26px); }
 .hero { flex: 1 1 0; min-height: 0; padding: 14px 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .fan { --cw: 60px; --ch: 90px; --gap: 12px; --rad: 6px; display: grid; grid-template-columns: repeat(2, var(--cw)); gap: var(--gap); }
@@ -274,9 +280,8 @@ const GAME_DATA = {
   // ---- TEXTS ----
   texts: {
     tagline: 'How high can you count?',
-    credit: 'Patrick Blim-Hockberger, 2019',
     flip: 'Flip', start: 'Start', continueAt: 'Continue · Level {L}',
-    highScores: 'High scores ▸', howToPlay: 'How to play',
+    settings: 'Settings', soundLabel: 'Sound', highScores: 'High scores ▸', howToPlay: 'How to play',
     menu: 'Menu', menuItems: ['Rules', 'Main Menu'],
     ok: 'OK', newRecord: 'NEW RECORD!',
     columns: ['LEVEL', 'MISTAKES', 'TIME'],
@@ -659,6 +664,7 @@ const Sound = (() => {
     profileMenu: null,           // null | 'list' | 'rename'
     rules: false, gameMenu: false,
     mode: 'climb',               // 'climb' | 'practice'
+    settings: false,             // the Settings panel (main menu) is open
     round: null, results: null, built: null,
     now: () => performance.now(),            // tests may replace this clock
     build: BUILD,
@@ -771,7 +777,6 @@ const Sound = (() => {
   }
 
   // ---------------- screens ----------------
-  const soundIcon = on => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.6L13 19V5L7.6 9.5z"/>${on ? '<path d="M16.2 8.8a4.6 4.6 0 0 1 0 6.4"/><path d="M18.8 6.2a8.4 8.4 0 0 1 0 11.6"/>' : '<path d="M17 9.5l5 5"/><path d="M22 9.5l-5 5"/>'}</svg>`;
   function profileHTML() {
     const cur = profile(), open = ui.profileMenu;
     let drop = '';
@@ -789,12 +794,13 @@ const Sound = (() => {
   }
   function menuHTML() {
     const fan = [3, 1, 4, 2].map((n, i) => `<div class="card" style="--i:${i}">${cardInner(n)}</div>`).join('');
-    return `<div class="screen menu">
-      ${libraryLink()}<button class="snd" data-act="sound" aria-label="Sound ${ui.sound ? 'on' : 'off'}" aria-pressed="${ui.sound}">${soundIcon(ui.sound)}</button>
+    const lib = libraryLink();
+    return `<div class="screen menu${lib ? ' haslib' : ''}">
+      ${lib}
       <header class="head"><h1 class="title">${esc(D.title)}</h1><p class="tag">${esc(T.tagline)}</p></header>
-      <div class="buttons"><button class="btn" data-act="scores">${esc(T.highScores)}</button><button class="btn" data-act="howto">${esc(T.howToPlay)}</button></div>
+      <div class="buttons"><button class="btn" data-act="scores">${esc(T.highScores)}</button><button class="btn" data-act="howto">${esc(T.howToPlay)}</button><button class="quiet" data-act="settings">${esc(T.settings)}</button></div>
       <div class="hero"><div class="fan" aria-hidden="true">${fan}</div></div>
-      <footer class="bottom">${profileHTML()}<button class="gold start" data-act="start">${esc(T.start)}</button>${continueHTML()}<div class="credit">${esc(T.credit)}</div></footer>
+      <footer class="bottom">${profileHTML()}<button class="gold start" data-act="start">${esc(T.start)}</button>${continueHTML()}</footer>
     </div>`;
   }
   function scoresHTML() {
@@ -816,6 +822,11 @@ const Sound = (() => {
     return `<div class="over rules" data-act="noop"><div class="sheet"><h2>${esc(T.rulesTitle)}</h2><div class="body scroll"><div class="steps">${steps}</div>${T.rulesLines.map(l => `<p>${esc(l)}</p>`).join('')}
       <details><summary>${esc(T.finePrintTitle)}</summary><ol class="fine">${T.finePrint.map(l => `<li>${esc(l)}</li>`).join('')}</ol><p class="credit" style="font-size:11px">${esc(BUILD)}</p></details></div>
       <button class="btn gold done" data-act="closerules">${esc(T.done)}</button></div></div>`;
+  }
+  function settingsHTML() {
+    const seg = `<span class="seg">${[['on', 'On'], ['off', 'Off']].map(([v, t]) => `<button class="${(ui.sound ? 'on' : 'off') === v ? 'on' : ''}" data-act="sound" data-v="${v}">${t}</button>`).join('')}</span>`;
+    return `<div class="over rules settings" data-act="noop"><div class="sheet"><h2>${esc(T.settings)}</h2><div class="setrow"><span>${esc(T.soundLabel)}</span>${seg}</div>
+      <button class="btn gold done" data-act="closesettings">${esc(T.done)}</button></div></div>`;
   }
   function resultsHTML() {
     const R = ui.results, vals = [R.level, R.mistakes, R.time], keys = ['level', 'mistakes', 'time'];
@@ -864,7 +875,7 @@ const Sound = (() => {
       return;
     }
     boardEl = null;
-    root.innerHTML = (ui.screen === 'menu' ? menuHTML() : scoresHTML()) + (ui.rules ? rulesHTML() : '');
+    root.innerHTML = (ui.screen === 'menu' ? menuHTML() : scoresHTML()) + (ui.rules ? rulesHTML() : '') + (ui.settings && ui.screen === 'menu' ? settingsHTML() : '');
     fitHero();
     if (ui.profileMenu === 'rename') { const i = root.querySelector('#rename'); if (i) { i.focus(); i.select(); } }
   }
@@ -909,7 +920,9 @@ const Sound = (() => {
     const d = el.dataset, r = ui.round;
     switch (d.act) {
       case 'noop': return;
-      case 'sound': ui.sound = !ui.sound; pref.set(SOUND_KEY, ui.sound ? 'on' : 'off'); audio.setEnabled(ui.sound); sfx('tick'); break;
+      case 'settings': ui.settings = true; break;
+      case 'closesettings': ui.settings = false; break;
+      case 'sound': ui.sound = d.v ? d.v === 'on' : !ui.sound; pref.set(SOUND_KEY, ui.sound ? 'on' : 'off'); audio.setEnabled(ui.sound); sfx('tick'); break;
       case 'start': sfx('tick'); startClimb(0); return;
       case 'continue': sfx('tick'); startClimb(+d.i); return;
       case 'scores': sfx('tick'); goScores(); return;

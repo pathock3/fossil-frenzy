@@ -98,6 +98,20 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     assert.ok(fit.tx >= fit.rx + 10 && fit.tr <= fit.rr - 10, 'the words sit inside the oval: ' + JSON.stringify(fit));
     await page.goto(base + '/index.html?unlisted');
     assert.equal(await page.locator('a.box').count(), listed.length, 'an unlisted placeholder without an address still does not render a dead link');
+    // the way-back chip never covers a game's title, at any size
+    for (const vp of [{ width: 1024, height: 768 }, { width: 768, height: 1024 }, { width: 390, height: 844 }, { width: 360, height: 640 }]) {
+      await page.setViewportSize(vp);
+      for (const g of listed.filter(g => g.path)) {
+        await page.goto(base + '/' + g.path);
+        const o = await page.evaluate(() => {
+          const chip = document.querySelector('a.libback').getBoundingClientRect(), hit = [];
+          document.querySelectorAll('h1, .title, .logo').forEach(e => { const r = e.getBoundingClientRect(); if (r.width && r.height && !(r.right <= chip.left || r.left >= chip.right || r.bottom <= chip.top || r.top >= chip.bottom)) hit.push(e.className || e.tagName); });
+          return hit;
+        });
+        assert.deepEqual(o, [], `${g.id} at ${vp.width}x${vp.height}: the library chip covers ${o}`);
+      }
+    }
+    await page.setViewportSize({ width: 1024, height: 768 });
     await page.goto(base + '/index.html');
     await page.tap(ff);
     await page.waitForURL('**/games/fossil-frenzy/index.html');

@@ -56,14 +56,16 @@ async function playLevel(page, { mistakes = 0 } = {}) {
 }
 
 // ---------------------------------------------------------------- main menu
-test('menu: tagline, 58px buttons (High scores then How to play), credit, no scrolling', SKIP, async () => {
+test('menu: tagline, 58px buttons (High scores then How to play), no credit line, no sound icon, no scrolling', SKIP, async () => {
   const t = await open({ viewport: PHONE, clock: false });
   assert.equal(await t.page.locator('.tag').innerText(), 'How high can you count?');
   assert.deepEqual(await texts(t.page, '.buttons .btn'), ['High scores ▸', 'How to play']);
   const [a, b] = [await box(t.page, '.buttons .btn:nth-child(1)'), await box(t.page, '.buttons .btn:nth-child(2)')];
   assert.equal(Math.round(a.height), 58); assert.equal(Math.round(b.height), 58); assert.ok(a.y < b.y, 'High scores is above How to play');
   assert.ok(Math.abs(a.width - (PHONE.width - 36)) <= 1, 'full width (inside the screen margin)'); assert.equal(Math.round(a.width), Math.round(b.width));
-  assert.equal(await t.page.locator('.credit').innerText(), 'Patrick Blim-Hockberger, 2019');
+  assert.equal(await t.page.locator('.credit').count(), 0, 'no name and year on the main menu: the library page credits the designer');
+  assert.doesNotMatch(await t.page.locator('.menu').innerText(), /Blim|2019/);
+  assert.equal(await t.page.locator('.snd, [aria-label^=Sound]').count(), 0, 'no mute icon in the corner');
   assert.equal(await t.page.locator('h1').innerText(), 'Advanced Counting');
   assert.equal(await t.page.title(), 'Advanced Counting');
   assert.deepEqual(t.errors, []); assert.deepEqual(t.external, [], 'no network');
@@ -122,16 +124,34 @@ test('menu: Rename profile… rejects blank names, keeps records, and the new na
   assert.deepEqual(t.errors, []); await t.close();
 });
 
-test('menu: the sound icon toggles, is quiet, and is remembered on the device', SKIP, async () => {
+test('settings: Sound On/Off lives in Settings (a quiet link under How to play), and is remembered on the device', SKIP, async () => {
   const t = await open({ viewport: PHONE });
-  const b = await box(t.page, '.snd'); assert.ok(b.width <= 48 && b.x > PHONE.width - 70 && b.y < 60, 'a small icon in the corner');
+  assert.equal(await t.page.locator('.quiet').innerText(), 'Settings');
+  const q = await box(t.page, '.quiet'), h = await box(t.page, '.buttons .btn:nth-child(2)');
+  assert.ok(q.y >= h.y + h.height - 1 && q.height >= 44, 'quiet but tappable, under How to play');
   assert.equal(await t.page.evaluate(() => window.AdvancedCountingUI.audio.isEnabled()), true);
-  await t.page.tap('.snd');
+  await t.page.tap('[data-act=settings]');
+  assert.equal(await t.page.locator('.settings [data-act=sound].on').innerText(), 'On');
+  await t.page.tap('.settings [data-act=sound][data-v=off]');
   assert.equal(await t.page.evaluate(() => window.AdvancedCountingUI.audio.isEnabled()), false);
-  assert.equal(await t.page.getAttribute('.snd', 'aria-pressed'), 'false');
+  assert.equal(await t.page.locator('.settings [data-act=sound].on').innerText(), 'Off');
+  await t.page.tap('[data-act=closesettings]');
+  assert.equal(await t.page.locator('.settings').count(), 0);
   await t.page.reload(); assert.equal(await t.page.evaluate(() => window.AdvancedCountingUI.audio.isEnabled()), false);
-  await t.page.tap('.snd'); await t.page.reload(); assert.equal(await t.page.evaluate(() => window.AdvancedCountingUI.audio.isEnabled()), true);
+  await t.page.tap('[data-act=settings]'); await t.page.tap('.settings [data-act=sound][data-v=on]'); await t.page.reload();
+  assert.equal(await t.page.evaluate(() => window.AdvancedCountingUI.audio.isEnabled()), true);
+  assert.deepEqual(t.errors, []);
   await t.close();
+});
+
+test('menu: the title is not clipped (the tail of the g is inside its box), at every size', SKIP, async () => {
+  for (const vp of [PHONE, SMALL, IPAD_L, IPAD_P]) {
+    const t = await open({ viewport: vp, clock: false });
+    const m = await t.page.evaluate(() => { const h = document.querySelector('.title'), r = h.getBoundingClientRect(), fs = parseFloat(getComputedStyle(h).fontSize), cs = getComputedStyle(h); const range = document.createRange(); range.selectNodeContents(h); const tr = range.getBoundingClientRect(); return { fs, lh: parseFloat(cs.lineHeight), pb: parseFloat(cs.paddingBottom), boxH: r.height, textBottom: tr.bottom, boxBottom: r.bottom }; });
+    assert.ok(m.lh >= m.fs * 1.18, 'line height leaves room for descenders: ' + JSON.stringify(m));
+    assert.ok(m.boxH >= m.fs * 1.2, 'the title box is tall enough for the tail of the g: ' + JSON.stringify(m));
+    await t.close();
+  }
 });
 
 test('menu: How to play shows the rules panel with the judgment calls folded under fine print', SKIP, async () => {
@@ -208,8 +228,8 @@ test('menu: Start begins at level A; Continue (shown once a level is beaten) pic
     await page.tap('[data-act=gamemenu]'); await page.tap('[data-act=mainmenu]');            // leave in the middle of B
     assert.equal(await page.locator('.cont').innerText(), 'Continue · Level B');
     // the layout still fits a small phone: nothing off screen, Start above Continue, no overlap
-    const st = await box(page, '.start'), co = await box(page, '.cont'), cr = await box(page, '.credit');
-    assert.ok(co.y >= st.y + st.height && cr.y >= co.y + co.height - 1 && cr.y + cr.height <= 640 + 1, JSON.stringify({ st, co, cr }));
+    const st = await box(page, '.start'), co = await box(page, '.cont'), cr = await box(page, '.bottom');
+    assert.ok(co.y >= st.y + st.height && co.y + co.height <= 640 && cr.y + cr.height <= 640 + 1, JSON.stringify({ st, co, cr }));
     assert.equal(Math.round(co.height), 58); assert.ok(Math.abs(co.width - st.width) < 1, 'as wide as Start');
     await page.tap('[data-act=continue]');
     s = await S(page); assert.equal(s.round.level, 'B'); assert.equal(s.round.practice, false, 'a climb round');

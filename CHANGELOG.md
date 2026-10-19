@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **Advanced Counting main menu:** the name-and-year credit line is gone (the library page credits the designer); the title is no longer clipped (the tail of the "g" shows); the "‹ Tabletop Library" chip now sits above the title instead of covering it (a test checks this for every game at four screen sizes); the mute icon in the corner is gone — **Sound On/Off is in Settings**, a quiet link under How to play.
 - **One More… — thumb zone:** the draw pile (the thing you tap most) now sits in the bottom-right corner, with a generous tap area around it; the boom pile, which you only look at, moved to the opposite top. Same layout in portrait (both piles along the bottom, draw pile at right) and on phones. **Settings → Draw pile: Right hand / Left hand** mirrors it to the bottom-left; remembered.
 - **Advanced Counting:** the cards show just the number now — the small numbers in the corners are gone — and the number gets all the room.
 - **Advanced Counting — Continue:** the main menu has a second way in. **Start** is still a fresh game from level A; once you have beaten a level, **Continue · Level F** appears beneath it and picks up at the highest level you have never beaten (not where your last run ended).
