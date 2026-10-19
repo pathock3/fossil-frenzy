@@ -197,6 +197,12 @@ h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spac
 .place .score { font-size: clamp(72px, 15vw, 112px); font-weight: 900; line-height: .95; letter-spacing: -2px; font-variant-numeric: tabular-nums; }
 .place .tiles { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .mini.lost { opacity: .5; }
+/* the fossils in this game: what exists (from the game's own data), not what is left */
+.fossils .frow { display: flex; align-items: center; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.fossils .frow .mini { min-width: 46px; height: 46px; font-size: 24px; border-radius: 10px; }
+.fossils .frow b { font-size: 24px; font-variant-numeric: tabular-nums; }
+.fossils .frow span.what { color: var(--dim); font-size: 15px; margin-left: auto; text-align: right; }
+.fossils .total { margin: 10px 0 0; font-weight: 700; }
 .rowlab { font-size: 12px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--dim); margin-top: 2px; }
 .place .tiles { min-height: 30px; }
 /* the unlock is a quiet line under the headline (not a card: nothing there is tappable); the confetti does the celebrating */
@@ -1235,6 +1241,7 @@ const Campaign = (() => {
   ui.settings = null;                                   // null | 'open' | 'unlock' (the warning before unlocking everything) | 'reset'
   ui.sound = pref.get(SOUND_KEY) !== 'off';             // sound effects: on unless switched off (Menu or Settings), remembered on this device
   ui.endSounded = false;
+  ui.fossils = false;                                   // the "Fossils in this game" panel
   const audio = Sound.create({ data: D.sound, AudioContext: window.AudioContext || window.webkitAudioContext });
   audio.setEnabled(ui.sound);
   // (a sound can follow another after a short gap: e.g. the flip's tap, then its chime)
@@ -1258,7 +1265,7 @@ const Campaign = (() => {
     ui.bots = Bots.attach(ui.st, campaign ? [null, Campaign.botSpec(LV[ui.levelIdx])] : Array(n).fill(null), seed);
     ui.names = campaign ? ['You', LV[ui.levelIdx].name] : ui.pass.names.slice(0, n);
     Object.assign(ui, { screen: 'play', showPeek: true, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '', countedOver: false, outcome: null,
-                        menu: null, help: false, lastEvent: '', prevPts: null, liftKey: '', endSounded: false });
+                        menu: null, help: false, fossils: false, lastEvent: '', prevPts: null, liftKey: '', endSounded: false });
     nextTurnStarts(true);
   }
   function beginTurn() {
@@ -1431,7 +1438,7 @@ const Campaign = (() => {
   function onClick(e) {
     audio.unlock();                                    // sound can only start from inside a tap; this wakes it
     const el = e.target.closest('[data-act]');
-    if (!el) { if (bankBannerUp() && !ui.menu && !ui.help) { takeOverFromOpponent(); render(); } return; }
+    if (!el) { if (bankBannerUp() && !ui.menu && !ui.help && !ui.fossils) { takeOverFromOpponent(); render(); } return; }
     const d = el.dataset, st = ui.st;
     switch (d.act) {
       case 'mode': ui.screen = d.v; ui.mode = d.v === 'campaign' ? 'campaign' : 'pass'; break;
@@ -1461,12 +1468,14 @@ const Campaign = (() => {
       case 'reset-yes': ui.unlockAll = false; pref.del(UNLOCKALL_KEY); ui.beaten = []; pref.del(CAMPAIGN_KEY); ui.settings = 'open'; break;       // forgets every win and any "unlock all"
       case 'reset-no': ui.settings = 'open'; break;
       case 'closehelp': ui.help = false; break;
+      case 'fossils': ui.fossils = true; ui.menu = null; break;
+      case 'closefossils': ui.fossils = false; break;
       // the in-game menu: rules, retry, back to the start. Retry and quit ask first; retry deals a fresh game at once, same setup.
       case 'menu': ui.menu = ui.menu ? null : 'open'; break;
       case 'menu-close': ui.menu = null; break;
       case 'menu-ask': ui.menu = d.v; break;
       case 'retry': startGame(); break;
-      case 'quit': clearAnim(); ui.menu = null; ui.help = false; ui.settings = null; ui.screen = 'home'; break;
+      case 'quit': clearAnim(); ui.menu = null; ui.help = false; ui.fossils = false; ui.settings = null; ui.screen = 'home'; break;
       case 'again': startGame(); break;
       default: return;
     }
@@ -1620,7 +1629,7 @@ const Campaign = (() => {
     const m = ui.menu, sure = (q, yes, act) => `<p class="mq">${q}</p><button class="danger" data-act="${act}">${yes}</button><button data-act="menu-close">No, keep playing</button>`;
     const body = m === 'retry' ? sure('Start this game over with a fresh deal? The current game will be lost.', 'Yes, start over', 'retry')
       : m === 'quit' ? sure('Leave this game and go to the Main Menu? The current game will be lost.', 'Yes, leave', 'quit')
-      : `<button data-act="menu-ask" data-v="retry">Retry</button><button data-act="help">How to play</button><button data-act="settings">Settings</button><button data-act="menu-ask" data-v="quit">Main Menu</button>`;
+      : `<button data-act="menu-ask" data-v="retry">Retry</button><button data-act="help">How to play</button><button data-act="fossils">Fossils</button><button data-act="settings">Settings</button><button data-act="menu-ask" data-v="quit">Main Menu</button>`;
     return `<div class="backdrop" data-act="menu-close"></div><div class="menu" role="menu">${body}</div>`;
   }
 
@@ -1749,9 +1758,20 @@ const Campaign = (() => {
     'Ties go to the most sets popped, then whoever popped the final pair.',
     'Campaign: you beat a level by winning outright (a shared win does not count). Opponents differ in how well they remember fossils (their memory fades as turns pass, and now and then they tap the wrong spot), and in how well they judge the game: which sets are worth taking, how close the end is, whether they are winning.',
   ];
+  // "Fossils": how many of each number are in THIS game (it comes from the game's own data, so it follows the level).
+  // It says nothing about which are still hidden — remembering that is the game.
+  function fossilsHTML() {
+    const data = ui.st.data, tokens = data.tokens.slice().sort((a, b) => (a.gem ? 1 : 0) - (b.gem ? 1 : 0) || a.value - b.value);
+    const total = tokens.reduce((n, t) => n + t.count, 0), M = data.matching;
+    const rows = tokens.map(t => `<div class="frow"><span class="mini">${t.gem ? '💎' : t.value}</span><b>× ${t.count}</b><span class="what">${t.gem ? `${t.count / M.gemSetSize === 1 ? 'one set' : t.count / M.gemSetSize + ' sets'} of ${M.gemSetSize}, worth ${t.value}` : `${t.count / M.pairSize === 1 ? 'one pair' : t.count / M.pairSize + ' pairs'}`}</span></div>`).join('');
+    return `<div class="screen help fossils" style="z-index:5"><div class="sheet"><h1>Fossils in this game</h1>
+      <p class="dim">How many of each there are — not which are still hidden.</p>
+      ${rows}<p class="total">${total} fossils in all</p>
+      <button class="big" data-act="closefossils">Close</button></div></div>`;
+  }
   function helpHTML() {
     return `<div class="screen help" style="z-index:5"><div class="sheet"><h1>How to play</h1>
-      <p>Match fossils from memory, bank your matches, and finish with the most points.</p>
+      <p>Match fossils from memory, bank your matches, and finish with the most points. <b>Menu → Fossils</b> shows how many of each number are in the game you are playing.</p>
       <h3>Your turn</h3><ul>
         <li><b>Peek</b> at any fossil — tap it. Only you should look.</li>
         <li><b>Flip</b> another fossil — tap it. Everyone sees it.</li>
@@ -1793,7 +1813,7 @@ const Campaign = (() => {
       sfx(ui.mode === 'campaign' && o ? (o.won ? (o.completed || o.newlyUnlocked ? 'unlock' : 'win') : 'lose') : 'win', 200);
     }
     const html = { home: homeHTML, pass: passHTML, campaign: campaignHTML, play: gameHTML }[ui.screen]();
-    root.innerHTML = html + (ui.help ? helpHTML() : '') + (ui.settings ? settingsHTML() : '');
+    root.innerHTML = html + (ui.help ? helpHTML() : '') + (ui.fossils && ui.st ? fossilsHTML() : '') + (ui.settings ? settingsHTML() : '');
     saveGame();
   }
 

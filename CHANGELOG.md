@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **Fossils panel:** ☰ menu → **Fossils** shows how many of each number (and gems) are in the game you are playing, read from that game's own data so it follows the level. It deliberately does not show what is left — remembering that is the game. How to play points to it.
 - **Layout:** the ☰ menu button moved to the board's bottom-left corner (End turn stays bottom-right), so the two score boxes at the top now span the whole width. The menu opens above the button.
 - **Sound effects** (new `sound` script + `GAME_DATA.sound` recipes; nothing to download, works offline): a soft note for a peek, a "tak" for a flip, a chime for a match, a gentle low note for a miss, a sparkle for gems, a coin for a bank, a small "hm" when the opponent slips, and short tunes for winning, losing and unlocking a level. They play for the opponent's moves too, as each is shown. **Sound On/Off** is in Settings (☰ menu → Settings); it is remembered on the device. Sound starts only after your first tap (iPad Safari requires that), stops when the page is hidden, and the iPad's silent switch still mutes it.
 - **Settings:** the unlock warning is reworded ("Unlock all opponents?" — what it does, why the campaign is the intended way, that it can be undone). **Reset campaign** is always available (asks first): it forgets every win and any "unlock all". The old "Go back to unlocking by winning" button is gone.

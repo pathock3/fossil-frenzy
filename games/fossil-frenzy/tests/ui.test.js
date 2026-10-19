@@ -679,7 +679,7 @@ test('menu: a ☰ button opens rules, retry and back-to-start; retry and leaving
     assert.equal(await page.locator('[data-act=menu]').count(), 1);
     assert.equal(await page.locator('.q').count(), 1, 'one small system button, nothing else competing for attention');
     await page.tap('[data-act=menu]');
-    assert.deepEqual(await page.locator('.menu button').allInnerTexts(), ['Retry', 'How to play', 'Settings', 'Main Menu']);
+    assert.deepEqual(await page.locator('.menu button').allInnerTexts(), ['Retry', 'How to play', 'Fossils', 'Settings', 'Main Menu']);
     await page.tap('.backdrop[data-act=menu-close]', { force: true });      // tap away to close
     assert.equal(await page.locator('.menu').count(), 0);
     await page.tap('[data-act=menu]'); await page.tap('[data-act=help]');   // rules from the menu
@@ -995,6 +995,28 @@ test('sound: the end of a game has its own sound, played when the end screen app
     await forceFinish(page, [11, 3]);
     await page.waitForTimeout(400);
     assert.ok((await page.evaluate(() => window.FossilFrenzyUI.audio.played)).includes('win'));
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('fossils panel: the menu shows how many of each number are in THIS game (from its data), nothing about what is left', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await passAndPlay(page, 2);
+    await page.tap('[data-act=menu]'); await page.tap('[data-act=fossils]');
+    assert.equal(await page.locator('.menu').count(), 0, 'the menu closes');
+    const rows = await page.locator('.fossils .frow').evaluateAll(els => els.map(e => [e.querySelector('.mini').textContent, e.querySelector('b').textContent.replace(/\s+/g, ' ')]));
+    const expect = await page.evaluate(() => window.FossilFrenzyUI.ui.st.data.tokens.slice().sort((a, b) => (a.gem ? 1 : 0) - (b.gem ? 1 : 0) || a.value - b.value).map(t => [t.gem ? '💎' : String(t.value), '× ' + t.count]));
+    assert.deepEqual(rows, expect);
+    assert.match(await page.locator('.fossils .total').innerText(), /31 fossils/);
+    const text = await page.locator('.fossils').innerText();
+    assert.doesNotMatch(text, /\bleft\b|remain/i, 'it does not say what remains');
+    // it follows the game's own data: a different game, different counts
+    await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI; ui.st.data.tokens[0].count += 2; render(); });
+    assert.match(await page.locator('.fossils .frow').first().innerText(), /× 8/);
+    await page.tap('[data-act=closefossils]');
+    assert.equal(await page.locator('.fossils').count(), 0);
+    assert.equal(await screenOf(page), 'play');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
