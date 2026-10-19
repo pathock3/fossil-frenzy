@@ -801,7 +801,7 @@ test('sets are shown in one place only — the scoreboard — and tapping them t
     await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI; ui.st.players[ui.st.current].sets = [{ value: 7, gem: false, size: 2, ids: [] }, { value: 12, gem: true, size: 3, ids: [] }]; ui.st.rng = () => 0.01; render(); });
     assert.equal(await page.locator('.chip.cur .setbtn[data-act=set]').count(), 2, 'the current player\'s sets are the tappable ones');
     assert.equal(await page.locator('.chip:not(.cur) [data-act=set]').count(), 0);
-    assert.deepEqual(await page.locator('.chip.cur .setbtn').allInnerTexts(), ['💎', '7']);
+    assert.deepEqual(await page.locator('.chip.cur .setbtn').allInnerTexts(), ['💎\n12', '7']);
     assert.match(await page.locator('.bankcap').innerText(), /tap to bank/i, 'the sets say they can be tapped');
     const box = await page.locator('.chip.cur .setbtn').first().boundingBox();
     assert.ok(box.width >= 48 && box.height >= 48, 'big enough to be a button: ' + JSON.stringify(box));
@@ -1021,6 +1021,23 @@ test('fossils panel: the menu shows how many of each number are in THIS game (fr
   } finally { await browser.close(); }
 });
 
+test('a gem always shows what it is worth: on its fossil, on the set you hold, and on the end screen', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await passAndPlay(page, 2);
+    const gemCell = await page.evaluate(() => { const st = window.FossilFrenzyUI.ui.st; return st.tokens.find(t => t.gem && !t.matched).cell; });
+    await page.tap(`[data-act=cell][data-id="${gemCell}"]`);                // peek a gem: my own number shows
+    assert.equal(await page.locator(`[data-id="${gemCell}"] .gemnum`).textContent(), '12', 'the worth is under the gem on the fossil');
+    assert.equal(await page.locator(`[data-id="${gemCell}"] .gem`).textContent(), '💎');
+    await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI; ui.st.players[ui.st.current].sets = [{ value: 12, gem: true, size: 3, ids: [] }]; render(); });
+    assert.equal(await page.locator('.chip.cur .setbtn').first().innerText(), '💎\n12', 'and under the gem in the set you hold');
+    await page.tap('[data-act=menu]'); await page.tap('[data-act=settings]');
+    const heads = await page.locator('.settings h3').allInnerTexts();
+    assert.deepEqual(heads.slice(0, 2), ['Sound effects', 'Prompts above the board'], 'Sound effects come first in Settings');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
 test('privacy: an opponent\'s peek is never shown — at any moment of any turn, animated or not, across whole games', SKIP, async () => {
   for (const animated of [false, true]) {
     const { browser, page, errors } = await open({ animated });
@@ -1090,7 +1107,7 @@ test('held sets are shown highest to lowest, and a tap still banks the set you t
       render();
     });
     const banker = await page.evaluate(() => window.FossilFrenzyUI.ui.st.current);
-    assert.deepEqual(await page.locator('.chip.cur .setbtn').allInnerTexts(), ['💎', '7', '5', '3'], 'gem (12) first, then 7, 5, 3');
+    assert.deepEqual(await page.locator('.chip.cur .setbtn').allInnerTexts(), ['💎\n12', '7', '5', '3'], 'gem (12) first, then 7, 5, 3');
     await page.tap('.chip.cur .setbtn >> nth=2');                          // the "5"
     assert.equal(await page.evaluate(b => window.FossilFrenzyUI.ui.st.players[b].points, banker), 5);
     assert.deepEqual(await page.evaluate(b => window.FossilFrenzyUI.ui.st.players[b].sets.map(x => x.value), banker), [3, 12, 7]);
@@ -1130,7 +1147,7 @@ test('end screen: each player\'s fossils are two labelled rows — Banked, and M
     const first = page.locator('.place').first();
     assert.deepEqual(await first.locator('.rowlab').evaluateAll(els => els.map(e => e.textContent)), ['Banked', 'Matched, not banked']);
     assert.deepEqual(await first.locator('.tiles:not(.lostrow) .mini').allInnerTexts(), ['7', '3']);
-    assert.deepEqual(await first.locator('.tiles.lostrow .mini').allInnerTexts(), ['💎', '5']);
+    assert.deepEqual(await first.locator('.tiles.lostrow .mini').allInnerTexts(), ['💎\n12', '5']);
     assert.doesNotMatch(await page.locator('.results').innerText(), /\+/);
     assert.deepEqual(await page.locator('.place').nth(1).locator('.dim').allInnerTexts(), ['none', 'none']);
     assert.deepEqual(errors, []);

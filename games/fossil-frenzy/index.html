@@ -47,7 +47,7 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .setbtn.act:active { transform: translateY(4px); box-shadow: 0 1px 0 #a89458, 0 0 0 3px var(--good); animation: none; }
 @keyframes ready { 0%, 100% { box-shadow: 0 5px 0 #a89458, 0 0 0 3px var(--good), 0 0 8px rgba(62,207,142,.25); } 50% { box-shadow: 0 5px 0 #a89458, 0 0 0 3px var(--good), 0 0 20px rgba(62,207,142,.7); } }
 .bankcap { font-size: 12px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--good); line-height: 1.1; max-width: 4.2em; }
-.q { position: absolute; left: 6px; bottom: 6px; z-index: 3; width: 48px; height: 48px; border-radius: 12px; background: var(--panel); color: var(--dim); font-weight: 700; font-size: 24px; opacity: .85; }   /* the menu sits in the board's bottom-left corner, so the scores can span the whole width */
+.q { position: absolute; left: 6px; bottom: 6px; z-index: 3; width: 58px; height: 58px; border-radius: 14px; background: var(--panel); color: var(--dim); font-weight: 700; font-size: 30px; opacity: .85; }   /* the menu sits in the board's bottom-left corner, so the scores can span the whole width */
 .legend { display: flex; gap: 14px; align-items: center; font-size: 12px; color: var(--dim); padding: 0 4px; min-height: 18px; }
 .legend .hint { margin-left: auto; color: var(--text); font-size: 14px; text-align: right; }
 .main { min-height: 0; display: flex; position: relative; }
@@ -64,7 +64,7 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 
 /* menu (system chrome: small and quiet) */
 .backdrop { position: absolute; inset: 0; z-index: 4; background: rgba(0,0,0,.45); }
-.menu { position: absolute; z-index: 5; bottom: calc(env(safe-area-inset-bottom) + 80px); left: max(12px, env(safe-area-inset-left)); width: min(300px, calc(100% - 24px)); background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 10px;
+.menu { position: absolute; z-index: 5; bottom: calc(env(safe-area-inset-bottom) + 90px); left: max(12px, env(safe-area-inset-left)); width: min(300px, calc(100% - 24px)); background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 10px;
   display: flex; flex-direction: column; gap: 6px; box-shadow: 0 12px 30px rgba(0,0,0,.55); }
 .menu button { padding: 14px 16px; border-radius: 12px; background: var(--panel2); text-align: left; font-weight: 700; font-size: 17px; }
 .menu button.danger { background: #5a2a1e; }
@@ -78,7 +78,8 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .tile.up .face { fill: var(--bone); stroke: #c9ae6a; }
 .tile.peek .face { fill: #ead9a8; stroke: #c9ae6a; }          /* my private look: a lighter face, plain solid edge — the only dashes are the coloured peek ring */
 .tile .num { fill: var(--ink); font-weight: 800; font-size: 25px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
-.tile .gem { font-size: 24px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.tile .gem { font-size: 21px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.tile .gemnum { fill: var(--ink); font-weight: 800; font-size: 14px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }   /* what a gem is worth, under the gem */
 .ring { fill: none; stroke-width: 4.5; pointer-events: none; }
 .ring.peekring { stroke-dasharray: 9 6; }
 .flipin { animation: flip .32s ease-out; transform-box: fill-box; transform-origin: center; }
@@ -197,6 +198,7 @@ h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spac
 .place .score { font-size: clamp(72px, 15vw, 112px); font-weight: 900; line-height: .95; letter-spacing: -2px; font-variant-numeric: tabular-nums; }
 .place .tiles { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .mini.lost { opacity: .5; }
+.gw { font-size: .62em; font-weight: 800; margin-left: 2px; }
 /* the fossils in this game: what exists (from the game's own data), not what is left */
 .fossils .frow { display: flex; align-items: center; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--line); }
 .fossils .frow .mini { min-width: 46px; height: 46px; font-size: 24px; border-radius: 10px; }
@@ -1489,7 +1491,7 @@ const Campaign = (() => {
 
   // ---------------- rendering ----------------
   const hexPts = (cx, cy, r) => Array.from({ length: 6 }, (_, i) => { const a = (Math.PI / 180) * (60 * i - 30); return (cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1); }).join(' ');
-  const setLabel = s => (s.gem ? '💎' : s.value);
+  const setLabel = s => (s.gem ? `💎<small class="gw">${s.value}</small>` : s.value);      // a gem always carries what it is worth
 
   function boardSVG() {
     const st = ui.st, S = 34, W = Math.sqrt(3) * S, color = COLORS[st.current];
@@ -1525,7 +1527,7 @@ const Campaign = (() => {
         const lifting = lift && tid === peekTid;
         g += `<g class="tile${up ? ' up' : ''}${peeking ? ' peek' : ''}${flipped(tid) ? ' flipin' : ''}${lifting ? ' lift' : ''}">`;
         g += `<polygon class="face" points="${hexPts(x, y, S * 0.8)}"/>`;
-        if (shown) g += t.gem ? `<text class="gem" x="${x}" y="${y + 1}">💎</text>` : `<text class="num" x="${x}" y="${y + 1}">${t.value}</text>`;
+        if (shown) g += t.gem ? `<text class="gem" x="${x}" y="${y - 6}">💎</text><text class="gemnum" x="${x}" y="${y + 14}">${t.value}</text>` : `<text class="num" x="${x}" y="${y + 1}">${t.value}</text>`;
         else g += `<circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.3}"/><circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.13}"/>`;
         g += '</g>';
         if (up) g += `<polygon class="ring" style="stroke:${color}" points="${hexPts(x, y, S * 0.9)}"/>`;
@@ -1712,7 +1714,7 @@ const Campaign = (() => {
     let title = r.winners.length > 1 ? 'Shared win!' : esc(seatName(r.winners[0])) + ' wins!';
     if (campaign && o) title = o.won ? (o.completed ? 'Campaign complete!' : `You beat ${esc(LV[ui.levelIdx].name)}!`) : r.winners.length > 1 ? 'A draw — not a win.' : `${esc(LV[ui.levelIdx].name)} wins`;
     const extra = campaign && o && !o.won ? 'Win outright to unlock the next level.' : '';
-    const tileHTML = (x, cls = '') => `<span class="mini ${cls}">${x.gem ? '💎' : x.value}</span>`;
+    const tileHTML = (x, cls = '') => `<span class="mini ${cls}">${setLabel(x)}</span>`;
     const places = r.ranking.map(x => {
       const p = st.players[x.idx], win = r.winners.includes(x.idx);
       return `<div class="place${win ? ' win' : ''}" style="--c:${COLORS[x.idx]}">
@@ -1799,8 +1801,8 @@ const Campaign = (() => {
       : `${ui.unlockAll ? '<p class="ok">✓ All opponents are unlocked.</p>' : '<button class="ghost" data-act="unlock-ask">Unlock all opponents…</button>'}<button class="ghost" data-act="reset-ask">Reset campaign…</button>`;
     const soundSeg = `<span class="seg">${[['on', 'On'], ['off', 'Off']].map(([v, t]) => `<button class="${(ui.sound ? 'on' : 'off') === v ? 'on' : ''}" data-act="sound" data-v="${v}">${t}</button>`).join('')}</span>`;
     return `<div class="screen help settings" style="z-index:6"><div class="sheet"><h1>Settings</h1>
-      <h3>Prompts above the board</h3><p>${seg}</p><p class="dim">Auto shows them until you have finished one game on this device.</p>
       <h3>Sound effects</h3><p>${soundSeg}</p>
+      <h3>Prompts above the board</h3><p>${seg}</p><p class="dim">Auto shows them until you have finished one game on this device.</p>
       <h3>Campaign</h3>${unlock}
       ${ui.settings === 'unlock' || ui.settings === 'reset' ? '' : '<button class="big" data-act="closesettings">Done</button>'}</div></div>`;
   }
