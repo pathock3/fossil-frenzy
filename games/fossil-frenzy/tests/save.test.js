@@ -7,7 +7,7 @@ const snapshot = s => JSON.stringify(Engine.standings(s)) + '|' + s.turnNo + '|'
 // Plays a bot game; at action number `cutAt`, saves, throws everything away and carries on from the JSON.
 function play({ seed, cutAt, memories = [2, 6, 10], endSenses = [0, 2, 10] }) {
   let s = Engine.createGame({ players: 3, seed });
-  let bots = Bots.attach(s, memories.map((m, i) => ({ ...GAME_DATA.ai.profiles.expert, memory: m, endSense: endSenses[i], focus: 8 })), seed);
+  let bots = Bots.attach(s, memories.map((m, i) => ({ ...GAME_DATA.ai.profiles.expert, memory: m, endSense: endSenses[i] })), seed);
   for (let i = 0; !s.over; i++) {
     if (i === cutAt) {
       const json = JSON.stringify({ game: Engine.serialize(s), bots: bots.map(b => b.save()) });   // → localStorage

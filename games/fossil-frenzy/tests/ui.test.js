@@ -755,6 +755,13 @@ test('home: a few tiles on the board flip over by themselves, on a loop (no demo
     assert.equal(await page.locator('.hero-board .ring.peekring').count(), 0, 'no dotted peek ring on the title board');
     const anim = await page.evaluate(() => { const el = document.querySelector('.hero-board .h-flipper'); return getComputedStyle(el).animationName; });
     assert.equal(anim, 'hback', 'the flip is a looping CSS animation');
+    // never more than two face up at once: tiles start a second apart and each is up for under two seconds of the 7 s loop
+    const delays = await page.evaluate(() => [...document.querySelectorAll('.hero-board .h-flipper')].map(el => -parseFloat(el.style.getPropertyValue('--d'))).sort((a, b) => a - b));
+    const upSeconds = 7 * (0.78 - 0.54);                                   // from the start of the flip to the end of the flip back (keyframes hback)
+    for (let i = 0; i < delays.length; i++) {
+      const overlapping = delays.filter(d => { const gap = (d - delays[i] + 7) % 7; return gap < upSeconds; }).length;
+      assert.ok(overlapping <= 2, 'at most two tiles face up at once: ' + JSON.stringify(delays));
+    }
     assert.equal(await page.evaluate(() => typeof window.FossilFrenzyUI.demo), 'undefined', 'there is no scripted demo game any more');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }

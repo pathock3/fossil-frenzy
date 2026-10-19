@@ -87,19 +87,6 @@ test('gems: a bot with no feel for them always goes for the third gem; the perfe
   assert.equal(turn(EXPERT), 'endTurn', 'the perfect AI keeps the two positions to itself');
 });
 
-test('focus: a bot that is not fully focused plays a random move now and then instead of the best one', () => {
-  const rate = focus => {
-    const p = position({ held: [[9], []], profile: { ...EXPERT, focus } });
-    let banked = 0, N = 2000;
-    for (let i = 0; i < N; i++) if (p.decide().type === 'bank') banked++;
-    return banked / N;
-  };
-  const slip = GAME_DATA.ai.tuning.slipAtZero;
-  assert.equal(rate(10), 1, 'fully focused: it always plays the best move (here, bank)');
-  assert.ok(Math.abs(rate(4) - (1 - slip * 0.6)) < 0.04, 'focus 4: it slips ' + (slip * 0.6 * 100) + '% of the time');
-  assert.ok(Math.abs(rate(0) - (1 - slip)) < 0.04, 'focus 0: it slips as often as it ever does');
-});
-
 // ---------------------------------------------------------------- what the easier opponents lack
 test('easier AI: with no feel for set values every set looks the same — it takes a pair of 2s as eagerly as a pair of 9s', () => {
   const low = position({ known: pairOf(2), profile: BLIND }).weigh(), high = position({ known: pairOf(9), profile: BLIND }).weigh();
@@ -123,7 +110,7 @@ test('levels: the five opponents\' abilities never go down from one level to the
   for (const { id } of GAME_DATA.skills) {
     for (let i = 1; i < LEVELS.length; i++) assert.ok(LEVELS[i][id] >= LEVELS[i - 1][id], `${id} drops at level ${i + 1}`);
   }
-  assert.ok(LEVELS.every(l => l.memory < 10 && l.focus < 10), 'no opponent in the campaign is perfect');
+  assert.ok(LEVELS.every(l => l.memory < 10), 'no opponent in the campaign is perfect');
 });
 
 // ---------------------------------------------------------------- strength follows ability (fixed seeds: deterministic)
@@ -150,7 +137,7 @@ test('strength: each campaign level beats the one before it, and Master beats Be
 
 test('skills: every skill has a name and a description, every profile scores every skill 0-10, and the perfect AI scores 10 on all of them', () => {
   const ids = GAME_DATA.skills.map(k => k.id);
-  assert.deepEqual(ids.slice().sort(), ['endSense', 'focus', 'gemSense', 'leadSense', 'memory', 'selfAwareness', 'setsSense', 'valueSense']);
+  assert.deepEqual(ids.slice().sort(), ['endSense', 'gemSense', 'leadSense', 'memory', 'selfAwareness', 'setsSense', 'valueSense']);
   for (const k of GAME_DATA.skills) { assert.ok(k.name && k.name.length > 2, k.id); assert.ok(k.blurb && k.blurb.length > 20, k.id); }
   for (const [name, prof] of [['expert', EXPERT], ...GAME_DATA.campaign.levels.map(l => [l.name, l.ai])]) {
     assert.deepEqual(Object.keys(prof).sort(), ids.slice().sort(), `${name} scores exactly the registered skills`);

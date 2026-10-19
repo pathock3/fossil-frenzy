@@ -129,8 +129,8 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .h-front { transform: scaleX(0); }
 .h-flipper { animation: hback 7s ease-in-out infinite; animation-delay: var(--d); }
 .h-front { animation: hfront 7s ease-in-out infinite; animation-delay: var(--d); }
-@keyframes hback { 0%, 52% { transform: scaleX(1); } 56%, 78% { transform: scaleX(0); } 82%, 100% { transform: scaleX(1); } }
-@keyframes hfront { 0%, 52% { transform: scaleX(0); } 56%, 78% { transform: scaleX(1); } 82%, 100% { transform: scaleX(0); } }
+@keyframes hback { 0%, 54% { transform: scaleX(1); } 58%, 74% { transform: scaleX(0); } 78%, 100% { transform: scaleX(1); } }
+@keyframes hfront { 0%, 54% { transform: scaleX(0); } 58%, 74% { transform: scaleX(1); } 78%, 100% { transform: scaleX(0); } }
 @media (prefers-reduced-motion: reduce) { .h-cell, .h-flipper, .h-front { animation: none; } }
 .hero-menu { position: relative; display: flex; flex-direction: column; align-items: stretch; min-height: 0; }
 .logo { margin: 0 0 6px; font-size: clamp(40px, min(11vw, 10.5vh), 96px); line-height: .9; font-weight: 900; letter-spacing: -2px; text-align: left;
@@ -262,11 +262,11 @@ const GAME_DATA = {
   // harder, change its numbers: memory first, then the skills.
   campaign: {
     levels: [
-      { id: 'beginner',    name: 'Beginner',    ai: { memory: 4.0, selfAwareness: 0, valueSense: 0,  leadSense: 0,  endSense: 0,  setsSense: 0,  gemSense: 0,  focus: 6.0 } },
-      { id: 'novice',      name: 'Novice',      ai: { memory: 5.6, selfAwareness: 3, valueSense: 3,  leadSense: 3,  endSense: 3,  setsSense: 3,  gemSense: 3,  focus: 7.2 } },
-      { id: 'normal',      name: 'Normal',      ai: { memory: 6.8, selfAwareness: 5, valueSense: 6,  leadSense: 6,  endSense: 6,  setsSense: 6,  gemSense: 6,  focus: 8.1 } },
-      { id: 'challenging', name: 'Challenging', ai: { memory: 7.7, selfAwareness: 7, valueSense: 8,  leadSense: 8,  endSense: 8,  setsSense: 8,  gemSense: 8,  focus: 8.9 } },
-      { id: 'master',      name: 'Master',      ai: { memory: 8.5, selfAwareness: 9, valueSense: 10, leadSense: 10, endSense: 10, setsSense: 10, gemSense: 10, focus: 9.5 } },
+      { id: 'beginner',    name: 'Beginner',    ai: { memory: 4.8, selfAwareness: 0, valueSense: 0, leadSense: 0, endSense: 0, setsSense: 0, gemSense: 0 } },
+      { id: 'novice',      name: 'Novice',      ai: { memory: 7.4, selfAwareness: 3, valueSense: 3, leadSense: 3, endSense: 3, setsSense: 3, gemSense: 3 } },
+      { id: 'normal',      name: 'Normal',      ai: { memory: 8.6, selfAwareness: 5, valueSense: 5, leadSense: 5, endSense: 5, setsSense: 5, gemSense: 5 } },
+      { id: 'challenging', name: 'Challenging', ai: { memory: 9.2, selfAwareness: 7, valueSense: 8, leadSense: 8, endSense: 8, setsSense: 8, gemSense: 8 } },
+      { id: 'master',      name: 'Master',      ai: { memory: 9.8, selfAwareness: 9, valueSense: 10, leadSense: 10, endSense: 10, setsSense: 10, gemSense: 10 } },
     ],
   },
 
@@ -281,18 +281,16 @@ const GAME_DATA = {
     { id: 'endSense',      name: 'Endgame sense',  blurb: 'Knows how close the game is to ending: when to bank, how much time is left. Very low: it banks by rule of thumb instead.' },
     { id: 'setsSense',     name: 'Set tracking',   blurb: 'Keeps track of which sets are still on the board. Below 5 it has no idea what is left.' },
     { id: 'gemSense',      name: 'Gem sense',      blurb: 'Understands that going for the third gem gives two gems\' positions away. Below 5 it always goes for the third.' },
-    { id: 'focus',         name: 'Focus',          blurb: 'How rarely it plays a random move instead of its best. Low: it slips now and then.' },
   ],
   ai: {
     slipSays: ['Hm…', 'Oops!', 'Wait — no.'],                  // what an opponent mutters (on its chip) after a turn in which it slipped
     profiles: {
       random: { style: 'random' },                                          // the tutorial opponent: it just taps at random
-      expert: { memory: 10, selfAwareness: 10, valueSense: 10, leadSense: 10, endSense: 10, setsSense: 10, gemSense: 10, focus: 10 },
+      expert: { memory: 10, selfAwareness: 10, valueSense: 10, leadSense: 10, endSense: 10, setsSense: 10, gemSense: 10 },
     },
     // How the smart opponent weighs things, and what the 0-10 scores mean in numbers. Calibration numbers (see games/fossil-frenzy/docs/AI.md), shared by every level.
     tuning: {
       retentionAtZero: 0.5,                                      // memory skill 0 = a memory survives a turn half the time; skill 10 = always
-      slipAtZero: 0.5,                                           // focus skill 0 = a random move half the time; skill 10 = never
       nearMiss: 0.5,                                             // when memory slips: how often it taps a neighbour of the right fossil rather than any fossil
       endHabits: [                                               // an opponent with almost no endgame sense banks by rule of thumb (endSense at or below `upTo`)
         { upTo: 0.5, bankAt: 2, endgameTiles: 0 },               //   bank as soon as it holds 2 sets
@@ -623,7 +621,6 @@ const Engine = (() => {
      endSense       knows how close the game is to ending (when to bank); a very low score banks by rule of thumb instead
      setsSense      keeps track of which sets are still on the board
      gemSense       understands that going for the third gem gives two gems' positions away (low = it always goes for the third)
-     focus          how rarely it plays a random move instead of its best
    ===================================================================== */
 const Bots = (() => {
   const AI = () => GAME_DATA.ai;
@@ -638,7 +635,7 @@ const Bots = (() => {
   const softplus = x => (x > 20 ? x : Math.log1p(Math.exp(x)));
   const keyOf = (value, gem) => (gem ? 'g' : 'n') + value;
 
-  const DEFAULTS = { style: 'smart', memory: 10, selfAwareness: 10, valueSense: 10, leadSense: 10, endSense: 10, setsSense: 10, gemSense: 10, focus: 10 };
+  const DEFAULTS = { style: 'smart', memory: 10, selfAwareness: 10, valueSense: 10, leadSense: 10, endSense: 10, setsSense: 10, gemSense: 10 };
   function profileOf(spec) {
     if (typeof spec === 'string') { if (!AI().profiles[spec]) throw new Error('unknown bot profile ' + spec); return { ...DEFAULTS, ...AI().profiles[spec] }; }
     const base = spec && spec.profile ? AI().profiles[spec.profile] : null;
@@ -667,7 +664,6 @@ const Bots = (() => {
     // abilities are scored 0-10 in the profile; the engine works with 0-1
     const sk = name => P[name] / 10;
     const retention = () => T.retentionAtZero + (1 - T.retentionAtZero) * sk('memory');          // memory skill -> chance a memory survives a turn
-    const slipRate = () => T.slipAtZero * (1 - sk('focus'));                                       // focus skill -> chance of a random move
     const overconfidence = () => 1 - sk('selfAwareness');
     // a bot with almost no feel for the end of the game banks by rule of thumb (its habits come from GAME_DATA.ai.tuning.endHabits)
     const habit = () => T.endHabits.find(h => P.endSense <= h.upTo) || null;
@@ -889,7 +885,6 @@ const Bots = (() => {
     function chooseAction(v) {
       const X = look(v);
       const me = X.me;
-      if (slipRate() > 0 && rnd() < slipRate()) { const any = unmatchedIds(v); if (any.length) { bot.slips++; return { type: 'peek', tid: pick(any) }; } }      // a slip: it just taps something
       const hb = habit();
       if (v.status.canBank && me.sets.length && hb && ((hb.bankAt > 0 && me.sets.length >= hb.bankAt) || (hb.endgameTiles > 0 && v.tokensLeft <= hb.endgameTiles))) { let bi = 0; me.sets.forEach((s, i) => { if (s.value > me.sets[bi].value) bi = i; }); return { type: 'bank', set: bi }; }
       const ps = plans(X);
@@ -908,7 +903,6 @@ const Bots = (() => {
 
     function chooseFlip(v) {
       const X = look(v), T0 = v.peeked;
-      if (slipRate() > 0 && rnd() < slipRate()) { const any = unmatchedIds(v).filter(t => t !== T0.tid); if (any.length) { bot.slips++; return { type: 'flipOther', tid: pick(any) }; } }
       const k = keyOf(T0.value, T0.gem);
       const twins = (X.byKey[k] || []).filter(t => t.tid !== T0.tid);
       if (twins.length) {
@@ -1502,7 +1496,7 @@ const Campaign = (() => {
     for (let i = vals.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [vals[i], vals[j]] = [vals[j], vals[i]]; }
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
     cells.forEach(c => { const q = pos(c); x0 = Math.min(x0, q.x - W / 2); x1 = Math.max(x1, q.x + W / 2); y0 = Math.min(y0, q.y - S); y1 = Math.max(y1, q.y + S); });
-    const flippers = new Map([[3, 0], [8, 1.9], [12, 3.7], [15, 0.9], [19, 5.1], [23, 2.8], [27, 4.4]]);   // which tiles flip, and when (seconds into the loop)
+    const flippers = new Map([[3, 0], [8, 3], [12, 5], [15, 1], [19, 6], [23, 2], [27, 4]]);   // which tiles flip, and when (seconds into the 7 s loop): one new tile a second, each up for under 2 s, so never more than two face up at once
     let out = '';
     cells.forEach((c, k) => {
       const { x, y } = pos(c), v = vals[k], fl = flippers.has(k);

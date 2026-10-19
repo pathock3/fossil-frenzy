@@ -177,9 +177,7 @@ const ABILITIES = [
   ['no Endgame sense (0: it banks as soon as it holds 2 sets)', { endSense: 0 }],
   ['no Set tracking (0)', { setsSense: 0 }],
   ['no Gem sense (0: always goes for the third gem)', { gemSense: 0 }],
-  ['Focus 8 (a random move 10% of the time)', { focus: 8 }],
-  ['Focus 5 (a random move 25% of the time)', { focus: 5 }],
-  ['all of the Beginner\'s weak settings (Memory 4, every sense 0, Focus 6)', { memory: 4, selfAwareness: 0, valueSense: 0, leadSense: 0, endSense: 0, setsSense: 0, gemSense: 0, focus: 6 }],
+  ['all of the Beginner\'s weak settings (Memory 4.8, every sense 0)', { memory: 4.8, selfAwareness: 0, valueSense: 0, leadSense: 0, endSense: 0, setsSense: 0, gemSense: 0 }],
 ];
 R.abilities = ABILITIES.map(([name, o]) => ({ name, ...headToHead(EXPERT, { ...EXPERT, ...o }) }));
 R.tutorial = LEVELS.map((_, i) => headToHead(level(i), GAME_DATA.ai.profiles.random));
@@ -240,7 +238,7 @@ R.abilities.forEach(x => L.push(`| ${x.name} | ${P(x.winShare)} ±${P(x.ci)} |`)
 L.push('');
 L.push('## Table 10 — the five campaign opponents\' skills (0 = none, 10 = perfect)', '', `| level | ${GAME_DATA.skills.map(k => k.name).join(' | ')} |`, `|---|${GAME_DATA.skills.map(() => '---').join('|')}|`);
 R.levelSettings.forEach(x => L.push(`| ${x.name} | ${GAME_DATA.skills.map(k => x[k.id]).join(' | ')} |`));
-L.push('', 'Memory 8 = a memory that survives a turn 90% of the time; 4 = 70%; 0 = 50%. Focus 8 = a random move 10% of the time; 5 = 25%. See `docs/AI.md`.', '');
+L.push('', 'Memory 8 = a memory that survives a turn 90% of the time; 4 = 70%; 0 = 50%. See `docs/AI.md`.', '');
 L.push('## Table 11 — the tutorial opponent (plays at random): how often each campaign level beats it (2 players)', '', '| level | wins |', '|---|---|');
 R.tutorial.forEach((x, i) => L.push(`| ${R.levels[i]} | ${P(x.winShare)} |`));
 L.push('');

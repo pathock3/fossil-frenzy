@@ -2,6 +2,8 @@
 
 Reproduce: `npm run simulate -- --games 1000` from the repo root (about 4½ minutes; deterministic — seeds are fixed). Raw numbers: `tools/results.json`; the tables below are `tools/tables.md` verbatim. How the opponents work: `docs/AI.md`.
 
+> **Retuned (playtest 7):** the Focus skill was removed and the campaign levels were retuned (table 10 shows the new values). The other tables below were produced before this and were not re-run; a quick re-check of the five levels head to head (500 games per pair) gives each level over the one below it: 78% / 76% / 71% / 71%.
+
 Rules simulated: 31 fossils on a hexagon (2/3/5/6/7/9/10 and three gems worth 12), no pieces; a turn is *peek then flip* or *bank one set* (scored at the number on its fossil; the tables below were run when a bank also rolled a d6 chain of +1 per 6, since removed — about +0.2 a bank, which shifts every player alike, so the ladder is unchanged in kind but not re-run); up to 4 players. A player is the one decision engine in the `bots` script with a profile of eight skills scored 0–10 (`GAME_DATA.skills`): **Memory**, **Self-awareness**, **Value sense**, **Lead sense**, **Endgame sense**, **Set tracking**, **Gem sense**, **Focus**. "Perfect" = 10 on every skill; "Memory m" in a table means the perfect player with that Memory skill (8 = a memory that survives a turn 90% of the time, 4 = 70%, 0 = 50%). "Level" rows use the campaign levels' own profiles. ± values are 95% confidence half-widths. See `DECISIONS.md` (items 55–63) for what was tried and dropped.
 
 ## Findings
@@ -121,21 +123,19 @@ Outright wins only, since the campaign counts only an outright win as a defeat (
 | no Endgame sense (0: it banks as soon as it holds 2 sets) | 52.2% ±3.1% |
 | no Set tracking (0) | 51.1% ±3.1% |
 | no Gem sense (0: always goes for the third gem) | 66.7% ±2.9% |
-| Focus 8 (a random move 10% of the time) | 57.2% ±3.1% |
-| Focus 5 (a random move 25% of the time) | 76.2% ±2.6% |
-| all of the Beginner's weak settings (Memory 4, every sense 0, Focus 6) | 99.6% ±0.4% |
+| all of the Beginner's weak settings (Memory 4, every sense 0, plus a random move one turn in five — the since-removed Focus 6) | 99.6% ±0.4% |
 
 ## Table 10 — the five campaign opponents' skills (0 = none, 10 = perfect)
 
-| level | Memory | Self-awareness | Value sense | Lead sense | Endgame sense | Set tracking | Gem sense | Focus |
-|---|---|---|---|---|---|---|---|---|
-| Beginner | 4 | 0 | 0 | 0 | 0 | 0 | 0 | 6 |
-| Novice | 5.6 | 3 | 3 | 3 | 3 | 3 | 3 | 7.2 |
-| Normal | 6.8 | 5 | 6 | 6 | 6 | 6 | 6 | 8.1 |
-| Challenging | 7.7 | 7 | 8 | 8 | 8 | 8 | 8 | 8.9 |
-| Master | 8.5 | 9 | 10 | 10 | 10 | 10 | 10 | 9.5 |
+| level | Memory | Self-awareness | Value sense | Lead sense | Endgame sense | Set tracking | Gem sense |
+|---|---|---|---|---|---|---|---|
+| Beginner | 4.8 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Novice | 7.4 | 3 | 3 | 3 | 3 | 3 | 3 |
+| Normal | 8.6 | 5 | 5 | 5 | 5 | 5 | 5 |
+| Challenging | 9.2 | 7 | 8 | 8 | 8 | 8 | 8 |
+| Master | 9.8 | 9 | 10 | 10 | 10 | 10 | 10 |
 
-Memory 8 = a memory that survives a turn 90% of the time; 4 = 70%; 0 = 50%. Focus 8 = a random move 10% of the time; 5 = 25%. See `docs/AI.md`.
+Memory 8 = a memory that survives a turn 90% of the time; 4 = 70%; 0 = 50%. See `docs/AI.md`.
 
 ## Table 11 — the tutorial opponent (plays at random): how often each campaign level beats it (2 players)
 

@@ -16,7 +16,7 @@ test('campaign: every skill rises (or stays) from one level to the next — a sm
     assert.ok(ai[i].memory > ai[i - 1].memory, `${NAMES[i]} should remember more than ${NAMES[i - 1]}`);
     for (const { id } of GAME_DATA.skills) assert.ok(ai[i][id] >= ai[i - 1][id], `${NAMES[i]}: ${id}`);
   }
-  assert.ok(ai.every(a => a.memory < 10 && a.focus < 10), 'the opponents forget now and then, and slip now and then');
+  assert.ok(ai.every(a => a.memory < 10), 'the opponents forget now and then');
 });
 
 test('campaign: only the easiest level is open at the start', () => {
@@ -64,5 +64,5 @@ test('campaign: beating Master completes the campaign (there is nothing further 
 
 test('campaign: an opponent\'s settings come from the level data', () => {
   assert.equal(Campaign.botSpec(GAME_DATA.campaign.levels[2]), GAME_DATA.campaign.levels[2].ai);
-  assert.equal(Campaign.botSpec(GAME_DATA.campaign.levels[2]).memory, 6.8);
+  assert.equal(Campaign.botSpec(GAME_DATA.campaign.levels[2]).memory, 8.6);
 });
