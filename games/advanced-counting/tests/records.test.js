@@ -46,6 +46,27 @@ test('profiles: select switches the current profile; an unknown id is refused', 
   assert.equal(P.select(st, 'nope'), false); assert.equal(P.current(st).id, a.id);
 });
 
+test('continue: picks up on the lowest level not yet beaten — nothing to continue until a level is beaten; all beaten: the top level', () => {
+  const { p } = fresh();
+  assert.equal(P.continueIndex(p), null, 'a new profile has nothing to continue');
+  P.applyResult(p, res(0, 1, 5000));
+  assert.equal(P.continueIndex(p), 1, 'level A beaten: continue at B');
+  P.applyResult(p, res(1, 0, 9000)); P.applyResult(p, res(2, 0, 9000));
+  assert.equal(P.continueIndex(p), 3, 'A-C beaten: continue at D');
+  for (let i = 3; i < E.levels.length; i++) P.applyResult(p, res(i, 0, 9000));
+  assert.equal(P.continueIndex(p), E.levels.length - 1, 'every level beaten: the top level');
+});
+
+test('continue: only the highest beaten level matters — not the last run, not replays of easier levels, not practice', () => {
+  const { p } = fresh();
+  P.applyResult(p, res(0, 0, 5000)); P.applyResult(p, res(1, 0, 5000)); P.applyResult(p, res(2, 0, 5000));
+  assert.equal(P.continueIndex(p), 3);
+  P.applyResult(p, res(0, 9, 90000));                              // a poor, later run of level A changes nothing
+  assert.equal(P.continueIndex(p), 3);
+  P.applyResult(p, { ...res(5, 0, 5000), practice: true });       // practice never moves it
+  assert.equal(P.continueIndex(p), 3);
+});
+
 test('rename: blank names are rejected (empty, spaces only) and nothing changes', () => {
   const { st, p } = fresh();
   P.applyResult(p, res(0, 1, 5000));

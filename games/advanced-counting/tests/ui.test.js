@@ -196,6 +196,30 @@ test('play: before Flip, tapping any card turns it face down or up again (free f
   } finally { await t.close(); }
 });
 
+test('menu: Start begins at level A; Continue (shown once a level is beaten) picks up on the first level not yet beaten', SKIP, async () => {
+  const t = await open({ viewport: SMALL });
+  const { page } = t;
+  try {
+    assert.equal(await page.locator('.cont').count(), 0, 'a fresh profile has nothing to continue');
+    const fresh = await box(page, '.start'); assert.ok(fresh.y + fresh.height <= 640);
+    await page.tap('[data-act=start]');
+    let s = await S(page); await playLevel(page); await page.tap('[data-act=ok]');          // beat level A, then B is dealt
+    assert.equal((await S(page)).round.level, 'B');
+    await page.tap('[data-act=gamemenu]'); await page.tap('[data-act=mainmenu]');            // leave in the middle of B
+    assert.equal(await page.locator('.cont').innerText(), 'Continue · Level B');
+    // the layout still fits a small phone: nothing off screen, Start above Continue, no overlap
+    const st = await box(page, '.start'), co = await box(page, '.cont'), cr = await box(page, '.credit');
+    assert.ok(co.y >= st.y + st.height && cr.y >= co.y + co.height - 1 && cr.y + cr.height <= 640 + 1, JSON.stringify({ st, co, cr }));
+    assert.equal(Math.round(co.height), 58); assert.ok(Math.abs(co.width - st.width) < 1, 'as wide as Start');
+    await page.tap('[data-act=continue]');
+    s = await S(page); assert.equal(s.round.level, 'B'); assert.equal(s.round.practice, false, 'a climb round');
+    await page.tap('[data-act=gamemenu]'); await page.tap('[data-act=mainmenu]');
+    await page.tap('[data-act=start]');
+    assert.equal((await S(page)).round.level, 'A', 'Start is always a fresh game from the beginning');
+    assert.deepEqual(t.errors, []);
+  } finally { await t.close(); }
+});
+
 test('play: a wrong tap re-deals the identical layout face up, counts a mistake, and only completion deals a new layout', SKIP, async () => {
   const t = await open();
   await t.page.tap('[data-act=start]'); await t.page.tap('[data-act=flip]');
