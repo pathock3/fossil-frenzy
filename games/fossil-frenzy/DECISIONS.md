@@ -85,3 +85,5 @@ Movement (0–3 spaces on a hex board, going around or pushing other pieces), th
 
 ## Process
 32. Tests use Node's built-in runner (`npm test`); the browser tests use Playwright if installed and skip themselves otherwise. A build runs the tests first, so a failing test keeps the old version live.
+64. **Home board reverted to the ambient flip (playtest 7):** the owner preferred the original title-screen picture — the real board with a few random tiles flipping face up and back on a slow loop (CSS only, one peek ring) — over the scripted demo game, so items 44 and 54 no longer apply. The one-screen layout from playtest 4 stays. It holds still under reduced motion.
+65. **Quieter table, shorter menu (playtest 7):** the concealed/public colour key above the board is gone (the tiles say it themselves). The in-game menu is Retry, How to play, Settings and **Main Menu** (in that order) (was "Back to the start"); there is no Resume — tapping away from the menu closes it. Supersedes the button list in item 38.

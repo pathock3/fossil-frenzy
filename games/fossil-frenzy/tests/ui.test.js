@@ -679,8 +679,8 @@ test('menu: a ☰ button opens rules, retry and back-to-start; retry and leaving
     assert.equal(await page.locator('[data-act=menu]').count(), 1);
     assert.equal(await page.locator('.q').count(), 1, 'one small system button, nothing else competing for attention');
     await page.tap('[data-act=menu]');
-    assert.deepEqual(await page.locator('.menu button').allInnerTexts(), ['How to play', 'Settings', 'Retry', 'Back to the start', 'Resume']);
-    await page.tap('[data-act=menu-close]', { force: true });               // Resume
+    assert.deepEqual(await page.locator('.menu button').allInnerTexts(), ['Retry', 'How to play', 'Settings', 'Main Menu']);
+    await page.tap('.backdrop[data-act=menu-close]', { force: true });      // tap away to close
     assert.equal(await page.locator('.menu').count(), 0);
     await page.tap('[data-act=menu]'); await page.tap('[data-act=help]');   // rules from the menu
     assert.ok(await page.locator('.help').count());
@@ -696,7 +696,7 @@ test('menu: a ☰ button opens rules, retry and back-to-start; retry and leaving
     assert.equal(await gameState(page), before);
     // leaving asks first too
     await page.tap('[data-act=menu]'); await page.tap('[data-act=menu-ask][data-v=quit]');
-    assert.match(await page.locator('.menu').innerText(), /go back to the start/i);
+    assert.match(await page.locator('.menu').innerText(), /Main Menu/i);
     await page.tap('.menu [data-act=menu-close]');
     assert.equal(await screenOf(page), 'play');
     assert.deepEqual(errors, []);
@@ -726,7 +726,7 @@ test('menu: retry (confirmed) deals a fresh game at once, same players — no le
   } finally { await browser.close(); }
 });
 
-test('menu: "Back to the start" (confirmed) leaves the game and clears the save', SKIP, async () => {
+test('menu: "Main Menu" (confirmed) leaves the game and clears the save', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     await passAndPlay(page, 2);
@@ -744,50 +744,18 @@ test('home: Campaign is listed before Pass & Play, over a picture of the board',
   try {
     assert.deepEqual(await page.locator('[data-act=mode]').evaluateAll(els => els.map(e => e.dataset.v)), ['campaign', 'pass']);
     assert.equal(await page.locator('.hero-board .h-cell').count(), 31, 'it is the real 31-space board');
-    assert.equal(await page.locator('.hero-board .h-ring.dash, .h-peek').count(), 0, 'no stray decorative ring: rings only appear as a game is played');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
 
-test('home: a whole demo game plays by itself — blue then red, two tiles up per turn, the next colour\'s first flip clears the last turn, matches vanish', SKIP, async () => {
+test('home: a few tiles on the board flip over by themselves, on a loop (no demo game)', SKIP, async () => {
   const { browser, page, errors } = await open({ animated: true });
   try {
-    await page.evaluate(() => { const d = window.FossilFrenzyUI.demo(); clearTimeout(d.timer); });   // drive it by hand, instantly
-    const log = await page.evaluate(() => {
-      const U = window.FossilFrenzyUI, d = U.demo(), seen = { blueTurns: 0, redTurns: 0, twoUp: 0, clearedOnNextFlip: 0, dashed: 0, vanished: 0, upNoNumber: 0, stayedAfterEnd: 0 };
-      const up = () => d.cells.map((el, c) => (el.classList.contains('up') ? c : -1)).filter(c => c >= 0);
-      for (let i = 0; i < 4000 && !d.st.over; i++) {
-        const before = d.st.current, upBefore = up().length, turnNoBefore = d.st.turnNo;
-        const pending = d.prev ? { cells: [...d.prev.up], matched: [...d.prev.matched] } : null;   // what the last turn left up
-        U.demoStep(d);
-        if (d.st.turnNo !== turnNoBefore) {                                    // that step ended a turn: its tiles must still be showing
-          if (up().length === upBefore) seen.stayedAfterEnd++;
-          if (up().length === 2) seen.twoUp++;
-          if (before === 0) seen.blueTurns++; else seen.redTurns++;
-        } else if (pending && !d.prev) {                                       // the next player's first move: the last turn's tiles come down
-          if (pending.cells.every(c => !d.cells[c].classList.contains('up'))) seen.clearedOnNextFlip++;
-          seen.vanished += pending.matched.filter(c => d.cells[c].classList.contains('gone')).length;
-        }
-        d.cells.forEach(el => { if (el.classList.contains('dash')) seen.dashed++; if (el.classList.contains('up') && !el.querySelector('.h-front text').textContent) seen.upNoNumber++; });
-      }
-      const wait = U.demoStep(d);                                              // the game is over: the last tiles vanish and it waits
-      return { ...seen, over: d.st.over, gone: d.cells.every(el => el.classList.contains('gone')), wait, left: d.st.tokens.filter(t => !t.matched).length };
-    });
-    assert.equal(log.over, true);
-    assert.equal(log.left, 0, 'every fossil was collected');
-    assert.equal(log.gone, true, 'and every tile has vanished');
-    assert.ok(log.wait >= 2000, 'then the empty board waits before the next game: ' + log.wait);
-    assert.ok(log.blueTurns > 0 && log.redTurns > 0, 'both colours play');
-    assert.ok(log.twoUp > 0, 'a finished turn shows two tiles face up');
-    assert.equal(log.stayedAfterEnd > 0, true, 'a turn\'s tiles are not taken down when it ends…');
-    assert.ok(log.clearedOnNextFlip > 0, '…but when the other colour flips its first tile');
-    assert.ok(log.vanished > 0, 'matched tiles vanish then');
-    assert.equal(log.dashed, 0, 'no dashed rings in the demo: just tiles flipped up');
-    assert.equal(log.upNoNumber, 0, 'a flipped tile always shows its number');
-    // and it really restarts by itself
-    const before = await page.evaluate(() => window.FossilFrenzyUI.demo().seed);
-    await page.evaluate(() => { window.FossilFrenzyUI.render(); });
-    assert.notEqual(await page.evaluate(() => window.FossilFrenzyUI.demo().seed), before, 'a re-drawn home screen starts a fresh game');
+    assert.equal(await page.locator('.hero-board .h-flipper').count(), 7, 'seven tiles take turns flipping');
+    assert.equal(await page.locator('.hero-board .h-front').count(), 7);
+    const anim = await page.evaluate(() => { const el = document.querySelector('.hero-board .h-flipper'); return getComputedStyle(el).animationName; });
+    assert.equal(anim, 'hback', 'the flip is a looping CSS animation');
+    assert.equal(await page.evaluate(() => typeof window.FossilFrenzyUI.demo), 'undefined', 'there is no scripted demo game any more');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

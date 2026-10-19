@@ -50,7 +50,6 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .sys { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
 .q { width: 44px; height: 44px; border-radius: 12px; background: var(--panel); color: var(--dim); font-weight: 700; font-size: 22px; }
 .legend { display: flex; gap: 14px; align-items: center; font-size: 12px; color: var(--dim); padding: 0 4px; min-height: 18px; }
-.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
 .legend .hint { margin-left: auto; color: var(--text); font-size: 14px; text-align: right; }
 .main { min-height: 0; display: flex; position: relative; }
 .boardwrap { min-height: 0; min-width: 0; display: flex; flex: 1; }
@@ -120,31 +119,23 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .hero-art { position: relative; min-height: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 .hero-art::before { content: ""; position: absolute; inset: 8% 6%; background: radial-gradient(circle, rgba(245,165,36,.42), rgba(245,165,36,0) 68%); filter: blur(24px); }
 .hero-board { position: relative; flex: 1 1 0; min-height: 0; width: 100%; max-width: 620px; filter: drop-shadow(0 18px 24px rgba(0,0,0,.55)); }
-.hero-score { position: relative; display: flex; gap: 12px; }
-.hero-score .hs { display: flex; align-items: center; gap: 8px; padding: 4px 14px; border-radius: 99px; background: var(--panel); border: 2px solid transparent; font-weight: 800; font-size: 20px; transition: border-color .2s; }
-.hero-score .hs.cur { border-color: var(--c); background: var(--panel2); }
-.hero-score .hs i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
-/* the demo game: tiles flip, rings mark who peeked/flipped, collected tiles vanish — exactly as in a real game */
 .h-cell { transform-box: fill-box; transform-origin: center; animation: hin .55s ease-out backwards; animation-delay: calc(var(--i) * 22ms); }
 @keyframes hin { 0% { transform: scale(.2) rotate(-25deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
 .h-cell .bg { fill: #2a1d14; stroke: #3d2b1d; stroke-width: 1.5; }
-.h-tile, .h-back, .h-front { transform-box: fill-box; transform-origin: center; }
-.h-tile { transition: opacity .55s ease, transform .55s ease; }
-.h-cell.gone .h-tile { opacity: 0; transform: scale(.25); }
-.h-back { transition: transform .22s ease-in; }
-.h-front { transform: scaleX(0); transition: transform .22s ease-out; }
-.h-cell.up .h-back { transform: scaleX(0); }
-.h-cell.up .h-front { transform: scaleX(1); transition-delay: .22s; }
-.h-cell.lift .h-tile { animation: lift .6s ease-in-out; }
 .h-back .face { fill: var(--umber); stroke: var(--umber-d); stroke-width: 2.5; }
 .h-back .spiral { fill: none; stroke: #6d4a30; stroke-width: 2; }
 .h-front .face { fill: var(--bone); stroke: #c9ae6a; stroke-width: 2.5; }
 .h-front .num { fill: var(--ink); font-weight: 800; font-size: 25px; text-anchor: middle; dominant-baseline: central; }
 .h-front .gem { font-size: 24px; text-anchor: middle; dominant-baseline: central; }
-.h-ring { fill: none; stroke-width: 4.5; opacity: 0; pointer-events: none; transition: opacity .15s; }
-.h-cell.ringed .h-ring { opacity: 1; }
-.h-cell.dash .h-ring { stroke-dasharray: 9 6; }
-.h-cell.gone .h-ring { opacity: 0; }
+.h-back, .h-front { transform-box: fill-box; transform-origin: center; }
+.h-front { transform: scaleX(0); }
+.h-flipper { animation: hback 7s ease-in-out infinite; animation-delay: var(--d); }
+.h-front { animation: hfront 7s ease-in-out infinite; animation-delay: var(--d); }
+@keyframes hback { 0%, 52% { transform: scaleX(1); } 56%, 78% { transform: scaleX(0); } 82%, 100% { transform: scaleX(1); } }
+@keyframes hfront { 0%, 52% { transform: scaleX(0); } 56%, 78% { transform: scaleX(1); } 82%, 100% { transform: scaleX(0); } }
+.h-peek { animation: hpulse 2.4s ease-in-out infinite; }
+@keyframes hpulse { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .h-cell, .h-flipper, .h-front, .h-peek { animation: none; } }
 .hero-menu { position: relative; display: flex; flex-direction: column; align-items: stretch; min-height: 0; }
 .logo { margin: 0 0 6px; font-size: clamp(40px, min(11vw, 10.5vh), 96px); line-height: .9; font-weight: 900; letter-spacing: -2px; text-align: left;
   background: linear-gradient(180deg, #ffe3a0 10%, #f5a524 55%, #c8650f 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 0 rgba(0,0,0,.4)); animation: logoin .7s ease-out .2s backwards; }
@@ -161,7 +152,7 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .mode .pips { display: flex; gap: 6px; margin-top: 4px; }
 .mode .pips i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(43,27,16,.55); }
 .mode .pips i.on { background: #2b1b10; border-color: #2b1b10; }
-@media (max-height: 520px) { .hero-menu .sub, .hero-menu .mode span:not(.pips) { display: none; } .hero-menu .ver { display: none; } .hero-score { display: none; } }
+@media (max-height: 520px) { .hero-menu .sub, .hero-menu .mode span:not(.pips) { display: none; } .hero-menu .ver { display: none; } }
 @media (prefers-reduced-motion: reduce) { .h-cell, .logo { animation: none; } .h-tile, .h-back, .h-front { transition: none; } }
 
 .screen { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 22px 18px 30px; background: radial-gradient(ellipse at 50% 0%, #3a2616, var(--bg) 70%); }
@@ -335,9 +326,6 @@ const GAME_DATA = {
   // long (each move stays on screen that many ms before the next appears). A tap on the board skips ahead.
   pace: { peek: 650, flip: 600, bank: 0 },
 
-  // The home screen plays a whole demo game by itself (two opponents, over and over). Milliseconds between moves, and
-  // how long the empty board waits before the next game starts.
-  homeDemo: { peek: 700, flip: 1000, bank: 800, endTurn: 150, restart: 4000 },
 };
 </script>
 
@@ -1488,13 +1476,12 @@ const Campaign = (() => {
       <div class="bk-pts">+${b.total}</div><div class="bk-sub">${b.base}${what}</div><div class="bk-score">Score now ${st.players[b.player].points}</div><div class="bk-tap">Tap anywhere to go on</div></button>`;
   }
 
-  const swatches = '<span><i style="background:var(--umber)"></i>concealed</span><span><i style="background:var(--bone)"></i>public</span>';
 
   function gameHTML() {
     const st = ui.st;
     return `<div class="game">
       <div class="bar"><div class="chips">${chipsHTML()}</div><div class="sys"><button class="q" data-act="menu" aria-label="Menu">☰</button></div></div>
-      <div class="legend">${ui.lastEvent && !ui.turnCard ? `<span class="event">${esc(ui.lastEvent)}</span>` : swatches}<span class="hint">${esc(hintsVisible() ? hint() : '')}</span></div>
+      <div class="legend">${ui.lastEvent && !ui.turnCard ? `<span class="event">${esc(ui.lastEvent)}</span>` : ''}<span class="hint">${esc(hintsVisible() ? hint() : '')}</span></div>
       <div class="main"><div class="boardwrap">${boardSVG()}</div>${bankBannerHTML()}${endButtonHTML()}${ui.turnCard && !st.over ? turnCardHTML() : ''}</div>
     </div>${st.over && !animating() ? overHTML() : ''}${ui.menu ? menuHTML() : ''}`;
   }
@@ -1510,133 +1497,42 @@ const Campaign = (() => {
   function menuHTML() {
     const m = ui.menu, sure = (q, yes, act) => `<p class="mq">${q}</p><button class="danger" data-act="${act}">${yes}</button><button data-act="menu-close">No, keep playing</button>`;
     const body = m === 'retry' ? sure('Start this game over with a fresh deal? The current game will be lost.', 'Yes, start over', 'retry')
-      : m === 'quit' ? sure('Leave this game and go back to the start? The current game will be lost.', 'Yes, leave', 'quit')
-      : `<button data-act="help">How to play</button><button data-act="settings">Settings</button><button data-act="menu-ask" data-v="retry">Retry</button><button data-act="menu-ask" data-v="quit">Back to the start</button><button data-act="menu-close">Resume</button>`;
+      : m === 'quit' ? sure('Leave this game and go to the Main Menu? The current game will be lost.', 'Yes, leave', 'quit')
+      : `<button data-act="menu-ask" data-v="retry">Retry</button><button data-act="help">How to play</button><button data-act="settings">Settings</button><button data-act="menu-ask" data-v="quit">Main Menu</button>`;
     return `<div class="backdrop" data-act="menu-close"></div><div class="menu" role="menu">${body}</div>`;
   }
 
   const libraryLink = () => (D.library && /^https?:$/.test(location.protocol) ? `<a class="back" href="${esc(D.library.href)}">‹ ${esc(D.library.name)}</a>` : '');
   const footer = () => `${ui.notice ? `<p class="dim" style="margin-top:14px">${esc(ui.notice)}</p>` : ''}<p class="dim" style="margin-top:18px">Version ${esc(BUILD)}</p>`;
 
-  // ---------------- the home screen's demo game ----------------
-  // Two opponents (blue and red) play a whole real game on the real board, over and over. Each turn flips two tiles face up in the
-  // player's colour and leaves them there; when the other colour flips its first tile, a miss turns face down and a match vanishes.
-  // When every fossil is gone the empty board waits, then a fresh game starts.
-  // Decoration only; it never touches the game you play.
-  let demo = null;
-  const stopDemo = () => { if (demo && demo.timer) clearTimeout(demo.timer); demo = null; };
-
-  function demoNew() {
-    const seed = Math.floor(Math.random() * 2147483647);
-    const st = Engine.createGame({ players: 2, seed });
-    const spec = Campaign.botSpec(LV[Math.min(2, LV.length - 1)]);
-    return { st, bots: Bots.attach(st, [spec, spec], seed), seed, timer: null, moves: 0, el: null, cells: [], pts: [] };
-  }
-
-  function demoSVG(st) {
-    const S = 34, W = Math.sqrt(3) * S;
+  // The home screen's picture: the real board, tiles flipping over by themselves to show numbers and gems. Decoration only.
+  function heroSVG() {
+    const S = 34, W = Math.sqrt(3) * S, cells = Engine.buildBoard(D);
     const pos = c => ({ x: W * (c.q + c.r / 2), y: 1.5 * S * c.r });
+    const vals = [];
+    D.tokens.forEach(t => { for (let i = 0; i < t.count; i++) vals.push({ v: t.value, gem: !!t.gem }); });
+    for (let i = vals.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [vals[i], vals[j]] = [vals[j], vals[i]]; }
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
-    st.cells.forEach(c => { const q = pos(c); x0 = Math.min(x0, q.x - W / 2); x1 = Math.max(x1, q.x + W / 2); y0 = Math.min(y0, q.y - S); y1 = Math.max(y1, q.y + S); });
-    const out = st.cells.map((c, k) => {
-      const { x, y } = pos(c);
-      return `<g class="h-cell" data-c="${c.id}" style="--i:${k}"><polygon class="bg" points="${hexPts(x, y, S)}"/>
-        <g class="h-tile"><g class="h-back"><polygon class="face" points="${hexPts(x, y, S * 0.8)}"/><circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.3}"/><circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.13}"/></g>
-        <g class="h-front"><polygon class="face" points="${hexPts(x, y, S * 0.8)}"/><text class="num" x="${x}" y="${y + 1}"></text></g></g>
-        <polygon class="h-ring" points="${hexPts(x, y, S * 0.9)}"/></g>`;
-    }).join('');
+    cells.forEach(c => { const q = pos(c); x0 = Math.min(x0, q.x - W / 2); x1 = Math.max(x1, q.x + W / 2); y0 = Math.min(y0, q.y - S); y1 = Math.max(y1, q.y + S); });
+    const flippers = new Map([[3, 0], [8, 1.9], [12, 3.7], [15, 0.9], [19, 5.1], [23, 2.8], [27, 4.4]]);   // which tiles flip, and when (seconds into the loop)
+    let out = '';
+    cells.forEach((c, k) => {
+      const { x, y } = pos(c), v = vals[k], fl = flippers.has(k);
+      out += `<g class="h-cell" style="--i:${k}"><polygon class="bg" points="${hexPts(x, y, S)}"/>
+        <g class="h-back${fl ? ' h-flipper' : ''}"${fl ? ` style="--d:-${flippers.get(k)}s"` : ''}><polygon class="face" points="${hexPts(x, y, S * 0.8)}"/><circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.3}"/><circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.13}"/></g>`;
+      if (fl) out += `<g class="h-front" style="--d:-${flippers.get(k)}s"><polygon class="face up" points="${hexPts(x, y, S * 0.8)}"/>${v.gem ? `<text class="gem" x="${x}" y="${y + 1}">💎</text>` : `<text class="num" x="${x}" y="${y + 1}">${v.v}</text>`}<polygon class="ring" style="stroke:#f5a524" points="${hexPts(x, y, S * 0.9)}"/></g>`;
+      if (k === 21) out += `<polygon class="ring peekring h-peek" style="stroke:#ff5a5f" points="${hexPts(x, y, S * 0.9)}"/>`;
+      out += '</g>';
+    });
     const pad = 6;
     return `<svg class="hero-board" viewBox="${(x0 - pad).toFixed(1)} ${(y0 - pad).toFixed(1)} ${(x1 - x0 + 2 * pad).toFixed(1)} ${(y1 - y0 + 2 * pad).toFixed(1)}" aria-hidden="true">${out}</svg>`;
   }
 
-  // Wire a fresh demo game to the SVG now on the page.
-  function demoBind(d) {
-    const art = document.querySelector('.hero-art');
-    if (!art) return false;
-    d.el = art;
-    d.prev = null; d.cells = []; art.querySelectorAll('.h-cell').forEach(el => { d.cells[+el.dataset.c] = el; });
-    d.pts = [...art.querySelectorAll('.hs b')];
-    return true;
-  }
-  const demoScores = d => { d.pts.forEach((b, i) => { b.textContent = d.st.players[i].points; }); d.el.querySelectorAll('.hs').forEach((el, i) => el.classList.toggle('cur', i === d.st.current && !d.st.over)); };
-  const demoCell = (d, tid) => d.cells[d.st.tokens[tid].cell];
-  function demoShow(d, tid, solid) {
-    const el = demoCell(d, tid), t = d.st.tokens[tid], seat = d.st.current;
-    const txt = el.querySelector('.h-front text');
-    txt.textContent = t.gem ? '💎' : t.value; txt.setAttribute('class', t.gem ? 'gem' : 'num');
-    el.querySelector('.h-ring').style.stroke = COLORS[seat];
-    el.classList.add('ringed'); el.classList.toggle('dash', !solid); el.classList.toggle('up', solid);
-  }
-
-  // The tiles a turn left face up stay up until the next player's first move: a miss then flips face down, a match vanishes.
-  function demoClearPrev(d) {
-    if (!d.prev) return;
-    d.prev.up.forEach(c => { const el = d.cells[c]; el.classList.remove('ringed', 'dash', 'lift', 'up'); if (d.prev.matched.has(c)) el.classList.add('gone'); });
-    d.prev = null;
-  }
-
-  // One move of the demo; returns how long to wait before the next one.
-  function demoStep(d) {
-    const st = d.st, P = D.homeDemo;
-    if (st.over) {                                    // everything collected: the last set vanishes, then the empty board waits
-      d.cells.forEach(el => { el.classList.add('gone'); el.classList.remove('ringed', 'up'); });
-      d.prev = null;
-      demoScores(d);
-      return P.restart;
-    }
-    const bot = d.bots[st.current], a = bot.decide(Engine.publicView(st, st.current));
-    d.moves++;
-    if (!a || a.type === 'endTurn' || d.moves > 4000) {            // the turn is over: its tiles stay up for the next player's first move to clear
-      const up = new Set((st.turn.revealed || []).map(t => st.tokens[t].cell));
-      if (st.turn.T !== null && st.turn.T !== undefined && (st.turn.matched || []).includes(st.turn.T)) up.add(st.tokens[st.turn.T].cell);
-      d.prev = { up, matched: new Set((st.turn.matched || []).map(t => st.tokens[t].cell)) };
-      Engine.endTurn(st);
-      demoScores(d);
-      return P.endTurn;
-    }
-    demoClearPrev(d);                                              // this is the first move of a new turn: what the last player left comes down
-    Engine.apply(st, a);
-    // Both tiles of a turn show face up in the player's colour (the first one is the peek, the second the flip).
-    if (a.type === 'peek') { const el = demoCell(d, a.tid); demoShow(d, a.tid, true); el.classList.remove('lift'); void el.getBoundingClientRect(); el.classList.add('lift'); return P.peek; }
-    if (a.type === 'flipOther' || a.type === 'flipSecond') { demoShow(d, a.tid, true); return P.flip; }
-    if (a.type === 'flipOwn') { demoShow(d, st.turn.T, true); return P.flip; }
-    if (a.type === 'bank') { demoScores(d); return P.bank; }
-    return P.flip;
-  }
-
-  function demoRun(d) {
-    if (demo !== d) return;
-    if (!d.el.isConnected) { stopDemo(); return; }
-    let wait;
-    try { wait = demoStep(d); } catch (e) { wait = 0; }
-    if (d.st.over && d.cells.every(el => el.classList.contains('gone')) && wait === D.homeDemo.restart) {
-      d.timer = setTimeout(() => {
-        const n = demoNew(); n.timer = null; demo = n;
-        d.el.querySelector('.hero-board').outerHTML = demoSVG(n.st);
-        demoBind(n); demoScores(n);
-        n.timer = setTimeout(() => demoRun(n), 900);
-      }, wait);
-      return;
-    }
-    d.timer = setTimeout(() => demoRun(d), wait);
-  }
-
-  function startDemo() {
-    stopDemo();
-    if (ui.screen !== 'home' || reducedMotion()) return;
-    const d = demoNew();
-    if (!demoBind(d)) return;
-    demo = d; demoScores(d);
-    d.timer = setTimeout(() => demoRun(d), 1400);
-  }
-
   function homeHTML() {
-    stopDemo();
     const beaten = LV.filter((l, i) => Campaign.isBeaten(i, ui.beaten)).length;
     const pips = LV.map((l, i) => `<i class="${Campaign.isBeaten(i, ui.beaten) ? 'on' : ''}"></i>`).join('');
-    const st0 = Engine.createGame({ players: 2, seed: 1 });          // only for the board's shape; the demo game itself starts once the page is drawn
     return `<div class="screen home"><div class="sheet hero">
-      <div class="hero-art">${demoSVG(st0)}<div class="hero-score">${[0, 1].map(i => `<div class="hs" style="--c:${COLORS[i]}"><i></i><b>0</b></div>`).join('')}</div></div>
+      <div class="hero-art">${heroSVG()}</div>
       <div class="hero-menu">
         ${libraryLink()}
         <h1 class="logo">Fossil<br>Frenzy</h1>
@@ -1768,11 +1664,10 @@ const Campaign = (() => {
     if (ui.st && ui.st.over && !ui.countedOver) gameFinished();     // count the game (and record a campaign result) before drawing the end screen
     const html = { home: homeHTML, pass: passHTML, campaign: campaignHTML, play: gameHTML }[ui.screen]();
     root.innerHTML = html + (ui.help ? helpHTML() : '') + (ui.settings ? settingsHTML() : '');
-    if (ui.screen === 'home') startDemo(); else stopDemo();
     saveGame();
   }
 
-  window.FossilFrenzyUI = { ui, render, onClick, demo: () => demo, demoStep };    // (the last two are for the tests)
+  window.FossilFrenzyUI = { ui, render, onClick };
   resumeGame();
   render();
 })();
