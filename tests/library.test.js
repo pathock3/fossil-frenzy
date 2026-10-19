@@ -76,17 +76,16 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     assert.equal(await page.evaluate(() => getComputedStyle(document.body).overscrollBehaviorY), 'none', 'no pull-to-refresh on the shelf');
     assert.equal(await page.locator('a.box').count(), 1, 'only listed games with an address are on the shelf');
     assert.match(await page.locator('a.box').getAttribute('aria-label'), /Fossil Frenzy/);
-    // a box is a picture first: cover art (an SVG) and a small info band, not a paragraph of text
+    // a box is a picture first: cover art (an SVG) only, not a paragraph of text
     assert.equal(await page.locator('a.box .art svg').count(), 1, 'cover art');
     assert.match(await page.locator('a.box .art svg').getAttribute('aria-label'), /Fossil Frenzy/);
     const box = await page.locator('a.box').boundingBox();
-    assert.ok(box.width >= 240 && box.height >= box.width, 'a box is a big, upright rectangle: ' + JSON.stringify(box));
+    assert.ok(box.width >= 240 && box.height >= box.width * 1.2, 'a box is a big, upright rectangle: ' + JSON.stringify(box));
     assert.equal(await page.locator('a.box p').count(), 0, 'no paragraph of text on the box');
-    assert.ok((await page.locator('a.box .strip').innerText()).trim().length < 40, 'only a small info band');
-    assert.ok(await page.locator('.strip .pill').evaluateAll(els => els.every(e => parseFloat(getComputedStyle(e).fontSize) >= 14)), 'the info band is legible');
-    assert.equal((await page.locator('.strip').innerText()).trim(), '1–4 players', 'just the players: no play time, no Played tag');
+    assert.equal(await page.locator('a.box .strip, a.box .pill, a.box .played').count(), 0, 'nothing but the cover art: no players, no time, no Played tag');
+    assert.match(await page.locator('a.box').getAttribute('aria-label'), /1–4 players/, 'the player count is still there for screen readers');
     // the tagline in the ribbon fits inside its oval
-    const fit = await page.evaluate(() => { const svg = document.querySelector('a.box .art svg'), t = [...svg.querySelectorAll('text')].find(x => /PEEK/.test(x.textContent)), r = [...svg.querySelectorAll('rect')].find(x => x.getAttribute('rx') === '12'); const tb = t.getBBox(), rb = r.getBBox(); return { tx: tb.x, tr: tb.x + tb.width, rx: rb.x, rr: rb.x + rb.width }; });
+    const fit = await page.evaluate(() => { const svg = document.querySelector('a.box .art svg'), t = [...svg.querySelectorAll('text')].find(x => /PEEK/.test(x.textContent)), r = [...svg.querySelectorAll('rect')].find(x => x.getAttribute('rx') === '13'); const tb = t.getBBox(), rb = r.getBBox(); return { tx: tb.x, tr: tb.x + tb.width, rx: rb.x, rr: rb.x + rb.width }; });
     assert.ok(fit.tx >= fit.rx + 10 && fit.tr <= fit.rr - 10, 'the words sit inside the oval: ' + JSON.stringify(fit));
     await page.goto(base + '/index.html?unlisted');
     assert.equal(await page.locator('a.box').count(), 1, 'an unlisted placeholder without an address still does not render a dead link');

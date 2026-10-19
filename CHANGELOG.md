@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **Library boxes are just cover art now:** the player count is gone from the box (it stays as the box's spoken label for screen readers), and the art is a little taller, with a slightly bigger board, title and tagline ribbon to use the room.
 - **Library boxes:** no play time and no "Played" tag on the box (just the player count); the tagline on Fossil Frenzy's cover now fits inside its oval; the shelf no longer pull-to-refreshes or rubber-bands.
 - **How to play is now mostly pictures:** four little illustrated cards (Peek, Flip, Match, Bank) with a line each, two one-line reminders (gems, winning), a button to the Fossils panel, and the fine print (judgment calls) folded under "The fine print". Under 110 words on the first screen, and it fits without scrolling on an iPad.
 - **Housekeeping (no change to play):** removed dead code (an always-true peek flag, an unused footer, an unused style, the archived two-rule-set report) and a 30-second wasted wait in the sound test.
