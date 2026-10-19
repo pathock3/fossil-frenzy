@@ -81,7 +81,6 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .tile .gem { font-size: 21px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 .tile .gemnum { fill: var(--ink); font-weight: 800; font-size: 14px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }   /* what a gem is worth, under the gem */
 .ring { fill: none; stroke-width: 4.5; pointer-events: none; }
-.ring.peekring { stroke-dasharray: 9 6; }
 .flipin { animation: flip .32s ease-out; transform-box: fill-box; transform-origin: center; }
 /* an opponent peeks: the fossil lifts and tilts as if a corner were being peeked under; the number stays hidden */
 .tile.lift { animation: lift .6s ease-in-out; transform-box: fill-box; transform-origin: center; }
@@ -510,7 +509,8 @@ const Engine = (() => {
   }
 
   // ---------------- banking ----------------
-  const canBank = s => (s.phase === 'action' || s.phase === 'peeked') && cur(s).sets.length > 0;
+  // A turn is a peek AND a flip (once you have peeked you must flip another fossil), or a bank instead — never a peek and then a bank.
+  const canBank = s => s.phase === 'action' && cur(s).sets.length > 0;
 
   // Bank ONE held set (the player's choice). It scores the number on its fossil, once: no bonus roll.
   function bank(s, setIndex = 0) {
@@ -596,7 +596,7 @@ const Engine = (() => {
       canBank: canBank(s),
       canFlipOwn: canFlipOwn(s),
       canFlipSecond: canFlipSecond(s),
-      canEnd: !s.over,
+      canEnd: !s.over && (s.phase === 'flipped' || s.phase === 'gemThird' || s.phase === 'resolved'),    // only once you have flipped (or banked)
     };
   }
 
@@ -1392,7 +1392,7 @@ const Campaign = (() => {
     if (st.over || ui.botWaiting || isBot(st.current)) { render(); return; }
     ui.lastEvent = '';
     const tid = st.tokenAt[id];
-    if (st.turn.T !== null && st.turn.T !== undefined && tid === st.turn.T && st.phase !== 'action') return;   // the fossil I peeked at: tapping it does nothing (no hiding, no animation)
+    if (st.phase === 'peeked' && tid === st.turn.T) return;                            // the fossil I peeked at: tapping it does nothing (no hiding, no animation) — I must flip another
     const phase0 = st.phase, pop0 = st.matchedCount;
     try {
       if (st.phase === 'action') {
@@ -1405,13 +1405,14 @@ const Campaign = (() => {
         }
       } else if (st.phase === 'flipped') {
         const T = st.tokens[st.turn.T], F = st.tokens[st.turn.F];
-        if (tid >= 0 && tid !== st.turn.F && T.gem && F.gem) {                 // two gems: tapping a third IS the consent to reveal mine
+        if (tid >= 0 && tid !== st.turn.T && tid !== st.turn.F && T.gem && F.gem) {   // two gems: tapping a third IS the consent to reveal mine
           Engine.flipOwn(st);
           if (Engine.canFlipSecond(st)) Engine.flipSecond(st, tid);
-        }
+        } else { endTurn(); render(); return; }                                // anything else, once I have flipped: tap anywhere ends the turn
       } else if (st.phase === 'gemThird') {
         if (tid >= 0 && tid !== st.turn.T && tid !== st.turn.F) Engine.flipSecond(st, tid);
-      }
+        else { endTurn(); render(); return; }
+      } else if (st.phase === 'resolved') { endTurn(); render(); return; }
     } catch (e) { console.warn(e.message); }
     if (phase0 === 'action' && st.phase === 'peeked') sfx('peek');
     else if (st.phase !== phase0 && phase0 !== 'action') {                        // a public flip happened
@@ -1436,11 +1437,18 @@ const Campaign = (() => {
   }
 
   // While the opponent's bank banner is up, a tap anywhere (not just on the banner) sends it away and starts my turn.
+  // Has my turn got to the point where a tap anywhere ends it? (after the flip — or a pair/bank — never before)
+  const tapEndsTurn = () => ui.screen === 'play' && !!ui.st && !ui.st.over && !ui.turnCard && !ui.botWaiting && !animating() && !isBot(ui.st.current) && Engine.status(ui.st).canEnd;
   const bankBannerUp = () => ui.screen === 'play' && !!ui.st && ui.botWaiting && !animating() && !ui.turnCard && !ui.st.over && !!ui.st.turn.banked && !!ui.st.lastBank;
   function onClick(e) {
     audio.unlock();                                    // sound can only start from inside a tap; this wakes it
     const el = e.target.closest('[data-act]');
-    if (!el) { if (bankBannerUp() && !ui.menu && !ui.help && !ui.fossils) { takeOverFromOpponent(); render(); } return; }
+    if (!el) {
+      if (ui.menu || ui.help || ui.fossils || ui.settings) return;
+      if (bankBannerUp()) { takeOverFromOpponent(); render(); }
+      else if (tapEndsTurn()) { endTurn(); render(); }                          // once I have flipped, a tap anywhere ends my turn
+      return;
+    }
     const d = el.dataset, st = ui.st;
     switch (d.act) {
       case 'mode': ui.screen = d.v; ui.mode = d.v === 'campaign' ? 'campaign' : 'pass'; break;
@@ -1491,6 +1499,9 @@ const Campaign = (() => {
 
   // ---------------- rendering ----------------
   const hexPts = (cx, cy, r) => Array.from({ length: 6 }, (_, i) => { const a = (Math.PI / 180) * (60 * i - 30); return (cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1); }).join(' ');
+  // The dashed ring for a peeked space: a hexagon's side is as long as its radius, so each side gets three equal dashes with the
+  // gaps centred on the corners — even, and nothing piles up at a corner.
+  const dashStyle = r => { const p = r / 3, dash = p * 0.6, gap = p - dash; return `stroke-dasharray:${dash.toFixed(2)} ${gap.toFixed(2)};stroke-dashoffset:${(dash + gap / 2).toFixed(2)}`; };
   const setLabel = s => (s.gem ? `💎<small class="gw">${s.value}</small>` : s.value);      // a gem always carries what it is worth
 
   function boardSVG() {
@@ -1531,7 +1542,7 @@ const Campaign = (() => {
         else g += `<circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.3}"/><circle class="spiral" cx="${x}" cy="${y}" r="${S * 0.13}"/>`;
         g += '</g>';
         if (up) g += `<polygon class="ring" style="stroke:${color}" points="${hexPts(x, y, S * 0.9)}"/>`;
-        else if (tid === peekTid) g += `<polygon class="ring peekring${lifting ? ' pulse' : ''}" style="stroke:${color}" points="${hexPts(x, y, S * 0.9)}"/>` + (lifting ? `<text class="eye" x="${x}" y="${y - S * 0.95}">👁</text>` : '');   // peeked: dashed, number hidden
+        else if (tid === peekTid) g += `<polygon class="ring peekring${lifting ? ' pulse' : ''}" style="stroke:${color};${dashStyle(S * 0.9)}" points="${hexPts(x, y, S * 0.9)}"/>` + (lifting ? `<text class="eye" x="${x}" y="${y - S * 0.95}">👁</text>` : '');   // peeked: dashed, number hidden
       }
       out += g + '</g>';
     }
@@ -1586,10 +1597,10 @@ const Campaign = (() => {
     const s = Engine.status(st);
     switch (st.phase) {
       case 'action': return s.canBank ? 'Tap a fossil to peek — or tap one of your sets at the top to bank it (that ends your turn).' : 'Tap a fossil to peek.';
-      case 'peeked': return 'Tap another fossil to flip it — or tap a set to bank it instead.';
-      case 'flipped': return st.tokens[st.turn.F].gem ? 'A gem! If yours is one too, tap a third fossil to go for the set — or end your turn.' : 'No match — end your turn to flip them back.';
+      case 'peeked': return 'Tap another fossil to flip it.';
+      case 'flipped': return st.tokens[st.turn.F].gem ? 'A gem! If yours is one too, tap a third fossil to go for the set — or tap anywhere else to end your turn.' : 'No match — tap anywhere to end your turn.';
       case 'gemThird': return 'Flip a third fossil.';
-      case 'resolved': return st.turn.matched ? 'Match! Your set is at the top.' : 'End your turn to flip them back.';
+      case 'resolved': return st.turn.matched ? 'Match! Your set is at the top. Tap anywhere to end your turn.' : 'Tap anywhere to end your turn.';
       default: return '';
     }
   }
@@ -1597,7 +1608,7 @@ const Campaign = (() => {
   // The one button on the table: end my turn (so I can flip the fossils back). Only while it is my turn.
   function endButtonHTML() {
     const st = ui.st;
-    if (st.over || ui.turnCard || ui.botWaiting || animating() || isBot(st.current)) return '';
+    if (st.over || ui.turnCard || ui.botWaiting || animating() || isBot(st.current) || !Engine.status(st).canEnd) return '';
     return `<button class="end${['flipped', 'resolved'].includes(st.phase) ? ' go' : ''}" data-act="end">End turn</button>`;
   }
 

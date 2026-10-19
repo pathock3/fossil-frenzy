@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- **A turn is a peek and a flip.** Once you peek you must flip another fossil: there is no End turn (and no banking) after a peek, and no End turn at the start of a turn. After you flip, **a tap anywhere ends your turn** (the End turn button stays as a cue). Opponents follow the same rule.
+- **The dashed ring on a peeked space is neat now:** three equal dashes per side, with the gaps on the corners, so nothing piles up.
 - **Gems show what they are worth** (12): under the gem on its fossil, under it on the set you hold (the thing you tap to bank) and on the end screen — the same number that banking scores. **☰ menu button is bigger.** In Settings, **Sound effects** now come before Prompts.
 - **Fossils panel:** ☰ menu → **Fossils** shows how many of each number (and gems) are in the game you are playing, read from that game's own data so it follows the level. It deliberately does not show what is left — remembering that is the game. How to play points to it.
 - **Layout:** the ☰ menu button moved to the board's bottom-left corner (End turn stays bottom-right), so the two score boxes at the top now span the whole width. The menu opens above the button.

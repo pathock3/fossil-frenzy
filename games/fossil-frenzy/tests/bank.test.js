@@ -55,8 +55,23 @@ test('bank: rejects a set that is not there', () => {
   assert.throws(() => Engine.bank(s, 3), /no such set/);
 });
 
-test('bank: takes the whole turn — and works right after a peek (the peeked fossil stays secret)', () => {
+test('bank: takes the whole turn — and is not available after a peek (a peek must be followed by a flip)', () => {
   const s = game({ rolls: [6, 5, 1] });
+  me(s).sets = held(2);
+  Engine.bank(s, 0);
+  assert.equal(s.phase, 'resolved');
+  assert.throws(() => Engine.peek(s, 0));
+  const t = game({ rolls: [6, 5, 1] });
+  me(t).sets = held(2);
+  Engine.peek(t, 0);
+  assert.equal(Engine.canBank(t), false, 'after a peek you must flip');
+  assert.throws(() => Engine.bank(t, 0), /cannot bank/);
+  assert.equal(Engine.status(t).canEnd, false, 'and you cannot end the turn after only a peek');
+  const u = game({ rolls: [6, 5, 1] });
+  assert.equal(Engine.status(u).canEnd, false, 'nor before doing anything');
+  Engine.peek(u, 0); Engine.flipOther(u, 1);
+  assert.equal(Engine.status(u).canEnd, true, 'but yes once you have flipped');
+});
   me(s).sets = held(2);
   Engine.peek(s, 0);
   assert.equal(Engine.canBank(s), true);

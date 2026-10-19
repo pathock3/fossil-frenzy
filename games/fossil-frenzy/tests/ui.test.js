@@ -54,7 +54,8 @@ const otherFree = page => page.evaluate(() => { const st = window.FossilFrenzyUI
 const openSettings = async page => { if (await page.locator('[data-act=menu]').count()) await page.tap('[data-act=menu]'); await page.tap('[data-act=settings]'); };
 const openRules = async page => { if (await page.locator('[data-act=menu]').count()) await page.tap('[data-act=menu]'); await page.tap('[data-act=help]'); };
 const quitToStart = async page => { await page.tap('[data-act=menu]'); await page.tap('[data-act=menu-ask][data-v=quit]'); await page.tap('[data-act=quit]'); };
-const takeATurn = async page => { if (await page.locator('.bankcard').count()) await page.tap('.bankcard'); await page.tap(await firstFree(page)); await page.tap(await otherFree(page)); await page.tap('[data-act=end]'); };
+const idle = page => page.waitForFunction(() => { const u = window.FossilFrenzyUI.ui; return !u.steps || u.stage >= u.steps.length; });   // an opponent's turn has finished being shown
+const takeATurn = async page => { await idle(page); if (await page.locator('.bankcard').count()) await page.tap('.bankcard'); await page.tap(await firstFree(page)); await page.tap(await otherFree(page)); await page.tap('[data-act=end]'); };
 
 // Make specific fossils particular values by swapping with another fossil that has it (keeps the set intact).
 const rig = (page, wanted) => page.evaluate(w => {
@@ -347,14 +348,13 @@ test('peek then flip: a gem sequence — peek a gem, flip a gem, tap a third —
   } finally { await browser.close(); }
 });
 
-test('gems: a third tap that misses flips my gem and the third, then the turn is over to end; tapping my own peeked gem alone reveals nothing', SKIP, async () => {
+test('gems: a third tap that misses flips my gem and the third, then the turn is over to end', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     await passAndPlay(page, 2);
     await rig(page, { 0: 12, 1: 12, 2: 7 });
     await page.tap(await cellOf(page, 0)); await page.tap(await cellOf(page, 1));
-    await page.tap(await cellOf(page, 0));                                 // my own peeked gem: only hides/shows my private look
-    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.turn.revealed.length), 1, 'still only the flipped gem is public');
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.turn.revealed.length), 1, 'only the flipped gem is public so far');
     await page.tap(await cellOf(page, 2));                                 // a third that is not a gem
     const r = await page.evaluate(() => { const st = window.FossilFrenzyUI.ui.st; return [st.phase, st.turn.revealed.length, st.players[st.current].sets.length]; });
     assert.deepEqual(r, ['resolved', 3, 0]);
@@ -362,15 +362,38 @@ test('gems: a third tap that misses flips my gem and the third, then the turn is
   } finally { await browser.close(); }
 });
 
-test('gems: if the flipped fossil is not a gem, tapping a third does nothing', SKIP, async () => {
+test('gems: if the flipped fossil is not a gem, tapping another fossil just ends the turn (nothing more is flipped)', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     await passAndPlay(page, 2);
     await rig(page, { 0: 12, 1: 5, 2: 12 });
     await page.tap(await cellOf(page, 0)); await page.tap(await cellOf(page, 1));
     await page.tap(await cellOf(page, 2));
-    const r = await page.evaluate(() => { const st = window.FossilFrenzyUI.ui.st; return [st.phase, st.turn.revealed.length]; });
-    assert.deepEqual(r, ['flipped', 1]);
+    const r = await page.evaluate(() => { const st = window.FossilFrenzyUI.ui.st; return [st.current, st.turnNo, st.tokens.filter(t => t.matched).length]; });
+    assert.deepEqual(r, [1, 1, 0], 'the turn passed to the other player; the third fossil was not flipped');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('a turn is a peek AND a flip: no End turn (and no bank) until you have flipped — then End turn, or a tap anywhere, ends it', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await passAndPlay(page, 2);
+    await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI; ui.st.players[ui.st.current].sets = [{ value: 7, gem: false, size: 2, ids: [] }]; render(); });
+    assert.equal(await page.locator('[data-act=end]').count(), 0, 'no End turn at the start of a turn');
+    await page.tap('body', { position: { x: 5, y: 400 } });                // a tap in empty space does nothing yet
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.turnNo), 0);
+    await page.tap(await firstFree(page));                                  // peek
+    assert.equal(await page.locator('[data-act=end]').count(), 0, 'no End turn after the peek: I must flip');
+    assert.equal(await page.locator('.setbtn.act').count(), 0, 'and my sets cannot be banked after a peek');
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.phase), 'peeked');
+    await page.tap('body', { position: { x: 5, y: 400 } });
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.turnNo), 0, 'a tap in empty space still does nothing');
+    await page.tap(await otherFree(page));                                  // flip
+    assert.equal(await page.locator('[data-act=end]').count(), 1, 'now End turn appears');
+    assert.match(await page.locator('.hint').innerText(), /tap anywhere/i);
+    await page.tap('body', { position: { x: 5, y: 400 } });                // a tap anywhere ends it
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.turnNo), 1);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
