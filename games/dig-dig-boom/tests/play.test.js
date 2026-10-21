@@ -49,9 +49,8 @@ async function script(page, { mine = [], dice = [], start = {}, line = [], ongoi
 }
 // Keep the first n offered cards that are not a Mystery Box (which would keep one more and make card counts depend on luck).
 async function keepNonMystery(page, n) {
-  const idx = await page.evaluate(() => { const o = window.DigDigBoomPlay.S.run.prep.offer; return o.map((c, i) => [i, /When kept/.test(c.text)]).filter(([, m]) => !m).map(([i]) => i); });
-  const take = idx.slice(0, n);
-  for (const i of take) await page.click(`#play [data-p=pick] >> nth=${i}`);                          // tap to choose...
+  const uids = await page.evaluate(() => window.DigDigBoomPlay.S.run.prep.offer.filter(c => !/When kept/.test(c.text)).map(c => c.uid));
+  for (const u of uids.slice(0, n)) await page.click(`#play [data-p=pick][data-uid="${u}"]`);          // tap to move each card up into a place...
   await page.click('#play [data-p=keepgo]');                                                          // ...then Keep (bottom right)
 }
 // A run from the main menu: the AI switched off unless asked (tests turn it on explicitly); round 1: open the Bronze Pack, keep a card, choose it as the Starter Kit, then the table.
@@ -402,12 +401,20 @@ test('run: round 1 opens a Bronze Pack (draw 3, keep 1), then you choose your St
     assert.ok(await page.locator('#play [data-p=keepgo]').isEnabled());
     await page.click('#play [data-p=pick] >> nth=0'); assert.equal(await page.locator('#play .pcard.sel').count(), 0, 'tapping a chosen card puts it back'); await page.click('#play [data-p=pick] >> nth=1'); assert.equal(await page.locator('#play .pcard.sel').count(), 1);
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.run.prep.step), 'keep');
-    assert.ok(await page.locator('#play [data-p=keepgo]').isEnabled());
+    assert.equal(await page.locator('#play .kslot').count(), 1, 'the pack uses the same layout as the Starter Kit: a place on top for each card you may keep');
+    await page.click('#play .kslot .pcard');                                                                // put the card back
+    const s1 = await page.locator('#play .pool [data-p=pick]').first().boundingBox(), d1 = await page.locator('#play .kslot[data-i="0"]').boundingBox();
+    await page.mouse.move(s1.x + s1.width / 2, s1.y + s1.height / 2); await page.mouse.down(); await page.mouse.move(d1.x + d1.width / 2, d1.y + d1.height / 2, { steps: 8 }); await page.mouse.up(); await page.waitForTimeout(120);
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.run.prep.picked.length), 1, 'dragging a card up into the place chooses it');
+    const s2 = await page.locator('#play .kslot .pcard').boundingBox();
+    await page.mouse.move(s2.x + s2.width / 2, s2.y + s2.height / 2); await page.mouse.down(); await page.mouse.move(60, 770, { steps: 8 }); await page.mouse.up(); await page.waitForTimeout(120);
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.run.prep.picked.length), 0, 'and dragging it off puts it back');
+    assert.ok(await page.locator('#play [data-p=keepgo]').isDisabled(), 'nothing chosen: Keep waits');
     await keepNonMystery(page, 1);
     assert.equal(await page.locator('#play [data-p=kitpick]').count(), 1, 'one card to choose from: the one you kept');
     assert.equal(await page.locator('#play [data-p=kitgem]').count(), 0, 'no gem to pick: an empty place is a gem');
     assert.match(await page.locator('#play .kitbar .count').innerText(), /^0 of 1$/, 'how many you may choose and how many you have');
-    assert.match(await page.locator('#play .keepsay').innerText(), /^These will be the first cards you draw\.$/, 'the Starter Kit is defined, not explained');
+    assert.match(await page.locator('#play .kdef').innerText(), /^These will be the first cards you draw\.$/, 'the Starter Kit is defined, not explained');
     assert.equal(await page.locator('#play .kslot.empty .kgem').count(), 1, 'an empty place shows the gem it will be filled with');
     assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('#play .kitbar .count')).fontSize), '42px', 'the Keep and Starter Kit titles use the same size');
     assert.equal(await page.locator('#play .pips2').count(), 0, 'no circles');
@@ -433,14 +440,16 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     await page.click('#play [data-p=bank]');
     assert.match(await page.locator('#play .over').innerText(), /Banked![\s\S]*4 Monsters survived · ♛/);
     await page.click('#play [data-p=prep]');
-    await page.waitForSelector('#play .bigdie'); assert.ok(await page.locator('#play .bigdie').count() === 1, 'a die to tap'); assert.match(await page.locator('#play .eq').innerText(), /1\s*\+\s*4\s*\+/, 'Geodes + Monsters + the die');
+    assert.equal(await page.locator('#play .bigboard .brow').count(), 2, 'first the Leaderboard, full screen: the Crown and you'); assert.equal(await page.locator('#play .bdisc').count(), 1, 'your marker is on it');
     await page.evaluate(() => { window.DigDigBoomPlay.S.run.dice = [8]; });
-    await page.click('#play [data-p=escape]'); await dieShows(page, '#play .eq .t.die', 8);
+    await page.click('#play [data-p=boardgo]');
+    assert.equal(await page.locator('#play .bigdie, #play [data-p=escape]').count(), 0, 'nothing to tap: the die rolls by itself');
+    await page.waitForSelector('#play .eq .t.die.pop'); await dieShows(page, '#play .eq .t.die', 8); assert.match(await page.locator('#play .eq').innerText(), /1\s*\+\s*4\s*\+/, 'Geodes + Monsters + the die');
     await page.waitForSelector('#play .pack'); await page.waitForFunction(() => /13/.test(document.querySelector('#play .eq .sum').textContent)); assert.match(await page.locator('#play .eq .sum').innerText(), /13/); assert.equal(await page.locator('#play .pack b').innerText(), 'Silver');
     assert.equal(await page.locator('#play .lb, #play .pbar h1').count(), 0, 'no Leaderboard and no title in Prep: just a Menu in the corner');
     assert.equal(await page.locator('#play .pbar [data-p=gmenu]').count(), 1);
     await page.click('#play [data-p=openpack]'); assert.equal(await page.locator('#play [data-p=pick]').count(), 4);
-    const w = await page.locator('#play [data-p=pick]').first().evaluate(e => e.offsetWidth); assert.ok(w >= 200, 'whole cards, not a reduction: ' + w);
+    const w = await page.locator('#play [data-p=pick]').first().evaluate(e => e.offsetWidth); assert.ok(w >= 150, 'whole cards, not a reduction: ' + w);
     assert.doesNotMatch(await page.locator('#play .panel').innerText(), /[Ll]ast [Dd]ig|banked after/);
     await keepNonMystery(page, 2);
     assert.equal(await page.locator('#play [data-p=kitpick]').count(), 3, 'the card from round 1 and the two you kept');
@@ -454,6 +463,11 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     assert.deepEqual(await stOf(page, () => window.DigDigBoomPlay.S.run.prep.kitPick.slice()), [order0[1], order0[0]], 'dragging one kit card onto another swaps them');
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.run.prep.step), 'kit', 'a drag is not a tap');
     await page.waitForTimeout(120);
+    const out = await page.locator('#play .kslot[data-i="0"] .pcard').boundingBox();
+    await page.mouse.move(out.x + out.width / 2, out.y + out.height / 2); await page.mouse.down(); await page.mouse.move(60, 770, { steps: 8 }); await page.mouse.up(); await page.waitForTimeout(120);
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.run.prep.kitPick.length), 1, 'dragging a card off the Kit takes it out: it goes back to your cards');
+    await page.click('#play .pool [data-p=kitpick] >> nth=0'); await page.waitForTimeout(120);
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.run.prep.kitPick.length), 2, 'and a tap puts one back');
     await page.click('#play [data-p=startround]');
     assert.match(await page.locator('#play .lbhead').innerText(), /round 2 of 2 · final/i);
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.known), 2, 'the two kit cards are on top of the Mine, face up; the third is shuffled in');
@@ -462,7 +476,7 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     await script(page, { mine: ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01'], dice: Array(30).fill(10) });
     for (let i = 0; i < 6 && !(await page.locator('#play .over').count()); i++) { await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await faceIt(page); }
     assert.match(await page.locator('#play .over').innerText(), /In the lead![\s\S]*Everyone else is out/);
-    await page.click('#play [data-p=prep]');
+    await page.click('#play [data-p=prep]'); await page.click('#play [data-p=boardgo]');
     assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown Jewel!/);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -477,17 +491,15 @@ test('run: after a bank the tally is shown one piece at a time — Treasure, the
     await script(page, { mine: ['TR-01', 'TR-01', 'MO-01', 'TR-01'], dice: [10, 10] });
     for (let i = 0; i < 4; i++) { await page.click('#play [data-p=dig]'); if (i === 2) { await page.click('#play [data-p=roll]'); await faceIt(page); } }
     await page.click('#play [data-p=bank]'); await page.click('#play [data-p=prep]');
+    await page.evaluate(() => { window.DigDigBoomPlay.S.run.dice = [6]; }); await page.click('#play [data-p=boardgo]');
     assert.equal(await page.locator('#play .gchart').count(), 1, 'the thermometer is on the side from the start');
     assert.equal(await page.locator('#play .pack').count(), 0, 'no pack yet');
-    await page.waitForFunction(() => document.querySelectorAll('#play .eq .t').length === 1);                    // Treasure first
-    assert.equal(await page.locator('#play .eq .t').count(), 1);
-    await page.waitForFunction(() => document.querySelectorAll('#play .eq .t').length === 2);                    // then Monsters
-    assert.equal(await page.locator('#play .bigdie').count(), 0, 'the die has not come yet');
-    await page.waitForSelector('#play .bigdie');                                                                 // then the die waits for you
-    assert.equal(await page.locator('#play .pack').count(), 0, 'still no pack');
+    await page.waitForFunction(() => document.querySelectorAll('#play .eq .t.pop').length === 1);                    // Treasure first
+    assert.equal(await page.locator('#play .eq .t.pop').count(), 1);
+    await page.waitForFunction(() => document.querySelectorAll('#play .eq .t.pop').length === 2);                    // then Monsters
+    assert.equal(await page.locator('#play .eq .t.die.pop').count(), 0, 'the die has not come yet');
     const before = await page.locator('#play .gbubble').innerText();
-    await page.evaluate(() => { window.DigDigBoomPlay.S.run.dice = [6]; });
-    await page.click('#play [data-p=escape]');
+    await page.waitForSelector('#play .eq .t.die.pop');                                                              // then the die rolls by itself
     assert.equal(await page.locator('#play .pack').count(), 0, 'the die is still rolling: the pack is not shown yet');
     await page.waitForSelector('#play .pack');
     assert.notEqual(await page.locator('#play .gbubble').innerText(), before, 'the level rose with the die');
@@ -505,10 +517,9 @@ test('run: a tap on the tally skips ahead to the die (and past the landing to th
     await script(page, { mine: ['TR-01', 'TR-01', 'MO-01', 'TR-01'], dice: [10, 10] });
     for (let i = 0; i < 2; i++) await page.click('#play [data-p=dig]');
     await page.click('#play [data-p=bank]'); await page.click('#play [data-p=prep]');
-    assert.equal(await page.locator('#play .bigdie').count(), 0, 'nothing has been revealed yet and the timers are slow');
-    await page.click('#play [data-p=skiptally]'); assert.equal(await page.locator('#play .bigdie').count(), 1, 'a tap jumps to the die');
-    await page.evaluate(() => { window.DigDigBoomPlay.S.run.dice = [4]; });
-    await page.click('#play [data-p=escape]');
+    await page.evaluate(() => { window.DigDigBoomPlay.S.run.dice = [4]; }); await page.click('#play [data-p=boardgo]');
+    assert.equal(await page.locator('#play .eq .t.die.pop').count(), 0, 'nothing has been revealed yet and the timers are slow');
+    await page.click('#play [data-p=skiptally]'); await dieShows(page, '#play .eq .t.die', 4);
     assert.equal(await page.locator('#play .pack').count(), 0); await page.click('#play [data-p=skiptally]');
     assert.equal(await page.locator('#play .pack').count(), 1, 'and a tap while the die lands brings the pack');
     assert.deepEqual(errors, []);
@@ -528,8 +539,8 @@ test('run: BOOM skips the Escape Bonus and gives a Bronze Pack; your marker move
     await page.click('#play [data-p=dig]'); assert.equal(await page.locator('#play .lbc.here').innerText().then(t => t.split('\n')[0].trim()), '2');
     await page.click('#play [data-p=roll]'); await faceIt(page);
     assert.match(await page.locator('#play .over').innerText(), /BOOM/); assert.equal(await page.locator('#play .lbc .mk.pledge').count(), 0, 'BOOM cleared the live marker');
-    await page.click('#play [data-p=prep]');
-    assert.equal(await page.locator('#play .bigdie').count(), 0, 'no Escape Bonus after a BOOM'); assert.equal(await page.locator('#play .pack b').innerText(), 'Bronze');
+    await page.click('#play [data-p=prep]'); await page.click('#play [data-p=boardgo]');
+    assert.equal(await page.locator('#play .eq').count(), 0, 'no Escape Bonus after a BOOM'); assert.equal(await page.locator('#play .pack b').innerText(), 'Bronze');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -603,7 +614,7 @@ test('play: a reload puts you back exactly where you were — mid-fight in a run
 });
 
 test('play: monkey test — random taps through whole runs at iPad sizes: no errors, the page never scrolls, a legal tap always exists until the run is done', { ...SKIP, timeout: 300000 }, async () => {
-  const ALL = `(document.querySelector('#play .zoom') ? [document.querySelector('#play .zoom')] : [...document.querySelectorAll('#play [data-p]:not([disabled])')]).filter(e => e.getBoundingClientRect().width > 0 && (!(e.closest('.pbar') || e.closest('.foot')) || ['startround', 'prep', 'keepgo', 'again', 'openpack', 'ff'].includes(e.dataset.p)) && (r => e.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)))(e.getBoundingClientRect()))`;
+  const ALL = `(document.querySelector('#play .zoom') ? [document.querySelector('#play .zoom')] : [...document.querySelectorAll('#play [data-p]:not([disabled])')]).filter(e => e.getBoundingClientRect().width > 0 && (!(e.closest('.pbar') || e.closest('.foot')) || ['startround', 'prep', 'boardgo', 'keepgo', 'continuereveal', 'again', 'openpack', 'ff'].includes(e.dataset.p)) && (r => e.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)))(e.getBoundingClientRect()))`;
   const AVOID = ['menu', 'more', 'gmenu', 'gmenuclose', 'mainmenu', 'practice', 'cards', 'help', 'startrun', 'setup', 'rounds', 'resume'];
   for (const [vp, seed, ai] of [[{ width: 1180, height: 820 }, 1, true], [{ width: 820, height: 1180 }, 2, false], [{ width: 1024, height: 700 }, 3, true]]) {
     const { browser, page, errors } = await open({ viewport: vp, menu: true });
@@ -615,7 +626,7 @@ test('play: monkey test — random taps through whole runs at iPad sizes: no err
         const acts = await page.evaluate(`${ALL}.map((e, i) => [i, e.dataset.p])`);
         const pool = acts.filter(([, p]) => !AVOID.includes(p));
         assert.ok(pool.length, `no legal tap at step ${i}: ${(await page.locator('#play').innerText()).slice(0, 160)}`);
-        const prefer = pool.filter(([, p]) => ['dig', 'roll', 'face', 'escape', 'openpack', 'pick', 'keepgo', 'kitpick', 'startround', 'prep', 'unzoom', 'ff'].includes(p));
+        const prefer = pool.filter(([, p]) => ['dig', 'roll', 'face', 'boardgo', 'openpack', 'pick', 'keepgo', 'kitpick', 'startround', 'prep', 'unzoom', 'ff'].includes(p));
         const from = prefer.length && rnd() < .85 ? prefer : pool, [idx] = from[Math.floor(rnd() * from.length)];
         const h = await page.evaluateHandle(`${ALL}[${idx}]`);
         try { await h.asElement().click({ timeout: 15000 }); } catch (e) { if (/not attached/.test(e.message)) continue; throw e; }       // the AI's fast-forwarded clock may redraw the panel under the monkey
@@ -669,14 +680,15 @@ test('ai: when your Dig ends you wait for the AI (or tap Fast forward); the Esca
     await script(page, { mine: ['TR-01', 'TR-01'] });
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=bank]');
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.match.runs.ai.dig.over), null, 'the AI is not done: it plays at its own pace');
-    assert.match(await page.locator('#play .over').innerText(), /Fast forward/); assert.equal(await page.locator('#play .over [data-p=prep]').count(), 0, 'Prep waits for the AI');
+    assert.match(await page.locator('#play .over').innerText(), /Fast-forward the AI/); assert.match(await page.locator('#play .over').innerText(), /opponent is still digging/i); assert.equal(await page.locator('#play .over [data-p=prep]').count(), 0, 'Prep waits for the AI');
     await page.click('#play .over [data-p=ff]');
     await page.waitForSelector('#play .over [data-p=prep]', { timeout: 20000 });
     assert.equal(await page.locator('#play .over [data-p=ff]').count(), 0);
     await page.click('#play [data-p=prep]');
+    assert.equal(await page.locator('#play .bigboard .brow').count(), 3, 'the Leaderboard first: the Crown, you and the AI');
+    await page.evaluate(() => { window.DigDigBoomPlay.S.match.dice = [6]; }); await page.click('#play [data-p=boardgo]');
     assert.ok(['escape', 'pack'].includes(await stOf(page, () => window.DigDigBoomPlay.S.match.runs.ai.prep.step)), 'the AI has not opened a pack: it does that when you open yours');
-    await page.evaluate(() => { window.DigDigBoomPlay.S.match.dice = [6]; });
-    await page.click('#play [data-p=escape]'); await dieShows(page, '#play .eq .t.die', 6);
+    await page.waitForSelector('#play .eq .t.die.pop'); await dieShows(page, '#play .eq .t.die', 6);
     const esc = await stOf(page, () => [window.DigDigBoomPlay.S.match.runs.me.prep.escape, window.DigDigBoomPlay.S.match.runs.ai.prep.escape]);
     assert.equal(esc[0], 6); assert.ok(esc[1] === 6 || esc[1] === null, 'the AI got the same roll when it banked');
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.match.runs.ai.prep.step), 'pack', 'its Escape Bonus is read; its pack is still closed');

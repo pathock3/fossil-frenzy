@@ -578,7 +578,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
   box-shadow: inset 0 3px 6px rgba(70,42,12,.45), 0 1px 0 rgba(255,255,255,.55); position: relative; }
 #play .tc b { font-weight: inherit; }
 #play .tc.lit { background: #ead9b7; opacity: 1; }
-#play .tc:not(.lit):not(.now) { opacity: .5; background: #c9b387; }
+#play .tc:not(.lit):not(.now) { opacity: 1; background: #ead9b7; }
 #play .tc.now { background: #ead9b7; border-color: #8a6c3c; font-size: inherit; text-shadow: none; opacity: 1; }
 #play .tc.now b { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -26px 0 0 -23px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.6);
   background: radial-gradient(circle at 34% 28%, color-mix(in srgb, var(--tc) 55%, #fff), var(--tc) 58%, color-mix(in srgb, var(--tc) 55%, #000)); border: 3px solid color-mix(in srgb, var(--tc) 60%, #000); box-shadow: 0 6px 0 color-mix(in srgb, var(--tc) 45%, #000), 0 10px 12px rgba(0,0,0,.5); }
@@ -660,16 +660,14 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .poolhead { text-align: center; color: var(--dim); font-weight: 800; letter-spacing: .1em; text-transform: uppercase; font-size: 14px; margin: 6px 0 2px; }
 #play .cards.pool { gap: 12px; }
 #play .pcard[data-p=kitpick] { touch-action: none; margin-bottom: 24px; }
+#play .pcard[data-p=pick] { touch-action: none; }
+#play .kslot .kplus { font-size: 20px; font-weight: 800; color: var(--dim); text-transform: uppercase; letter-spacing: .1em; }
 #play .kslot { margin-bottom: 0; }
 #play .pcard.dragging { opacity: .35; }
 .dragghost { filter: drop-shadow(0 16px 20px rgba(0,0,0,.6)); }
 #play .pcard .ctag { position: absolute; z-index: 3; left: 50%; bottom: -24px; transform: translateX(-50%); padding: 2px 10px; border-radius: 0 0 8px 8px; font-size: 13px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; background: #1d1712; color: #fff; white-space: nowrap; }
 #play .pcard .ctag.new { background: var(--accent); color: #1c1410; }
 #play .pcard .ctag.last { background: #2b6f9c; }
-#play .bpile { position: absolute; left: max(16px, env(safe-area-inset-left)); top: var(--top); z-index: 6; display: flex; align-items: center; gap: 8px; color: var(--dim); font-weight: 800; }
-#play .bpile .bbacks { position: relative; width: 38px; height: 54px; display: block; }
-#play .bpile .bbacks i { position: absolute; inset: 0; border-radius: 6px; background: repeating-linear-gradient(45deg, #5b3b22 0 6px, #6e4829 6px 12px); border: 2px solid #a6753f; }
-#play .bpile .bbacks i:nth-child(1) { transform: translate(4px, 4px); } #play .bpile .bbacks i:nth-child(2) { transform: translate(2px, 2px); }
 #play .sweep { position: absolute; inset: 0; z-index: 7; pointer-events: none; overflow: hidden; }
 #play .sweepcard { position: absolute; left: 50%; top: 34%; margin-left: -63px; width: 125px; height: 175px; display: block; animation: sweepaway .8s cubic-bezier(.5,0,.8,.4) both; animation-delay: calc(.1s + var(--i) * .09s); }
 @keyframes sweepaway { 0% { transform: translate(var(--sx), 0) scale(1) rotate(0); opacity: 1; } 100% { transform: translate(calc(-50vw + 80px - 63px), calc(-34vh + 10px)) scale(.28) rotate(-18deg); opacity: .1; } }
@@ -682,9 +680,33 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 
 /* leaving the pack: the cards you did not keep fly from where they were to the discard pile; the ones you kept slide to their places; then the rest are dealt in */
 #play .sweepcard { margin-left: 0; animation: flyaway .8s cubic-bezier(.5,0,.8,.4) both; animation-delay: calc(.05s + var(--i) * .07s); }
-@keyframes flyaway { 0% { transform: none; opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(.14) rotate(-18deg); opacity: .15; } }
+@keyframes flyaway { 0% { transform: none; opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(.7) rotate(-14deg); opacity: 0; } }
 #play .kfirst .pcard.kept { animation: none; }
 #play .kfirst .pcard:not(.kept) { animation-delay: calc(1s + var(--i) * .08s); }
+
+/* the Leaderboard, full screen */
+#play .bigboard .steptitle { text-align: center; font-size: 42px; margin: 8px 0 14px; }
+#play .bbwrap { max-width: 1020px; margin: 0 auto; padding: 14px 18px 16px; border: 4px solid #6b4a27; border-radius: 16px; background-color: #cdb58a; box-shadow: 0 8px 0 #3f2a14, 0 16px 24px rgba(0,0,0,.5); display: flex; flex-direction: column; gap: 10px; color: #3a2a18; }
+#play .brow { display: grid; grid-template-columns: 150px 1fr 50px; align-items: center; gap: 12px; }
+#play .bname { font-weight: 900; font-size: 22px; display: flex; align-items: center; gap: 10px; color: #3a2a18; }
+#play .bname i { width: 22px; height: 22px; border-radius: 50%; background: var(--pc); border: 3px solid rgba(0,0,0,.4); }
+#play .bname b { font-size: 26px; color: #8a6a10; }
+#play .bcells { display: grid; gap: 5px; }
+#play .bc { position: relative; height: 70px; border-radius: 10px; background: #ead9b7; border: 2px solid #8a6c3c; box-shadow: inset 0 3px 6px rgba(70,42,12,.45); display: flex; align-items: center; justify-content: center; }
+#play .bc.free { background: #f0d68e; }
+#play .crow .bc { height: 56px; }
+#play .bn { font-weight: 800; font-size: 18px; color: #6b5636; font-family: "Iowan Old Style", Georgia, serif; }
+#play .bcrown { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 400; color: #b58a00; background: rgba(240,214,142,.85); border-radius: 8px; }
+#play .bcrown.held { color: #d99a00; text-shadow: 0 0 10px rgba(255,190,60,.8); }
+#play .bdisc { width: 46px; height: 46px; border-radius: 50%; background: radial-gradient(circle at 34% 28%, color-mix(in srgb, var(--pc) 55%, #fff), var(--pc) 58%, color-mix(in srgb, var(--pc) 55%, #000)); border: 3px solid color-mix(in srgb, var(--pc) 60%, #000); box-shadow: 0 6px 0 color-mix(in srgb, var(--pc) 45%, #000), 0 10px 12px rgba(0,0,0,.5); animation: discdrop .6s cubic-bezier(.3,.9,.3,1) var(--d) backwards; }
+@keyframes discdrop { 0% { transform: translateY(-120px) scale(1.4); opacity: 0; } 70% { opacity: 1; } 100% { transform: none; } }
+#play .bscore { font-size: 34px; font-weight: 900; text-align: right; color: #3a2a18; font-family: "Iowan Old Style", Georgia, serif; }
+#play .bnote { text-align: center; font-size: 24px; font-weight: 800; margin: 18px 0 0; }
+#play .bigboard { position: relative; }
+#play .eq .ghost { visibility: hidden; }
+#play .eq .t.sum { min-width: 118px; }
+#play .krow { display: flex; align-items: center; justify-content: center; gap: 30px; }
+#play .kdef { margin: 0; max-width: 240px; font-size: 22px; font-weight: 800; line-height: 1.25; color: var(--text); }
 </style>
 </head>
 <body>
@@ -1739,6 +1761,14 @@ const Run = (() => {
     else if (pr.picked.length < keepCount(run) && pr.offer.some(c => c.uid === id)) pr.picked.push(id); else return false;
     return true;
   }
+  // Drag a card onto a Keep place: from the pack it takes that place (what was there goes back among the cards), or it swaps with another chosen card.
+  function moveKeep(run, id, to) {
+    const pr = run.prep; if (!pr || pr.step !== 'keep' || !pr.offer.some(c => c.uid === id) || to < 0 || to >= keepCount(run)) return false;
+    const k = pr.picked, from = k.indexOf(id);
+    if (from >= 0) { const j = Math.min(to, k.length - 1); [k[from], k[j]] = [k[j], k[from]]; return true; }
+    if (to < k.length) k[to] = id; else k.push(id);
+    return true;
+  }
   function confirmKeep(run) {
     const pr = run.prep; if (!pr || pr.step !== 'keep' || pr.picked.length !== keepCount(run)) return false;
     const kept = pr.offer.filter(c => pr.picked.includes(c.uid)), rest = pr.offer.filter(c => !pr.picked.includes(c.uid));
@@ -1852,7 +1882,7 @@ const Run = (() => {
     checkOver(r); return true;
   }
   const reserve = n => { uid = Math.max(uid, n + 1); };
-  return { makeDeck, setEscape, reserve, pledge, bank, finalCheck, refresh, checkOver, sync, save, load, start, rollEscape, packInfo, openPack, keepCount, toggleKeep, confirmKeep, continueReveal, toggleKit, moveKit, beginDig, finishDig, ladderFor, kitSize };
+  return { makeDeck, setEscape, reserve, pledge, bank, finalCheck, refresh, checkOver, sync, save, load, start, rollEscape, packInfo, openPack, keepCount, toggleKeep, moveKeep, confirmKeep, continueReveal, toggleKit, moveKit, beginDig, finishDig, ladderFor, kitSize };
 })();
 
 /* =====================================================================
@@ -2481,15 +2511,34 @@ const Match = (() => {
     const sparks = Array.from({ length: 14 }, (_, i) => { const a = i / 14 * 6.283 + .2, d = 170 + (i * 47) % 120; return `<i style="--dx:${Math.round(Math.cos(a) * d)}px;--dy:${Math.round(Math.sin(a) * d * .8 - 30)}px;--s:${16 + (i * 7) % 14}px">✦</i>`; }).join('');
     return `<div class="tear" style="--pc:${col}" aria-hidden="true"><span class="rays"></span><span class="shock"></span><div class="tpack"><div class="pk ttop"><span class="star">${plus ? '★★' : '★'}</span></div><div class="pk tbody"><b>${A.esc(pack.name.replace('+', ''))}</b></div><span class="tflash"></span></div><span class="sparks">${sparks}</span></div>`;
   }
+  // The Leaderboard, full screen, between the end of the Dig and the gems being added up: one row per player with their marker, and the Crown Jewel's tracker above.
+  function boardHTML() {
+    const run = S.run, bd = run.board, tr = Board.tracker(bd), holder = Board.holder(bd), players = bd.players;
+    const marks = players.map(p => ({ p, m: Board.marker(bd, p.id, 'best') }));
+    const max = Math.max(8, tr + 2, ...marks.map(x => (x.m ? x.m.n + 1 : 0)));
+    const head = Array.from({ length: max + 1 }, (_, n) => `<div class="bc ${n <= tr ? 'free' : ''}"><span class="bn">${n === 0 ? 'Start' : n}</span>${n === tr ? `<b class="bcrown ${holder ? 'held' : ''}">♛</b>` : ''}</div>`).join('');
+    const rows = marks.map(({ p, m }, ri) => `<div class="brow"><span class="bname" style="--pc:${p.color}"><i></i>${A.esc(p.id === run.me ? 'You' : p.name)}</span><div class="bcells" style="grid-template-columns:repeat(${max + 1},minmax(0,1fr))">${Array.from({ length: max + 1 }, (_, n) => `<div class="bc ${n <= tr ? 'free' : ''}">${m && m.n === n ? `<i class="bdisc" style="--pc:${p.color};--d:${(.5 + ri * .6).toFixed(1)}s"></i>` : ''}</div>`).join('')}</div><b class="bscore">${m ? m.n : 0}</b></div>`).join('');
+    const final = run.phase === 'done';
+    const who = holder ? (holder === run.me ? 'You hold the Crown Jewel' : `${A.esc(nameOf(run, holder))} holds the Crown Jewel`) : `Nobody has the Crown Jewel yet: it is at ${tr}`;
+    return `<div class="panel setup bigboard"><div class="scroll"><h2 class="steptitle">Leaderboard</h2><div class="bbwrap"><div class="brow crow"><span class="bname"><b>♛</b>Crown</span><div class="bcells" style="grid-template-columns:repeat(${max + 1},minmax(0,1fr))">${head}</div><b class="bscore">${tr}</b></div>${rows}</div><p class="bnote">${who}</p></div><div class="foot"><button class="btn" data-p="boardgo">${final ? 'See the result' : 'Add up your gems'}</button></div></div>`;
+  }
   // The tally after a bank, shown one piece at a time while a thermometer fills up beside it: Treasure, a pause, Monsters, a pause, then you tap the die; and only when the die has landed does the pack appear.
   const TP = () => window.DDB_TALLY_PACE || 1;                         // tests speed this up
   function tallyStage(run, pr) {                                       // 0 nothing yet · 1 Treasure · 2 Monsters · 3 the die waits for you · 4 the die rolls · 5 it is added: the total and the thermometer rise together · 6 the pack
     if (!S.tally || S.tally.run !== run || S.tally.key !== run.round) {
       const t = S.tally = { run, key: run.round, stage: pr.escape !== null ? 6 : 0, shown: 0 };
       const go = (n, ms) => setTimeout(() => { if (S.tally === t && t.stage < n) { t.stage = n; if (S.panel === 'prep' && S.run === run) render(); } }, ms * TP());
-      if (t.stage < 3) { go(1, 500); go(2, 2200); go(3, 3900); }
+      if (t.stage < 3) { go(1, 500); go(2, 2200); go(3, 3300); setTimeout(() => escapeRoll(t), 3900 * TP()); }
     }
     return S.tally.stage;
+  }
+  // The Escape Bonus die rolls by itself once the tally has been shown; then it is added, the total and the thermometer rise together, and the pack appears.
+  function escapeRoll(t) {
+    const run = t.run; if (S.tally !== t || t.stage >= 4 || !run.prep || run.prep.step !== 'escape') return;
+    if (S.match) Match.rollEscape(S.match); else Run.rollEscape(run);
+    t.stage = 4; persist();
+    const up = n => ms => setTimeout(() => { if (S.tally === t && t.stage < n) { t.stage = n; if (S.panel === 'prep' && S.run === run) render(); } }, ms * TP()); up(5)(1900); up(6)(3500);
+    if (S.panel === 'prep' && S.run === run) render();
   }
   // The reward ladder as a thermometer: the pack you would get at each number of gems, lit as the fill passes it.
   function gemChart(lvl, final, countFrom) {
@@ -2507,20 +2556,26 @@ const Match = (() => {
     let body = '', foot = '';
     if (pr.banked && (step === 'escape' || step === 'pack')) {
       const stage = tallyStage(run, pr), lvl = stage < 1 ? 0 : stage < 2 ? pr.geodes : stage < 5 ? pr.geodes + pr.monsters : pr.gems;
-      const pop = (n, html) => stage >= n ? html : '';
-      const eq = `<div class="eq">${pop(1, `<span class="t pop" title="Treasure">${ico('Treasure')}${pr.geodes}</span>`)}${pop(2, `<span class="op pop">+</span><span class="t pop" title="Monsters survived">${ico('Monster')}${pr.monsters}</span>`)}${pop(3, `<span class="op pop">+</span><span class="t die pop" title="Escape Bonus">${rolled ? d10(tumble ? '' : pr.escape, tumble ? 'fx-tumble' : '', pr.escape) : d10('?', 'idle')}</span>`)}${pop(5, `<span class="op pop">=</span><span class="t sum pop" title="Gems"><b class="cnt" data-cf="${pr.geodes + pr.monsters}" data-ct="${pr.gems}">${pr.gems}</b>${ic('gem')}</span>`)}</div>`;
-      const dieBtn = stage === 3 && !rolled ? `<button class="bigdie" data-p="escape" aria-label="Roll the Escape Bonus">${d10('', 'idle')}<span class="tapword">Tap to roll</span></button>` : '';
+      // Every piece has its place from the start (hidden until it is its turn), so nothing moves when the next one appears.
+      const cl = n => stage >= n ? 'pop' : 'ghost';
+      const eq = `<div class="eq"><span class="t ${cl(1)}" title="Treasure">${ico('Treasure')}${pr.geodes}</span><span class="op ${cl(2)}">+</span><span class="t ${cl(2)}" title="Monsters survived">${ico('Monster')}${pr.monsters}</span><span class="op ${cl(3)}">+</span><span class="t die ${cl(3)}" title="Escape Bonus">${rolled ? d10(tumble ? '' : pr.escape, tumble ? 'fx-tumble' : '', pr.escape) : d10('?', 'idle')}</span><span class="op ${cl(5)}">=</span><span class="t sum ${cl(5)}" title="Gems"><b class="cnt" ${stage >= 5 ? `data-cf="${pr.geodes + pr.monsters}" data-ct="${pr.gems}"` : ''}>${stage >= 5 ? pr.gems : pr.geodes + pr.monsters}</b>${ic('gem')}</span></div>`;
       const info = rolled ? Run.packInfo(run) : null, col = info ? (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a' : '', plus = info && /\+$/.test(info.name);
       const packBtn = stage >= 6 ? `<button class="pack pop" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>` : '';
-      body = `<div class="tallyrow" ${stage < 3 || stage === 4 || stage === 5 ? 'data-p="skiptally"' : ''}><div class="tallymain">${eq}${dieBtn}${packBtn}</div>${gemChart(lvl, stage >= 6, stage === 5 ? pr.geodes + pr.monsters : null)}</div>`;
-    } else if (step === 'escape') body = `<button class="bigdie" data-p="escape" aria-label="Roll the Escape Bonus">${d10('', 'idle')}<span class="tapword">Tap</span></button>`;
+      body = `<div class="tallyrow" ${stage < 6 ? 'data-p="skiptally"' : ''}><div class="tallymain">${eq}${packBtn}</div>${gemChart(lvl, stage >= 6, stage === 5 ? pr.geodes + pr.monsters : null)}</div>`;
+    } else if (step === 'escape') body = '';
     else if (step === 'pack') {
       const info = Run.packInfo(run), col = (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a', plus = /\+$/.test(info.name);
       body = `<button class="pack" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>`;
     } else if (step === 'keep') {
-      const need = Run.keepCount(run), sc = cardScale(pr.offer.length, .95, .4);
+      const need = Run.keepCount(run);
       const fxKey = `${run.round}:${pr.offer.map(c => c.uid).join()}`, first = S.fxPack !== fxKey; S.fxPack = fxKey;       // the pack tears open once, the first time these cards are drawn
-      body = `${first ? tearHTML(pr.pack) : ''}<div class="kitbar"><b>${A.esc(pr.pack.name)} Pack</b><span class="count" aria-label="${pr.picked.length} of ${need} chosen">Keep ${pr.picked.length} of ${need}</span></div><div class="cards">${pr.offer.map((c, i) => pcard(c, sc, { act: 'pick', sel: pr.picked.includes(c.uid), i, deal: first, dx: ((pr.offer.length - 1) / 2 - i) * (250 * sc + 14) })).join('')}</div>`;
+      // The same layout as the Starter Kit: your places on top, the cards you drew below. Tap a card to move it up (tap it again to put it back), or drag it.
+      const W = Math.min(innerWidth, 1180) - 48, avail = innerHeight - 32 - 150 - 92 - 30 - 20;
+      const ss = Math.min(.6, fitCards(need, .6, W, avail * .46)), sh = 350 * ss;
+      const chosen = pr.picked.map(id => pr.offer.find(c => c.uid === id)).filter(Boolean), hand = pr.offer.filter(c => !pr.picked.includes(c.uid));
+      const ps = Math.min(.8, fitCards(hand.length, .8, W, avail - sh - 14, 12));
+      const slots = Array.from({ length: need }, (_, i) => { const c = chosen[i]; return `<div class="kslot ${c ? '' : 'empty'}" data-i="${i}" style="width:${250 * ss}px;height:${sh}px">${c ? pcard(c, ss, { act: 'pick', sel: true, badge: i + 1, kslot: true }) : '<span class="kplus">keep</span>'}</div>`; }).join('');
+      body = `${first ? tearHTML(pr.pack) : ''}<div class="kitbar"><b>${A.esc(pr.pack.name)} Pack</b><span class="count" aria-label="${pr.picked.length} of ${need} chosen">Keep ${pr.picked.length} of ${need}</span></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool">${hand.map((c, i) => pcard(c, ps, { act: 'pick', i: pr.offer.indexOf(c), deal: first, dx: ((pr.offer.length - 1) / 2 - pr.offer.indexOf(c)) * (250 * ps + 14) })).join('')}</div>`;
       foot = `<button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'}>Keep</button>`;
     } else if (step === 'reveal') {            // a Mystery Box: the other cards go away, the next card of the deck is dealt and turned over; nothing moves on until you say so
       const kept = pr.offer.filter(c => pr.picked.includes(c.uid)), rest = pr.offer.filter(c => !pr.picked.includes(c.uid)), sc = cardScale(kept.length + pr.extra.length, .95, .4), w = 250 * sc;
@@ -2544,10 +2599,9 @@ const Match = (() => {
       const from = first ? S.keepFrom : null, rest = first ? pr.offer.filter(c => !pr.picked.includes(c.uid)) : [];
       const sweep = rest.length ? `<div class="sweep" aria-hidden="true">${rest.map((c, i) => {
         const r = from && from[c.uid] ? from[c.uid] : { x: innerWidth / 2 - 63 + (i - (rest.length - 1) / 2) * 130, y: innerHeight * .34, w: 125, h: 175 };
-        return `<span class="sweepcard" style="--i:${i};left:${Math.round(r.x)}px;top:${Math.round(r.y)}px;width:${Math.round(r.w)}px;height:${Math.round(r.h)}px;--tx:${Math.round(44 - (r.x + r.w / 2))}px;--ty:${Math.round(64 - (r.y + r.h / 2))}px">${A.playCard(c, r.w / 250)}</span>`;
+        return `<span class="sweepcard" style="--i:${i};left:${Math.round(r.x)}px;top:${Math.round(r.y)}px;width:${Math.round(r.w)}px;height:${Math.round(r.h)}px;--tx:${-Math.round(r.x + r.w + 120)}px;--ty:${-Math.round(r.y + r.h + 100)}px">${A.playCard(c, r.w / 250)}</span>`;
       }).join('')}</div>` : '';
-      const bpile = `<div class="bpile" aria-label="Booster discard pile, ${run.trash.length} cards"><span class="bbacks"><i></i><i></i><i></i></span><b>${run.trash.length}</b></div>`;
-      body = `${sweep}${bpile}<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${n} of ${pr.kitMax} chosen">${n} of ${pr.kitMax}</span></div><p class="keepsay">${say}</p><div class="kslots ${first ? 'kfirst' : ''}">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool ${first ? 'kfirst' : ''}">${hand.map((c, i) => pcard(c, ps, { act: 'kitpick', i, ...tagOf2(c) })).join('') || '<span class="note">Everything you own is in your Starter Kit.</span>'}</div>`;
+      body = `${sweep}<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${n} of ${pr.kitMax} chosen">${n} of ${pr.kitMax}</span></div><div class="krow"><div class="kslots ${first ? 'kfirst' : ''}">${slots}</div><p class="kdef">${say}</p></div><div class="poolhead">Your cards</div><div class="cards pool ${first ? 'kfirst' : ''}">${hand.map((c, i) => pcard(c, ps, { act: 'kitpick', i, ...tagOf2(c) })).join('') || '<span class="note">Everything you own is in your Starter Kit.</span>'}</div>`;
       foot = `<button class="btn" data-p="startround">Start round ${run.round}${run.round === run.rounds ? ' · final' : ''}</button>`;
     }
     const stage = step === 'kit' || step === 'keep' || step === 'reveal' ? body : `<div class="prepstage">${body}</div>`;
@@ -2649,7 +2703,7 @@ const Match = (() => {
     const gems = st.geodeGems + st.monsterGems, live = can.dig, bankLive = can.bank;
     const kn = st.mine.slice(0, st.known), up = kn[0];
     // the Mine: a deck of cards, the same size as the cards you dig. Cards you can see coming are on top, face up.
-    const deck = `<div class="stack"><button class="deck ${live ? 'live' : ''}" data-p="dig" ${live ? '' : 'disabled'} aria-label="Mine, ${st.mine.length} cards">${st.mine.length ? `<span class="cw" style="--s:var(--ca)"><span class="cs">${up ? A.playCard(up, 1) : '<span class="cardback"></span>'}</span></span>` : '<span class="cw" style="--s:var(--ca)"><span class="cs"><span class="cardback none"></span></span></span>'}<span class="cnt">${st.mine.length}</span></button>${kn.length > 1 ? `<div class="known"><span>then</span> ${kn.slice(1, 4).map(c => `<i>${A.esc(c.name)}</i>`).join('')}${kn.length > 4 ? `<i>+${kn.length - 4}</i>` : ''}</div>` : ''}</div>`;
+    const deck = `<div class="stack"><button class="deck ${live ? 'live' : ''}" data-p="dig" ${live ? '' : 'disabled'} aria-label="Mine, ${st.mine.length} cards">${st.mine.length ? `<span class="cw" style="--s:var(--ca)"><span class="cs">${up ? A.playCard(up, 1) : '<span class="cardback"></span>'}</span></span>` : '<span class="cw" style="--s:var(--ca)"><span class="cs"><span class="cardback none"></span></span></span>'}<span class="cnt">${st.mine.length}</span></button></div>`;
     // There is no separate discard pile: the cards you flip land in one spot beside the Mine, and the ones before it are stacked underneath. (Monsters move on to the Monster pile above.)
     const piles = `<div class="piles"><button class="pile bankp ${bankLive ? 'live' : ''}" data-p="bank" ${bankLive ? '' : 'disabled'}><span class="gpile" aria-hidden="true">${Array.from({ length: Math.min(gems, 24) }, (_, i) => `<i style="left:${8 + (i % 7) * 19 + (Math.floor(i / 7) % 2) * 9}px;bottom:${Math.floor(i / 7) * 13 + (i * 5) % 4}px">${A.gemSvg(D.gems[i % D.gems.length], '24px')}</i>`).join('')}</span><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span><span>Bank</span></button></div>`;
     const dug = `<div class="dugz"><div class="slot ${st.discard.length ? 'stacked' : ''}">${dugHTML(st)}</div></div>`;
@@ -2659,7 +2713,7 @@ const Match = (() => {
     const ovFx = st.over && st.over !== fx.over ? 'fx' : '';
     if (st.over && S.run) {
       const fin = S.run.round === S.run.rounds, waiting = aiDigging();
-      const next = waiting ? `<div class="row2"><button class="btn" data-p="ff">Fast forward</button></div>`
+      const next = waiting ? `<div class="big">Your opponent is still digging</div><div class="row2"><button class="btn" data-p="ff">Fast-forward the AI</button></div>`
         : `<div class="row2"><button class="btn" data-p="prep">${fin ? 'See the result' : 'To Prep'}</button></div>`;
       over = st.over.kind === 'boom'
         ? `<div class="over boom ${ovFx}"><h2>BOOM!</h2>${next}</div>`
@@ -2698,7 +2752,7 @@ const Match = (() => {
         <li>Your marker on the Leaderboard moves the moment you meet a Monster. BOOM clears it.</li>
         <li>Your Starter Kit goes on top of the Mine in the order you tap it; every other card you own is shuffled in.</li>
         <li>Monsters you are done with go in the Monster pile, never the discard.</li>
-        <li>The AI digs on its own clock; tap Fast forward when you are done and it is not.</li></ul></details>
+        <li>The AI digs on its own clock; tap Fast-forward the AI when you are done and it is not.</li></ul></details>
     </div></div>`;
   }
   function render() {
@@ -2711,6 +2765,7 @@ const Match = (() => {
     let body;
     if (S.panel === 'menu') body = homeHTML();
     else if (S.panel === 'more') body = moreHTML();
+    else if (S.panel === 'board' && S.run) body = boardHTML();
     else if (S.panel === 'prep' && S.run) body = prepHTML();
     else if (S.panel === 'done' && S.run) body = doneHTML();
     else if (S.panel === 'setup' || !S.st) body = setupHTML();
@@ -2770,11 +2825,6 @@ const Match = (() => {
       case 'practice': if (resumable() && S.confirmNew !== 'practice') { S.confirmNew = 'practice'; break; } S.confirmNew = null; S.run = null; S.match = null; S.st = null; S.panel = 'setup'; S.back = null; break;
       case 'rounds': S.rounds = Number(ds.v); break;
       case 'startrun': { if (resumable() && S.confirmNew !== 'startrun') { S.confirmNew = 'startrun'; break; } S.confirmNew = null; if (S.opp) { S.match = Match.start(cards(), { rounds: S.rounds }); S.run = Match.human(S.match); } else { S.match = null; S.run = Run.start(cards(), { rounds: S.rounds }); } S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
-      case 'escape': {
-        if (S.match) Match.rollEscape(S.match); else Run.rollEscape(S.run);
-        const t = S.tally; if (t && S.run.prep && S.run.prep.banked) { t.stage = 4; const up = n => ms => setTimeout(() => { if (S.tally === t && t.stage < n) { t.stage = n; if (S.panel === 'prep') render(); } }, ms * TP()); up(5)(1900); up(6)(3500); }
-        break;
-      }
       case 'openpack': if (S.match) Match.openPack(S.match); else Run.openPack(S.run); break;
       case 'pick': {                       // tap a card to choose it, tap it again to put it back; once you have chosen all you may, you must put one back before choosing another
         const uid = Number(ds.uid), pr = S.run.prep;
@@ -2785,14 +2835,15 @@ const Match = (() => {
         Run.confirmKeep(S.run); break;
       }
       case 'continuereveal': S.keepFrom = null; Run.continueReveal(S.run); break;
-      case 'skiptally': if (S.tally) S.tally.stage = S.tally.stage >= 4 ? 6 : 3; break;          // the tally plays out on its own; a tap anywhere on it skips ahead
+      case 'skiptally': if (S.tally) { if (S.tally.stage >= 4) S.tally.stage = 6; else { S.tally.stage = 3; escapeRoll(S.tally); } } break;          // the tally plays out on its own; a tap anywhere on it skips ahead
       case 'kitpick': {                    // tap to choose, in the order you want them on top; tap a chosen one to take it back; a full Kit takes no more
         const uid = Number(ds.uid), pr = S.run.prep;
         Run.toggleKit(S.run, uid); break;                      // (the engine refuses a card beyond the limit: take one out first, or drag a card onto a place to swap)
       }
       case 'startround': startRound(); break;
       case 'ff': S.ff = true; if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; } break;
-      case 'prep': if (S.match) Match.finishRound(S.match); else Run.finishDig(S.run); S.panel = S.run.phase === 'done' ? 'done' : 'prep'; break;
+      case 'prep': if (S.match) Match.finishRound(S.match); else Run.finishDig(S.run); S.panel = 'board'; S.tally = null; break;          // first, a look at where everyone stands
+      case 'boardgo': S.panel = S.run.phase === 'done' ? 'done' : 'prep'; break;
             case 'tab': S.tab = ds.v; break;
       case 'kit': { const c = cards().find(x => x.id === ds.id); if (!c || !Dig.supported(c)) break; const i = S.kit.indexOf(c.id); if (i >= 0) S.kit.splice(i, 1); else if (S.kit.length < S.kitSize) S.kit.push(c.id); break; }
       case 'size': S.kitSize = Math.max(0, Math.min(8, S.kitSize + Number(ds.d))); S.kit = S.kit.slice(0, S.kitSize); break;
@@ -2822,7 +2873,7 @@ const Match = (() => {
   }
   // Dragging in the Starter Kit: pick a card up and drop it on a place to put it there, swap with the card in it, or reorder.
   let drag = null;
-  $.addEventListener('pointerdown', e => { const el = e.target.closest('.pcard[data-p=kitpick]'); if (!el || (e.pointerType === 'mouse' && e.button > 0)) return; drag = { el, uid: Number(el.dataset.uid), x0: e.clientX, y0: e.clientY, moved: false, ghost: null }; });
+  $.addEventListener('pointerdown', e => { const el = e.target.closest('.pcard[data-p=kitpick], .pcard[data-p=pick]'); if (!el || (e.pointerType === 'mouse' && e.button > 0)) return; drag = { el, uid: Number(el.dataset.uid), x0: e.clientX, y0: e.clientY, moved: false, ghost: null }; });
   window.addEventListener('pointermove', e => {
     if (!drag) return;
     if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > 12) {
@@ -2840,7 +2891,12 @@ const Match = (() => {
     d.ghost.remove(); d.el.classList.remove('dragging'); $.querySelectorAll('.kslot.over').forEach(x => x.classList.remove('over'));
     S.noClick = true; setTimeout(() => { S.noClick = false; }, 60);
     const t = drop ? document.elementFromPoint(e.clientX, e.clientY) : null, slot = t && t.closest('.kslot');
-    if (slot && S.run && S.run.prep && S.run.prep.step === 'kit') { Run.moveKit(S.run, d.uid, Number(slot.dataset.i)); persist(); }
+    const pr = S.run && S.run.prep;
+    if (pr && (pr.step === 'kit' || pr.step === 'keep')) {          // the Starter Kit and the pack work the same way: drop on a place to put the card there or swap, drop anywhere else to take it out
+      const kit = pr.step === 'kit', list = kit ? pr.kitPick : pr.picked;
+      if (slot) { (kit ? Run.moveKit : Run.moveKeep)(S.run, d.uid, Number(slot.dataset.i)); persist(); }
+      else if (drop && list.includes(d.uid)) { (kit ? Run.toggleKit : Run.toggleKeep)(S.run, d.uid); persist(); }
+    }
     render();
   };
   window.addEventListener('pointerup', e => endDrag(e, true)); window.addEventListener('pointercancel', e => endDrag(e, false));
