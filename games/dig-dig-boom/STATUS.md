@@ -12,4 +12,4 @@ Cards: https://docs.google.com/spreadsheets/d/1cKcNNs38CydvvhW7rUJIc4DWHgEvT-del
 
 Working rule from the owner: if a rule is ambiguous, ask — don't guess. Unanswered questions are in `QUESTIONS.md`; the engine keeps each ambiguous point behind a named ruling in the data block so it is one line to change once answered.
 
-Overnight plan (owner away): finish what does not depend on the card-style pick — the pure rules engine for Steps 3–4 (Monster roll, Grit/Reroll, triggers, damage, BOOM, banking, Pledge/Leaderboard, Prep) with tests; do not build the card art across the deck until a direction is chosen.
+Where things stand: everything the owner asked for so far is built and pushed, and the full test suite passes. Waiting on the owner: testing on an iPad, the open questions in `QUESTIONS.md` (especially whether the live Pledge marker follows every Monster survived), and the go-ahead for hot-seat multiplayer / an AI opponent (the Leaderboard engine, `Board`, already supports any number of players). Nothing else is queued, so no further overnight check-ins are scheduled.
