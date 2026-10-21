@@ -131,3 +131,18 @@ test('lab: the comparison table lists all five directions; the page works on an 
     } finally { await browser.close(); }
   }
 });
+
+test('deck: every card from the sheet is drawn in the chosen design — Geode a huge gem count, Monster a damage ladder, no text overflow', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    const cards = await page.locator('#deckRow .card').evaluateAll(els => els.map(e => ({ id: e.dataset.id, stat: e.dataset.stat, label: e.getAttribute('aria-label'), big: [...e.querySelectorAll('.stat')].length })));
+    assert.equal(cards.length, 11);
+    const geode = cards.find(c => c.id === 'TR-01'), monster = cards.find(c => c.id === 'MO-01');
+    assert.equal(geode.stat, '3'); assert.equal(monster.stat, '1');
+    assert.ok(await page.locator('#deckRow .card[data-id=MO-01]').evaluate(e => [...e.querySelectorAll('div')].filter(d => /^[1357]$/.test(d.textContent.trim())).length >= 4), 'four damage tiles 1 3 5 7');
+    assert.ok(await page.locator('#deckRow .card[data-id=TR-01]').evaluate(e => parseFloat(getComputedStyle([...e.querySelectorAll('div')].find(d => d.textContent.trim() === '1')).fontSize) > 100), 'the gem count is huge');
+    const over = await page.locator('#deckRow .card .text').evaluateAll(els => els.filter(e => e.scrollHeight > e.clientHeight + 1).map(e => e.parentElement.dataset.id));
+    assert.deepEqual(over, []);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});

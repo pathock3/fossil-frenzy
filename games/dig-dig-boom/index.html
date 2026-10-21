@@ -287,7 +287,7 @@ const Engine = (() => {
     const words = name.split(' '); let best = 1, bd = 1e9;
     for (let i = 1; i < words.length; i++) { const d = Math.abs(words.slice(0, i).join(' ').length - words.slice(i).join(' ').length); if (d < bd) { bd = d; best = i; } }
     const l1 = words.slice(0, best).join(' '), l2 = words.slice(best).join(' ');
-    const sz = Math.min(fitWidth(l1, 800, maxSize * 0.82, w, 11), fitWidth(l2, 800, maxSize * 0.82, w, 11), h / 2 / 0.98);
+    const sz = Math.min(fitWidth(l1, 800, maxSize * 0.82, w, 11), fitWidth(l2, 800, maxSize * 0.82, w, 11), h / 2 / 0.98 * 0.9);
     return box(x, y, w, h, cls, `font-size:${u(sz)};display:flex;flex-direction:column;justify-content:center;line-height:.98`, `<span>${esc(l1)}</span><span>${esc(l2)}</span>`);
   }
 
@@ -355,6 +355,18 @@ const Engine = (() => {
     const gd = g ? `<div class="guides"><i class="bleed" style="${inset(0)}"></i><i class="trim" style="${inset(C.bleed)}"></i><i class="safe" style="${inset(C.bleed + C.safe)}"></i></div>` : '';
     const card = `<div class="card${state.round && g ? ' round' : ''}" data-id="${esc(c.id)}" data-dir="B2" data-art="${art}" data-stat="${stat}" style="--u:${scale}px;width:${u(275)};height:${u(375)}" role="img" aria-label="${esc(c.name)}, ${esc(c.type)}${c.number !== null ? ', ' + c.number : ''}. ${esc(c.text)}">${buildR2(c, tw, art, stat)}${gd}</div>`;
     return g ? card : `<div style="position:relative;--u:${scale}px;width:${u(250)};height:${u(350)};overflow:hidden;border-radius:${u(12.5)};flex:none"><div style="position:absolute;left:${u(-12.5)};top:${u(-12.5)}">${card}</div></div>`;
+  }
+  // ---------------- the chosen design: Top Tab, Geode = stat 3, Monster = stat 1, standard art ----------------
+  const statFor = c => c.type === 'Treasure' ? 3 : c.type === 'Monster' ? 1 : 0;
+  function deckHTML(scale) {
+    const pool = state.all.filter(c => c.type !== 'Monster' && c.type !== 'Treasure');
+    const b = R2.textBox('standard'); let tw = 44;
+    for (const c of pool) tw = Math.min(tw, fitFont(textHTML(c.text), b.w, b.h));
+    const order = Object.keys(D.types), list = [...state.all].sort((a, b2) => order.indexOf(a.type) - order.indexOf(b2.type));
+    const cells = list.map(c => `<div class="cell">${r2Card(c, tw, 'standard', statFor(c), scale)}<span class="cap">${esc(c.id)} · ${esc(c.name)}${c.count > 1 ? ' ×' + c.count : ''}</span></div>`).join('');
+    return `<section class="dir" id="deck" data-round="deck"><span class="tag">Your picks, applied to every card</span><h2>The whole deck — Top Tab</h2>
+      <p class="sub">Coloured border and header with the name, type and Power number. Geodes: slim art, then a huge gem count. Monsters: art, then the damage ladder in big tiles, with the gems a survived Monster is worth. Rules text is <b>${E.formatSize(tw)}</b> on every card. ${list.length} cards, live from your sheet.</p>
+      <div class="row" id="deckRow">${cells}</div></section>`;
   }
   function round2HTML(by, scale) {
     const text = D.round2.textIds.map(id => by[id]).filter(Boolean), stat = D.round2.statIds.map(id => by[id]).filter(Boolean);
@@ -571,7 +583,8 @@ const Engine = (() => {
       <tr><td>When overlapped you see</td>${Object.keys(DIRS).map(k => `<td>${{ A: 'icon, name, type, number', B: 'icon, name, type, number', C: 'number, icon, name', D: 'index, name, type', E: 'icon, type word, number (no name)' }[k]}</td>`).join('')}</tr>
       <tr><td>Best at</td>${Object.keys(DIRS).map(k => `<td>${{ A: 'staying close to today', B: 'balance of text and overlap', C: 'sideways Power line, tall text', D: 'cards held any way up', E: 'long effects, reading at arm\'s length' }[k]}</td>`).join('')}</tr></table>`;
     const by0 = Object.fromEntries(state.all.map(c => [c.id, c]));
-    html += round2HTML(by0, scaleFor(DIRS.B));
+    html += deckHTML(scaleFor(DIRS.B));
+    html += '<details class="round2d"><summary>Round 2 — the stat treatments you chose from</summary>' + round2HTML(by0, scaleFor(DIRS.B)) + '</details>';
     html += '<details class="round1"><summary>Round 1 — the five directions you chose from (A–E)</summary>';
     for (const key of Object.keys(DIRS)) {
       const d = DIRS[key], tw = uniformSize(key), s = scaleFor(d) * 1.0;
