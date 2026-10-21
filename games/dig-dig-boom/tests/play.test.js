@@ -484,6 +484,25 @@ test('run: after a bank the tally is shown one piece at a time — Treasure, the
   } finally { await browser.close(); }
 });
 
+test('run: a tap on the tally skips ahead to the die (and past the landing to the pack)', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await page.addInitScript(() => { window.DDB_TALLY_PACE = 50; });
+    await page.reload(); await page.waitForSelector('#play .home');
+    await startRun(page, { opp: false, rounds: 3 });
+    await script(page, { mine: ['TR-01', 'TR-01', 'MO-01', 'TR-01'], dice: [10, 10] });
+    for (let i = 0; i < 2; i++) await page.click('#play [data-p=dig]');
+    await page.click('#play [data-p=bank]'); await page.click('#play [data-p=prep]');
+    assert.equal(await page.locator('#play .bigdie').count(), 0, 'nothing has been revealed yet and the timers are slow');
+    await page.click('#play [data-p=skiptally]'); assert.equal(await page.locator('#play .bigdie').count(), 1, 'a tap jumps to the die');
+    await page.evaluate(() => { window.DigDigBoomPlay.S.run.dice = [4]; });
+    await page.click('#play [data-p=escape]');
+    assert.equal(await page.locator('#play .pack').count(), 0); await page.click('#play [data-p=skiptally]');
+    assert.equal(await page.locator('#play .pack').count(), 1, 'and a tap while the die lands brings the pack');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
 test('run: BOOM skips the Escape Bonus and gives a Bronze Pack; your marker moves the moment you ENCOUNTER a Monster, before you roll; BOOM takes it away (no pledging)', SKIP, async () => {
   const { browser, page, errors } = await open({ menu: true });
   try {

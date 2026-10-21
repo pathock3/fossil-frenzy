@@ -2450,7 +2450,7 @@ const Match = (() => {
       const dieBtn = stage === 3 && !rolled ? `<button class="bigdie" data-p="escape" aria-label="Roll the Escape Bonus">${d10('', 'idle')}<span class="tapword">Tap to roll</span></button>` : '';
       const info = rolled ? Run.packInfo(run) : null, col = info ? (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a' : '', plus = info && /\+$/.test(info.name);
       const packBtn = stage >= 5 ? `<button class="pack pop" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>` : '';
-      body = `<div class="tallyrow"><div class="tallymain">${eq}${dieBtn}${packBtn}</div>${gemChart(lvl, stage >= 5)}</div>`;
+      body = `<div class="tallyrow" ${stage < 3 || (stage === 4) ? 'data-p="skiptally"' : ''}><div class="tallymain">${eq}${dieBtn}${packBtn}</div>${gemChart(lvl, stage >= 5)}</div>`;
     } else if (step === 'escape') body = `<button class="bigdie" data-p="escape" aria-label="Roll the Escape Bonus">${d10('', 'idle')}<span class="tapword">Tap</span></button>`;
     else if (step === 'pack') {
       const info = Run.packInfo(run), col = (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a', plus = /\+$/.test(info.name);
@@ -2692,6 +2692,7 @@ const Match = (() => {
       }
       case 'keepgo': Run.confirmKeep(S.run); break;
       case 'continuereveal': Run.continueReveal(S.run); break;
+      case 'skiptally': if (S.tally) S.tally.stage = S.tally.stage >= 4 ? 5 : 3; break;          // the tally plays out on its own; a tap anywhere on it skips ahead
       case 'kitpick': {                    // tap to choose, in the order you want them on top; tap a chosen one to take it back
         const uid = Number(ds.uid), pr = S.run.prep;
         if (!pr.kitPick.includes(uid) && pr.kitPick.length >= pr.kitMax) Run.toggleKit(S.run, pr.kitPick[pr.kitPick.length - 1]);
