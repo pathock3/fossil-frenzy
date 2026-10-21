@@ -56,7 +56,7 @@ summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .card .name { font-weight: 800; line-height: 1; white-space: nowrap; letter-spacing: -.01em; }
 .card .name, .card .typeword { text-align: left; }
 .card .typeword { opacity: .9; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; line-height: 1; white-space: nowrap; }
-.card .text { font-weight: 600; line-height: 1.13; color: #1d1712; overflow: hidden; }
+.card .text { font-weight: 600; line-height: 1.13; color: #1d1712; overflow: hidden; text-wrap: balance; }
 .card .text .ic, .meas .ic { display: inline-block; width: 1.12em; height: 1.12em; vertical-align: -.2em; margin: 0 .04em; }
 .card .stat { font-weight: 900; line-height: 1.05; }
 .card .art { border-radius: calc(var(--u) * 7); background: repeating-linear-gradient(135deg, #e9dfc9 0 calc(var(--u)*6), #f6efdf calc(var(--u)*6) calc(var(--u)*12)); border: calc(var(--u) * 1.5) solid rgba(0,0,0,.28); display: flex; align-items: center; justify-content: center; color: rgba(0,0,0,.35); font-weight: 800; letter-spacing: .2em; }
@@ -249,8 +249,8 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
 #play .pcard { position: relative; border-radius: 12px; flex: none; transition: transform .12s; }
 #play .pcard:active { transform: scale(.97); }
-#play .pcard.sel { box-shadow: 0 0 0 4px var(--accent), 0 0 22px 6px rgba(255,177,59,.55); transform: translateY(-6px); }
-#play .pcard .badge { position: absolute; left: -6px; top: -8px; z-index: 3; min-width: 32px; height: 32px; border-radius: 99px; background: var(--accent); color: #1c1410; font-weight: 900; font-size: 18px; display: flex; align-items: center; justify-content: center; border: 3px solid #fffaf0; box-shadow: 0 2px 0 rgba(0,0,0,.4); }
+#play .pcard.sel { box-shadow: 0 0 0 3px #fff, 0 0 0 8px #e5261f, 0 0 26px 10px rgba(229,38,31,.6); transform: translateY(-6px); }
+#play .pcard .badge { position: absolute; left: -6px; top: -8px; z-index: 3; min-width: 32px; height: 32px; border-radius: 99px; background: #e5261f; color: #fff; font-weight: 900; font-size: 18px; display: flex; align-items: center; justify-content: center; border: 3px solid #fffaf0; box-shadow: 0 2px 0 rgba(0,0,0,.4); }
 #play .kitbar { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 #play .foot .btn { min-width: 200px; }
 #play .gmenu-back { position: fixed; inset: 0; z-index: 18; background: rgba(0,0,0,.45); }
@@ -418,8 +418,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .hero2 .hc.lit { opacity: 1; background: #f9d6dc; }
 #play .hero2 .hc.now { opacity: 1; background: #e8344e; color: #fff; font-size: 22px; box-shadow: 0 0 14px rgba(232,52,78,.8); }
 #play .hero2 .hdeck { position: absolute; left: 40px; top: 120px; width: 200px; height: 280px; }
-#play .hero2 .hdeck::before, #play .hero2 .hdeck::after { content: ""; position: absolute; inset: 0; border-radius: 12px; background: #6e4829; border: 2px solid #a6753f; }
-#play .hero2 .hdeck::before { transform: translate(5px, 6px); } #play .hero2 .hdeck::after { transform: translate(10px, 12px); background: #4b3019; z-index: -1; }
+#play .hero2 .hlayers i { position: absolute; left: 0; top: 0; width: 200px; height: 280px; border-radius: 12px; background: #6e4829; border: 2px solid #a6753f; box-shadow: 0 2px 3px rgba(0,0,0,.35); }
 #play .hero2 .hdeck .cardback { position: absolute; left: 0; top: 0; transform: scale(.8); transform-origin: 0 0; z-index: 1; }
 #play .hero2 .hcnt { position: absolute; z-index: 2; right: -14px; top: -14px; min-width: 38px; height: 38px; padding: 0 8px; border-radius: 99px; background: #1d1712; border: 3px solid #e7b866; color: #fff; font-weight: 900; font-size: 18px; display: flex; align-items: center; justify-content: center; }
 #play .hero2 .hslot { position: absolute; left: 310px; top: 120px; width: 200px; height: 280px; border-radius: 18px; border: 3px dashed rgba(255,255,255,.22); background: rgba(0,0,0,.16); }
@@ -675,6 +674,17 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .sweepcard { position: absolute; left: 50%; top: 34%; margin-left: -63px; width: 125px; height: 175px; display: block; animation: sweepaway .8s cubic-bezier(.5,0,.8,.4) both; animation-delay: calc(.1s + var(--i) * .09s); }
 @keyframes sweepaway { 0% { transform: translate(var(--sx), 0) scale(1) rotate(0); opacity: 1; } 100% { transform: translate(calc(-50vw + 80px - 63px), calc(-34vh + 10px)) scale(.28) rotate(-18deg); opacity: .1; } }
 #play .kfirst .pcard { animation: dealin .45s cubic-bezier(.2,.8,.3,1) backwards; animation-delay: calc(.6s + var(--i) * .07s); }
+#play .under { position: absolute; left: 0; top: 0; display: block; z-index: 0; }
+#play .draw { z-index: 1; }
+#play .hero2 .hslot .cw { position: relative; left: 0; top: 0; }
+#play .hero2 .hslot > .draw, #play .hero2 .hslot > .under, #play .hero2 .hslot > .landing { position: absolute; left: -3px; top: -3px; width: 200px; height: 280px; display: block; }
+#play .hero2 .hslot .landing > .draw { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+
+/* leaving the pack: the cards you did not keep fly from where they were to the discard pile; the ones you kept slide to their places; then the rest are dealt in */
+#play .sweepcard { margin-left: 0; animation: flyaway .8s cubic-bezier(.5,0,.8,.4) both; animation-delay: calc(.05s + var(--i) * .07s); }
+@keyframes flyaway { 0% { transform: none; opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(.14) rotate(-18deg); opacity: .15; } }
+#play .kfirst .pcard.kept { animation: none; }
+#play .kfirst .pcard:not(.kept) { animation-delay: calc(1s + var(--i) * .08s); }
 </style>
 </head>
 <body>
@@ -2022,7 +2032,7 @@ const Match = (() => {
 
   // ---------------- icons ----------------
   const ic = (code, extra = '') => `<svg class="ic" viewBox="0 0 24 24" aria-label="${code}"${extra}><use href="#i-${code}"/></svg>`;
-  const textHTML = (text) => E.tokens(text, D.iconCodes).map(t => t.t === 'icon' ? ic(t.v) : esc(t.v)).join('');
+  const textHTML = (text) => E.tokens(text, D.iconCodes).map(t => t.t === 'icon' ? ic(t.v) : esc(t.v)).join('').replace(/ (<svg)/g, '\u00a0$1');          // an icon stays with the word before it: never a line of its own
   const typeIcon = (type, size, color) => `<svg viewBox="0 0 24 24" style="width:${size};height:${size};color:${color}" aria-hidden="true"><use href="#${D.types[type].icon}"/></svg>`;
 
   // ---------------- text fitting (measured in the browser, at 1 px per unit) ----------------
@@ -2099,8 +2109,8 @@ const Match = (() => {
         `<span style="flex:none">${worth}</span>${gem ? gemSvg(gem, u(108), 'filter:drop-shadow(0 ' + u(4) + ' ' + u(4) + ' rgba(0,0,0,.35))') : gemIcon(108)}${sp(`left:${u(12)};top:${u(10)};font-size:${u(22)}`)}${sp(`right:${u(14)};top:${u(26)};font-size:${u(14)}`)}${sp(`right:${u(22)};bottom:${u(14)};font-size:${u(20)}`)}${sp(`left:${u(20)};bottom:${u(24)};font-size:${u(12)}`)}`);
     }
     const gems = c.type === 'Monster' ? 1 : worth;                       // a Monster is worth 1 gem when survived (v2.7 Rules: Gems)
-    const worthTxt = c.type === 'Monster' ? 'if survived' : 'each';
-    if (stat === 1) {          // Monster: art on top, the damage ladder in big tiles, what it is worth if survived
+    const worthTxt = c.type === 'Monster' ? '' : 'each';          // a Monster is simply worth a gem: you can only bank once you have survived it
+    if (stat === 1) {          // Monster: art on top, the damage ladder in big tiles, what it is worth
       s += artBox(28, 100, W - 56, 118, c);
       if (steps) {
         s += box(31, 226, 213, 22, 'typeword', `font-size:${u(13)};color:#7a1d1d;display:flex;align-items:center;gap:${u(6)}`, `${dmgIcon(18)} DAMAGE, IN ORDER`);
@@ -2139,7 +2149,13 @@ const Match = (() => {
     const base = deckTextSize();
     if (c.type === 'Monster' || c.type === 'Treasure') return base;
     const key = c.id + '|' + c.text + '|' + base; if (twOwn.has(key)) return twOwn.get(key);
-    const b = R2.textBox(), v = Math.max(base, Math.min(fitFont(textHTML(c.text), b.w, b.h, 10, 64), Math.round(base * 1.4)));
+    const b = R2.textBox(), html = textHTML(c.text);
+    let v = Math.min(fitFont(html, b.w, b.h, 10, 64), Math.round(base * 1.4));
+    // Bigger is better only while lines stay readable: about 2 to 3 words a line at the very least, never a line break every word or two.
+    const words = c.text.replace(/\{[a-z]+\}/g, 'x').split(/\s+/).filter(Boolean).length, maxLines = words <= 2 ? 1 : Math.max(2, Math.floor(words / 2.5));
+    const lines = z => { meas.style.width = b.w + 'px'; meas.style.fontSize = z + 'px'; meas.innerHTML = html; return Math.round(meas.scrollHeight / (z * 1.13)); };
+    while (v > base && lines(v) > maxLines) v -= 0.5;
+    v = Math.max(base, v);
     twOwn.set(key, v); return v;
   }
   function playCard(c, scale, opts = {}) { return r2Card(c, textSizeFor(c), 'compact', statFor(c), scale, opts.step, opts.gem); }
@@ -2314,7 +2330,7 @@ const Match = (() => {
     const cells = Array.from({ length: R.caps.heart + 1 }, (_, i) => `<i class="hc" data-n="${i}">${i}</i>`).join('');
     return `<div class="hero-art"><div class="hero-stage hero2" data-hero="1">
       <div class="htrack">${cells}</div>
-      <div class="hdeck"><span class="cardback"></span><span class="hcnt"></span></div>
+      <div class="hdeck"><span class="hlayers"></span><span class="cardback"></span><span class="hcnt"></span></div>
       <div class="hslot"></div>
       <div class="hbank"><span class="hgems">0</span>${ic('gem')}<small>Bank</small></div>
       <div class="hbanner"></div>
@@ -2328,9 +2344,11 @@ const Match = (() => {
     const mon = l => all.find(c => c.type === 'Monster' && c.deck === D.rules.startingDeck && new RegExp('\\s' + l + '$').test(c.name));
     const $$ = sel => root.querySelector(sel), cellsEl = [...root.querySelectorAll('.hc')];
     const card = (c, o) => `<span class="cw hcard" style="--s:.8"><span class="cs">${A.playCard(c, 1, o)}</span></span>`;
+    const deckN = all.filter(c => c.deck === D.rules.startingDeck && c.type !== 'Power' && c.type !== 'Ongoing').reduce((a, c) => a + (c.count || 1), 0) || 25;          // the whole Mine, as in the game
     let li = 0, ci = 0, hp = R.start.heart, gems = 0, met = 0, timer = null;
+    const deckView = n => { $$('.hcnt').textContent = n; const k = Math.max(1, Math.ceil(n / 3)); $$('.hlayers').innerHTML = Array.from({ length: k }, (_, i) => `<i style="transform:translate(${((k - 1 - i) * 1.5).toFixed(1)}px,${((k - 1 - i) * 1.7).toFixed(1)}px)"></i>`).join(''); };
     const setHealth = () => cellsEl.forEach(c => { const n = Number(c.dataset.n); c.className = 'hc' + (n === hp ? ' now' : n < hp ? ' lit' : ''); });
-    const reset = () => { hp = R.start.heart; gems = 0; met = 0; ci = 0; $$('.hslot').innerHTML = ''; $$('.hbanner').className = 'hbanner'; $$('.hbanner').textContent = ''; root.querySelectorAll('.hdmg').forEach(e => e.remove()); $$('.hgems').textContent = '0'; $$('.hcnt').textContent = HERO_LOOPS[li].cards.length; $$('.hdeck').classList.remove('empty'); setHealth(); };
+    const reset = () => { hp = R.start.heart; gems = 0; met = 0; ci = 0; $$('.hslot').innerHTML = ''; $$('.hbanner').className = 'hbanner'; $$('.hbanner').textContent = ''; root.querySelectorAll('.hdmg').forEach(e => e.remove()); $$('.hgems').textContent = '0'; deckView(deckN); $$('.hdeck').classList.remove('empty'); setHealth(); };
     const banner = (cls, html) => { const b = $$('.hbanner'); b.innerHTML = `<span>${html}</span>`; b.className = 'hbanner show ' + cls; };
     const cellPos = n => ({ x: 23 + n * 47 + 22, y: 31 });            // where a Health cell is, in stage pixels
     // A Monster takes its time: it lands, we look at it, then its damage flies from the card to the Health track and the marker steps down.
@@ -2350,14 +2368,16 @@ const Match = (() => {
       if (!root.isConnected) return;
       const L = HERO_LOOPS[li];
       if (ci < L.cards.length) {
-        const c = L.cards[ci++]; $$('.hcnt').textContent = L.cards.length - ci;
+        const c = L.cards[ci++]; deckView(deckN - ci);
         if (c === 'g') {
-          gems++; $$('.hslot').innerHTML = drawn(card(geo, { gem: ci }), `<span class="cw hcard" style="--s:.8"><span class="cs"><span class="cardback"></span></span></span>`); $$('.hgems').textContent = gems;
+          gems++; const prevH = $$('.hslot .drface'); const under = prevH ? `<span class="under">${prevH.innerHTML}</span>` : $$('.hslot .under') ? $$('.hslot .under').outerHTML : '';
+          $$('.hslot').innerHTML = under + drawn(card(geo, { gem: ci }), `<span class="cw hcard" style="--s:.8"><span class="cs"><span class="cardback"></span></span></span>`); $$('.hgems').textContent = gems;
           const g = $$('.hgems'); g.classList.remove('bump'); void g.offsetWidth; g.classList.add('bump');
           timer = setTimeout(step, 1100 * HP());
         } else {
           const m = mon(c[0]), dmg = L.end === 'boom' ? [3, 4, 5][met] : ((Engine.damageSteps(m.text) || [])[c[1] - 1] || c[1]);
-          $$('.hslot').innerHTML = `<span class="landing">${drawn(card(m, { step: c[1] }), `<span class="cw hcard" style="--s:.8"><span class="cs"><span class="cardback"></span></span></span>`)}</span>`;
+          const prevM = $$('.hslot .drface'); const underM = prevM ? `<span class="under">${prevM.innerHTML}</span>` : '';
+          $$('.hslot').innerHTML = underM + `<span class="landing">${drawn(card(m, { step: c[1] }), `<span class="cw hcard" style="--s:.8"><span class="cs"><span class="cardback"></span></span></span>`)}</span>`;
           timer = setTimeout(() => hit(dmg), 1000 * HP());                      // about three gems' worth of time in all
         }
       } else {
@@ -2453,7 +2473,7 @@ const Match = (() => {
     for (let rows = 1; rows <= 3 && rows <= n; rows++) { const per = Math.ceil(n / rows); best = Math.max(best, Math.min(hi, (w - (per - 1) * 14) / (per * 250), (h - (rows - 1) * 14) / (rows * 350))); }
     return Math.max(.4, best);
   };
-  const pcard = (c, scale, o = {}) => `<button class="pcard ${o.sel ? 'sel' : ''} ${o.deal ? 'deal' : ''}" data-p="${o.act}" data-uid="${c.uid}" style="width:${250 * scale}px;height:${350 * scale}px;--i:${o.i || 0};--dx:${Math.round(o.dx || 0)}px;--tc:${(D.types[c.type] || {}).color || '#fff'}" aria-label="${A.esc(c.name)}">${o.badge ? `<span class="badge">${o.badge}</span>` : ''}${o.tag ? `<span class="ctag ${o.tagCls || ''}">${o.tag}</span>` : ''}${o.deal ? `<span class="dback"><span class="cardback"></span></span><span class="pface">${A.playCard(c, scale)}</span>` : A.playCard(c, scale)}</button>`;
+  const pcard = (c, scale, o = {}) => `<button class="pcard ${o.sel ? 'sel' : ''} ${o.deal ? 'deal' : ''} ${o.kept ? 'kept' : ''}" data-p="${o.act}" data-uid="${c.uid}" style="width:${250 * scale}px;height:${350 * scale}px;--i:${o.i || 0};--dx:${Math.round(o.dx || 0)}px;--tc:${(D.types[c.type] || {}).color || '#fff'}" aria-label="${A.esc(c.name)}">${o.badge ? `<span class="badge">${o.badge}</span>` : ''}${o.tag ? `<span class="ctag ${o.tagCls || ''}">${o.tag}</span>` : ''}${o.deal ? `<span class="dback"><span class="cardback"></span></span><span class="pface">${A.playCard(c, scale)}</span>` : A.playCard(c, scale)}</button>`;
   const dots = (n, on) => `<span class="pips2" role="img" aria-label="${on} of ${n}">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</span>`;
   // The pack, torn open: the top strip rips off and the cards come out of it (decoration only: the cards can be tapped at once).
   function tearHTML(pack) {
@@ -2500,8 +2520,7 @@ const Match = (() => {
     } else if (step === 'keep') {
       const need = Run.keepCount(run), sc = cardScale(pr.offer.length, .95, .4);
       const fxKey = `${run.round}:${pr.offer.map(c => c.uid).join()}`, first = S.fxPack !== fxKey; S.fxPack = fxKey;       // the pack tears open once, the first time these cards are drawn
-      const left = need - pr.picked.length, say = pr.picked.length === 0 ? (need > 1 ? `Tap ${need} cards to keep` : 'Tap a card to keep') : left > 0 ? `Tap ${left} more card${left === 1 ? '' : 's'}` : 'Tap Keep to confirm, or tap another card';
-      body = `${first ? tearHTML(pr.pack) : ''}<div class="kitbar"><b>${A.esc(pr.pack.name)} Pack</b><span class="count" aria-label="${pr.picked.length} of ${need} chosen">Keep ${pr.picked.length} of ${need}</span></div><p class="keepsay">${say}</p><div class="cards">${pr.offer.map((c, i) => pcard(c, sc, { act: 'pick', sel: pr.picked.includes(c.uid), i, deal: first, dx: ((pr.offer.length - 1) / 2 - i) * (250 * sc + 14) })).join('')}</div>`;
+      body = `${first ? tearHTML(pr.pack) : ''}<div class="kitbar"><b>${A.esc(pr.pack.name)} Pack</b><span class="count" aria-label="${pr.picked.length} of ${need} chosen">Keep ${pr.picked.length} of ${need}</span></div><div class="cards">${pr.offer.map((c, i) => pcard(c, sc, { act: 'pick', sel: pr.picked.includes(c.uid), i, deal: first, dx: ((pr.offer.length - 1) / 2 - i) * (250 * sc + 14) })).join('')}</div>`;
       foot = `<button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'}>Keep</button>`;
     } else if (step === 'reveal') {            // a Mystery Box: the other cards go away, the next card of the deck is dealt and turned over; nothing moves on until you say so
       const kept = pr.offer.filter(c => pr.picked.includes(c.uid)), rest = pr.offer.filter(c => !pr.picked.includes(c.uid)), sc = cardScale(kept.length + pr.extra.length, .95, .4), w = 250 * sc;
@@ -2516,15 +2535,19 @@ const Match = (() => {
       const prev = (run.kit || []).map(c => c.uid), kitCards = pr.kitPick.map(id => run.owned.find(c => c.uid === id)).filter(Boolean);
       const hand = run.owned.filter(c => !pr.kitPick.includes(c.uid)).sort((x, y) => (pr.gained.includes(y.uid) ? 1 : 0) - (pr.gained.includes(x.uid) ? 1 : 0));          // what you just won comes first, top left
       const ps = Math.min(.8, fitCards(hand.length, .8, W, avail - sh - 14, 12));
-      const tagOf = c => pr.gained.includes(c.uid) ? { tag: 'NEW', tagCls: 'new' } : prev.includes(c.uid) ? { tag: 'Last round', tagCls: 'last' } : {};
+      const tagOf = c => (first && S.keepFrom && pr.picked.includes(c.uid) ? { kept: true } : {}) ;
+      const tagOf2 = c => ({ ...tagOf(c), ...(pr.gained.includes(c.uid) ? { tag: 'NEW', tagCls: 'new' } : prev.includes(c.uid) ? { tag: 'Last round', tagCls: 'last' } : {}) });
       const gemIc = `<svg class="kgem" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gem"/></svg>`;
-      const slots = Array.from({ length: pr.kitMax }, (_, i) => { const c = kitCards[i]; return `<div class="kslot ${c ? '' : 'empty'}" data-i="${i}" style="width:${250 * ss}px;height:${sh}px">${c ? pcard(c, ss, { act: 'kitpick', sel: true, badge: i + 1, i: i, deal: false, ...tagOf(c) }) : `${gemIc}<span>gem</span>`}</div>`; }).join('');
+      const slots = Array.from({ length: pr.kitMax }, (_, i) => { const c = kitCards[i]; return `<div class="kslot ${c ? '' : 'empty'}" data-i="${i}" style="width:${250 * ss}px;height:${sh}px">${c ? pcard(c, ss, { act: 'kitpick', sel: true, badge: i + 1, i: i, deal: false, ...tagOf2(c) }) : `${gemIc}<span>gem</span>`}</div>`; }).join('');
       const n = kitCards.length, same = prev.length && prev.length === n && prev.every((id, i) => id === pr.kitPick[i]);
-      const say = n === 0 ? (pr.kitMax > 1 ? `Tap up to ${pr.kitMax} cards, in the order you want them on top` : 'Tap a card to start with') : same && run.round > 1 ? 'Same Starter Kit as last round. Swap cards in, or start.' : 'Tap to add or remove. Drag a card onto another to swap or reorder.';
-      const rest = first ? pr.offer.filter(c => !pr.picked.includes(c.uid)) : [];
-      const sweep = rest.length ? `<div class="sweep" aria-hidden="true">${rest.map((c, i) => `<span class="sweepcard" style="--i:${i};--sx:${Math.round((i - (rest.length - 1) / 2) * 130)}px">${A.playCard(c, .5)}</span>`).join('')}</div>` : '';
+      const say = 'These will be the first cards you draw.';
+      const from = first ? S.keepFrom : null, rest = first ? pr.offer.filter(c => !pr.picked.includes(c.uid)) : [];
+      const sweep = rest.length ? `<div class="sweep" aria-hidden="true">${rest.map((c, i) => {
+        const r = from && from[c.uid] ? from[c.uid] : { x: innerWidth / 2 - 63 + (i - (rest.length - 1) / 2) * 130, y: innerHeight * .34, w: 125, h: 175 };
+        return `<span class="sweepcard" style="--i:${i};left:${Math.round(r.x)}px;top:${Math.round(r.y)}px;width:${Math.round(r.w)}px;height:${Math.round(r.h)}px;--tx:${Math.round(44 - (r.x + r.w / 2))}px;--ty:${Math.round(64 - (r.y + r.h / 2))}px">${A.playCard(c, r.w / 250)}</span>`;
+      }).join('')}</div>` : '';
       const bpile = `<div class="bpile" aria-label="Booster discard pile, ${run.trash.length} cards"><span class="bbacks"><i></i><i></i><i></i></span><b>${run.trash.length}</b></div>`;
-      body = `${sweep}${bpile}<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${n} of ${pr.kitMax} chosen">${n} of ${pr.kitMax}</span></div><p class="keepsay">${say}</p><div class="kslots ${first ? 'kfirst' : ''}">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool ${first ? 'kfirst' : ''}">${hand.map((c, i) => pcard(c, ps, { act: 'kitpick', i, ...tagOf(c) })).join('') || '<span class="note">Everything you own is in your Starter Kit.</span>'}</div>`;
+      body = `${sweep}${bpile}<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${n} of ${pr.kitMax} chosen">${n} of ${pr.kitMax}</span></div><p class="keepsay">${say}</p><div class="kslots ${first ? 'kfirst' : ''}">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool ${first ? 'kfirst' : ''}">${hand.map((c, i) => pcard(c, ps, { act: 'kitpick', i, ...tagOf2(c) })).join('') || '<span class="note">Everything you own is in your Starter Kit.</span>'}</div>`;
       foot = `<button class="btn" data-p="startround">Start round ${run.round}${run.round === run.rounds ? ' · final' : ''}</button>`;
     }
     const stage = step === 'kit' || step === 'keep' || step === 'reveal' ? body : `<div class="prepstage">${body}</div>`;
@@ -2582,13 +2605,16 @@ const Match = (() => {
   const backOf = v => `<span class="cw" style="--s:${v}"><span class="cs"><span class="cardback"></span></span></span>`;
   const drawn = (front, back) => `<span class="draw"><span class="drface">${front}</span><span class="drback">${back}</span></span>`;
   function dugHTML(st) {
-    const f = st.fight, fx = S.fx;
-    if (f) return `<div class="mcard" aria-label="${A.esc(f.monster.name)}"><span class="flipwrap ${f.monster.uid !== fx.mon ? 'landing' : ''}">${f.monster.uid !== fx.mon ? drawn(cw(A.playCard(f.monster, 1, { step: f.step }), 'ca'), backOf('var(--ca)')) : cw(A.playCard(f.monster, 1, { step: f.step }), 'ca')}</span></div>`;       // the Monster is not a button: you leave the fight by tapping the Mine (dig on) or the Bank (stop)
+    const f = st.fight, fx = S.fx, before = S.dugShown;          // the card that was in the flip spot before this render: it stays visible underneath while the new card flips over it
+    const under = c => c ? `<span class="under">${cw(A.playCard(c, 1), 'ca')}</span>` : '';
+    if (f) S.dugShown = f.monster;
+    if (f) return `<div class="mcard" aria-label="${A.esc(f.monster.name)}"><span class="flipwrap ${f.monster.uid !== fx.mon ? 'landing' : ''}">${f.monster.uid !== fx.mon ? under(before) + drawn(cw(A.playCard(f.monster, 1, { step: f.step }), 'ca'), backOf('var(--ca)')) : cw(A.playCard(f.monster, 1, { step: f.step }), 'ca')}</span></div>`;       // the Monster is not a button: you leave the fight by tapping the Mine (dig on) or the Bank (stop)
     // A Power or Ongoing card goes straight up to the others: it is not shown here as well. The spot keeps showing the last card that stays here (the discard pile's top).
     const goesUp = st.last && (st.last.type === 'Power' || st.last.type === 'Ongoing'), show = goesUp ? st.discard[st.discard.length - 1] : st.last;
+    S.dugShown = show || null;
     if (!show) return '';
     const fresh = !goesUp && st.last.uid !== fx.last, oc = show === st.last && show.type === 'Monster' && !st.over ? st.flags.lastOutcome : null;
-    return `<button class="mcard" data-p="zoom" data-uid="${show.uid}" aria-label="${A.esc(show.name)}${oc ? ', ' + oc : ''}"><span class="flipwrap">${fresh ? drawn(cw(A.playCard(show, 1), 'ca'), backOf('var(--ca)')) : cw(A.playCard(show, 1), 'ca')}${fresh && show.type === 'Treasure' ? burstHTML(10) : ''}${oc ? `<span class="stamp ${oc}">${oc === 'defeated' ? 'Defeated' : 'Survived'}</span>` : ''}</span></button>`;
+    return `<button class="mcard" data-p="zoom" data-uid="${show.uid}" aria-label="${A.esc(show.name)}${oc ? ', ' + oc : ''}"><span class="flipwrap">${fresh ? under(before) + drawn(cw(A.playCard(show, 1), 'ca'), backOf('var(--ca)')) : cw(A.playCard(show, 1), 'ca')}${fresh && show.type === 'Treasure' ? burstHTML(10) : ''}${oc ? `<span class="stamp ${oc}">${oc === 'defeated' ? 'Defeated' : 'Survived'}</span>` : ''}</span></button>`;
   }
   // The action zone, bottom right: the die, the button that takes the damage, and one line saying what the game is waiting for.
   function diceHTML(st, can) {
@@ -2693,6 +2719,15 @@ const Match = (() => {
     $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z;
     const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
     fitHero(); heroPlay(); fitTable(); playDice();
+    if (S.keepFrom && $.querySelector('.pcard.kept')) {          // the cards you kept slide from where they were to their places; the others are dealt in after them
+      $.querySelectorAll('.pcard.kept').forEach(el => {
+        const o = S.keepFrom[el.dataset.uid], n = el.getBoundingClientRect(); if (!o || !n.width) return;
+        el.style.transformOrigin = '0 0'; el.style.zIndex = 20;
+        const an = el.animate([{ transform: `translate(${o.x - n.left}px, ${o.y - n.top}px) scale(${o.w / n.width})` }, { transform: 'none' }], { duration: 750, delay: 250, easing: 'cubic-bezier(.3,.8,.3,1)', fill: 'backwards' });
+        an.onfinish = () => { el.style.zIndex = ''; };
+      });
+      S.keepFrom = null;
+    }
     $.querySelectorAll('.cnt[data-cf]').forEach(el => { const a = Number(el.dataset.cf), z = Number(el.dataset.ct), t0 = performance.now(), dur = 1300 * TP(); el.textContent = a; const tick = now => { const k = Math.min(1, (now - t0) / Math.max(1, dur)); el.textContent = Math.round(a + (z - a) * (1 - Math.pow(1 - k, 3))); if (k < 1 && el.isConnected) requestAnimationFrame(tick); }; requestAnimationFrame(tick); });
     $.querySelectorAll('.gchart[data-to]').forEach(el => requestAnimationFrame(() => requestAnimationFrame(() => el.style.setProperty('--lv', el.dataset.to))));
     scheduleAI();
@@ -2741,18 +2776,19 @@ const Match = (() => {
         break;
       }
       case 'openpack': if (S.match) Match.openPack(S.match); else Run.openPack(S.run); break;
-      case 'pick': {                       // tap a card to choose it, tap it again to put it back; tapping another card when you have chosen all you may moves the choice
-        const uid = Number(ds.uid), pr = S.run.prep, need = Run.keepCount(S.run);
-        if (!pr.picked.includes(uid) && pr.picked.length >= need) Run.toggleKeep(S.run, pr.picked[0]);
-        Run.toggleKeep(S.run, uid); break;
-      }
-      case 'keepgo': Run.confirmKeep(S.run); break;
-      case 'continuereveal': Run.continueReveal(S.run); break;
-      case 'skiptally': if (S.tally) S.tally.stage = S.tally.stage >= 4 ? 6 : 3; break;          // the tally plays out on its own; a tap anywhere on it skips ahead
-      case 'kitpick': {                    // tap to choose, in the order you want them on top; tap a chosen one to take it back
+      case 'pick': {                       // tap a card to choose it, tap it again to put it back; once you have chosen all you may, you must put one back before choosing another
         const uid = Number(ds.uid), pr = S.run.prep;
-        if (!pr.kitPick.includes(uid) && pr.kitPick.length >= pr.kitMax) Run.toggleKit(S.run, pr.kitPick[pr.kitPick.length - 1]);
-        Run.toggleKit(S.run, uid); S.kitFlash = uid; break;
+        Run.toggleKeep(S.run, uid); break;                  // (the engine refuses a card beyond the limit)
+      }
+      case 'keepgo': {                     // remember where each card is, so the next screen can slide the kept ones to their places and fly the others away from where they were
+        S.keepFrom = {}; $.querySelectorAll('.pcard[data-p=pick]').forEach(el => { const r = el.getBoundingClientRect(); S.keepFrom[el.dataset.uid] = { x: r.left, y: r.top, w: r.width, h: r.height }; });
+        Run.confirmKeep(S.run); break;
+      }
+      case 'continuereveal': S.keepFrom = null; Run.continueReveal(S.run); break;
+      case 'skiptally': if (S.tally) S.tally.stage = S.tally.stage >= 4 ? 6 : 3; break;          // the tally plays out on its own; a tap anywhere on it skips ahead
+      case 'kitpick': {                    // tap to choose, in the order you want them on top; tap a chosen one to take it back; a full Kit takes no more
+        const uid = Number(ds.uid), pr = S.run.prep;
+        Run.toggleKit(S.run, uid); break;                      // (the engine refuses a card beyond the limit: take one out first, or drag a card onto a place to swap)
       }
       case 'startround': startRound(); break;
       case 'ff': S.ff = true; if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; } break;

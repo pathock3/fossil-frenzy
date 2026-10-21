@@ -395,19 +395,21 @@ test('run: round 1 opens a Bronze Pack (draw 3, keep 1), then you choose your St
     const pos = await page.locator('#play [data-p=keepgo]').evaluate(e => { const r = e.getBoundingClientRect(); return [r.right > innerWidth * .6, r.bottom > innerHeight * .8]; });
     assert.deepEqual(pos, [true, true], 'the confirm button is bottom right, where the most reachable things are');
     assert.equal(await page.evaluate(() => document.querySelector('#play .scroll').scrollHeight <= document.querySelector('#play .scroll').clientHeight + 1), true, 'the pack fits the screen: nothing scrolls');
-    assert.match(await page.locator('#play .keepsay').innerText(), /^Tap a card to keep$/, 'before anything is tapped it says to tap a card');
+    assert.equal(await page.locator('#play .keepsay').count(), 0, 'no instruction line: the layout says it all');
     await page.click('#play [data-p=pick] >> nth=0'); assert.equal(await page.locator('#play .pcard.sel').count(), 1, 'one tap chooses');
-    await page.click('#play [data-p=pick] >> nth=1'); assert.equal(await page.locator('#play .pcard.sel').count(), 1, 'tapping another card moves the choice');
+    const first = await stOf(page, () => window.DigDigBoomPlay.S.run.prep.picked.slice());
+    await page.click('#play [data-p=pick] >> nth=1'); assert.deepEqual(await stOf(page, () => window.DigDigBoomPlay.S.run.prep.picked.slice()), first, 'with all you may keep chosen, another card cannot be chosen: nothing is silently dropped');
+    assert.ok(await page.locator('#play [data-p=keepgo]').isEnabled());
+    await page.click('#play [data-p=pick] >> nth=0'); assert.equal(await page.locator('#play .pcard.sel').count(), 0, 'tapping a chosen card puts it back'); await page.click('#play [data-p=pick] >> nth=1'); assert.equal(await page.locator('#play .pcard.sel').count(), 1);
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.run.prep.step), 'keep');
-    assert.match(await page.locator('#play .keepsay').innerText(), /Tap Keep to confirm/, 'having chosen one, it says what to do next');
     assert.ok(await page.locator('#play [data-p=keepgo]').isEnabled());
     await keepNonMystery(page, 1);
     assert.equal(await page.locator('#play [data-p=kitpick]').count(), 1, 'one card to choose from: the one you kept');
     assert.equal(await page.locator('#play [data-p=kitgem]').count(), 0, 'no gem to pick: an empty place is a gem');
     assert.match(await page.locator('#play .kitbar .count').innerText(), /^0 of 1$/, 'how many you may choose and how many you have');
-    assert.match(await page.locator('#play .keepsay').innerText(), /^Tap a card to start with$/);
+    assert.match(await page.locator('#play .keepsay').innerText(), /^These will be the first cards you draw\.$/, 'the Starter Kit is defined, not explained');
     assert.equal(await page.locator('#play .kslot.empty .kgem').count(), 1, 'an empty place shows the gem it will be filled with');
-    assert.equal(await page.evaluate(() => { const f = e => getComputedStyle(document.querySelector(e)).fontSize; return f('#play .kitbar .count') + f('#play .keepsay'); }), '42px22px', 'the Keep and Starter Kit screens use the same sizes');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('#play .kitbar .count')).fontSize), '42px', 'the Keep and Starter Kit titles use the same size');
     assert.equal(await page.locator('#play .pips2').count(), 0, 'no circles');
     assert.equal(await page.locator('#play [data-p=startround]').isEnabled(), true, 'you may start with the place empty');
     await page.click('#play [data-p=startround]'); await page.waitForSelector('#play .ptable');
@@ -444,9 +446,8 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     assert.equal(await page.locator('#play [data-p=kitpick]').count(), 3, 'the card from round 1 and the two you kept');
     assert.equal(await page.locator('#play .kslot .pcard').count(), 1, "last round's Starter Kit is already in its place");
     assert.match(await page.locator('#play .kslot .ctag.last').innerText(), /last round/i); assert.equal(await page.locator('#play .pool .ctag.new').count(), 2, 'what you just won is marked new');
-    assert.match(await page.locator('#play .keepsay').innerText(), /Same Starter Kit as last round/);
     await page.click('#play [data-p=kitpick] >> nth=1');                                  // a new card joins the kit
-    assert.equal(await page.locator('#play .kslot .pcard').count(), 2); assert.match(await page.locator('#play .keepsay').innerText(), /Tap to add or remove/);
+    assert.equal(await page.locator('#play .kslot .pcard').count(), 2); 
     const order0 = await stOf(page, () => window.DigDigBoomPlay.S.run.prep.kitPick.slice());
     const src = await page.locator('#play .kslot[data-i="1"] .pcard').boundingBox(), dst = await page.locator('#play .kslot[data-i="0"]').boundingBox();
     await page.mouse.move(src.x + src.width / 2, src.y + src.height / 2); await page.mouse.down(); await page.mouse.move(dst.x + dst.width / 2, dst.y + dst.height / 2, { steps: 8 }); await page.mouse.up();

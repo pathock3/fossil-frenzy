@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — pack and Starter Kit:** no instruction line on the pack screen; you can choose only as many cards as you may keep (tap a chosen one to put it back — nothing is silently dropped), and the Starter Kit says only what it is: "These will be the first cards you draw." The chosen outline is red with a white gap so it shows on every card colour. Going from the pack to the Starter Kit: the cards you did not keep fly from where they were to the Booster discard pile, the ones you kept slide into their places, then the rest of your cards are dealt in. The main menu's deck is the whole 25-card Mine and thins as it is drawn.
+
+- **Dig Dig BOOM! — cards:** a Monster card just shows what it is worth (a gem), not "if survived". Card effect text is as large as reads well: bigger than before, but it backs off when that would put a line break every one or two words (about 2–3 words a line at least), lines are balanced, and an icon stays with the word before it instead of sitting alone on a line. When a card is drawn, the card that was in the flip spot stays visible underneath while the new one flips over it (in the game and on the main menu).
+
 - **Dig Dig BOOM! — the Starter Kit step:** a big step title at the top ("Silver Pack", "Starter Kit"). The cards you did not keep sweep into a Booster discard pile (top left), then your cards are dealt out: what you just won comes first, marked NEW. Last round's Starter Kit is already in its places (marked LAST ROUND), so your default is to keep it; tap a card to add it or take it out, or drag a card onto a place to put it there, swap with what is there, or reorder. Empty places show the gem they will be filled with.
 - **Dig Dig BOOM! — drawing:** every card you flip now comes off the Mine face down, slides into the flip spot and turns over (a Monster lands with a little shake); the main menu's picture uses the same draw.
 
