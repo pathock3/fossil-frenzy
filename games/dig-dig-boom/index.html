@@ -75,6 +75,117 @@ table.cmp th { background: var(--panel); color: var(--accent); }
 .view-deut .card { filter: url(#deut); }
 .view-prot .card { filter: url(#prot); }
 .meas { position: absolute; left: -9999px; top: 0; visibility: hidden; font-weight: 600; line-height: 1.13; font-family: "Avenir Next", "Helvetica Neue", Arial, system-ui, sans-serif; }
+/* ---------- the game screen (solo Dig) ---------- */
+body[data-mode=play] #app, body[data-mode=cards] #play { display: none; }
+body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidden; position: fixed; inset: 0; width: 100%; }
+#play { height: 100%; display: flex; flex-direction: column; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+#play .pbar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; flex: none; }
+#play .pbar h1 { margin: 0 auto 0 4px; font-size: 20px; }
+#play .pbar .chip { min-height: 40px; padding: 6px 12px; font-size: 14px; }
+#play .pbar .back { min-height: 40px; padding: 6px 12px 6px 8px; font-size: 14px; }
+#play .pmain { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 10px; padding: 0 10px 10px; }
+#play .ptable { min-height: 0; display: flex; flex-direction: column; gap: 8px; position: relative; }
+#play .plog { min-height: 0; display: flex; flex-direction: column; background: var(--panel); border: 2px solid var(--line); border-radius: 14px; overflow: hidden; }
+#play .plog h3 { margin: 0; padding: 8px 12px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--line); flex: none; }
+#play .plog .entries { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 6px 10px 10px; font-size: 14px; line-height: 1.35; overscroll-behavior: contain; }
+#play .plog .e { padding: 3px 0; border-bottom: 1px dotted rgba(255,255,255,.08); }
+#play .plog .k-dig { font-weight: 800; color: #fff; padding-top: 8px; }
+#play .plog .k-roll { color: #ffd98a; }
+#play .plog .k-damage { color: #ff8a7a; font-weight: 700; }
+#play .plog .k-boom { color: #fff; background: #a8201f; padding: 6px 8px; border-radius: 8px; font-weight: 800; }
+#play .plog .k-sys { color: var(--dim); font-style: italic; }
+#play .plog .ic { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -.2em; }
+#play .drill { display: flex; gap: 10px; flex: none; background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 8px 10px; }
+#play .tracks { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+#play .trow { display: flex; align-items: center; gap: 8px; }
+#play .tlab { width: 34px; height: 34px; flex: none; display: flex; align-items: center; justify-content: center; }
+#play .tlab svg { width: 30px; height: 30px; }
+#play .track { flex: 1; display: grid; gap: 3px; border-radius: 10px; padding: 2px; border: 3px solid transparent; min-width: 0; }
+#play .track.live { border-color: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 3px rgba(255,177,59,.35); } }
+#play .tc { height: 34px; border-radius: 7px; background: #fffaf0; color: #1d1712; font-weight: 800; font-size: 17px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--tc, #888); opacity: .55; }
+#play .tc.lit { opacity: 1; background: color-mix(in srgb, var(--tc) 30%, #fffaf0); }
+#play .tc.now { opacity: 1; background: var(--tc); color: #fff; font-size: 20px; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+#play .ongoing { width: 250px; flex: none; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
+#play .ongoing h4, #play .linehead { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+#play .ongoing .list { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; max-height: 112px; overscroll-behavior: contain; }
+#play .piece { position: relative; border-radius: 9px; border: 3px solid var(--c); background: #fffaf0; color: #1d1712; text-align: left; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; width: 100%; }
+#play .piece .h { background: var(--c); color: var(--on); font-weight: 800; font-size: 13px; line-height: 1.1; padding: 3px 6px; display: flex; align-items: center; gap: 5px; }
+#play .piece .h svg { width: 15px; height: 15px; flex: none; }
+#play .piece .h .n { margin-left: auto; background: #fffaf0; color: #1d1712; border-radius: 99px; min-width: 22px; text-align: center; padding: 0 4px; font-size: 13px; }
+#play .piece .t { display: block; font-size: 11.5px; font-weight: 600; line-height: 1.2; padding: 3px 6px 4px; }
+#play .piece .ic { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -.2em; }
+#play .piece.pick { outline: 4px solid var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+#play .piece.trig { box-shadow: 0 0 0 3px #fff, 0 0 12px 4px var(--accent); }
+#play .piece .tag { position: absolute; right: 3px; bottom: 3px; font-size: 10px; font-weight: 800; background: #1d1712; color: #fff; border-radius: 6px; padding: 1px 5px; }
+#play .piece .wb { display: flex; gap: 4px; padding: 0 6px 5px; }
+#play .piece .wb button { flex: 1; min-height: 34px; border-radius: 8px; background: #2a1f18; color: #fff; font-weight: 800; font-size: 13px; }
+#play .piece .wb button:disabled { opacity: .35; }
+#play .line { flex: 1; min-height: 120px; display: flex; flex-direction: column; background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 6px 8px 8px; }
+#play .linehead { display: flex; justify-content: space-between; padding: 0 2px 4px; flex: none; }
+#play .lcols { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
+#play .lcol { display: flex; flex-direction: column; gap: 3px; border-radius: 8px; padding: 2px; background: rgba(255,255,255,.04); min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+#play .lcol.on { background: rgba(255,177,59,.18); outline: 2px solid var(--accent); }
+#play .lcol.off { opacity: .45; }
+#play .lnum { font-weight: 900; font-size: 15px; text-align: center; color: var(--dim); order: 99; margin-top: auto; padding-top: 2px; }
+#play .lcol.on .lnum { color: var(--accent); }
+#play .mat { flex: none; height: 286px; display: grid; grid-template-columns: 124px minmax(0, 1fr) 124px; gap: 10px; }
+#play .pile { border-radius: 14px; border: 3px dashed var(--line); background: rgba(255,255,255,.03); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 8px; color: var(--dim); font-weight: 800; font-size: 13px; text-align: center; min-width: 0; }
+#play .pile.live { border-color: var(--accent); border-style: solid; color: #fff; animation: pulse 1.4s ease-in-out infinite; }
+#play .cardback { width: 76px; height: 106px; border-radius: 10px; background: repeating-linear-gradient(45deg, #5b3b22 0 8px, #6e4829 8px 16px); border: 3px solid #a6753f; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 34px; font-weight: 900; text-shadow: 0 2px 4px #000; box-shadow: 3px 3px 0 #2a1a0d, 6px 6px 0 #1c1410; }
+#play .pile .cap2 { font-size: 12px; color: var(--dim); font-weight: 700; }
+#play .known { display: flex; flex-direction: column; gap: 3px; width: 100%; }
+#play .known .piece .h { font-size: 11px; padding: 2px 5px; }
+#play .stack { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+#play .stack .pile { flex: 1; }
+#play .gemline { display: flex; align-items: center; gap: 4px; font-size: 24px; color: #fff; }
+#play .gemline svg { width: 26px; height: 26px; }
+#play .dig { min-width: 0; border-radius: 14px; background: rgba(255,255,255,.03); border: 2px solid var(--line); display: flex; gap: 12px; padding: 8px 12px; align-items: center; justify-content: center; }
+#play .dig.idle { color: var(--dim); font-size: 18px; text-align: center; line-height: 1.4; }
+#play .mcard { display: block; border-radius: 12px; flex: none; position: relative; }
+#play .mcard.live { outline: 4px solid var(--accent); outline-offset: 3px; animation: pulse 1.2s ease-in-out infinite; }
+#play .rollp { display: flex; flex-direction: column; gap: 8px; align-items: stretch; min-width: 0; flex: 1; max-width: 250px; }
+#play .die { width: 108px; height: 108px; margin: 0 auto; border-radius: 22px; background: #fffaf0; color: #1d1712; font-weight: 900; font-size: 64px; display: flex; align-items: center; justify-content: center; border: 5px solid #1d1712; box-shadow: 0 4px 0 #000; }
+#play .die.live { flex-direction: column; border-color: var(--accent); animation: pulse 1.2s ease-in-out infinite; font-size: 26px; }
+#play .die small { font-size: 15px; display: block; }
+#play .calc { text-align: center; font-size: 15px; line-height: 1.35; color: var(--dim); }
+#play .calc b { color: #fff; font-size: 26px; display: block; }
+#play .tokens { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; min-height: 36px; }
+#play .tokens button { width: 40px; height: 40px; border-radius: 10px; background: #fffaf0; border: 2px solid #f4a022; display: flex; align-items: center; justify-content: center; }
+#play .tokens svg { width: 28px; height: 28px; }
+#play .hint { font-size: 14px; color: var(--accent); text-align: center; line-height: 1.3; font-weight: 700; }
+#play .over { position: absolute; inset: 0; z-index: 5; background: rgba(28,20,16,.94); border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 16px; }
+#play .over h2 { font-size: 46px; margin: 0; }
+#play .over.boom h2 { color: #ff5b4a; }
+#play .over .big { font-size: 22px; line-height: 1.5; }
+#play .over .row2 { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+#play .btn { min-height: 56px; padding: 12px 22px; border-radius: 14px; background: var(--accent); color: #1c1410; font-weight: 900; font-size: 18px; }
+#play .btn.alt { background: var(--panel); color: var(--text); border: 2px solid var(--line); }
+#play .zoom { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.72); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+#play .zoom .warn { color: #ffb4a8; font-size: 14px; max-width: 340px; text-align: center; }
+#play .panel { position: fixed; inset: 0; z-index: 15; background: var(--bg); display: flex; flex-direction: column; padding: max(10px, env(safe-area-inset-top)) 14px 10px; }
+#play .panel.setup { position: static; flex: 1; min-height: 0; z-index: auto; padding: 0 14px 10px; }
+#play .panel h2 { margin: 4px 0; font-size: 24px; }
+#play .panel .scroll { flex: 1; overflow-y: auto; min-height: 0; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 4px 0 12px; }
+#play .tabs { display: flex; gap: 8px; margin: 8px 0; flex-wrap: wrap; align-items: center; }
+#play .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+#play .grid .piece { min-height: 70px; }
+#play .piece.off { opacity: .45; }
+#play .grid .piece.sel { outline: 4px solid var(--accent); }
+#play .grid .piece .t { font-size: 14px; }
+#play .grid .piece .h { font-size: 15px; }
+#play .stepper { display: inline-flex; align-items: center; gap: 4px; background: var(--panel); border: 2px solid var(--line); border-radius: 99px; padding: 2px; }
+#play .stepper button { width: 40px; height: 40px; border-radius: 99px; font-size: 22px; font-weight: 900; background: #3a2b20; }
+#play .stepper span { min-width: 34px; text-align: center; font-weight: 800; }
+#play .foot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--line); }
+#play .note { font-size: 13px; color: var(--dim); line-height: 1.4; }
+#play .helptxt { font-size: 15px; line-height: 1.5; max-width: 760px; }
+#play .helptxt li { margin: 4px 0; }
+@media (max-aspect-ratio: 1/1) {                       /* iPad held upright: the log goes under the table */
+  #play .pmain { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) 150px; }
+  #play .ongoing { width: 180px; }
+}
+@media (max-height: 700px) { #play .mat { height: 240px; } #play .tc { height: 28px; } }
 @media print { body { background: #fff; } .bar, .dir h2, .dir .why, .sub, h1, .status, .back, details, .cap { display: none; } .dir { border: 0; padding: 0; background: none; } }
 </style>
 </head>
@@ -104,6 +215,7 @@ table.cmp th { background: var(--panel); color: var(--accent); }
   </defs>
 </svg>
 <div id="app"></div>
+<div id="play"></div>
 
 <!-- =====================================================================
      DATA — where the cards and rules come from, the card types, the icon codes, the card geometry.
@@ -157,7 +269,8 @@ const DDB = {
     startingDeck: 'Starting',                            // the Deck column value for the Mine's cards and the Pet
     survivedGems: 1, geodeGems: 1,
     beyond: { firstDamage: 8, gems: 2 },                 // Monsters after the Mine runs out: 8, 9, ... and worth 2 gems
-    kitSizes: [1, 2, 2, 3],                              // Round tracker: Starter Kit cards per round (testing)
+    kitSizes: [1, 2, 2, 3],
+    soloKit: 3,                                          // Starter Kit size offered in the solo prototype (the round tracker's round 1 is 1)                              // Round tracker: Starter Kit cards per round (testing)
     maxChain: 6,                                         // safety limit on effects that trigger effects
     rulings: {                                           // each one is a question in QUESTIONS.md; change the value to change the rule
       transformOrder: ['double', 'becomes', 'floor'],    // #9  what happens to the result, in order, after bonuses are added
@@ -455,7 +568,7 @@ const Dig = (() => {
     }
     st.mine = shuffle(st, mine);
     refreshPet(st);
-    log(st, 'sys', `New Dig. Mine: ${st.mine.length} cards. ${st.pet ? st.pet.name + ' is on the line.' : ''}`);
+    log(st, 'sys', `New Dig (seed ${seed}). Mine: ${st.mine.length} cards. ${st.pet ? st.pet.name + ' is on the line.' : ''}`);
     if (st.kit.length) log(st, 'sys', `Starter Kit: ${st.kit.map(k => k.name).join(', ')}.`);
     for (const o of st.ongoing) for (const e of compile(o).ongoing.startDig) run(st, [e], { src: o });
     return st;
@@ -661,6 +774,7 @@ const Dig = (() => {
     let c = st.mine.shift(); st.known = Math.max(0, st.known - 1);
     if (!c) { c = bonusMonster(st); log(st, 'dig', `Your Mine is empty — a ${c.name} appears`); }
     else log(st, 'dig', `You dig ${c.name}`);
+    st.last = c;
     resolveDug(st, c);
     return true;
   }
@@ -850,6 +964,7 @@ const Dig = (() => {
   const BUILD = (() => { const m = document.querySelector('meta[name=build]'); const v = m ? m.content : ''; return !v || v.startsWith('__') ? 'local file' : v; })();
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const u = n => `calc(var(--u) * ${n})`;
+  document.body.dataset.mode = location.hash === '#cards' ? 'cards' : 'play';
   const state = { all: [], source: '', status: 'loading', error: '', view: 'color', guides: true, overlap: true, dir: 'all', round: true };
 
   // ---------------- the sheet ----------------
@@ -875,9 +990,10 @@ const Dig = (() => {
     } catch (e) {
       state.all = E.cards(E.parseCSV(DDB_SAMPLE_CSV), D.columns); state.source = 'sample'; state.status = 'offline'; state.error = e.message;
     }
-    render();
+    render(); document.dispatchEvent(new Event('ddb-cards'));
   }
-  window.DigDigBoomUI = { state, load, render: () => render() };
+  const setMode = m => { document.body.dataset.mode = m; if (m === 'cards') render(); else document.dispatchEvent(new Event('ddb-mode')); };
+  window.DigDigBoomUI = { state, load, render: () => render(), setMode, api: {} };
 
   // ---------------- icons ----------------
   const ic = (code, extra = '') => `<svg class="ic" viewBox="0 0 24 24" aria-label="${code}"${extra}><use href="#i-${code}"/></svg>`;
@@ -978,6 +1094,17 @@ const Dig = (() => {
   }
   // ---------------- the chosen design: Top Tab, Geode = stat 3, Monster = stat 1, standard art ----------------
   const statFor = c => c.type === 'Treasure' ? 3 : c.type === 'Monster' ? 1 : 0;
+  // For the game screen: one card in the chosen design, as cut (no guides), at `scale` pixels per 0.01 in. Text size is the deck's uniform size.
+  let twCache = { key: '', tw: 20 };
+  function deckTextSize() {
+    const key = state.all.length + state.source;
+    if (twCache.key === key) return twCache.tw;
+    const b = R2.textBox('compact'); let tw = 44;
+    for (const c of state.all) if (c.type !== 'Monster' && c.type !== 'Treasure') tw = Math.min(tw, fitFont(textHTML(c.text), b.w, b.h));
+    twCache = { key, tw }; return tw;
+  }
+  function playCard(c, scale) { const g = state.guides; state.guides = false; try { return r2Card(c, deckTextSize(), 'compact', statFor(c), scale); } finally { state.guides = g; } }
+  Object.assign(window.DigDigBoomUI.api, { ic, textHTML, esc, playCard });
   function deckHTML(scale) {
     const pool = state.all.filter(c => c.type !== 'Monster' && c.type !== 'Treasure');
     const b = R2.textBox('compact'); let tw = 44;
@@ -1182,6 +1309,7 @@ const Dig = (() => {
     return `<span class="status bad"><b>Could not reach the sheet</b> (${esc(state.error)}). Showing a 6-card design sample only. <button class="chip" data-act="reload">Try again</button></span>`;
   }
   function render() {
+    if (document.body.dataset.mode !== 'cards') return;
     const lab = state.all.length ? pickLab() : [];
     const libLink = /^https?:$/.test(location.protocol) ? `<a class="back" href="${esc(D.library.href)}"><span>‹</span> ${esc(D.library.name)}</a>` : '';
     const scaleFor = d => (d.orient === 'L' ? 1.0 : 1.0) * (Math.min(innerWidth - 40, 1000) < 500 ? 0.78 : 1);
@@ -1189,6 +1317,7 @@ const Dig = (() => {
       <h1>${esc(D.title)} — card design, step 1</h1>
       <p class="sub">Three directions on the same six real cards, drawn from your v2.7 sheet. Every card is poker size (2.5 × 3.5 in) with 0.125 in bleed. Type is shown by <b>icon, word, pattern and colour</b>. The rules text is set at one size on every card: the largest that still fits the card with the longest text.</p>
       <div class="bar">
+        <button class="chip" data-act="mode" data-v="play">▶ Play</button>
         <button class="chip ${state.guides ? 'on' : ''}" data-act="guides">Print guides</button>
         <button class="chip ${state.overlap ? 'on' : ''}" data-act="overlap">Overlapped row</button>
         <button class="chip ${state.round ? 'on' : ''}" data-act="round">Rounded corners</button>
@@ -1238,11 +1367,209 @@ const Dig = (() => {
     else if (a === 'round') state.round = !state.round;
     else if (a === 'view') state.view = el.dataset.v;
     else if (a === 'reload') { load(); return; }
+    else if (a === 'mode') { setMode(el.dataset.v); return; }
     render();
   });
   let lastW = innerWidth;
   window.addEventListener('resize', () => { if (Math.abs(innerWidth - lastW) < 2) return; lastW = innerWidth; clearTimeout(window.__rz); window.__rz = setTimeout(render, 150); });     // (width only: a tall screenshot changes the height)
   load();
+})();
+</script>
+<script id="solo">
+/* =====================================================================
+   PLAY — the solo Dig on screen. Reads the table from the Dig engine; every tap is one action of the engine.
+   The table is the UI: tap the Mine to dig, the die to roll, the Grit track to spend Grit, the Rerolls to reroll, the Monster to face it.
+   ===================================================================== */
+(() => {
+  'use strict';
+  const D = DDB, R = D.rules, UI = window.DigDigBoomUI, A = UI.api, $ = document.getElementById('play');
+  const S = { st: null, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', zoom: null, help: false, panel: 'setup', settings: null };
+  const cards = () => UI.state.all;
+  const typeIcon = t => `<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#${D.types[t].icon}"/></svg>`;
+  const ic = (c, st = '') => A.ic(c, st);
+  const T = text => A.textHTML(text);
+
+  // ----- a card as a table piece: coloured header (icon, name, number) and its effect text -----
+  function piece(c, o = {}) {
+    const t = D.types[c.type], num = c.number !== null ? `<span class="n">${c.number}</span>` : '';
+    const tag = o.tag ? `<span class="tag">${A.esc(o.tag)}</span>` : '';
+    const body = `<span class="h">${typeIcon(c.type)}<span>${A.esc(c.name)}</span>${o.num === false ? '' : num}</span>${o.text === false ? '' : `<span class="t">${T(c.text)}</span>`}${o.extra || ''}${tag}`;
+    const attrs = `class="piece ${o.cls || ''}" style="--c:${t.color};--on:${t.on}"`;
+    return o.act ? `<button ${attrs} data-p="${o.act}" data-uid="${c.uid === undefined ? '' : c.uid}" data-id="${A.esc(c.id)}">${body}</button>` : `<div ${attrs}>${body}</div>`;
+  }
+  function findCard(uid) {
+    const st = S.st; if (!st) return null;
+    const pool = [...st.line.map(e => e.card), ...st.ongoing, ...st.discard, ...st.mine, st.last, st.fight && st.fight.monster, ...st.kit].filter(Boolean);
+    return pool.find(c => String(c.uid) === String(uid)) || null;
+  }
+
+  // ----- setup: choose a Starter Kit -----
+  const boosters = () => cards().filter(c => c.deck === 'Booster' && ['Power', 'Ongoing', 'Immediate'].includes(c.type));
+  function setupHTML() {
+    const all = cards(), st = UI.state;
+    if (!all.length) return `<div class="panel setup"><h2>Dig Dig BOOM!</h2><p class="note">${st.status === 'loading' ? 'Reading your sheet…' : 'No cards yet.'}</p></div>`;
+    const list = boosters(), shown = list.filter(c => c.type === S.tab), bad = list.filter(c => !Dig.supported(c));
+    const offline = st.source !== 'sheet';
+    const count = n => list.filter(c => c.type === n).length;
+    const stepper = (act, v, extra = '') => `<span class="stepper"><button data-p="${act}" data-d="-1" aria-label="less">−</button><span>${v}</span><button data-p="${act}" data-d="1" aria-label="more">+</button></span>${extra}`;
+    return `<div class="panel setup"><div class="scroll" id="setupScroll">
+      <h2>Choose your Starter Kit</h2>
+      <p class="note">Your Mine is the ${all.filter(c => c.deck === R.startingDeck && c.type !== 'Power').reduce((a, c) => a + c.count, 0)} Starting cards. Pick Booster cards to start this Dig with: Power and Ongoing cards are in play from the start; Immediate cards are shuffled into your Mine.${offline ? ' <b style="color:#ff9a8a">Your sheet could not be reached, so only the design sample is available — reload when you are online.</b>' : ''}</p>
+      <div class="tabs">
+        ${['Power', 'Ongoing', 'Immediate'].map(t => `<button class="chip ${S.tab === t ? 'on' : ''}" data-p="tab" data-v="${t}">${t} (${count(t)})</button>`).join('')}
+        <span class="note" style="margin-left:auto">Kit size ${stepper('size', S.kitSize)}</span>
+        <button class="chip" data-p="random">Random kit</button>
+        <button class="chip" data-p="clear">Clear</button>
+      </div>
+      <div class="grid">${shown.map(c => piece(c, { act: 'kit', cls: (S.kit.includes(c.id) ? 'sel' : '') + (Dig.supported(c) ? '' : ' off'), tag: S.kit.includes(c.id) ? '✓ in kit' : (Dig.supported(c) ? '' : 'not built yet') })).join('') || '<p class="note">No cards of this type in the sheet.</p>'}</div>
+      ${bad.length ? `<p class="note">Not implemented yet: ${bad.map(c => A.esc(c.name)).join(', ')}.</p>` : ''}
+      <details style="margin-top:12px"><summary>Testing options — where your tracks start</summary>
+        <p class="note">The Rules tab does not give the starred spaces yet (see QUESTIONS.md #12). Set them here to try different starts.</p>
+        <p>${ic('heart', ' style="width:26px;height:26px;vertical-align:middle"')} Health ${stepper('stat', S.start.heart).replace(/data-p="stat"/g, 'data-p="stat" data-r="heart"')}
+        &nbsp; ${ic('grit', ' style="width:26px;height:26px;vertical-align:middle"')} Grit ${stepper('stat', S.start.grit).replace(/data-p="stat"/g, 'data-p="stat" data-r="grit"')}
+        &nbsp; ${ic('reroll', ' style="width:26px;height:26px;vertical-align:middle"')} Rerolls ${stepper('stat', S.start.reroll).replace(/data-p="stat"/g, 'data-p="stat" data-r="reroll"')}</p>
+      </details>
+    </div>
+    <div class="foot"><button class="btn" data-p="go">Start the Dig${S.kit.length ? ' with ' + S.kit.length + ' kit card' + (S.kit.length === 1 ? '' : 's') : ''}</button>
+      <button class="chip" data-p="cards">Card designs</button><button class="chip" data-p="help">How it works</button>
+      <span class="note">${S.kit.length}/${S.kitSize} chosen · by the book, round 1 has a kit of ${R.kitSizes[0]}</span></div></div>`;
+  }
+
+  // ----- the table -----
+  function track(res, max, cur, live, color) {
+    let cells = '';
+    for (let i = 0; i <= max; i++) cells += `<div class="tc ${i === cur ? 'now' : i < cur ? 'lit' : ''}">${i}</div>`;
+    return `<button class="track ${live ? 'live' : ''}" data-p="${res}" style="grid-template-columns:repeat(${max + 1},1fr);--tc:${color}" aria-label="${res} ${cur}">${cells}</button>`;
+  }
+  function drillHTML(st, can) {
+    const f = st.fight, gritLive = can.grit || can.bonus;
+    const ong = st.ongoing.map(o => {
+      const wb = Dig.flag(st, 'workbench') && Dig.compile(o).ongoing.flags.workbench;
+      const extra = wb ? `<span class="wb"><button data-p="trade" data-v="grit" ${st.grit >= wb.gritCost && st.reroll < R.caps.reroll ? '' : 'disabled'}>${wb.gritCost}${ic('grit', ' style="width:15px;height:15px"')} → ${wb.rerollGain}${ic('reroll', ' style="width:15px;height:15px"')}</button><button data-p="trade" data-v="reroll" ${st.reroll >= wb.rerollCost && st.grit < R.caps.grit ? '' : 'disabled'}>${wb.rerollCost}${ic('reroll', ' style="width:15px;height:15px"')} → ${wb.gritGain}${ic('grit', ' style="width:15px;height:15px"')}</button></span>` : '';
+      return wb ? `<div class="piece" style="--c:${D.types.Ongoing.color};--on:${D.types.Ongoing.on}"><button class="h" style="width:100%;text-align:left" data-p="zoom" data-uid="${o.uid}">${typeIcon('Ongoing')}<span>${A.esc(o.name)}</span></button>${extra}</div>` : piece(o, { act: 'zoom', num: false });
+    }).join('');
+    return `<section class="drill"><div class="tracks">
+      <div class="trow"><span class="tlab">${ic('heart')}</span>${track('heart', R.caps.heart, st.heart, false, '#e8344e')}</div>
+      <div class="trow"><span class="tlab">${ic('grit')}</span>${track('grit', R.caps.grit, st.grit, gritLive, '#d9951a')}</div>
+      <div class="trow"><span class="tlab">${ic('reroll')}</span>${track('reroll', R.caps.reroll, st.reroll, can.reroll, '#2eaf68')}</div>
+    </div><div class="ongoing"><h4>Ongoing ${st.ongoing.length ? '(' + st.ongoing.length + ')' : ''}</h4><div class="list">${ong || '<span class="note">Ongoing cards you dig stay here.</span>'}</div></div></section>`;
+  }
+  function lineHTML(st) {
+    const f = st.fight, res = f && f.phase === 'after' ? Dig.result(st) : null, total = res ? res.total : null;
+    const cols = [];
+    for (let n = R.line.min; n <= R.line.max; n++) {
+      const here = st.line.filter(e => e.at === n);
+      const cls = total === null ? '' : n <= total ? 'on' : 'off';
+      cols.push(`<div class="lcol ${cls}">${here.map(e => piece(e.card, {
+        act: 'card', cls: (st.pending && st.pending.kind === 'clone' ? 'pick ' : '') + (total !== null && e.at <= total ? 'trig' : ''),
+        tag: e.pet ? 'PET' : e.cloned ? '×2' : e.at < e.base ? '↓' + e.base : '', num: false })).join('')}<span class="lnum">${n}</span></div>`);
+    }
+    return `<section class="line"><div class="linehead"><span>Power line — a result triggers every card at that number or lower</span><span>${total !== null ? 'Result ' + total : ''}</span></div><div class="lcols">${cols.join('')}</div></section>`;
+  }
+  function fightHTML(st, can) {
+    const f = st.fight, res = Dig.result(st), after = f.phase === 'after';
+    const tokens = f.gritSteps.map((v, i) => `<button data-p="refund" aria-label="take back Grit">${ic('grit')}${v > 1 ? '<b style="position:absolute;font-size:12px">+' + v + '</b>' : ''}</button>`).join('');
+    const die = after ? `<div class="die">${f.fixed !== null ? f.fixed : f.die}</div>` : `<button class="die live" data-p="roll">Roll<small>tap</small></button>`;
+    const calc = after
+      ? `<div class="calc"><b>Result ${res.total}</b>${res.parts.map(p => p.set ? `becomes ${p.v}` : `${p.label} ${p.v >= 0 && p.label !== 'Die' && p.label !== 'Fixed' ? '+' : ''}${p.v}`).join(' · ')}</div>`
+      : `<div class="calc">This Monster deals <b style="display:inline">${f.damage}</b> ${ic('damage', ' style="width:20px;height:20px;vertical-align:-4px"')}</div>`;
+    const hint = after
+      ? (f.fixed !== null ? 'Tap the Monster to face it.' : [can.bonus ? `Grit: ${R.gritAfter.cost} for +${R.gritAfter.bonus}` : '', can.reroll ? 'Rerolls: reroll' : '', 'Tap the Monster to face it'].filter(Boolean).join(' · '))
+      : (st.grit ? 'Tap Grit to add +1 · tap the die to roll' : 'Tap the die to roll');
+    return `<button class="mcard ${after ? 'live' : ''}" data-p="face" ${after ? '' : 'disabled'}>${A.playCard(f.monster, 0.71)}</button>
+      <div class="rollp">${die}<div class="tokens">${tokens}</div>${calc}<div class="hint">${hint}</div></div>`;
+  }
+  function tableHTML() {
+    const st = S.st, can = Dig.can(st), f = st.fight;
+    const gems = st.geodeGems + st.monsterGems;
+    const known = st.mine.slice(0, st.known).map(c => piece(c, { text: false, num: false, cls: '' })).join('');
+    const mine = `<div class="stack" style="gap:6px"><button class="pile ${can.dig ? 'live' : ''}" data-p="dig" ${can.dig ? '' : 'disabled'} style="flex:1"><div class="cardback">${st.mine.length}</div><span>Mine<br><span class="cap2">${st.mine.length ? (can.dig ? 'tap to dig' : '') : 'empty: Bonus Monsters next'}</span></span></button>${known ? `<div class="known">${known}</div>` : ''}</div>`;
+    const top = [...st.discard].reverse()[0];
+    const right = `<div class="stack"><button class="pile" data-p="zoom" data-uid="${top ? top.uid : ''}" ${top ? '' : 'disabled'} style="${top ? 'color:#fff' : ''}">${top ? piece(top, { text: false, num: false }) : ''}<span>Discard · ${st.discard.length}</span></button>
+      <button class="pile ${can.bank ? 'live' : ''}" data-p="bank" ${can.bank ? '' : 'disabled'}><span class="gemline">${gems}${ic('gem')}</span><span>Bank<br><span class="cap2">${can.bank ? 'tap to keep them' : ''}</span></span></button></div>`;
+    let mid;
+    if (f) mid = `<div class="dig">${fightHTML(st, can)}</div>`;
+    else if (st.pending) mid = `<div class="dig idle"><div>${A.esc(st.pending.card.name)} goes under one of your Power cards.<br><b style="color:var(--accent)">Tap a Power card on the line.</b></div></div>`;
+    else mid = `<div class="dig idle">${st.last ? `<button class="mcard" data-p="zoom" data-uid="${st.last.uid}">${A.playCard(st.last, 0.71)}</button>` : ''}<div>${st.last ? 'Last card dug.<br>' : ''}<b style="color:var(--accent)">${can.dig ? 'Tap your Mine to dig.' : ''}</b></div></div>`;
+    const s = st.over ? Dig.score(st) : null;
+    const over = st.over ? (st.over.kind === 'boom'
+      ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${A.esc(st.over.why).replace(/\{heart\}/g, '')}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this Dig.</div>`
+      : `<div class="over"><h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>` : '';
+    return `${drillHTML(st, can)}${lineHTML(st)}<div class="mat" style="position:relative">${mine}${mid}${right}${over}</div>`;
+  }
+  function logHTML(st) {
+    return `<aside class="plog"><h3>What happened</h3><div class="entries" id="logEntries">${st.log.map(l => `<div class="e k-${l.kind}">${T(l.text)}</div>`).join('')}</div></aside>`;
+  }
+  function helpHTML() {
+    return `<div class="panel"><div class="scroll"><h2>How this works</h2><div class="helptxt">
+      <p>This is a solo Dig: dig through your Mine one card at a time. Bank to keep your gems, or push on and risk BOOM. Everything is a tap on the table:</p>
+      <ul><li><b>Mine</b>: tap to dig the top card. Geodes score ${R.geodeGems} gem. Immediate cards happen at once. Power cards go on the line at their number; Ongoing cards stay in your Ongoing area.</li>
+      <li><b>Monster</b>: tap the Grit track to spend ${R.gritBefore} Grit for +1 on the roll (tap a spent Grit token to take it back), tap the die to roll (a d${R.die}). After the roll, tap Grit to spend ${R.gritAfter.cost} for +${R.gritAfter.bonus}, or tap Rerolls to reroll. Then tap the Monster to face it.</li>
+      <li><b>Facing it</b>: every card on the Power line at the result or lower triggers (the Pet is at ${R.pet.at}; if it triggers, the Monster is defeated and you take no damage). Then you take the Monster's damage. Health at 0 is BOOM.</li>
+      <li><b>Bank</b>: tap the Bank chest between cards to end the Dig and keep your gems. Not while a Monster is in front of you.</li>
+      <li><b>Any card</b>: tap it to see it full size, tap again to close.</li>
+      <li><b>Beyond the Mine</b>: when the Mine runs out, Bonus Monsters keep coming: ${R.beyond.firstDamage}, ${R.beyond.firstDamage + 1}, … damage, worth ${R.beyond.gems} gems.</li></ul>
+      <p><b>Calls made where the rules are unclear</b> (all in QUESTIONS.md, one line each to change):</p>
+      <ul><li>The die is a d${R.die}; Health starts at ${R.start.heart}, Grit ${R.start.grit}, Rerolls ${R.start.reroll}.</li>
+      <li>Cards that trigger resolve highest number first, then damage is halved before Block is taken off.</li>
+      <li>Grit you have already spent stays on the roll when you reroll.</li>
+      <li>"Whenever you gain" only counts when the track actually moves.</li>
+      <li>Result changes apply in order: bonuses, then double, then "becomes", then "less than".</li>
+      <li>You may bank between any two cards (there is no Pledge in a solo Dig).</li></ul>
+      <p><a href="#" data-p="cards">Card designs</a></p></div></div><div class="foot"><button class="btn" data-p="closehelp">Back to the table</button></div></div>`;
+  }
+  function render() {
+    if (document.body.dataset.mode !== 'play') return;
+    const keep = $.querySelector('#setupScroll'), ks = keep ? keep.scrollTop : 0;
+    const libLink = /^https?:$/.test(location.protocol) ? `<a class="back" href="${A.esc(D.library.href)}"><span>‹</span> ${A.esc(D.library.name)}</a>` : '';
+    const bar = `<div class="pbar">${libLink}<h1>Dig Dig BOOM!</h1><button class="chip" data-p="help">How it works</button><button class="chip" data-p="setup">New Dig</button><button class="chip" data-p="cards">Cards</button></div>`;
+    let body;
+    if (S.panel === 'setup' || !S.st) body = setupHTML();
+    else body = `<div class="pmain"><div class="ptable">${tableHTML()}</div>${logHTML(S.st)}</div>`;
+    const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, 1.35)}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}</div>` : '';
+    $.innerHTML = bar + body + (S.help ? helpHTML() : '') + z;
+    const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
+    const lg = $.querySelector('#logEntries'); if (lg) lg.scrollTop = lg.scrollHeight;
+  }
+
+  // ----- taps -----
+  function newDig() {
+    const by = id => cards().find(c => c.id === id);
+    S.st = Dig.start(cards(), S.kit.map(by).filter(Boolean), { start: S.start }); S.panel = 'dig'; S.zoom = null;
+  }
+  function act(a, el) {
+    const st = S.st, f = st && st.fight, ds = el.dataset;
+    switch (a) {
+      case 'tab': S.tab = ds.v; break;
+      case 'kit': { const c = cards().find(x => x.id === ds.id); if (!c || !Dig.supported(c)) break; const i = S.kit.indexOf(c.id); if (i >= 0) S.kit.splice(i, 1); else if (S.kit.length < S.kitSize) S.kit.push(c.id); break; }
+      case 'size': S.kitSize = Math.max(0, Math.min(8, S.kitSize + Number(ds.d))); S.kit = S.kit.slice(0, S.kitSize); break;
+      case 'stat': { const r = ds.r, v = S.start[r] + Number(ds.d); S.start[r] = Math.max(r === 'heart' ? 1 : 0, Math.min(R.caps[r], v)); break; }
+      case 'random': { const pool = boosters().filter(Dig.supported); S.kit = []; const rr = Dig.makeRng((Math.random() * 1e9) | 0); while (S.kit.length < Math.min(S.kitSize, pool.length)) { const c = pool[Math.floor(rr() * pool.length)]; if (!S.kit.includes(c.id)) S.kit.push(c.id); } break; }
+      case 'clear': S.kit = []; break;
+      case 'go': case 'again': newDig(); break;
+      case 'setup': S.panel = 'setup'; S.help = false; break;
+      case 'help': S.help = true; break;
+      case 'closehelp': S.help = false; break;
+      case 'cards': S.help = false; UI.setMode('cards'); return;
+      case 'unzoom': S.zoom = null; break;
+      case 'zoom': S.zoom = findCard(ds.uid); break;
+      case 'card': { const c = findCard(ds.uid), e = st && st.line.find(x => x.card === c); if (st && st.pending && e) Dig.chooseClone(st, e); else S.zoom = c; break; }
+      case 'dig': if (st) Dig.dig(st); break;
+      case 'grit': if (f) { if (f.phase === 'before') Dig.spendGrit(st); else Dig.buyBonus(st); } break;
+      case 'refund': Dig.refundGrit(st); break;
+      case 'roll': Dig.roll(st); break;
+      case 'reroll': if (f && f.phase === 'after') Dig.reroll(st); break;
+      case 'face': Dig.face(st); break;
+      case 'bank': Dig.bank(st); break;
+      case 'trade': Dig.trade(st, el.dataset.v); break;
+      case 'heart': break;
+    }
+    render();
+  }
+  $.addEventListener('click', e => { const el = e.target.closest('[data-p]'); if (!el || el.disabled) return; e.preventDefault(); act(el.dataset.p, el); });
+  document.addEventListener('ddb-cards', render); document.addEventListener('ddb-mode', render);
+  window.DigDigBoomPlay = { S, render, act: (a, d) => act(a, { dataset: d || {} }) };
+  render();
 })();
 </script>
 </body>

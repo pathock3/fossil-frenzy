@@ -20,7 +20,7 @@ async function open({ sheet = 'ok', viewport = { width: 1180, height: 820 } } = 
   page.on('pageerror', e => errors.push(e.message));
   page.on('request', r => { if (!/^(file|data|blob):/.test(r.url())) requests.push(r.url()); });
   await page.route('**/docs.google.com/**', r => (sheet === 'ok' ? r.fulfill({ status: 200, contentType: 'text/csv', body: fixture }) : sheet === 'html' ? r.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><html></html>' }) : r.abort()));
-  await page.goto(FILE);
+  await page.goto(FILE + '#cards');
   await page.waitForSelector('section.dir');
   return { browser, page, errors, requests };
 }

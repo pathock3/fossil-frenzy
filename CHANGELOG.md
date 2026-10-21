@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **Dig Dig BOOM! — solo Dig (prototype step 3):** the game opens on a playable solo Dig. Choose a Starter Kit, then tap your Mine to dig; tap the Grit track to spend Grit before a roll, tap the die to roll, tap Grit (3 for +1) or Rerolls after it, tap the Monster to face it; every card on the Power line at the result or lower triggers, then damage; Bank from the chest between cards; BOOM ends the Dig. Every card in your sheet is understood by the rules engine, with a log of each effect. The card designs moved to the "Cards" button.
 - **Dig Dig BOOM! deck uses compact art** (your pick; rules text 17.5 pt on every card). Art stays placeholder for the prototype.
 - **Dig Dig BOOM! whole deck in the chosen design:** every card from your sheet is now drawn as Top Tab — Geodes use the slim-art + huge gem count (Stat 3), Monsters use art + big damage-ladder tiles + "1 gem if survived" (Stat 1). Rounds 1 and 2 are folded away under the deck. Two-line card names no longer touch the type word.
 - **Dig Dig BOOM! card lab, round 2:** you picked the Top Tab (B), so the lab now leads with a refined B — a bigger tab — and asks two things: standard or compact art (compact gives the rules text +11% size), and three ways to make Gem and Monster numbers huge (Stat 1 panel under the art, Stat 2 ribbon under the tab, Stat 3 two tiles). The page now tries your published-to-web link first, then the sheet's other addresses. Round 1 (A–E) is folded away under the new section.
