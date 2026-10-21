@@ -23,8 +23,8 @@ Read live from the sheet by the lab page ("Questions already written in your she
 ## Added while building the solo Dig (each is one line in `DDB.rules`, so easy to change)
 9. **Order of result changes:** Tune-Up and friends add; Wrecking Ball doubles; Backfire turns 1 into 10; Floor Jack lifts below 4 to 4. Default: add, then double, then "becomes", then "less than" (`rulings.transformOrder`). Second Spark (3 or less rerolls free) looks at the result *before* the double/becomes/floor changes, once per Monster. — open
 10. **Panic Button:** the free reroll happens after the line has triggered and before damage; does the rerolled result trigger the line *again* (so heals and Grit stack)? Default: yes (`rulings.panicRetriggers`). — open
-11. **Die size:** the Rules tab says "roll the die" but not how many sides. Default: a six-sided die (`rules.die`). With a d6 plus Grit (max 6) a 10 needs bonuses. — open (important)
-12. **Starting spaces:** the Rules tab says each track "resets to its starred space" but not which. Default: Health 6, Grit 0, Rerolls 0 (`rules.start`). The kit screen has steppers to try other starts. — open (important)
+11. **Die size:** ruled by the owner — a d10 (`rules.die`). — **ruled**
+12. **Starting spaces:** ruled by the owner — Health 0–10 starting at 10; Grit 0–6 starting at 0; Rerolls 0–3 starting at 0 each round (`rules.start`, `rules.caps`). — **ruled**
 13. **"Whenever you gain …" at a full track:** does gaining Health at 12 still count? Default: no — the track has to actually move (`rulings.gainAtCapFires`). — open
 14. **Immediate cards in the Starter Kit:** the Rules tab says you "start the next Dig with" the chosen cards. Immediates would do nothing in play, so they are shuffled into the Mine (`rulings.kitImmediates`). — open
 15. **Losing Health to a card** (Prickly Porcupine, Risky Shortcut) can take you to 0 and BOOM you. Default: yes. Lucky Cricket only protects against a Monster's damage. — open

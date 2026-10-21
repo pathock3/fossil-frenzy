@@ -37,6 +37,17 @@ test('a new Dig: Mine of 25 (18 Geodes, 7 Monsters), the Pet on the line at 10, 
   assert.notDeepEqual(Dig.start(cards, [], { seed: 6 }).mine.map(c => c.id), st.mine.map(c => c.id));
 });
 
+test('the Drill by the rules: a d10, Health 0-10 starting at 10, Grit 0-6 and Rerolls 0-3 both starting at 0', () => {
+  assert.equal(DDB.rules.die, 10);
+  assert.deepEqual(DDB.rules.caps, { heart: 10, grit: 6, reroll: 3 });
+  assert.deepEqual(DDB.rules.start, { heart: 10, grit: 0, reroll: 0 });
+  const st = Dig.start(cards, [], { seed: 3 });
+  assert.deepEqual([st.heart, st.grit, st.reroll], [10, 0, 0]);
+  const seen = new Set(); for (let i = 1; i <= 400; i++) { const g = Dig.start(cards, [], { seed: i }); g.mine = [{ ...by('MO-01'), uid: 1 }]; Dig.dig(g); Dig.roll(g); seen.add(g.fight.die); }
+  assert.deepEqual([Math.min(...seen), Math.max(...seen), seen.size], [1, 10, 10], 'every face of a d10 comes up');
+  const h = game({ mine: ['IM-13'], start: { heart: 8 } }); Dig.dig(h); assert.equal(h.heart, 10, 'Health stops at 10');
+});
+
 test('Starter Kit: Power cards go on the line, Ongoing cards in play, Immediate cards are shuffled into the Mine', () => {
   const st = Dig.start(cards, ['PW-02', 'ON-33', 'IM-13'].map(by), { seed: 1 });
   assert.equal(st.line.length, 2); assert.equal(st.ongoing.length, 1); assert.equal(st.mine.length, 26);

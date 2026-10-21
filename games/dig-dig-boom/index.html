@@ -262,9 +262,9 @@ const DDB = {
   texts: { longestHint: 'IM-24' },
   // ---- The rules of a Dig (v2.7 Rules tab). Numbers here are the rules; the engine (script "dig") only does what they say. ----
   rules: {
-    die: 6,                                              // sides of the die (QUESTIONS #11: not stated in the Rules tab)
-    caps: { heart: 12, grit: 6, reroll: 3 },             // Drill tracks: Health 0-12, Grit 0-6, Rerolls 0-3
-    start: { heart: 6, grit: 0, reroll: 0 },             // each track's starred reset space (QUESTIONS #12: not stated)
+    die: 10,                                             // sides of the die (owner: a d10)
+    caps: { heart: 10, grit: 6, reroll: 3 },             // Drill tracks: Health 0-10, Grit 0-6, Rerolls 0-3 (owner)
+    start: { heart: 10, grit: 0, reroll: 0 },            // each track's reset space at the start of a round (owner)
     gritBefore: 1,                                       // Grit spent before the roll: +1 each
     gritAfter: { cost: 3, bonus: 1 },                    // Grit spent after seeing the roll: 3 for +1
     rerollCost: 1,
@@ -1438,7 +1438,7 @@ const Dig = (() => {
       <div class="grid">${shown.map(c => piece(c, { act: 'kit', cls: (S.kit.includes(c.id) ? 'sel' : '') + (Dig.supported(c) ? '' : ' off'), tag: S.kit.includes(c.id) ? '✓ in kit' : (Dig.supported(c) ? '' : 'not built yet') })).join('') || '<p class="note">No cards of this type in the sheet.</p>'}</div>
       ${bad.length ? `<p class="note">Not implemented yet: ${bad.map(c => A.esc(c.name)).join(', ')}.</p>` : ''}
       <details style="margin-top:12px"><summary>Testing options — where your tracks start</summary>
-        <p class="note">The Rules tab does not give the starred spaces yet (see QUESTIONS.md #12). Set them here to try different starts.</p>
+        <p class="note">By the rules a Dig starts at Health ${R.start.heart}, Grit ${R.start.grit}, Rerolls ${R.start.reroll}. Change them here only to try things out.</p>
         <p>${ic('heart', ' style="width:26px;height:26px;vertical-align:middle"')} Health ${stepper('stat', S.start.heart).replace(/data-p="stat"/g, 'data-p="stat" data-r="heart"')}
         &nbsp; ${ic('grit', ' style="width:26px;height:26px;vertical-align:middle"')} Grit ${stepper('stat', S.start.grit).replace(/data-p="stat"/g, 'data-p="stat" data-r="grit"')}
         &nbsp; ${ic('reroll', ' style="width:26px;height:26px;vertical-align:middle"')} Rerolls ${stepper('stat', S.start.reroll).replace(/data-p="stat"/g, 'data-p="stat" data-r="reroll"')}</p>
