@@ -188,3 +188,19 @@ test('play: if the sheet cannot be reached it says so instead of failing', SKIP,
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
+
+test('play: a seed replays the same Dig; your best (Monsters survived, gems banked) is remembered in this browser', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await page.click('#play details summary'); await page.fill('#seedIn', '42'); await page.click('#play [data-p=go]'); await page.waitForSelector('#play .ptable');
+    const a = await page.evaluate(() => window.DigDigBoomPlay.S.st.mine.map(c => c.id).join(','));
+    await page.click('#play .pbar [data-p=setup]'); await page.click('#play details summary'); await page.fill('#seedIn', '42'); await page.click('#play [data-p=go]');
+    assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.st.mine.map(c => c.id).join(',')), a);
+    assert.match(await page.locator('#logEntries').innerText(), /seed 42/);
+    await begin(page, { mine: ['TR-01', 'TR-01', 'MO-01'], dice: [6], start: { heart: 6 } });
+    await page.click('#play [data-p=dig]'); await page.click('#play [data-p=dig]'); await page.click('#play [data-p=bank]');
+    assert.match(await page.locator('#play .over').innerText(), /Best so far: 0 Monsters survived · 2 gems banked \(new!\)/);
+    assert.deepEqual(JSON.parse(await page.evaluate(() => localStorage.getItem('ddb.solo.best'))), { survived: 0, gems: 2 });
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});

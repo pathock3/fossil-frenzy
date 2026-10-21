@@ -1389,6 +1389,16 @@ const Dig = (() => {
   const D = DDB, R = D.rules, UI = window.DigDigBoomUI, A = UI.api, $ = document.getElementById('play');
   const S = { st: null, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', zoom: null, help: false, panel: 'setup', settings: null };
   const cards = () => UI.state.all;
+  // Personal bests live in this browser only (best Monsters survived, best gems banked). Never needed for play.
+  const BEST_KEY = 'ddb.solo.best';
+  const readBest = () => { try { return JSON.parse(localStorage.getItem(BEST_KEY)) || { survived: 0, gems: 0 }; } catch (e) { return { survived: 0, gems: 0 }; } };
+  function recordBest(st) {
+    const b = readBest(), prev = { ...b }, sc = Dig.score(st);
+    if (sc.survived > b.survived) b.survived = sc.survived;
+    if (st.over.kind === 'bank' && sc.total > b.gems) b.gems = sc.total;
+    try { localStorage.setItem(BEST_KEY, JSON.stringify(b)); } catch (e) { /* private window: fine */ }
+    st.best = { now: b, prev, newSurvived: b.survived > prev.survived, newGems: b.gems > prev.gems };
+  }
   const typeIcon = t => `<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#${D.types[t].icon}"/></svg>`;
   const ic = (c, st = '') => A.ic(c, st);
   const T = text => A.textHTML(text);
@@ -1432,6 +1442,7 @@ const Dig = (() => {
         <p>${ic('heart', ' style="width:26px;height:26px;vertical-align:middle"')} Health ${stepper('stat', S.start.heart).replace(/data-p="stat"/g, 'data-p="stat" data-r="heart"')}
         &nbsp; ${ic('grit', ' style="width:26px;height:26px;vertical-align:middle"')} Grit ${stepper('stat', S.start.grit).replace(/data-p="stat"/g, 'data-p="stat" data-r="grit"')}
         &nbsp; ${ic('reroll', ' style="width:26px;height:26px;vertical-align:middle"')} Rerolls ${stepper('stat', S.start.reroll).replace(/data-p="stat"/g, 'data-p="stat" data-r="reroll"')}</p>
+        <p class="note">Seed (a number; leave empty for a random Dig; the same seed gives the same Mine and dice): <input id="seedIn" inputmode="numeric" pattern="[0-9]*" value="${S.seed === undefined ? '' : S.seed}" style="width:130px;min-height:40px;border-radius:10px;border:2px solid var(--line);background:var(--panel);color:var(--text);padding:0 10px;font-size:16px"></p>
       </details>
     </div>
     <div class="foot"><button class="btn" data-p="go">Start the Dig${S.kit.length ? ' with ' + S.kit.length + ' kit card' + (S.kit.length === 1 ? '' : 's') : ''}</button>
@@ -1499,7 +1510,7 @@ const Dig = (() => {
     const s = st.over ? Dig.score(st) : null;
     const over = st.over ? (st.over.kind === 'boom'
       ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${A.esc(st.over.why).replace(/\{heart\}/g, '')}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this Dig.</div>`
-      : `<div class="over"><h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>` : '';
+      : `<div class="over"><h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + (st.best ? `<div class="note">Best so far: ${st.best.now.survived} Monsters survived${st.best.newSurvived ? ' (new!)' : ''} · ${st.best.now.gems} gems banked${st.best.newGems ? ' (new!)' : ''}</div>` : '') + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>` : '';
     return `${drillHTML(st, can)}${lineHTML(st)}<div class="mat" style="position:relative">${mine}${mid}${right}${over}</div>`;
   }
   function logHTML(st) {
@@ -1540,7 +1551,8 @@ const Dig = (() => {
   // ----- taps -----
   function newDig() {
     const by = id => cards().find(c => c.id === id);
-    S.st = Dig.start(cards(), S.kit.map(by).filter(Boolean), { start: S.start }); S.panel = 'dig'; S.zoom = null;
+    const inp = $.querySelector('#seedIn'); if (inp) S.seed = inp.value.trim() === '' ? undefined : Number(inp.value) >>> 0;
+    S.st = Dig.start(cards(), S.kit.map(by).filter(Boolean), { start: S.start, seed: S.seed }); S.panel = 'dig'; S.zoom = null;
   }
   function act(a, el) {
     const st = S.st, f = st && st.fight, ds = el.dataset;
@@ -1551,7 +1563,8 @@ const Dig = (() => {
       case 'stat': { const r = ds.r, v = S.start[r] + Number(ds.d); S.start[r] = Math.max(r === 'heart' ? 1 : 0, Math.min(R.caps[r], v)); break; }
       case 'random': { const pool = boosters().filter(Dig.supported); S.kit = []; const rr = Dig.makeRng((Math.random() * 1e9) | 0); while (S.kit.length < Math.min(S.kitSize, pool.length)) { const c = pool[Math.floor(rr() * pool.length)]; if (!S.kit.includes(c.id)) S.kit.push(c.id); } break; }
       case 'clear': S.kit = []; break;
-      case 'go': case 'again': newDig(); break;
+      case 'go': newDig(); break;
+      case 'again': S.seed = undefined; newDig(); break;
       case 'setup': S.panel = 'setup'; S.help = false; break;
       case 'help': S.help = true; break;
       case 'closehelp': S.help = false; break;
@@ -1569,6 +1582,7 @@ const Dig = (() => {
       case 'trade': Dig.trade(st, el.dataset.v); break;
       case 'heart': break;
     }
+    if (S.st && S.st.over && !S.st.best) recordBest(S.st);
     render();
   }
   $.addEventListener('click', e => { const el = e.target.closest('[data-p]'); if (!el || el.disabled) return; e.preventDefault(); act(el.dataset.p, el); });
