@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dig Dig BOOM!">
+<meta name="build" content="__BUILD__">
+<meta name="theme-color" content="#1c1410">
+<title>Dig Dig BOOM!</title>
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
+<style>
+:root { --bg: #1c1410; --panel: #2a1f18; --line: #4b3a2c; --text: #f4ead8; --dim: #ac9a82; --accent: #ffb13b; --good: #52d28a; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif; overscroll-behavior: none; }
+body { padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 40px max(14px, env(safe-area-inset-left)); }
+button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
+a { color: var(--accent); }
+h1 { margin: 6px 0 2px; font-size: clamp(26px, 5vw, 40px); }
+h2 { margin: 0 0 4px; font-size: 22px; }
+.sub { color: var(--dim); margin: 0 0 12px; font-size: 15px; line-height: 1.4; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 18px; }
+.chip { min-height: 44px; padding: 8px 14px; border-radius: 99px; background: var(--panel); border: 2px solid var(--line); font-weight: 700; font-size: 15px; }
+.chip.on { border-color: var(--accent); background: #4a3418; }
+.status { font-size: 13px; color: var(--dim); }
+.status b { color: var(--good); }
+.status.bad b { color: #ff7a6b; }
+.back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 16px 8px 12px; border-radius: 99px; background: var(--panel); border: 2px solid var(--accent); font-weight: 800; text-decoration: none; color: var(--text); }
+.back span { color: var(--accent); font-size: 22px; line-height: 1; }
+.dir { margin: 0 0 34px; padding: 16px; border-radius: 18px; background: var(--panel); border: 2px solid var(--line); }
+.dir .why { margin: 0 0 12px; padding-left: 20px; font-size: 15px; line-height: 1.45; }
+.dir .why li { margin: 3px 0; }
+.dir .tag { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--accent); }
+.row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.cell { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.cap { font-size: 12px; color: var(--dim); }
+.fan { position: relative; margin: 6px 0 4px; }
+.fan .card { position: absolute; }
+.qs { font-size: 14px; line-height: 1.45; }
+.qs li { margin: 4px 0; }
+details { margin: 10px 0; }
+summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
+
+/* ---------- the cards ----------
+   Every card is drawn on a grid of hundredths of an inch (275 x 375 portrait, 375 x 275 landscape: 2.5 x 3.5 in poker size plus
+   0.125 in bleed all round). --u is how many screen pixels one unit is. Positions are computed in the script. */
+.card { position: relative; overflow: hidden; border-radius: 0; background: var(--ink-bg, #fff); color: #1d1712; font-family: "Avenir Next", "Helvetica Neue", Arial, system-ui, sans-serif; flex: none; }
+.card.round { border-radius: calc(var(--u) * 12.5); }
+.card .abs { position: absolute; }
+.card .paper { background: #fffaf0; }
+.card .band { color: var(--on, #fff); }
+.card .name { font-weight: 800; line-height: 1; white-space: nowrap; letter-spacing: -.01em; }
+.card .typeword { font-weight: 800; letter-spacing: .12em; text-transform: uppercase; line-height: 1; white-space: nowrap; }
+.card .text { font-weight: 600; line-height: 1.13; color: #1d1712; overflow: hidden; }
+.card .text .ic, .meas .ic { display: inline-block; width: 1.12em; height: 1.12em; vertical-align: -.2em; margin: 0 .04em; }
+.card .stat { font-weight: 900; line-height: 1.05; }
+.card .art { border-radius: calc(var(--u) * 7); background: repeating-linear-gradient(135deg, #e9dfc9 0 calc(var(--u)*6), #f6efdf calc(var(--u)*6) calc(var(--u)*12)); border: calc(var(--u) * 1.5) solid rgba(0,0,0,.28); display: flex; align-items: center; justify-content: center; color: rgba(0,0,0,.35); font-weight: 800; letter-spacing: .2em; }
+.card .art svg { width: 62%; height: 62%; opacity: .55; }
+.card .num { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #fffaf0; color: #1d1712; font-weight: 900; border-style: solid; }
+.card .disc { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #fffaf0; }
+.card .disc svg { width: 72%; height: 72%; }
+.guides { position: absolute; inset: 0; pointer-events: none; }
+.guides i { position: absolute; display: block; }
+.guides .trim { border: 1.5px dashed #ff2d55; }
+.guides .safe { border: 1.5px dashed #00b86b; }
+.guides .bleed { border: 1px solid rgba(255,255,255,.7); mix-blend-mode: difference; }
+table.cmp { width: 100%; border-collapse: collapse; margin: 0 0 22px; font-size: 14px; }
+table.cmp th, table.cmp td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+table.cmp th { background: var(--panel); color: var(--accent); }
+.view-gray .card { filter: grayscale(1); }
+.view-deut .card { filter: url(#deut); }
+.view-prot .card { filter: url(#prot); }
+.meas { position: absolute; left: -9999px; top: 0; visibility: hidden; font-weight: 600; line-height: 1.13; font-family: "Avenir Next", "Helvetica Neue", Arial, system-ui, sans-serif; }
+@media print { body { background: #fff; } .bar, .dir h2, .dir .why, .sub, h1, .status, .back, details, .cap { display: none; } .dir { border: 0; padding: 0; background: none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="deut"><feColorMatrix type="matrix" values="0.367 0.861 -0.228 0 0  0.280 0.673 0.047 0 0  -0.012 0.043 0.969 0 0  0 0 0 1 0"/></filter>
+    <filter id="prot"><feColorMatrix type="matrix" values="0.152 1.053 -0.205 0 0  0.115 0.786 0.099 0 0  -0.004 -0.048 1.052 0 0  0 0 0 1 0"/></filter>
+    <!-- resource icons: each has its own SILHOUETTE as well as its colour -->
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21.2S3.4 15.9 2.4 9.9C1.8 6.2 4.2 3.6 7.2 3.6c2 0 3.7 1 4.8 2.6 1.1-1.6 2.8-2.6 4.8-2.6 3 0 5.4 2.6 4.8 6.3-1 6-9.6 11.3-9.6 11.3z" fill="#e8344e" stroke="#5c0c1a" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.4 8.2c.3-1.3 1.2-2 2.4-2" fill="none" stroke="#ffd0d6" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-grit" viewBox="0 0 24 24"><path d="M5.2 11.2V8.4a1.7 1.7 0 0 1 3.4 0v-.5a1.7 1.7 0 0 1 3.4 0v.3a1.7 1.7 0 0 1 3.4 0v.4a1.7 1.7 0 0 1 3.4 0v6.6c0 3.4-2.5 6-5.8 6h-2.4c-3.3 0-5.4-2.4-5.4-5.5z" fill="#f4a01c" stroke="#6a3a00" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.6 9.2v3M12 8.6v3.2M15.4 8.9v3" stroke="#6a3a00" stroke-width="1.3" stroke-linecap="round"/></symbol>
+    <symbol id="i-reroll" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4.5" fill="#2eaf68" stroke="#0b4727" stroke-width="1.6"/><g fill="#fff"><circle cx="8" cy="8" r="1.7"/><circle cx="16" cy="8" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="8" cy="16" r="1.7"/><circle cx="16" cy="16" r="1.7"/></g></symbol>
+    <symbol id="i-damage" viewBox="0 0 24 24"><path d="M12 1.5l2.6 5.6 5.7-2.6-1.9 6 5.7 2.4-5.9 1.9 1.8 6-5.4-3.2L12 22.5l-1.5-5.4-5.4 3.2 1.8-6-5.9-1.9 5.7-2.4-1.9-6 5.7 2.6z" fill="#d6141f" stroke="#4a0509" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" fill="#ffd0a8"/></symbol>
+    <symbol id="i-gem" viewBox="0 0 24 24"><path d="M6 3.5h12l4 5.5-10 12L2 9z" fill="#2fb7e6" stroke="#0a3f66" stroke-width="1.6" stroke-linejoin="round"/><path d="M2 9h20M9 3.5L7.5 9 12 21M15 3.5L16.5 9 12 21" fill="none" stroke="#e8fbff" stroke-width="1.2" stroke-linejoin="round" opacity=".85"/></symbol>
+    <!-- card type icons -->
+    <symbol id="t-treasure" viewBox="0 0 24 24"><path d="M3 11V8a6 6 0 0 1 6-6h6a6 6 0 0 1 6 6v3z" fill="currentColor"/><rect x="3" y="11" width="18" height="10" rx="1.5" fill="currentColor" opacity=".78"/><rect x="10" y="9" width="4" height="6" rx="1" fill="#fffaf0" stroke="#1d1712" stroke-width="1.2"/></symbol>
+    <symbol id="t-immediate" viewBox="0 0 24 24"><path d="M13.5 1.5L4 13.5h6l-1.6 9L20 9.8h-6.4z" fill="currentColor" stroke="#1d1712" stroke-width="1" stroke-linejoin="round"/></symbol>
+    <symbol id="t-power" viewBox="0 0 24 24"><g fill="currentColor"><ellipse cx="6" cy="10" rx="2.5" ry="3.3" transform="rotate(-18 6 10)"/><ellipse cx="10.2" cy="5.6" rx="2.5" ry="3.4"/><ellipse cx="14.2" cy="5.6" rx="2.5" ry="3.4"/><ellipse cx="18.2" cy="10" rx="2.5" ry="3.3" transform="rotate(18 18.2 10)"/><path d="M12.2 11c3.6 0 6.2 3.3 6.2 6 0 2.4-1.7 3.4-3.4 3.4-1.2 0-1.9-.5-2.8-.5s-1.6.5-2.8.5c-1.7 0-3.4-1-3.4-3.4 0-2.7 2.6-6 6.2-6z"/></g></symbol>
+    <symbol id="t-ongoing" viewBox="0 0 24 24"><path d="M12 12c-1.6-2.8-3.2-4.6-5.4-4.6-2.4 0-4.2 1.9-4.2 4.6s1.8 4.6 4.2 4.6c2.2 0 3.8-1.8 5.4-4.6s3.2-4.6 5.4-4.6c2.4 0 4.2 1.9 4.2 4.6s-1.8 4.6-4.2 4.6c-2.2 0-3.8-1.8-5.4-4.6z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/></symbol>
+    <symbol id="t-monster" viewBox="0 0 24 24"><path d="M3 4l4 3.2h10L21 4l-1.2 6.4c.5 1.2.7 2.4.7 3.6 0 4.4-3.8 8-8.5 8S3.5 18.4 3.5 14c0-1.2.2-2.4.7-3.6z" fill="currentColor"/><circle cx="8.6" cy="12" r="1.8" fill="#fffaf0"/><circle cx="15.4" cy="12" r="1.8" fill="#fffaf0"/><path d="M8 17.5l1.4 2.4 1.3-2.4 1.3 2.4 1.3-2.4 1.4 2.4L16 17.5" fill="#fffaf0" stroke="#1d1712" stroke-width=".8" stroke-linejoin="round"/></symbol>
+    <!-- header patterns: a second, non-colour cue for every type -->
+    <pattern id="p-treasure" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="1.6" fill="#fff" opacity=".35"/></pattern>
+    <pattern id="p-immediate" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="12" fill="#000" opacity=".14"/></pattern>
+    <pattern id="p-power" width="14" height="10" patternUnits="userSpaceOnUse"><path d="M0 8l7-6 7 6" fill="none" stroke="#fff" stroke-width="1.6" opacity=".3"/></pattern>
+    <pattern id="p-ongoing" width="10" height="7" patternUnits="userSpaceOnUse"><rect y="0" width="10" height="2" fill="#000" opacity=".12"/></pattern>
+    <pattern id="p-monster" width="12" height="10" patternUnits="userSpaceOnUse"><path d="M0 10l3-8 3 8 3-8 3 8" fill="none" stroke="#000" stroke-width="1.4" opacity=".2"/></pattern>
+  </defs>
+</svg>
+<div id="app"></div>
+
+<!-- =====================================================================
+     DATA — where the cards and rules come from, the card types, the icon codes, the card geometry.
+     The card list is NEVER copied into this file: it is fetched from the owner's Google Sheet every time the page opens.
+     (The one exception is the `sample` block at the bottom, used ONLY when the sheet cannot be reached, so the design pages can
+     still be looked at. It is labelled on screen whenever it is in use.)
+     ===================================================================== -->
+<script id="data">
+const DDB = {
+  title: 'Dig Dig BOOM!',
+  library: { name: 'Tabletop Library', href: '../../index.html' },
+  sheet: {
+    id: '1cKcNNs38CydvvhW7rUJIc4DWHgEvT-deluLdhrIpk04',
+    tabs: { cards: 2, rules: 3 },                      // gid of "v2.7 Draft" (the cards) and "v2.7 Rules"
+    urls: [                                            // tried in order; the first that answers wins
+      (id, gid) => `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`,
+      (id, gid) => `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`,
+    ],
+    timeoutMs: 12000,
+  },
+  // Columns of the card tab. Print = shown on the card. Hint = used by game logic. Note = design notes, never printed.
+  columns: { id: 'ID', name: 'Name', type: 'Type', number: 'Number', deck: 'Deck', count: 'Count', text: 'Card Text', trigger: 'Trigger', notes: 'Notes' },
+  // Card types (v2.7 Rules, "Card types"): colour, icon, and a second cue (pattern) so no type depends on colour alone.
+  types: {
+    Treasure:  { icon: 't-treasure',  color: '#2b86d1', on: '#ffffff', pattern: 'p-treasure',  role: 'Geodes' },
+    Immediate: { icon: 't-immediate', color: '#f2c21b', on: '#1d1712', pattern: 'p-immediate', role: 'Do it when dug, then discard' },
+    Power:     { icon: 't-power',     color: '#7a3fb8', on: '#ffffff', pattern: 'p-power',     role: 'Sits on the Power line at its number' },
+    Ongoing:   { icon: 't-ongoing',   color: '#aab3bd', on: '#1d1712', pattern: 'p-ongoing',   role: 'Stays in play' },
+    Monster:   { icon: 't-monster',   color: '#cf2f2f', on: '#ffffff', pattern: 'p-monster',   role: 'Roll, resolve, take damage' },
+  },
+  // {code} in Card Text -> icon
+  iconCodes: { heart: 'i-heart', grit: 'i-grit', reroll: 'i-reroll', damage: 'i-damage', gem: 'i-gem' },
+  // Poker-size card, in hundredths of an inch (1 unit = 0.01 in).
+  card: { trimW: 250, trimH: 350, bleed: 12.5, safe: 12.5 },
+  // The cards used on the design pages (by ID), one or more of each type, including the card with the longest text.
+  labIds: ['PW-18', 'PW-21', 'ON-22', 'IM-24', 'TR-01', 'MO-01'],
+  texts: { longestHint: 'IM-24' },
+};
+// Design-time sample ONLY (a snapshot of six rows, taken 2026-10-21): shown, clearly labelled, if the sheet cannot be fetched.
+const DDB_SAMPLE_CSV = `ID,Name,Type,Number,Deck,Count,Card Text,Status,Was,Why,Trigger,Grit When Dug,Rerolls When Dug,Health When Dug,Bonus Cards When Kept,Uses Grit,Notes,Old Name
+PW-18,Energy Bat,Power,7,Booster,1,+1 {reroll}. When dug\\, +2 {grit},Converted,CO-31,,roll,2,,,,Yes,,
+PW-21,Falcon Finisher,Power,8,Booster,1,Roll again. If it's 10 or more\\, defeat this Monster,Converted,CO-34,,roll,,,,,,Question: should Grit and bonuses add to this second roll?,
+ON-22,Panic Button,Ongoing,,Booster,1,The first time each Dig a roll would make you BOOM\\, reroll it for free,Rewritten,UP-19,,would_boom,,,,,,,
+IM-24,Salvage Yard,Immediate,,Booster,1,Reveal cards from your Mine until you find a Power or Ongoing card. Play it and shuffle the rest back,Rewritten,EV-15,,immediate,,,,,,,
+TR-01,Geode,Treasure,,Starting,18,1 {gem},Rewritten,Gem,,,,,,,,,
+MO-01,Monster A,Monster,,Starting,4,{damage} 1 → 3 → 5 → 7,Rewritten,Gaia,,,,,,,,Name TBD. Each copy dug this Dig deals the next damage in the list.,`.replace(/\\,/g, '\u0001');
+</script>
+
+<script id="engine">
+/* =====================================================================
+   ENGINE — no DOM. Sheet text -> rows -> cards; card text -> tokens; fitting arithmetic.
+   ===================================================================== */
+const Engine = (() => {
+  // RFC-4180 CSV: quoted fields, doubled quotes, newlines inside quotes. (\u0001 stands for a comma inside the design-time sample.)
+  function parseCSV(text) {
+    const rows = []; let row = [], f = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+      else if (c === '"') q = true;
+      else if (c === ',') { row.push(f); f = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+      else f += c;
+    }
+    if (f.length || row.length) { row.push(f); rows.push(row); }
+    return rows.filter(r => r.some(x => x !== ''));
+  }
+  // rows -> objects keyed by header, then -> cards
+  function table(rows) {
+    const head = rows[0].map(h => h.trim());
+    return rows.slice(1).map(r => Object.fromEntries(head.map((h, i) => [h, (r[i] === undefined ? '' : r[i]).replace(/\u0001/g, ',')])));
+  }
+  function cards(rows, cols) {
+    return table(rows).filter(r => r[cols.id] && r[cols.name]).map(r => ({
+      id: r[cols.id].trim(), name: r[cols.name].trim(), type: r[cols.type].trim(),
+      number: r[cols.number] === '' || r[cols.number] === undefined ? null : Number(r[cols.number]),
+      deck: r[cols.deck].trim(), count: Number(r[cols.count]) || 1, text: r[cols.text].trim(),
+      trigger: (r[cols.trigger] || '').trim(), note: (r[cols.notes] || '').trim(), raw: r,
+    }));
+  }
+  const questions = list => list.filter(c => /^question:/i.test(c.note)).map(c => ({ id: c.id, name: c.name, q: c.note.replace(/^question:\s*/i, '') }));
+  // "+1 {reroll}. When dug, +2 {grit}" -> [{t:'text',v:'+1 '},{t:'icon',v:'reroll'},...]
+  function tokens(text, iconCodes) {
+    const out = []; const re = /\{(\w+)\}/g; let last = 0, m;
+    while ((m = re.exec(text))) {
+      if (m.index > last) out.push({ t: 'text', v: text.slice(last, m.index) });
+      out.push(iconCodes[m[1]] ? { t: 'icon', v: m[1] } : { t: 'text', v: m[0] });
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) out.push({ t: 'text', v: text.slice(last) });
+    return out;
+  }
+  // Largest value in [lo, hi] (steps of `step`) for which fits(v) is true. fits must be monotone: true for small values.
+  function largestFitting(fits, lo, hi, step = 0.25) {
+    let a = Math.round(lo / step), b = Math.round(hi / step);
+    if (!fits(a * step)) return a * step;
+    while (a < b) { const mid = Math.ceil((a + b) / 2); if (fits(mid * step)) a = mid; else b = mid - 1; }
+    return a * step;
+  }
+  const formatSize = u => (u / 100).toFixed(2) + ' in (' + (u * 0.01 * 72).toFixed(1) + ' pt)';
+  return { parseCSV, table, cards, questions, tokens, largestFitting, formatSize };
+})();
+</script>
+
+<script id="ui">
+(() => {
+  'use strict';
+  const D = DDB, E = Engine, C = D.card;
+  const $app = document.getElementById('app');
+  // Which build is this? tools/build.js stamps the commit/branch; an unbuilt file says so.
+  const BUILD = (() => { const m = document.querySelector('meta[name=build]'); const v = m ? m.content : ''; return !v || v.startsWith('__') ? 'local file' : v; })();
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const u = n => `calc(var(--u) * ${n})`;
+  const state = { all: [], source: '', status: 'loading', error: '', view: 'color', guides: true, overlap: true, dir: 'all', round: true };
+
+  // ---------------- the sheet ----------------
+  async function fetchTab(gid) {
+    let lastErr = '';
+    for (const mk of D.sheet.urls) {
+      const url = mk(D.sheet.id, gid), ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), D.sheet.timeoutMs);
+      try {
+        const res = await fetch(url, { signal: ctl.signal, cache: 'no-store', credentials: 'omit' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const text = await res.text();
+        if (/^\s*<(!doctype|html)/i.test(text)) throw new Error('got a web page, not CSV (is the sheet shared as "anyone with the link"?)');
+        return text;
+      } catch (e) { lastErr = (e && e.message) || String(e); } finally { clearTimeout(timer); }
+    }
+    throw new Error(lastErr);
+  }
+  async function load() {
+    state.status = 'loading'; render();
+    try {
+      const text = await fetchTab(D.sheet.tabs.cards);
+      state.all = E.cards(E.parseCSV(text), D.columns); state.source = 'sheet'; state.status = 'ok'; state.error = '';
+    } catch (e) {
+      state.all = E.cards(E.parseCSV(DDB_SAMPLE_CSV), D.columns); state.source = 'sample'; state.status = 'offline'; state.error = e.message;
+    }
+    render();
+  }
+  window.DigDigBoomUI = { state, load, render: () => render() };
+
+  // ---------------- icons ----------------
+  const ic = (code, extra = '') => `<svg class="ic" viewBox="0 0 24 24" aria-label="${code}"${extra}><use href="#i-${code}"/></svg>`;
+  const textHTML = (text) => E.tokens(text, D.iconCodes).map(t => t.t === 'icon' ? ic(t.v) : esc(t.v)).join('');
+  const typeIcon = (type, size, color) => `<svg viewBox="0 0 24 24" style="width:${size};height:${size};color:${color}" aria-hidden="true"><use href="#${D.types[type].icon}"/></svg>`;
+
+  // ---------------- text fitting (measured in the browser, at 1 px per unit) ----------------
+  const meas = document.createElement('div'); meas.className = 'meas'; document.body.appendChild(meas);
+  function fitsBox(html, w, h, size) {
+    meas.style.width = w + 'px'; meas.style.fontSize = size + 'px'; meas.innerHTML = html;
+    return meas.scrollHeight <= h + 0.5;
+  }
+  const fitFont = (html, w, h, lo = 10, hi = 44) => E.largestFitting(s => fitsBox(html, w, h, s), lo, hi, 0.25);
+  function fitWidth(text, weight, maxSize, boxW, minSize = 12) {
+    meas.style.width = 'auto'; meas.style.whiteSpace = 'nowrap'; meas.style.fontWeight = weight;
+    let s = maxSize;
+    for (; s > minSize; s -= 0.5) { meas.style.fontSize = s + 'px'; meas.textContent = text; if (meas.scrollWidth <= boxW) break; }
+    meas.style.whiteSpace = ''; meas.style.fontWeight = '';
+    return s;
+  }
+
+  // A card name in a box: one line when it fits at a good size, otherwise two lines split near the middle.
+  function nameBlock(name, x, y, w, h, maxSize, minOne, onBand = true) {
+    const cls = onBand ? 'name band' : 'name';
+    const one = fitWidth(name, 800, maxSize, w, 11);
+    if (one >= minOne || !/ /.test(name)) return box(x, y, w, h, cls, `font-size:${u(one)};display:flex;align-items:center`, `<span>${esc(name)}</span>`);
+    const words = name.split(' '); let best = 1, bd = 1e9;
+    for (let i = 1; i < words.length; i++) { const d = Math.abs(words.slice(0, i).join(' ').length - words.slice(i).join(' ').length); if (d < bd) { bd = d; best = i; } }
+    const l1 = words.slice(0, best).join(' '), l2 = words.slice(best).join(' ');
+    const sz = Math.min(fitWidth(l1, 800, maxSize * 0.82, w, 11), fitWidth(l2, 800, maxSize * 0.82, w, 11), h / 2 / 0.98);
+    return box(x, y, w, h, cls, `font-size:${u(sz)};display:flex;flex-direction:column;justify-content:center;line-height:.98`, `<span>${esc(l1)}</span><span>${esc(l2)}</span>`);
+  }
+
+  // ---------------- three design directions ----------------
+  // Each returns the card's inner HTML as absolutely-positioned boxes. All numbers are units (0.01 in).
+  const box = (x, y, w, h, cls, style, inner = '') => `<div class="abs ${cls}" style="left:${u(x)};top:${u(y)};width:${u(w)};height:${u(h)};${style}">${inner}</div>`;
+  const artBox = (x, y, w, h, c) => box(x, y, w, h, 'art', `font-size:${u(11)}`, c.type === 'Monster' || c.type === 'Treasure' ? `<svg viewBox="0 0 24 24" style="color:#000"><use href="#${D.types[c.type].icon}"/></svg>` : 'ART');
+  const gemChip = (x, y, c, s = 1) => (c.type === 'Treasure' || c.type === 'Monster')
+    ? box(x, y, 64 * s, 30 * s, '', `display:flex;align-items:center;gap:${u(4)};background:#fffaf0;border:${u(2)} solid #1d1712;border-radius:${u(15 * s)};padding:0 ${u(8 * s)};font-weight:900;font-size:${u(22 * s)};justify-content:center`, `1 <svg viewBox="0 0 24 24" style="width:${u(22 * s)};height:${u(22 * s)}"><use href="#i-gem"/></svg>`) : '';
+  const powerBadge = (x, y, d, c) => c.number === null ? '' : box(x, y, d, d, 'num', `font-size:${u(d * 0.64)};border-width:${u(4)};border-color:#1d1712`, String(c.number));
+  const typeColors = c => D.types[c.type];
+  const textHTMLFor = c => c.type === 'Monster' ? `<span class="stat">${textHTML(c.text)}</span>` : textHTML(c.text);
+
+  const DIRS = {
+    // A — landscape header strip: the evolution of the current cards. Overlap: cards stack DOWN, each showing its header.
+    A: {
+      name: 'A · Header Strip', tag: 'Landscape · stack downward',
+      orient: 'L', W: 375, H: 275, textBox: { w: 201, h: 156 }, overlap: { dx: 0, dy: 74 },
+      why: [
+        'Keeps what defines your cards today: landscape layout, a coloured frame by type, art on the left, rules text on the right.',
+        'A 0.5 in header carries everything that matters in one band: type icon, name, type word and the Power number. When cards are stacked down a Power-line column, only that band shows, and it is enough.',
+        'The number sits in a white badge with a heavy ring, so it reads on every type colour.',
+        'The type is told four ways: icon, the word, the band pattern and the colour — never colour alone.',
+      ],
+      build(c, tw) {
+        const t = typeColors(c), W = this.W, H = this.H;
+        let s = box(0, 0, W, H, '', `background:${t.color}`);
+        s += box(22, 22, W - 44, H - 44, 'paper', `border-radius:${u(10)}`);
+        s += box(28, 28, W - 56, 54, 'band', `background:${t.color};--on:${t.on};border-radius:${u(7)}`);
+        s += `<svg class="abs" style="left:${u(28)};top:${u(28)};width:${u(W - 56)};height:${u(54)};border-radius:${u(7)}" preserveAspectRatio="none"><rect width="100%" height="100%" fill="url(#${t.pattern})"/></svg>`;
+        s += box(34, 34, 42, 42, 'disc', '', typeIcon(c.type, '78%', '#1d1712'));
+        const nw = (c.number === null ? W - 56 - 58 - 6 : W - 56 - 58 - 62);
+        s += nameBlock(c.name, 86, 31, nw, 34, 30, 20);
+        s += box(86, 65, nw, 14, 'typeword band', `font-size:${u(11)}`, esc(c.type));
+        s += powerBadge(W - 28 - 54, 31, 48, c);
+        s += artBox(28, 90, 110, 157, c) + gemChip(34, 211, c);
+        s += box(148, 92, 192, 156, 'text', `font-size:${u(tw)}`, textHTMLFor(c));
+        return s;
+      },
+    },
+    // B — portrait top tab: a tall header tab, a banner of art, the widest text block of the three.
+    B: {
+      name: 'B · Top Tab', tag: 'Portrait · stack downward',
+      orient: 'P', W: 275, H: 375, textBox: { w: 213, h: 138 }, overlap: { dx: 0, dy: 80 },
+      why: [
+        'Portrait poker size, so the cards sit in normal card holders and sleeves.',
+        'A 0.6 in tab across the top: big type icon, name, type word and number. The cards stack down a Power line column with the tab always showing.',
+        'Art becomes a wide banner, which hands the most room to the rules text: the full card width.',
+        'The Power number is the largest thing on the tab, on the right where it is read last, like a price.',
+      ],
+      build(c, tw) {
+        const t = typeColors(c), W = this.W, H = this.H;
+        let s = box(0, 0, W, H, '', `background:${t.color}`);
+        s += box(22, 22, W - 44, H - 44, 'paper', `border-radius:${u(10)}`);
+        s += box(28, 28, W - 56, 60, 'band', `background:${t.color};--on:${t.on};border-radius:${u(7)}`);
+        s += `<svg class="abs" style="left:${u(28)};top:${u(28)};width:${u(W - 56)};height:${u(60)};border-radius:${u(7)}" preserveAspectRatio="none"><rect width="100%" height="100%" fill="url(#${t.pattern})"/></svg>`;
+        s += box(34, 34, 48, 48, 'disc', '', typeIcon(c.type, '78%', '#1d1712'));
+        const nw = (c.number === null ? W - 56 - 64 - 6 : W - 56 - 64 - 56);
+        s += nameBlock(c.name, 90, 33, nw, 36, 26, 16.5);
+        s += box(90, 70, nw, 13, 'typeword band', `font-size:${u(11)}`, esc(c.type));
+        s += powerBadge(W - 28 - 52, 33, 46, c);
+        s += artBox(28, 96, W - 56, 92, c) + gemChip(34, 152, c, 1);
+        s += box(31, 196, 213, 148, 'text', `font-size:${u(tw)}`, textHTMLFor(c));
+        return s;
+      },
+    },
+    // C — portrait rail: identity down the left edge, for cards fanned sideways; the tallest text column.
+    C: {
+      name: 'C · Left Rail', tag: 'Portrait · fan sideways',
+      orient: 'P', W: 275, H: 375, textBox: { w: 150, h: 218 }, overlap: { dx: 82, dy: 0 },
+      why: [
+        'Built for cards fanned sideways: the 0.6 in rail on the left edge is always visible and holds the number, type icon and the name (printed along the rail).',
+        'The rules text gets a tall column: fewer words per line is easier to read at arm\'s length, and a card with a very long effect can still be set large.',
+        'Art is a small window above the text; Treasure and Monster show their gem value on it.',
+        'The type is told by icon + colour + rail pattern + a type word set under the art.',
+      ],
+      build(c, tw) {
+        const t = typeColors(c), W = this.W, H = this.H;
+        let s = box(0, 0, W, H, '', `background:${t.color}`);
+        s += box(22, 22, W - 44, H - 44, 'paper', `border-radius:${u(10)}`);
+        s += box(28, 28, 62, H - 56, 'band', `background:${t.color};--on:${t.on};border-radius:${u(7)}`);
+        s += `<svg class="abs" style="left:${u(28)};top:${u(28)};width:${u(62)};height:${u(H - 56)};border-radius:${u(7)}" preserveAspectRatio="none"><rect width="100%" height="100%" fill="url(#${t.pattern})"/></svg>`;
+        let y = 34;
+        if (c.number !== null) { s += box(34, y, 50, 50, 'num', `font-size:${u(32)};border-width:${u(4)};border-color:#1d1712`, String(c.number)); y += 58; }
+        s += box(37, y, 44, 44, 'disc', '', typeIcon(c.type, '78%', '#1d1712')); y += 52;
+        const room = H - 28 - 8 - y, ns = fitWidth(c.name, 800, 22, room, 11);
+        s += box(34, y, 50, room, 'band', `display:flex;align-items:center;justify-content:center`,
+          `<div class="name band" style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:${u(ns)};max-height:100%">${esc(c.name)}</div>`);
+        s += artBox(98, 28, 149, 96, c) + gemChip(104, 90, c, 0.9);
+        s += box(98, 130, 149, 14, 'typeword', `font-size:${u(11)};color:#5b4d3e`, esc(c.type));
+        s += box(98, 148, 149, 196, 'text', `font-size:${u(tw)}`, textHTMLFor(c));
+        return s;
+      },
+    },
+
+    // D — portrait corner index: the playing-card habit. Number or type icon in the top-left, repeated (turned round) bottom-right.
+    D: {
+      name: 'D · Corner Index', tag: 'Portrait · stack downward (index shows)',
+      orient: 'P', W: 275, H: 375, textBox: { w: 213, h: 100 }, overlap: { dx: 0, dy: 76 },
+      why: [
+        'Borrows the oldest trick in card design: a corner index (number, or the type icon on cards without a number) in the top-left, repeated upside-down in the bottom-right, so a card reads whichever way it is held or stacked.',
+        'The name runs along the top beside the index, with the type word under it, so one 0.65 in strip tells you what a stacked card is.',
+        'Art gets a wide window in the middle. The price is the smallest text block of the five (the bottom index takes a corner), so long effects get smaller type.',
+      ],
+      build(c, tw) {
+        const t = typeColors(c), W = this.W, H = this.H;
+        const index = (x, y, rot) => {
+          let inner = c.number !== null ? box(0, 0, 44, 44, 'num', `font-size:${u(28)};border-width:${u(4)};border-color:#1d1712`, String(c.number)) + box(2, 48, 40, 40, 'disc', `background:${t.color};color:${t.on}`, typeIcon(c.type, '78%', t.on))
+            : box(0, 0, 44, 44, 'disc', `background:${t.color};border:${u(3)} solid #1d1712`, typeIcon(c.type, '80%', t.on));
+          return box(x, y, 44, c.number !== null ? 88 : 44, '', `transform:rotate(${rot}deg)`, inner);
+        };
+        let s = box(0, 0, W, H, '', `background:${t.color}`);
+        s += box(22, 22, W - 44, H - 44, 'paper', `border-radius:${u(10)}`);
+        s += box(28, 28, W - 56, 3, '', `background:${t.color}`);
+        s += index(32, 34, 0);
+        s += nameBlock(c.name, 86, 34, W - 28 - 86, 40, 26, 17, false);
+        s += box(86, 78, W - 28 - 86, 14, 'typeword', `font-size:${u(11)};color:#5b4d3e`, esc(c.type));
+        s += artBox(28, 126, W - 56, 82, c) + gemChip(34, 172, c, 0.95);
+        s += box(31, 214, 213, 92, 'text', `font-size:${u(tw)}`, textHTMLFor(c));
+        s += index(W - 28 - 44, H - 28 - (c.number !== null ? 88 : 44), 180);
+        return s;
+      },
+    },
+    // E — big type: the least decoration. A thin type bar, a big name, a slim art strip and the biggest text block.
+    E: {
+      name: 'E · Big Type', tag: 'Portrait · stack downward (bar shows)',
+      orient: 'P', W: 275, H: 375, textBox: { w: 213, h: 164 }, overlap: { dx: 0, dy: 54 },
+      why: [
+        'Everything is sacrificed to the words: a slim 0.35 in type bar (icon, type word, number), a big name, a thin art strip, and a rules block of about 2.1 × 1.6 in, the biggest of the five.',
+        'Best for reading at arm\'s length and for long effects. Weakest at a glance when stacked: only the type bar shows, not the name, so you tell cards apart by type and number.',
+        'Cards that are all about their stats (Monsters, Geodes) get big numerals and room for full-size art.',
+      ],
+      build(c, tw) {
+        const t = typeColors(c), W = this.W, H = this.H;
+        let s = box(0, 0, W, H, '', `background:${t.color}`);
+        s += box(22, 22, W - 44, H - 44, 'paper', `border-radius:${u(10)}`);
+        s += box(28, 28, W - 56, 36, 'band', `background:${t.color};--on:${t.on};border-radius:${u(7)}`);
+        s += `<svg class="abs" style="left:${u(28)};top:${u(28)};width:${u(W - 56)};height:${u(36)};border-radius:${u(7)}" preserveAspectRatio="none"><rect width="100%" height="100%" fill="url(#${t.pattern})"/></svg>`;
+        s += box(33, 32, 28, 28, 'disc', '', typeIcon(c.type, '80%', '#1d1712'));
+        s += box(68, 40, 120, 14, 'typeword band', `font-size:${u(13)}`, esc(c.type));
+        if (c.number !== null) s += box(W - 28 - 4 - 34, 29, 34, 34, 'num', `font-size:${u(22)};border-width:${u(3)};border-color:#1d1712`, String(c.number));
+        s += nameBlock(c.name, 31, 70, W - 62, 44, 34, 24, false);
+        s += artBox(28, 118, W - 56, 50, c) + (c.type === 'Treasure' || c.type === 'Monster' ? gemChip(W - 28 - 70, 126, c, 0.9) : '');
+        s += box(31, 176, 213, 168, 'text', `font-size:${u(tw)}`, textHTMLFor(c));
+        return s;
+      },
+    },
+  };
+  DIRS.A.textBox = { w: 192, h: 156 }; DIRS.B.textBox = { w: 213, h: 148 }; DIRS.C.textBox = { w: 149, h: 196 }; DIRS.D.textBox = { w: 213, h: 92 }; DIRS.E.textBox = { w: 213, h: 168 };
+
+  // What you would hold: the card cut at the trim line (bleed and guides gone), corners rounded.
+  function trimmedEl(dir, c, tw, scale) {
+    const d = DIRS[dir], b = C.bleed;
+    return `<div style="position:relative;--u:${scale}px;width:${u(d.W - 2 * b)};height:${u(d.H - 2 * b)};overflow:hidden;border-radius:${u(b)};flex:none"><div style="position:absolute;left:${u(-b)};top:${u(-b)}">${cardEl(dir, c, tw, scale, false, true)}</div></div>`;
+  }
+  function cardEl(dir, c, tw, scale, guides, bare) {
+    const d = DIRS[dir], g = state.guides && guides;
+    const inset = n => `left:${u(n)};top:${u(n)};right:${u(n)};bottom:${u(n)}`;
+    const gd = g ? `<div class="guides"><i class="bleed" style="${inset(0)}"></i><i class="trim" style="${inset(C.bleed)}"></i><i class="safe" style="${inset(C.bleed + C.safe)}"></i></div>` : '';
+    return `<div class="card${state.round && !bare ? ' round' : ''}" data-id="${esc(c.id)}" data-dir="${dir}" style="--u:${scale}px;width:${u(d.W)};height:${u(d.H)}" role="img" aria-label="${esc(c.name)}, ${esc(c.type)}${c.number !== null ? ', ' + c.number : ''}. ${esc(c.text)}">${d.build(c, tw)}${gd}</div>`;
+  }
+
+  // ---------------- the page ----------------
+  function pickLab() {
+    const by = Object.fromEntries(state.all.map(c => [c.id, c]));
+    let list = D.labIds.map(id => by[id]).filter(Boolean);
+    if (list.length < 6) { const have = new Set(list.map(c => c.id)); for (const c of state.all) if (list.length < 6 && !have.has(c.id)) list.push(c); }
+    return list;
+  }
+  function uniformSize(dir) {
+    const d = DIRS[dir], pool = state.all.filter(c => c.type !== 'Monster' && c.type !== 'Treasure');
+    let best = 44;
+    for (const c of pool) best = Math.min(best, fitFont(textHTML(c.text), d.textBox.w, d.textBox.h));
+    return best;
+  }
+  function statusLine() {
+    if (state.status === 'loading') return '<span class="status">Reading your sheet…</span>';
+    if (state.source === 'sheet') return `<span class="status"><b>Live from your sheet</b> · ${state.all.length} cards read just now</span>`;
+    return `<span class="status bad"><b>Could not reach the sheet</b> (${esc(state.error)}). Showing a 6-card design sample only. <button class="chip" data-act="reload">Try again</button></span>`;
+  }
+  function render() {
+    const lab = state.all.length ? pickLab() : [];
+    const libLink = /^https?:$/.test(location.protocol) ? `<a class="back" href="${esc(D.library.href)}"><span>‹</span> ${esc(D.library.name)}</a>` : '';
+    const scaleFor = d => (d.orient === 'L' ? 1.0 : 1.0) * (Math.min(innerWidth - 40, 1000) < 500 ? 0.78 : 1);
+    let html = `<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">${libLink}${statusLine()}</div>
+      <h1>${esc(D.title)} — card design, step 1</h1>
+      <p class="sub">Three directions on the same six real cards, drawn from your v2.7 sheet. Every card is poker size (2.5 × 3.5 in) with 0.125 in bleed. Type is shown by <b>icon, word, pattern and colour</b>. The rules text is set at one size on every card: the largest that still fits the card with the longest text.</p>
+      <div class="bar">
+        <button class="chip ${state.guides ? 'on' : ''}" data-act="guides">Print guides</button>
+        <button class="chip ${state.overlap ? 'on' : ''}" data-act="overlap">Overlapped row</button>
+        <button class="chip ${state.round ? 'on' : ''}" data-act="round">Rounded corners</button>
+        ${[['color', 'Colour'], ['gray', 'Greyscale'], ['deut', 'Red-green (deuteranopia)'], ['prot', 'Red-green (protanopia)']].map(([v, t]) => `<button class="chip ${state.view === v ? 'on' : ''}" data-act="view" data-v="${v}">${t}</button>`).join('')}
+      </div>`;
+    if (!state.all.length) { $app.innerHTML = html; return; }
+    const sizes = Object.fromEntries(Object.keys(DIRS).map(k => [k, uniformSize(k)]));
+    html += `<table class="cmp"><tr><th></th>${Object.keys(DIRS).map(k => `<th>${DIRS[k].name}</th>`).join('')}</tr>
+      <tr><td>Card orientation</td>${Object.keys(DIRS).map(k => `<td>${DIRS[k].orient === 'L' ? 'Landscape' : 'Portrait'}</td>`).join('')}</tr>
+      <tr><td>Rules text size (same on every card)</td>${Object.keys(DIRS).map(k => `<td><b>${(sizes[k] * 0.72).toFixed(1)} pt</b></td>`).join('')}</tr>
+      <tr><td>Rules text block</td>${Object.keys(DIRS).map(k => `<td>${(DIRS[k].textBox.w / 100).toFixed(2)} × ${(DIRS[k].textBox.h / 100).toFixed(2)} in</td>`).join('')}</tr>
+      <tr><td>When overlapped you see</td>${Object.keys(DIRS).map(k => `<td>${{ A: 'icon, name, type, number', B: 'icon, name, type, number', C: 'number, icon, name', D: 'index, name, type', E: 'icon, type word, number (no name)' }[k]}</td>`).join('')}</tr>
+      <tr><td>Best at</td>${Object.keys(DIRS).map(k => `<td>${{ A: 'staying close to today', B: 'balance of text and overlap', C: 'sideways Power line, tall text', D: 'cards held any way up', E: 'long effects, reading at arm\'s length' }[k]}</td>`).join('')}</tr></table>`;
+    for (const key of Object.keys(DIRS)) {
+      const d = DIRS[key], tw = uniformSize(key), s = scaleFor(d) * 1.0;
+      const longest = state.all.filter(c => c.type !== 'Monster' && c.type !== 'Treasure').reduce((a, c) => (!a || c.text.length > a.text.length ? c : a), null);
+      const cells = lab.map(c => `<div class="cell">${state.guides ? cardEl(key, c, tw, s, true) : trimmedEl(key, c, tw, s)}<span class="cap">${esc(c.id)} · ${esc(c.type)}</span></div>`).join('');
+      const fan = state.overlap ? (() => {
+        const n = lab.length, dx = d.overlap.dx * s, dy = d.overlap.dy * s, w = (d.W - 2 * C.bleed) * s, h = (d.H - 2 * C.bleed) * s;
+        const inner = lab.map((c, i) => `<div style="position:absolute;left:${i * dx}px;top:${i * dy}px;box-shadow:0 2px 8px rgba(0,0,0,.5);border-radius:${12.5 * s}px">${trimmedEl(key, c, tw, s)}</div>`).join('');
+        return `<h3 style="margin:16px 0 4px;font-size:16px">The same cards overlapped in a row <span class="cap">(cut to size; ${d.overlap.dy ? 'stacked downward, each card showing its top ' + (d.overlap.dy / 100).toFixed(2) + ' in' : 'fanned sideways, each card showing its left ' + (d.overlap.dx / 100).toFixed(2) + ' in'}) — can you still read type, name and number?</span></h3>
+          <div class="fan" style="width:${(n - 1) * dx + w}px;height:${(n - 1) * dy + h}px">${inner}</div>`;
+      })() : '';
+      html += `<section class="dir" data-dir="${key}"><span class="tag">${esc(d.tag)}</span><h2>${esc(d.name)}</h2>
+        <ul class="why">${d.why.map(w => `<li>${esc(w)}</li>`).join('')}</ul>
+        <p class="sub">Rules text: <b>${E.formatSize(tw)}</b> on every card — set by the longest card (${esc(state.all.filter(c => c.type !== 'Monster' && c.type !== 'Treasure').reduce((a, c) => (!a || c.text.length > a.text.length ? c : a), null).name)}).</p>
+        <div class="row">${cells}</div>${fan}</section>`;
+    }
+    const qs = E.questions(state.all);
+    html += `<details><summary>Questions already written in your sheet (${qs.length})</summary><ul class="qs">${qs.map(q => `<li><b>${esc(q.name)}</b> (${esc(q.id)}): ${esc(q.q)}</li>`).join('')}</ul></details>
+      <details><summary>Icon key</summary><p class="sub">${Object.keys(D.iconCodes).map(k => `${ic(k, ' style="width:28px;height:28px;vertical-align:middle"')} {${k}}`).join(' &nbsp; ')}</p></details>`;
+    html += `<p class="status" style="margin-top:24px">Version ${esc(BUILD)}</p>`;
+    $app.className = 'view-' + state.view;
+    $app.innerHTML = html;
+  }
+
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]'); if (!el) return;
+    const a = el.dataset.act;
+    if (a === 'guides') state.guides = !state.guides;
+    else if (a === 'overlap') state.overlap = !state.overlap;
+    else if (a === 'round') state.round = !state.round;
+    else if (a === 'view') state.view = el.dataset.v;
+    else if (a === 'reload') { load(); return; }
+    render();
+  });
+  let lastW = innerWidth;
+  window.addEventListener('resize', () => { if (Math.abs(innerWidth - lastW) < 2) return; lastW = innerWidth; clearTimeout(window.__rz); window.__rz = setTimeout(render, 150); });     // (width only: a tall screenshot changes the height)
+  load();
+})();
+</script>
+</body>
+</html>

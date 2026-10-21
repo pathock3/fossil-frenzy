@@ -3,7 +3,7 @@
 A collection of Patrick Blim-Hockberger's tabletop game designs, adapted as browser games. The front page (`index.html`) is the library; each game lives in `games/<id>/`. Roadmap and design philosophy: **`docs/PLAN.md`** — read it before starting new work.
 
 ## Hard rules
-1. **Every game is one self-contained `index.html`** (`games/<id>/index.html`), playable by touch on an iPad in Safari. It must work opened directly, with no runtime dependencies and no network. Plain JavaScript. The build only copies files and stamps the version.
+1. **Every game is one self-contained `index.html`** (`games/<id>/index.html`), playable by touch on an iPad in Safari. It must work opened directly, with no runtime dependencies and no network (Dig Dig BOOM!'s sheet fetch is the one documented exception). Plain JavaScript. The build only copies files and stamps the version.
 2. **All rules, point values and board setup live in one data block** per game (`<script id="data">`) — separate from its logic (`engine`, `bots`, `ui` scripts). Logic must not hard-code a rule number that belongs in the data block. The library's catalogue (`LIBRARY` in the root `index.html`) is the same idea for the collection.
 3. **Automated tests for every rule**, in each game's `tests/` (library and build tests are in the root `tests/`). While working, run `npm run test:quick` (all but the slow browser file, ~7 s) plus only the browser tests the change touches (`node --test --test-name-pattern="…" games/<id>/tests/ui.test.js`). Run the full `npm test` (~2 min) once before pushing a batch of changes — the deploy build runs it too — and fix failures before merging.
 4. **`main` is the live site** (friends play it). Work on a branch (`claude/peaceful-bardeen-fvc0jn` or a feature branch), push it, and the owner tests that branch's preview link on an iPad. Merge to `main` only when the owner says so.
@@ -14,7 +14,7 @@ A collection of Patrick Blim-Hockberger's tabletop game designs, adapted as brow
 - `index.html` — the Tabletop Library front page; its data block lists the games. To add a game: create `games/<id>/` with `index.html` (build-stamp meta included), then add a catalogue entry. A test fails if they disagree.
 - `games/<id>/` — one game: `index.html`, its rulebook/source rules, `DECISIONS.md` (every ambiguous call), `tests/`, optional `tools/` (bot simulations) and `REPORT.md`.
 - `games/<id>/tests/` — `npm test` runs them all (Node ≥ 20). A game's `tests/load.js` extracts its data/engine/bots scripts from its `index.html` and runs them in Node. Browser tests use Playwright and skip themselves if it is unavailable.
-- Dig Dig Boom (the flagship) is a **separate site/repo**; the library links to it by `url`.
+- Dig Dig BOOM! (the flagship) lives here too, as `games/dig-dig-boom/` — no separate site. It is hidden from the shelf (`listed: false`) until the owner says so. It is the one game allowed network access: it reads the owner's Google Sheet (cards and v2.7 rules) every time it opens, and never keeps a copy of the card data in the repo (test fixtures aside). Its Step-by-step plan and open rules questions are in `games/dig-dig-boom/STATUS.md` and `QUESTIONS.md`.
 - `tools/build.js`, `wrangler.jsonc`, `.github/workflows/ci.yml` — build and deploy.
 
 ## Fossil Frenzy (`games/fossil-frenzy/`)

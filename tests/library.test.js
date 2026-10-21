@@ -41,11 +41,10 @@ test('library: every entry has what the shelf shows; entries without an address 
   assert.ok(LIBRARY.games.find(g => g.id === 'fossil-frenzy').listed);
 });
 
-test('library: Dig Dig Boom is a separate site — a placeholder entry, off the shelf until it has a web address', () => {
+test('library: Dig Dig BOOM! is a game here like the others, hidden from the shelf until the owner says so', () => {
   const d = LIBRARY.games.find(g => g.id === 'dig-dig-boom');
   assert.equal(d.listed, false);
-  assert.equal(d.path, undefined);
-  assert.ok('url' in d);
+  assert.equal(d.path, 'games/dig-dig-boom/index.html');
 });
 
 // ---------- browser ----------
@@ -97,7 +96,7 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     const fit = await page.evaluate(() => { const svg = document.querySelector('a.box[data-id="fossil-frenzy"] .art svg'), t = [...svg.querySelectorAll('text')].find(x => /PEEK/.test(x.textContent)), r = [...svg.querySelectorAll('rect')].find(x => x.getAttribute('rx') === '13'); const tb = t.getBBox(), rb = r.getBBox(); return { tx: tb.x, tr: tb.x + tb.width, rx: rb.x, rr: rb.x + rb.width }; });
     assert.ok(fit.tx >= fit.rx + 10 && fit.tr <= fit.rr - 10, 'the words sit inside the oval: ' + JSON.stringify(fit));
     await page.goto(base + '/index.html?unlisted');
-    assert.equal(await page.locator('a.box').count(), listed.length, 'an unlisted placeholder without an address still does not render a dead link');
+    assert.equal(await page.locator('a.box').count(), LIBRARY.games.filter(g => g.path || g.url).length, '?unlisted shows the hidden games that have an address (and never a dead link)');
     // the way-back chip never covers a game's title, at any size
     for (const vp of [{ width: 1024, height: 768 }, { width: 768, height: 1024 }, { width: 390, height: 844 }, { width: 360, height: 640 }]) {
       await page.setViewportSize(vp);
