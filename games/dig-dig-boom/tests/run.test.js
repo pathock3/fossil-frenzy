@@ -78,6 +78,20 @@ test('Booster Pack (after a Dig): draw the pack\'s number of cards, keep exactly
   assert.deepEqual(r2.owned.map(x => x.uid), [c.uid]); assert.equal(r2.trash.length, 2);
 });
 
+test("Starter Kit: last round's kit is already in your kit; cards can be dragged onto a place to put them there, replace what is there, or swap", () => {
+  const run = firstRound({ keepIds: ['PW-02'] }); const first = run.owned[0]; Run.toggleKit(run, first.uid); Run.beginDig(run, { seed: 4 });
+  play(run, ['TR-01', 'MO-01'], ['dig', 'dig', 'bank'], 1); Run.finishDig(run); run.prep.step = 'pack'; Run.setEscape ? Run.openPack(run) : 0;
+  run.prep.step = 'keep'; run.prep.offer = [by('PW-09'), by('ON-33')].map((c, i) => ({ ...c, uid: 9900 + i })); run.prep.picked = []; run.prep.pack = { name: 'Silver', draw: 2, keep: 2 };
+  Run.toggleKeep(run, 9900); Run.toggleKeep(run, 9901); assert.ok(Run.confirmKeep(run));
+  const pr = run.prep; pr.kitMax = 2;
+  assert.deepEqual(pr.kitPick, [first.uid], "last round's kit is already in"); assert.deepEqual(pr.gained, [9900, 9901], 'and what you just won is marked');
+  assert.ok(Run.moveKit(run, 9900, 1)); assert.deepEqual(pr.kitPick, [first.uid, 9900], 'a card from your hand fills an empty place');
+  assert.ok(Run.moveKit(run, 9901, 0)); assert.deepEqual(pr.kitPick, [9901, 9900], 'dropped on a full place it replaces what was there (that card goes back to your hand)');
+  assert.ok(Run.moveKit(run, 9901, 1)); assert.deepEqual(pr.kitPick, [9900, 9901], 'a kit card dropped on another kit card swaps places');
+  assert.ok(!Run.moveKit(run, 9901, 2) && !Run.moveKit(run, 424242, 0), 'only real places and cards you own');
+  Run.beginDig(run, { seed: 5 }); assert.deepEqual(run.dig.mine.slice(0, 2).map(c => c.id), ['PW-09', 'ON-33'], 'the kit goes on top in the order you set');
+});
+
 test('Starter Kit: up to the round tracker (1, 2, 2, 3); the Mine is the 25 starting cards plus every card you own that is not in the kit', () => {
   assert.deepEqual([1, 2, 3, 4, 5, 6].map(r => Run.kitSize({}, r)), [1, 2, 2, 3, 3, 3]);
   const run = firstRound({ keepIds: ['PW-28'] });

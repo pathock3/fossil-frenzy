@@ -406,8 +406,8 @@ test('run: round 1 opens a Bronze Pack (draw 3, keep 1), then you choose your St
     assert.equal(await page.locator('#play [data-p=kitgem]').count(), 0, 'no gem to pick: an empty place is a gem');
     assert.match(await page.locator('#play .kitbar .count').innerText(), /^0 of 1$/, 'how many you may choose and how many you have');
     assert.match(await page.locator('#play .keepsay').innerText(), /^Tap a card to start with$/);
-    assert.match(await page.locator('#play .kitnote').innerText(), /empty spot is filled with a/i);
-    assert.equal(await page.evaluate(() => { const f = e => getComputedStyle(document.querySelector(e)).fontSize; return f('#play .kitbar .count') + f('#play .keepsay'); }), '26px22px', 'the Keep and Starter Kit screens use the same sizes');
+    assert.equal(await page.locator('#play .kslot.empty .kgem').count(), 1, 'an empty place shows the gem it will be filled with');
+    assert.equal(await page.evaluate(() => { const f = e => getComputedStyle(document.querySelector(e)).fontSize; return f('#play .kitbar .count') + f('#play .keepsay'); }), '42px22px', 'the Keep and Starter Kit screens use the same sizes');
     assert.equal(await page.locator('#play .pips2').count(), 0, 'no circles');
     assert.equal(await page.locator('#play [data-p=startround]').isEnabled(), true, 'you may start with the place empty');
     await page.click('#play [data-p=startround]'); await page.waitForSelector('#play .ptable');
@@ -434,7 +434,7 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     await page.waitForSelector('#play .bigdie'); assert.ok(await page.locator('#play .bigdie').count() === 1, 'a die to tap'); assert.match(await page.locator('#play .eq').innerText(), /1\s*\+\s*4\s*\+/, 'Geodes + Monsters + the die');
     await page.evaluate(() => { window.DigDigBoomPlay.S.run.dice = [8]; });
     await page.click('#play [data-p=escape]'); await dieShows(page, '#play .eq .t.die', 8);
-    await page.waitForSelector('#play .pack'); assert.match(await page.locator('#play .eq .sum').innerText(), /13/); assert.equal(await page.locator('#play .pack b').innerText(), 'Silver');
+    await page.waitForSelector('#play .pack'); await page.waitForFunction(() => /13/.test(document.querySelector('#play .eq .sum').textContent)); assert.match(await page.locator('#play .eq .sum').innerText(), /13/); assert.equal(await page.locator('#play .pack b').innerText(), 'Silver');
     assert.equal(await page.locator('#play .lb, #play .pbar h1').count(), 0, 'no Leaderboard and no title in Prep: just a Menu in the corner');
     assert.equal(await page.locator('#play .pbar [data-p=gmenu]').count(), 1);
     await page.click('#play [data-p=openpack]'); assert.equal(await page.locator('#play [data-p=pick]').count(), 4);
@@ -442,8 +442,17 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     assert.doesNotMatch(await page.locator('#play .panel').innerText(), /[Ll]ast [Dd]ig|banked after/);
     await keepNonMystery(page, 2);
     assert.equal(await page.locator('#play [data-p=kitpick]').count(), 3, 'the card from round 1 and the two you kept');
-    await page.click('#play [data-p=kitpick] >> nth=1'); await page.click('#play [data-p=kitpick] >> nth=2');
-    assert.match(await page.locator('#play .keepsay').innerText(), /Tap Start/);
+    assert.equal(await page.locator('#play .kslot .pcard').count(), 1, "last round's Starter Kit is already in its place");
+    assert.match(await page.locator('#play .kslot .ctag.last').innerText(), /last round/i); assert.equal(await page.locator('#play .pool .ctag.new').count(), 2, 'what you just won is marked new');
+    assert.match(await page.locator('#play .keepsay').innerText(), /Same Starter Kit as last round/);
+    await page.click('#play [data-p=kitpick] >> nth=1');                                  // a new card joins the kit
+    assert.equal(await page.locator('#play .kslot .pcard').count(), 2); assert.match(await page.locator('#play .keepsay').innerText(), /Tap to add or remove/);
+    const order0 = await stOf(page, () => window.DigDigBoomPlay.S.run.prep.kitPick.slice());
+    const src = await page.locator('#play .kslot[data-i="1"] .pcard').boundingBox(), dst = await page.locator('#play .kslot[data-i="0"]').boundingBox();
+    await page.mouse.move(src.x + src.width / 2, src.y + src.height / 2); await page.mouse.down(); await page.mouse.move(dst.x + dst.width / 2, dst.y + dst.height / 2, { steps: 8 }); await page.mouse.up();
+    assert.deepEqual(await stOf(page, () => window.DigDigBoomPlay.S.run.prep.kitPick.slice()), [order0[1], order0[0]], 'dragging one kit card onto another swaps them');
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.run.prep.step), 'kit', 'a drag is not a tap');
+    await page.waitForTimeout(120);
     await page.click('#play [data-p=startround]');
     assert.match(await page.locator('#play .lbhead').innerText(), /round 2 of 2 · final/i);
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.known), 2, 'the two kit cards are on top of the Mine, face up; the third is shuffled in');
