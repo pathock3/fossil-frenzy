@@ -1999,9 +1999,8 @@ const Match = (() => {
       ? `<div class="calc"><b>Result ${res.total}</b>${res.parts.map(p => p.set ? `becomes ${p.v}` : `${p.label} ${p.v >= 0 && p.label !== 'Die' && p.label !== 'Fixed' ? '+' : ''}${p.v}`).join(' · ')}</div>`
       : `<div class="calc">This Monster deals <b style="display:inline">${f.damage}</b> ${ic('damage', ' style="width:20px;height:20px;vertical-align:-4px"')}</div>`;
     const hint = after
-      ? (S.armed === 'face' ? `Tap the Monster again: damage, skipping ${Dig.eligible(st).length} card${Dig.eligible(st).length === 1 ? '' : 's'}`
-        : can.trigger ? `${[can.bonus ? `Grit: ${R.gritAfter.cost} for +${R.gritAfter.bonus}` : '', can.reroll ? 'Rerolls: reroll' : ''].filter(Boolean).join(' · ') || 'Choose your cards on the line'} · then the Monster takes its damage`
-        : 'Tap the Monster to take the damage')
+      ? (can.trigger ? `${[can.bonus ? `Grit: ${R.gritAfter.cost} for +${R.gritAfter.bonus}` : '', can.reroll ? 'Rerolls: reroll' : ''].filter(Boolean).join(' · ') || 'Tap a glowing card to use it'} · tap the Monster for the damage (unused cards are skipped)`
+        : 'Tap the Monster for the damage')
       : (st.grit ? 'Tap Grit: +1 · tap the die to roll' : 'Tap the die to roll');
     return `<button class="mcard ${after ? 'live' : ''}" data-p="face" ${after ? '' : 'disabled'}>${A.playCard(f.monster, S.ms || 0.71, { step: f.step })}</button>
       <div class="rollp">${die}<div class="tokens">${tokens}</div>${calc}<div class="hint">${hint}</div></div>`;
@@ -2044,7 +2043,7 @@ const Match = (() => {
       <p>This is a solo Dig: dig through your Mine one card at a time. Bank to keep your gems, or push on and risk BOOM. Everything is a tap on the table:</p>
       <ul><li><b>Mine</b>: tap to dig the top card. Geodes score ${R.geodeGems} gem. Immediate cards happen at once. Power cards go on the line at their number; Ongoing cards stay in your Ongoing area.</li>
       <li><b>Monster</b>: tap the Grit track to spend ${R.gritBefore} Grit for +1 on the roll (tap a spent Grit token to take it back), tap the die to roll (a d${R.die}). After the roll, tap Grit to spend ${R.gritAfter.cost} for +${R.gritAfter.bonus}, or tap Rerolls to reroll. Then tap the Monster to face it.</li>
-      <li><b>Facing it</b>: every Power card at the result or lower is <i>eligible</i>. Tap the ones you want to trigger, in the order you like (the Pet is at ${R.pet.at}; if you trigger it, the Monster is defeated and you take no damage), or tap Trigger all. Then tap the Monster: damage is the last thing that happens, and Block is part of it. Skipping your cards and taking the damage is always allowed (it asks for a second tap). Health at 0 is BOOM.</li>
+      <li><b>Facing it</b>: every Power card at the result or lower is <i>eligible</i>. Tap the ones you want to trigger, in the order you like (the Pet is at ${R.pet.at}; if you trigger it, the Monster is defeated and you take no damage), or tap Trigger all. Then tap the Monster: damage is the last thing that happens, and Block is part of it. Tap the Monster for the damage and any card you have not tapped is simply not used. Health at 0 is BOOM.</li>
       <li><b>Bank</b>: tap the Bank pile between cards to end the Dig and keep your gems. Not while a Monster is in front of you.</li>
       <li><b>Any card</b>: tap it to see it full size, tap again to close.</li>
       <li><b>Beyond the Mine</b>: when the Mine runs out, Bonus Monsters keep coming: ${R.beyond.firstDamage}, ${R.beyond.firstDamage + 1}, … damage, worth ${R.beyond.gems} gems.</li></ul>
@@ -2085,7 +2084,6 @@ const Match = (() => {
   function act(a, el) {
     const st = S.st, f = st && st.fight, ds = el.dataset; let digged = false;
     if (a !== 'startrun' && a !== 'practice') S.confirmNew = null;
-    if (a !== 'face') S.armed = null;
     switch (a) {
       case 'menu': if (S.panel !== 'menu') S.back = S.panel; S.panel = 'menu'; S.help = false; break;
       case 'resume': S.panel = S.back || 'menu'; break;
@@ -2125,7 +2123,7 @@ const Match = (() => {
       case 'refund': Dig.refundGrit(st); break;
       case 'roll': Dig.roll(st); break;
       case 'reroll': if (f && f.phase === 'after') Dig.reroll(st); break;
-      case 'face': { const left = st && f ? Dig.eligible(st).length : 0; if (left && S.armed !== 'face') { S.armed = 'face'; break; } S.armed = null; Dig.face(st); break; }
+      case 'face': Dig.face(st); break;
       case 'bank': if (S.run) Run.bank(S.run); else Dig.bank(st); break;
       case 'trade': Dig.trade(st, el.dataset.v); break;
       case 'heart': break;

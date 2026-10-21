@@ -437,7 +437,7 @@ test('ai: a reload in the middle of a match puts you and the AI back exactly whe
   } finally { await browser.close(); }
 });
 
-test('play: after the roll you tap the Power cards you want to trigger, in the order you like; the Monster takes its damage last; skipping asks for a second tap', SKIP, async () => {
+test('play: after the roll you tap the Power cards you want to trigger, in the order you like; the Monster takes its damage last; tapping the damage first skips the rest', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     await begin(page, { line: ['PW-02', 'PW-06', 'PW-15'], mine: ['MO-01', 'MO-01'], dice: [4, 4], start: { heart: 6, grit: 0 } });
@@ -447,15 +447,12 @@ test('play: after the roll you tap the Power cards you want to trigger, in the o
     await page.click('#play .piece.elig:has-text("Gritty Gecko")');
     assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.st.grit), 1);
     assert.equal(await page.locator('#play .piece.elig').count(), 1); assert.equal(await page.locator('#play .piece.done').count(), 1, 'the one you triggered is marked');
-    await page.click('#play .mcard[data-p=face]');                                   // Newt is still eligible: the first tap only arms it
-    assert.match(await page.locator('#play .hint').innerText(), /again: damage, skipping 1 card/);
-    assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.st.fight !== null), true);
-    await page.click('#play .mcard[data-p=face]');
+    await page.click('#play .mcard[data-p=face]');                                   // Newt is still eligible, but you tapped the damage: it is not used
     assert.deepEqual(await page.evaluate(() => [window.DigDigBoomPlay.S.st.heart, window.DigDigBoomPlay.S.st.survived]), [5, 1], 'Newt never triggered; 1 damage');
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]');
     await page.click('#play [data-p=triggerall]');
     assert.equal(await page.locator('#play .piece.elig').count(), 0);
-    await page.click('#play .mcard[data-p=face]');                                   // nothing left to skip: one tap
+    await page.click('#play .mcard[data-p=face]');
     assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.st.survived), 2);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
