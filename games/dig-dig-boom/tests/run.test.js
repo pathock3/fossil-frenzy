@@ -62,7 +62,7 @@ test('round 1: open the Bronze Pack, keep one card, choose your Starter Kit from
   assert.deepEqual(run.dig.kit.map(c => c.id), [card.id]); assert.equal(run.dig.mine[0].id, card.id); assert.equal(run.dig.geodeGems, 0, 'the place is filled with your card, so no gem');
   const g = Run.start(cards, { seed: 2 }); Run.openPack(g); Run.toggleKeep(g, g.prep.offer.find(c => !/When kept/.test(c.text)).uid); Run.confirmKeep(g);
   assert.ok(Run.beginDig(g, { seed: 4 }));                                          // nothing chosen: you do not want the card in play (say, an Immediate that heals you at full Health)
-  assert.equal(g.dig.kit.length, 0); assert.equal(g.dig.geodeGems, RN.startGems, 'the empty place is a gem'); assert.equal(g.dig.known, 1, 'the card is still on top of the Mine, face up, for you to see coming');
+  assert.equal(g.dig.kit.length, 0); assert.equal(g.dig.geodeGems, RN.startGems, 'the empty place is a gem'); assert.equal(g.dig.known, 0, 'the card you did not put in the kit is shuffled into the Mine, unknown');
   const two = firstRound({ keepIds: ['PW-02'] }); two.prep.kitMax = 2; Run.toggleKit(two, two.owned[0].uid); Run.beginDig(two, { seed: 4 });
   assert.equal(two.dig.geodeGems, RN.startGems, 'two places, one card: one gem');
 });
@@ -84,8 +84,8 @@ test('Starter Kit: up to the round tracker (1, 2, 2, 3); the Mine is the 25 star
   assert.ok(!Run.toggleKit(run, 12345), 'only cards you own'); assert.ok(Run.toggleKit(run, run.owned[0].uid));
   Run.beginDig(run, { seed: 3 });
   assert.equal(run.phase, 'dig'); assert.equal(run.dig.line.length, 1, 'the Pet'); assert.equal(run.dig.mine.length, 26, 'the kit card is on top of the Mine'); assert.equal(run.dig.mine[0].id, 'PW-28');
-  const r2 = firstRound({ keepIds: ['PW-28'] }); Run.beginDig(r2, { seed: 3 });   // no kit chosen: the card is still on top of the Mine, face up (owner: Booster cards go on top)
-  assert.equal(r2.dig.mine.length, 26); assert.equal(r2.dig.line.length, 1); assert.equal(r2.dig.mine[0].id, 'PW-28'); assert.equal(r2.dig.known, 1, 'and you can see it coming');
+  const r2 = firstRound({ keepIds: ['PW-28'] }); Run.beginDig(r2, { seed: 3 });   // no kit chosen: the card is shuffled into the Mine with the Starting cards
+  assert.equal(r2.dig.mine.length, 26); assert.equal(r2.dig.line.length, 1); assert.ok(r2.dig.mine.some(c => c.id === 'PW-28')); assert.equal(r2.dig.known, 0, 'unknown');
 });
 
 test('after a Dig the Mine is rebuilt from scratch: Drill reset, Power cards back at their numbers, everything shuffled in', () => {
@@ -103,8 +103,8 @@ test('a Burnout card climbs the Power line during a Dig and starts the next roun
   Dig.dig(st); assert.equal(st.line.find(e => e.card.id === burn.id).at, 2);
   st.mine = ['MO-01', 'MO-01'].map((id, i) => ({ ...by(id), uid: 9000 + i })); st.dice = [3, 1];
   Dig.dig(st); Dig.roll(st); Dig.autoFace(st); assert.equal(st.line.find(e => e.card.id === burn.id).at, 4, 'it triggered at 3 and burned up 2');
-  assert.ok(Dig.bank(st)); Run.finishDig(run); run.prep.step = 'kit'; Run.beginDig(run, { seed: 5 });
-  assert.equal(run.dig.mine[0].id, 'PW-02', 'the cards you own go on top of the Mine, face up'); assert.ok(run.dig.mine.slice(0, 2).some(c => c.id === burn.id));
+  assert.ok(Dig.bank(st)); Run.finishDig(run); run.prep.step = 'kit'; run.prep.kitMax = 1; run.prep.kitPick = []; Run.toggleKit(run, burn.uid); Run.beginDig(run, { seed: 5 });
+  assert.equal(run.dig.mine[0].id, burn.id, 'the kit card is on top of the Mine, face up'); assert.equal(run.dig.mine.filter(c => c.id === 'PW-02').length, 1, 'the card you own but left out is shuffled in');
   while (!run.dig.line.some(e => e.card.id === burn.id)) Dig.dig(run.dig);
   assert.equal(run.dig.line.find(e => e.card.id === burn.id).at, 2, 'a new Dig: every card at its printed number');
 });

@@ -77,21 +77,20 @@ test('Starter Kit: every kit card goes on top of the Mine, face up, in the order
   const rev = Dig.start(cards, ['ON-33', 'PW-02'].map(by), { seed: 1 }); assert.deepEqual(rev.mine.slice(0, 2).map(c => c.id), ['ON-33', 'PW-02'], 'the order you chose');
 });
 
-test('Booster cards go on top of the Mine, face up: the Starter Kit first (in order), then every other card you own (shuffled among themselves), then the 25 Starting cards', () => {
+test('the Starter Kit goes on top of the Mine, face up, in the order chosen; every other card you own is shuffled into the Mine with the 25 Starting cards', () => {
   const kit = ['PW-02', 'ON-33'].map(by), extra = ['IM-13', 'IM-11', 'PW-28', 'ON-05'].map(by);
   const orders = new Set();
   for (let seed = 1; seed <= 40; seed++) {
     const st = Dig.start(cards, kit, { seed, extra });
     assert.equal(st.mine.length, 25 + 2 + 4);
     assert.deepEqual(st.mine.slice(0, 2).map(c => c.id), ['PW-02', 'ON-33'], 'the kit, in the order chosen');
-    assert.deepEqual(st.mine.slice(2, 6).map(c => c.id).sort(), extra.map(c => c.id).sort(), 'then all your other cards');
-    assert.ok(st.mine.slice(6).every(c => c.deck === 'Starting'), 'the Starting cards are below, unknown');
-    assert.equal(st.known, 6, 'the cards you own are face up: the kit and the rest');
-    assert.ok(st.kit.every(k => k.fromKit) && !st.mine.slice(2, 6).some(c => c.fromKit), 'only the kit is the kit');
-    orders.add(st.mine.slice(2, 6).map(c => c.id).join());
+    assert.equal(st.known, 2, 'only the kit is face up');
+    assert.deepEqual(st.mine.slice(2).filter(c => extra.some(e => e.id === c.id)).map(c => c.id).sort(), extra.map(c => c.id).sort(), 'every other card you own is somewhere below');
+    assert.ok(st.kit.every(k => k.fromKit) && !st.mine.slice(2).some(c => c.fromKit), 'only the kit is the kit');
+    orders.add(st.mine.slice(2, 8).map(c => c.id).join());
   }
-  assert.ok(orders.size > 3, 'your other cards are shuffled among themselves');
-  const none = Dig.start(cards, [], { seed: 1, extra }); assert.equal(none.known, 4); assert.equal(none.kit.length, 0);
+  assert.ok(orders.size > 20, 'your other cards are shuffled in among the Starting cards');
+  const none = Dig.start(cards, [], { seed: 1, extra }); assert.equal(none.known, 0); assert.equal(none.kit.length, 0);
 });
 
 test('digging a Geode scores 1 gem and discards it; the Mine shrinks', () => {

@@ -318,7 +318,7 @@ test('run: round 1 opens a Bronze Pack (draw 3, keep 1), then you choose your St
     await page.click('#play [data-p=startround]'); await page.waitForSelector('#play .ptable');
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.geodeGems), 1, 'you started with a gem in the Bank');
     assert.match(await page.locator('#play [data-p=bank]').innerText(), /^1/);
-    assert.equal(await page.locator('#play .known .piece').count(), 1, 'the card you kept is on top of the Mine, face up');
+    assert.equal(await page.locator('#play .known .piece').count(), 0, 'the card you left out of the kit is shuffled into the Mine');
     assert.equal(await page.locator('#play .lb').count(), 1); assert.match(await page.locator('#play .lbhead').innerText(), /round 1 of 4/i);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -349,7 +349,7 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     await page.click('#play [data-p=kitpick] >> nth=1'); await page.click('#play [data-p=kitpick] >> nth=2');
     await page.click('#play [data-p=startround]');
     assert.match(await page.locator('#play .lbhead').innerText(), /round 2 of 2 · final/i);
-    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.known), 3, 'all your cards are on top of the Mine, face up');
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.known), 2, 'the two kit cards are on top of the Mine, face up; the third is shuffled in');
     assert.ok(await page.locator('#play [data-p=bank]').isDisabled(), 'the final round is a race: nobody banks');
     assert.match(await page.locator('#play .lbhead').innerText(), /not in the lead: keep digging/i);
     await script(page, { mine: ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01'], dice: Array(30).fill(10) });

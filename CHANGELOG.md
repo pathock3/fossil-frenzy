@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM!: Starter Kit and the Mine:** only your Starter Kit goes on top of the Mine (face up, in the order you tap them — first tapped is dug first; tap again to un-pick and re-order). Every other card you own is now shuffled into the Mine with the Starting cards, unknown.
+
 - **Dig Dig BOOM!**: the AI now banks when its Mine runs out (it could get stuck digging forever); fixed the Menu panel layout; the Geode's number and gem no longer clip each other.
 - **Dig Dig BOOM! — round 1 fixed:** you open a Bronze Pack (draw 3, keep 1) and choose your Starter Kit only from the cards you own (no catalogue of every card). Places you do not fill with a card are filled with gems automatically, so there is no gem to tap.
 - **Dig Dig BOOM! — opening the game:** tapping it on the shelf now shows the main menu (with Continue) instead of flashing the menu and jumping into your last game. A reload still puts you straight back where you were.
