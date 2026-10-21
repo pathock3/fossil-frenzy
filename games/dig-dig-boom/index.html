@@ -118,12 +118,16 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .piece.pick { outline: 4px solid var(--accent); animation: pulse 1.2s ease-in-out infinite; }
 #play .piece.trig { box-shadow: 0 0 0 3px #fff, 0 0 12px 4px var(--accent); }
 #play .piece .tag { position: absolute; right: 3px; bottom: 3px; font-size: 10px; font-weight: 800; background: #1d1712; color: #fff; border-radius: 6px; padding: 1px 5px; }
+#play .wbtn { flex: none; min-height: 40px; min-width: 76px; border-radius: 10px; background: #3a2b20; border: 2px solid var(--accent); font-weight: 800; font-size: 14px; color: #fff; }
+#play .wbtn:disabled { opacity: .3; border-color: var(--line); }
 #play .piece .wb { display: flex; gap: 4px; padding: 0 6px 5px; }
 #play .piece .wb button { flex: 1; min-height: 34px; border-radius: 8px; background: #2a1f18; color: #fff; font-weight: 800; font-size: 13px; }
 #play .piece .wb button:disabled { opacity: .35; }
 #play .line { flex: 1; min-height: 120px; display: flex; flex-direction: column; background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 6px 8px 8px; }
 #play .linehead { display: flex; justify-content: space-between; padding: 0 2px 4px; flex: none; }
 #play .lcols { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
+#play .lcol .piece .h svg { display: none; }
+#play .lcol .piece .h { font-size: 12px; padding: 3px 4px; overflow-wrap: anywhere; }
 #play .lcol { display: flex; flex-direction: column; gap: 3px; border-radius: 8px; padding: 2px; background: rgba(255,255,255,.04); min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 #play .lcol.on { background: rgba(255,177,59,.18); outline: 2px solid var(--accent); }
 #play .lcol.off { opacity: .45; }
@@ -1443,15 +1447,16 @@ const Dig = (() => {
   }
   function drillHTML(st, can) {
     const f = st.fight, gritLive = can.grit || can.bonus;
-    const ong = st.ongoing.map(o => {
-      const wb = Dig.flag(st, 'workbench') && Dig.compile(o).ongoing.flags.workbench;
-      const extra = wb ? `<span class="wb"><button data-p="trade" data-v="grit" ${st.grit >= wb.gritCost && st.reroll < R.caps.reroll ? '' : 'disabled'}>${wb.gritCost}${ic('grit', ' style="width:15px;height:15px"')} → ${wb.rerollGain}${ic('reroll', ' style="width:15px;height:15px"')}</button><button data-p="trade" data-v="reroll" ${st.reroll >= wb.rerollCost && st.grit < R.caps.grit ? '' : 'disabled'}>${wb.rerollCost}${ic('reroll', ' style="width:15px;height:15px"')} → ${wb.gritGain}${ic('grit', ' style="width:15px;height:15px"')}</button></span>` : '';
-      return wb ? `<div class="piece" style="--c:${D.types.Ongoing.color};--on:${D.types.Ongoing.on}"><button class="h" style="width:100%;text-align:left" data-p="zoom" data-uid="${o.uid}">${typeIcon('Ongoing')}<span>${A.esc(o.name)}</span></button>${extra}</div>` : piece(o, { act: 'zoom', num: false });
-    }).join('');
+    const ong = st.ongoing.map(o => piece(o, { act: 'zoom', num: false })).join('');
+    const wb = Dig.flag(st, 'workbench');
+    const wbBtn = (dir, ok, a, b) => `<button class="wbtn" data-p="trade" data-v="${dir}" ${ok ? '' : 'disabled'} aria-label="trade">${a}</button>`;
+    const sm = c => ic(c, ' style="width:17px;height:17px;vertical-align:-3px"');
+    const gritTrade = wb ? wbBtn('reroll', st.reroll >= wb.rerollCost && st.grit < R.caps.grit, `${wb.rerollCost}${sm('reroll')}→${wb.gritGain}${sm('grit')}`) : '';
+    const rerollTrade = wb ? wbBtn('grit', st.grit >= wb.gritCost && st.reroll < R.caps.reroll, `${wb.gritCost}${sm('grit')}→${wb.rerollGain}${sm('reroll')}`) : '';
     return `<section class="drill"><div class="tracks">
       <div class="trow"><span class="tlab">${ic('heart')}</span>${track('heart', R.caps.heart, st.heart, false, '#e8344e')}</div>
-      <div class="trow"><span class="tlab">${ic('grit')}</span>${track('grit', R.caps.grit, st.grit, gritLive, '#d9951a')}</div>
-      <div class="trow"><span class="tlab">${ic('reroll')}</span>${track('reroll', R.caps.reroll, st.reroll, can.reroll, '#2eaf68')}</div>
+      <div class="trow"><span class="tlab">${ic('grit')}</span>${track('grit', R.caps.grit, st.grit, gritLive, '#d9951a')}${gritTrade}</div>
+      <div class="trow"><span class="tlab">${ic('reroll')}</span>${track('reroll', R.caps.reroll, st.reroll, can.reroll, '#2eaf68')}${rerollTrade}</div>
     </div><div class="ongoing"><h4>Ongoing ${st.ongoing.length ? '(' + st.ongoing.length + ')' : ''}</h4><div class="list">${ong || '<span class="note">Ongoing cards you dig stay here.</span>'}</div></div></section>`;
   }
   function lineHTML(st) {

@@ -150,11 +150,11 @@ test('play: Cloning Machine asks for a Power card by tapping it on the line; tap
   } finally { await browser.close(); }
 });
 
-test('play: Workbench trades are taps on the card in the Ongoing area', SKIP, async () => {
+test('play: Workbench trades are taps on buttons beside the Grit and Rerolls tracks', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     await begin(page, { kit: ['ON-36'], mine: ['TR-01'], start: { grit: 4, reroll: 0 } });
-    await page.click('#play .ongoing [data-p=trade][data-v=grit]');
+    await page.click('#play .wbtn[data-v=grit]');
     assert.deepEqual(await page.evaluate(() => [window.DigDigBoomPlay.S.st.grit, window.DigDigBoomPlay.S.st.reroll]), [1, 1]);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }

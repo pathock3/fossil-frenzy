@@ -16,6 +16,20 @@ Read live from the sheet by the lab page ("Questions already written in your she
 3. **"Defeat the Monster" and Grit:** the Pet triggers on a final result of 10 or more. Is the result after Grit and Rerolls and bonuses the one compared? (The Rules tab says "Cards use the final result after Grit, Rerolls and bonuses", so yes — listed only so you can confirm.) — assumed yes
 4. **Grit before the roll:** "+1 per Grit on that roll, for you only." Does Grit spent before a roll carry onto a reroll of that same Monster? (The v2.6 rulebook says yes.) Default: yes. — open
 5. **After-roll Grit:** "3 Grit for +1." Can you buy several +1s in one go (6 Grit for +2)? Default: yes, any number you can afford. — open
-6. **Banking threshold in the solo Dig:** "You may bank any time after you reach your Pledge." In a solo Dig with no other players, what is the Pledge? Default: no Pledge — you may bank at any point between Monsters, once you have survived at least 1. — open
+6. **Banking threshold in the solo Dig:** "You may bank any time after you reach your Pledge." In a solo Dig with no other players, what is the Pledge? Default (now in the solo Dig): no Pledge — you may bank between any two cards, never in front of a Monster. — open
 7. **Monster damage numbering:** "Each copy dug this Dig deals the next number" — across both Monster sets together, or per set? Default: per set (A: 1, 3, 5, 7; B: 2, 4, 6), with the "beyond the Mine" Monsters continuing 8, 9, … — open
 8. **Immediate card while a Monster is unresolved:** can a Monster be dug while another is in progress? Default: no — a Monster is fully resolved (roll, triggers, damage) before the next card is dug. — open
+
+## Added while building the solo Dig (each is one line in `DDB.rules`, so easy to change)
+9. **Order of result changes:** Tune-Up and friends add; Wrecking Ball doubles; Backfire turns 1 into 10; Floor Jack lifts below 4 to 4. Default: add, then double, then "becomes", then "less than" (`rulings.transformOrder`). Second Spark (3 or less rerolls free) looks at the result *before* the double/becomes/floor changes, once per Monster. — open
+10. **Panic Button:** the free reroll happens after the line has triggered and before damage; does the rerolled result trigger the line *again* (so heals and Grit stack)? Default: yes (`rulings.panicRetriggers`). — open
+11. **Die size:** the Rules tab says "roll the die" but not how many sides. Default: a six-sided die (`rules.die`). With a d6 plus Grit (max 6) a 10 needs bonuses. — open (important)
+12. **Starting spaces:** the Rules tab says each track "resets to its starred space" but not which. Default: Health 6, Grit 0, Rerolls 0 (`rules.start`). The kit screen has steppers to try other starts. — open (important)
+13. **"Whenever you gain …" at a full track:** does gaining Health at 12 still count? Default: no — the track has to actually move (`rulings.gainAtCapFires`). — open
+14. **Immediate cards in the Starter Kit:** the Rules tab says you "start the next Dig with" the chosen cards. Immediates would do nothing in play, so they are shuffled into the Mine (`rulings.kitImmediates`). — open
+15. **Losing Health to a card** (Prickly Porcupine, Risky Shortcut) can take you to 0 and BOOM you. Default: yes. Lucky Cricket only protects against a Monster's damage. — open
+16. **Sneak Attack** defeats the dug Monster without a roll — it counts as survived (and defeated, so Monster Jerky and Bounty Poster apply). — assumed
+17. **Cloning Machine** goes under a Power card of your choice, the Pet included. If you move that card later, the clone goes with it. — assumed
+18. **A Monster beyond the Mine** has no card, only a number: it appears when you dig from an empty Mine. — assumed
+19. **Damage you take** is reduced by Block *and* by Bumper; "first Monster deals no damage" (Cowcatcher) applies to the first Monster dug this Dig, including one you only revealed with Cave Scout until you actually face it. — assumed
+20. **Magpie/Echo** copy the top Immediate card of the discard pile, not the cards that copied it (two Echoes in a row copy nothing). — assumed
