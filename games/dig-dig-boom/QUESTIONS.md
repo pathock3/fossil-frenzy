@@ -10,16 +10,7 @@ Read live from the sheet by the lab page ("Questions already written in your she
 - Shoo Spray (IM-27): is a blind move fun, or does it feel like nothing happened? — open (a design question, not a rules one)
 - Wormhole (IM-33): is chaining into another Immediate card the fun part of Portal, or was it the free choice? — open (design)
 
-## Mine, from reading the Rules tab for the engine
-1. **Order of triggered cards** ("Trigger order" is still an open decision in your sheet): when a roll triggers several Power cards, does the order they resolve in ever matter? Until you rule, the engine resolves them left to right by printed number, highest first, and logs the order. — open
-2. **Block vs. damage order:** "Resolve all triggered cards, then take damage." Block is a Power-card effect that lowers the damage. Is Block applied to the Monster's damage before halving effects (Venom Spider) or after? Default: halve first, then Block. — open
-3. **"Defeat the Monster" and Grit:** the Pet triggers on a final result of 10 or more. Is the result after Grit and Rerolls and bonuses the one compared? (The Rules tab says "Cards use the final result after Grit, Rerolls and bonuses", so yes — listed only so you can confirm.) — assumed yes
-4. **Grit before the roll:** "+1 per Grit on that roll, for you only." Does Grit spent before a roll carry onto a reroll of that same Monster? (The v2.6 rulebook says yes.) Default: yes. — open
-5. **After-roll Grit:** "3 Grit for +1." Can you buy several +1s in one go (6 Grit for +2)? Default: yes, any number you can afford. — open
-7. **Monster damage numbering:** "Each copy dug this Dig deals the next number" — across both Monster sets together, or per set? Default: per set (A: 1, 3, 5, 7; B: 2, 4, 6), with the "beyond the Mine" Monsters continuing 8, 9, … — open
-8. **Immediate card while a Monster is unresolved:** can a Monster be dug while another is in progress? Default: no — a Monster is fully resolved (roll, triggers, damage) before the next card is dug. — open
-
-## Added while building the solo Dig (each is one line in `DDB.rules`, so easy to change)
+## About a Dig (each is one line in `DDB.rules`, so easy to change)
 9. **Order of result changes:** Tune-Up and friends add; Wrecking Ball doubles; Backfire turns 1 into 10; Floor Jack lifts below 4 to 4. Default: add, then double, then "becomes", then "less than" (`rulings.transformOrder`). Second Spark (3 or less rerolls free) looks at the result *before* the double/becomes/floor changes, once per Monster. — open
 10. **Panic Button:** the free reroll happens after the line has triggered and before damage; does the rerolled result trigger the line *again* (so heals and Grit stack)? Default: yes (`rulings.panicRetriggers`). — open
 13. **"Whenever you gain …" at a full track:** does gaining Health at 10 (a full track) still count? Default: no — the track has to actually move (`rulings.gainAtCapFires`). — open
@@ -41,6 +32,15 @@ Read live from the sheet by the lab page ("Questions already written in your she
 
 ## Added while building the AI opponent (you against the most basic AI)
 32. **AI pacing:** the AI digs one card each time you tap your Mine (and plays out any Monster it finds), so you watch it climb the Leaderboard as you go; when your Dig is over it finishes its own at once. — my call
-33. **AI play (deliberately basic):** it never spends Grit before a roll; after a roll it buys +1s with Grit only to reach the Pet, and rerolls a result of 3 or less; it banks as soon as that would put it in the lead (or when its Health is 3 or less); in the final round it takes the Crown as soon as it can; it pledges 1 more once it has reached the Crown and has 5+ Health; it keeps the first cards a pack offers and picks its Starter Kit at random. It only uses what a player can see (its own Dig and the Leaderboard). Numbers are in `DDB.ai`. — my call
+33. **AI play (deliberately basic):** it never spends Grit before a roll; after a roll it buys +1s with Grit only to reach the Pet, and rerolls a result of 3 or less; it triggers every eligible Power card, highest number first, then takes the damage; it banks as soon as that would put it in the lead (or when its Health is 3 or less); in the final round it takes the Crown as soon as it can; it pledges 1 more once it has reached the Crown and has 5+ Health; it keeps the first cards a pack offers and picks its Starter Kit at random. It only uses what a player can see (its own Dig and the Leaderboard). Numbers are in `DDB.ai`. — my call
 34. **Shared table:** one Booster Deck and one Trash for both players; one Escape Bonus roll per round that everyone who banked adds (rolled for the AI automatically if you went BOOM); the AI does its Prep before you. — assumed (from "one player rolls the die for the whole table")
 35. **Winning against the AI:** whoever holds the Crown Jewel when the final round ends. In the final round the first one to get in the lead can take it. — assumed
+
+## Added with your latest rulings (player-chosen triggers, Starter Kit on top of the Mine)
+36. **Ongoing cards stay automatic.** You choose which eligible *Power* cards to trigger and in what order, but an Ongoing card's "Whenever…" effect still fires by itself when its event happens. Do you also want to choose whether (and when) each Ongoing card triggers? — open
+37. **Conga Crab and Unlucky Duck** ("for each other card that triggers", "if no other card triggers") count the other cards you chose once you have chosen them: they resolve when you take the damage. — my call
+38. **No Grit or Rerolls once you start triggering.** The sequence is roll, adjust with Grit/Rerolls, trigger, then damage. — my call
+39. **Generator ("at the start of each Dig")** fires when it is dug as part of your Starter Kit (before the first Monster), since the kit is how a Dig starts. — my call
+40. **Skipping and speed.** Tapping the Monster with cards still untriggered asks for a second tap before it takes the damage; "Trigger all" triggers everything eligible, highest number first. — my call
+41. **Panic Button** sends you back to choose your triggers again after its free reroll (gains from cards you already triggered stay). Still open under #10 whether the reroll should let you trigger again at all. — my call
+42. **Starter Kit order.** Your kit goes on top of the Mine face up in the order you tap them (1st is dug first); any other card you own is shuffled into the Mine. — ruled by the owner, order mine

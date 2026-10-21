@@ -38,9 +38,9 @@ test('the Board updates by itself: your live marker follows every Monster you su
   const run = Run.start(cards, { seed: 5, rounds: 2 }); Run.openPack(run); Run.toggleKeep(run, run.prep.offer[0].uid); Run.confirmKeep(run); Run.beginDig(run, { seed: 1 });
   const st = run.dig; st.mine = ['MO-01', 'MO-02', 'MO-01', 'MO-02'].map((id, i) => ({ ...by(id), uid: 9900 + i })); st.dice = Array(30).fill(10);
   Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge'), null, 'nothing survived yet');
-  for (let i = 1; i <= 3; i++) { Dig.dig(st); Dig.roll(st); Dig.face(st); Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge').n, i, 'the marker is on your number'); }
+  for (let i = 1; i <= 3; i++) { Dig.dig(st); Dig.roll(st); Dig.autoFace(st); Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge').n, i, 'the marker is on your number'); }
   assert.ok(Run.pledge(run, 4)); assert.equal(Board.marker(run.board, 'me', 'pledge').n, 4, 'a pledge puts it ahead');
-  Dig.dig(st); Dig.roll(st); Dig.face(st); Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge').n, 4, 'it stays until you catch up');
+  Dig.dig(st); Dig.roll(st); Dig.autoFace(st); Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge').n, 4, 'it stays until you catch up');
   assert.ok(Run.bank(run)); assert.equal(Board.marker(run.board, 'me', 'pledge'), null); assert.equal(run.best, 4);
 });
 
@@ -67,7 +67,7 @@ test('the AI digs one card each time you dig one, and finishes its Dig as soon a
   const ai = Match.bot(m); const d0 = ai.dig.digs;
   Match.aiStep(m); assert.equal(ai.dig.digs, d0 + 1, 'one card');
   Match.aiStep(m); assert.equal(ai.dig.digs, d0 + 2);
-  const me = Match.human(m).dig; me.heart = 1; me.mine = [{ ...by('MO-01'), uid: 9800 }]; me.dice = [1]; Dig.dig(me); Dig.roll(me); Dig.face(me); Run.checkOver(Match.human(m));
+  const me = Match.human(m).dig; me.heart = 1; me.mine = [{ ...by('MO-01'), uid: 9800 }]; me.dice = [1]; Dig.dig(me); Dig.roll(me); Dig.autoFace(me); Run.checkOver(Match.human(m));
   assert.equal(me.over.kind, 'boom'); assert.ok(!ai.dig.over); Match.settle(m); assert.ok(ai.dig.over, 'the AI is done too');
 });
 
@@ -111,7 +111,7 @@ test('if you go BOOM but the AI banked, the Escape Bonus is rolled for it withou
   const m = Match.start(cards, { seed: 9, rounds: 2, dice: [4] });
   const me = Match.human(m), ai = Match.bot(m);
   AI.prep(me); Match.beginRound(m);
-  me.dig.heart = 1; me.dig.mine = [{ ...by('MO-01'), uid: 9500 }]; me.dig.dice = [1]; Dig.dig(me.dig); Dig.roll(me.dig); Dig.face(me.dig); Run.checkOver(me);
+  me.dig.heart = 1; me.dig.mine = [{ ...by('MO-01'), uid: 9500 }]; me.dig.dice = [1]; Dig.dig(me.dig); Dig.roll(me.dig); Dig.autoFace(me.dig); Run.checkOver(me);
   ai.dig.mine = ['TR-01', 'TR-01'].map((id, i) => ({ ...by(id), uid: 9550 + i })); Dig.dig(ai.dig); Dig.bank(ai.dig); Run.checkOver(ai);
   Match.finishRound(m);
   assert.equal(me.prep.step, 'pack'); assert.equal(me.prep.gems, 0); assert.equal(ai.prep.escape, 4); assert.equal(m.escape, 4);

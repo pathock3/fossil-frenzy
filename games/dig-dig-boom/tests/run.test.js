@@ -23,7 +23,7 @@ function play(run, mine, plan, die = 1) {
   for (const a of plan) {
     if (a === 'bank') { assert.ok(Dig.bank(st), 'bank allowed'); continue; }
     assert.ok(Dig.dig(st), 'dig allowed');
-    if (st.fight) { Dig.roll(st); Dig.face(st); }
+    if (st.fight) { Dig.roll(st); Dig.autoFace(st); }
   }
   return st;
 }
@@ -50,15 +50,14 @@ test('Starter Kit: up to the round tracker (1, 2, 2, 3); the Mine is the 25 star
   const run = firstRound({ keepIds: ['PW-10'] });
   assert.ok(!Run.toggleKit(run, 12345), 'only cards you own'); assert.ok(Run.toggleKit(run, run.owned[0].uid));
   Run.beginDig(run, { seed: 3 });
-  assert.equal(run.phase, 'dig'); assert.equal(run.dig.line.length, 2, 'the Pet and the kit card'); assert.equal(run.dig.mine.length, 25);
+  assert.equal(run.phase, 'dig'); assert.equal(run.dig.line.length, 1, 'the Pet'); assert.equal(run.dig.mine.length, 26, 'the kit card is on top of the Mine'); assert.equal(run.dig.mine[0].id, 'PW-10');
   const r2 = firstRound({ keepIds: ['PW-10'] }); Run.beginDig(r2, { seed: 3 });   // no kit chosen: the card is shuffled into the Mine
-  assert.equal(r2.dig.mine.length, 26); assert.equal(r2.dig.line.length, 1);
+  assert.equal(r2.dig.mine.length, 26); assert.equal(r2.dig.line.length, 1); assert.notEqual(r2.dig.mine[0].id, 'PW-10', 'a card not in the kit is shuffled in');
 });
 
 test('after a Dig the Mine is rebuilt from scratch: Drill reset, Power cards back at their numbers, everything shuffled in', () => {
   const run = firstRound({ keepIds: ['PW-25'] }); Run.toggleKit(run, run.owned[0].uid); Run.beginDig(run, { seed: 4 });
   play(run, ['TR-01', 'MO-01'], ['dig', 'dig', 'bank'], 1);
-  run.dig.line[1].at = 5;                                  // moved down during the Dig
   Run.finishDig(run); run.prep.step = 'kit';
   Run.beginDig(run, { seed: 5 });
   assert.equal(run.dig.heart, DDB.rules.start.heart); assert.equal(run.dig.grit, 0); assert.equal(run.dig.reroll, 0);
@@ -112,14 +111,14 @@ test('Pledge: only once you have survived as many Monsters as the Crown tracker,
   const run = firstRound({ keepIds: ['PW-02'] }); Run.beginDig(run, { seed: 12 });
   const st = run.dig; st.mine = ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01'].map((id, i) => ({ ...by(id), uid: 9000 + i })); st.dice = Array(50).fill(10);
   assert.ok(!Dig.canPledge(st, 1) && !Dig.canPledge(st, 0), 'before the Crown you dig or bank freely');
-  for (let i = 0; i < 3; i++) { Dig.dig(st); Dig.roll(st); Dig.face(st); }
+  for (let i = 0; i < 3; i++) { Dig.dig(st); Dig.roll(st); Dig.autoFace(st); }
   assert.equal(st.survived, 3);
   assert.ok(!Dig.canPledge(st, 5) && !Dig.canPledge(st, 2), 'only 3 or 4'); assert.ok(Dig.canPledge(st, 3) && Dig.canPledge(st, 4));
   assert.ok(Dig.pledge(st, 4)); assert.equal(st.pledge, 4);
   assert.ok(!Dig.can(st).bank, 'cannot bank before reaching the pledge');
-  Dig.dig(st); Dig.roll(st); Dig.face(st);
+  Dig.dig(st); Dig.roll(st); Dig.autoFace(st);
   assert.ok(Dig.can(st).bank, 'reached it'); assert.ok(Dig.canPledge(st, 5) && Dig.canPledge(st, 4) === false);
-  const st2 = Dig.start(cards, [], { seed: 5, board: { crown: 3 } }); st2.survived = 3; Dig.pledge(st2, 4); st2.heart = 1; st2.mine = [{ ...by('MO-01'), uid: 1 }]; st2.dice = [1]; Dig.dig(st2); Dig.roll(st2); Dig.face(st2);
+  const st2 = Dig.start(cards, [], { seed: 5, board: { crown: 3 } }); st2.survived = 3; Dig.pledge(st2, 4); st2.heart = 1; st2.mine = [{ ...by('MO-01'), uid: 1 }]; st2.dice = [1]; Dig.dig(st2); Dig.roll(st2); Dig.autoFace(st2);
   assert.equal(st2.over.kind, 'boom'); assert.equal(st2.pledge, null);
 });
 
@@ -132,9 +131,9 @@ test('the final round: no banking until you are in the lead (past the Crown trac
   const st = run.dig; assert.ok(st.board.final);
   st.mine = ['TR-01', 'MO-01', 'MO-02', 'MO-01', 'MO-02', 'TR-01'].map((id, i) => ({ ...by(id), uid: 9100 + i })); st.dice = Array(30).fill(10);
   assert.ok(!Dig.can(st).bank, 'no banking in the final round');
-  Dig.dig(st); for (let i = 0; i < 3; i++) { Dig.dig(st); Dig.roll(st); Dig.face(st); }
+  Dig.dig(st); for (let i = 0; i < 3; i++) { Dig.dig(st); Dig.roll(st); Dig.autoFace(st); }
   assert.equal(st.survived, 3); assert.ok(!Dig.can(st).bank, '3 only ties the Crown tracker');
-  Dig.dig(st); Dig.roll(st); Dig.face(st);
+  Dig.dig(st); Dig.roll(st); Dig.autoFace(st);
   assert.ok(Dig.can(st).bank, 'in the lead');
   Dig.bank(st); Run.finishDig(run);
   assert.equal(run.phase, 'done'); assert.deepEqual(run.result, { crown: true, best: 4, tracker: 4 });
@@ -178,7 +177,7 @@ test('random runs of 5 rounds always finish, never lose or duplicate a Booster c
         if (st.over) Run.finishDig(run);
         else if (c.choose) Dig.chooseClone(st, st.line[0]);
         else if (st.fight && st.fight.phase === 'before') Dig.roll(st);
-        else if (st.fight) { if (c.reroll && rr() < .5) Dig.reroll(st); else Dig.face(st); }
+        else if (st.fight) { if (c.reroll && rr() < .5) Dig.reroll(st); else Dig.autoFace(st); }
         else if (c.bank && st.survived >= 2 && rr() < .3) Dig.bank(st);
         else if (c.dig) Dig.dig(st); else assert.fail(`seed ${seed}: stuck ${JSON.stringify(c)}`);
       }
@@ -191,7 +190,7 @@ test('random runs of 5 rounds always finish, never lose or duplicate a Booster c
 
 test('saving and resuming: a Dig and a run survive a reload — same cards, same next dice and shuffles, nothing duplicated or lost', () => {
   const roundtrip = o => JSON.parse(JSON.stringify(o));
-  const step = st => { const c = Dig.can(st); if (c.choose) Dig.chooseClone(st, st.line[0]); else if (st.fight && st.fight.phase === 'before') { if (c.grit && st.survived % 2 === 0) Dig.spendGrit(st); else Dig.roll(st); } else if (st.fight) { if (c.reroll && st.fight.die < 5) Dig.reroll(st); else Dig.face(st); } else if (c.dig) Dig.dig(st); else return false; return true; };
+  const step = st => { const c = Dig.can(st); if (c.choose) Dig.chooseClone(st, st.line[0]); else if (st.fight && st.fight.phase === 'before') { if (c.grit && st.survived % 2 === 0) Dig.spendGrit(st); else Dig.roll(st); } else if (st.fight) { if (c.reroll && st.fight.die < 5) Dig.reroll(st); else Dig.autoFace(st); } else if (c.dig) Dig.dig(st); else return false; return true; };
   for (let seed = 1; seed <= 40; seed++) {
     const kit = ['PW-10', 'ON-33', 'IM-13', 'ON-36', 'PW-25'].map(by).slice(0, 1 + seed % 5);
     const a = Dig.start(cards, kit, { seed, board: { crown: 3 }, start: { grit: 4, reroll: 2 } });
@@ -205,8 +204,8 @@ test('saving and resuming: a Dig and a run survive a reload — same cards, same
   const run = firstRound({ keepIds: ['PW-10'] }); Run.toggleKit(run, run.owned[0].uid);
   const r2 = Run.load(cards, roundtrip(Run.save(run)));
   assert.deepEqual(r2.owned.map(c => c.id), run.owned.map(c => c.id)); assert.equal(r2.deck.length, run.deck.length); assert.deepEqual(r2.prep.kitPick, run.prep.kitPick);
-  assert.ok(Run.beginDig(r2, { seed: 3 })); assert.equal(r2.dig.line.length, 2);
-  const r3 = Run.load(cards, roundtrip(Run.save(r2))); assert.ok(r3.dig.line[1].card.uid === r3.kit[0].uid || true);
+  assert.ok(Run.beginDig(r2, { seed: 3 })); assert.equal(r2.dig.line.length, 1); assert.equal(r2.dig.mine[0].id, r2.kit[0].id);
+  const r3 = Run.load(cards, roundtrip(Run.save(r2))); assert.equal(r3.dig.mine[0].uid, r2.dig.mine[0].uid);
   play(r3, ['TR-01', 'MO-01'], ['dig', 'dig', 'bank'], 10); Run.finishDig(r3);
   const r4 = Run.load(cards, roundtrip(Run.save(r3))); assert.equal(r4.prep.step, 'escape'); r4.dice = [5]; assert.ok(Run.rollEscape(r4)); assert.equal(r4.prep.escape, 5);
   assert.equal(new Set([...r4.deck, ...r4.owned, ...r4.trash].map(c => c.uid)).size, r4.deck.length + r4.owned.length + r4.trash.length);
@@ -215,18 +214,18 @@ test('saving and resuming: a Dig and a run survive a reload — same cards, same
 test('the Board changes the moment a Dig ends: a bank locks in and may take the Crown at once, a BOOM removes the Pledge marker (no waiting for Prep)', () => {
   const run = firstRound({ keepIds: ['PW-02'] }); Run.beginDig(run, { seed: 20 });
   const st = run.dig; st.mine = Array.from({ length: 6 }, (_, i) => ({ ...by(i % 2 ? 'MO-02' : 'MO-01'), uid: 9400 + i })); st.dice = Array(30).fill(10);
-  for (let i = 0; i < 4; i++) { Dig.dig(st); Dig.roll(st); Dig.face(st); }
+  for (let i = 0; i < 4; i++) { Dig.dig(st); Dig.roll(st); Dig.autoFace(st); }
   assert.ok(Run.pledge(run, 5)); assert.equal(Board.marker(run.board, 'me', 'pledge').n, 5);
   assert.ok(!Run.pledge(run, 4), 'a pledge cannot be lowered');
   assert.ok(!Run.bank(run), 'cannot bank below the pledge');
-  Dig.dig(st); Dig.roll(st); Dig.face(st);
+  Dig.dig(st); Dig.roll(st); Dig.autoFace(st);
   assert.ok(Run.bank(run)); assert.equal(run.crown.holder, true, 'the Crown moved at the moment of banking'); assert.equal(run.crown.tracker, 5); assert.equal(run.best, 5);
   assert.equal(Board.marker(run.board, 'me', 'pledge'), null);
   const r2 = firstRound({ keepIds: ['PW-02'] }); Run.beginDig(r2, { seed: 21 });
   const s2 = r2.dig; s2.mine = Array.from({ length: 6 }, (_, i) => ({ ...by('MO-01'), uid: 9500 + i })); s2.dice = Array(30).fill(10);
-  for (let i = 0; i < 3; i++) { Dig.dig(s2); Dig.roll(s2); Dig.face(s2); }
+  for (let i = 0; i < 3; i++) { Dig.dig(s2); Dig.roll(s2); Dig.autoFace(s2); }
   Run.pledge(r2, 4); assert.ok(Board.marker(r2.board, 'me', 'pledge'));
-  s2.heart = 1; s2.dice = [1]; Dig.dig(s2); Dig.roll(s2); Dig.face(s2);
+  s2.heart = 1; s2.dice = [1]; Dig.dig(s2); Dig.roll(s2); Dig.autoFace(s2);
   assert.equal(s2.over.kind, 'boom'); Run.checkOver(r2);
   assert.equal(Board.marker(r2.board, 'me', 'pledge'), null, 'BOOM removed the Pledge marker right away');
   Run.finishDig(r2); assert.equal(r2.history[0].kind, 'boom');
@@ -241,7 +240,7 @@ test('the Dig\'s copy of the Leaderboard is refreshed from the live Board before
   assert.equal(st.board.leadN, 4);
   Board.lockIn(run.board, 'ai', 7);                       // the AI banks 7 while I am digging
   Run.refresh(run); assert.equal(st.board.leadN, 8); assert.equal(st.board.crown, 7);
-  for (let i = 0; i < 7; i++) { Dig.dig(st); Dig.roll(st); Dig.face(st); }
+  for (let i = 0; i < 7; i++) { Dig.dig(st); Dig.roll(st); Dig.autoFace(st); }
   assert.ok(!Dig.can(st).bank, '7 only ties the AI, and the AI has the better spot: banking now would not lead');
-  Dig.dig(st); Dig.roll(st); Dig.face(st); assert.ok(Dig.can(st).bank);
+  Dig.dig(st); Dig.roll(st); Dig.autoFace(st); assert.ok(Dig.can(st).bank);
 });

@@ -16,7 +16,7 @@ function game({ kit = [], mine, dice = [], start = {}, seed = 1, ongoing = [], p
 }
 const text = st => st.log.map(l => l.text).join('\n');
 // dig a Monster and play the roll through: spend `grit` before, roll, then face it
-function fight(st, { grit = 0, then } = {}) { assert.ok(Dig.dig(st)); for (let i = 0; i < grit; i++) assert.ok(Dig.spendGrit(st)); assert.ok(Dig.roll(st)); if (then) then(st); if (st.fight) assert.ok(Dig.face(st)); return st; }
+function fight(st, { grit = 0, then } = {}) { assert.ok(Dig.dig(st)); for (let i = 0; i < grit; i++) assert.ok(Dig.spendGrit(st)); assert.ok(Dig.roll(st)); if (then) then(st); if (st.fight) assert.ok(Dig.autoFace(st)); return st; }
 
 test('the rules are data: nothing the engine needs is missing from DDB.rules, and every card text is understood', () => {
   for (const k of ['die', 'caps', 'start', 'gritBefore', 'gritAfter', 'pet', 'beyond', 'rulings']) assert.ok(DDB.rules[k] !== undefined, k);
@@ -48,12 +48,15 @@ test('the Drill by the rules: a d10, Health 0-10 starting at 10, Grit 0-6 and Re
   const h = game({ mine: ['IM-13'], start: { heart: 8 } }); Dig.dig(h); assert.equal(h.heart, 10, 'Health stops at 10');
 });
 
-test('Starter Kit: Power cards go on the line, Ongoing cards in play, Immediate cards go on top of the Mine (dug first, face up)', () => {
+test('Starter Kit: every kit card goes on top of the Mine, face up, in the order chosen; nothing else is in play at the start', () => {
   const st = Dig.start(cards, ['PW-02', 'ON-33', 'IM-13'].map(by), { seed: 1 });
-  assert.equal(st.line.length, 2); assert.equal(st.ongoing.length, 1); assert.equal(st.mine.length, 26);
-  assert.equal(st.mine[0].id, 'IM-13'); assert.equal(st.known, 1);
+  assert.equal(st.line.length, 1, 'only the Pet'); assert.equal(st.ongoing.length, 0); assert.equal(st.mine.length, 28);
+  assert.deepEqual(st.mine.slice(0, 3).map(c => c.id), ['PW-02', 'ON-33', 'IM-13']); assert.equal(st.known, 3);
   const two = Dig.start(cards, ['IM-13', 'IM-10'].map(by), { seed: 1, start: { heart: 2, grit: 0 } }); Dig.dig(two); Dig.dig(two);
   assert.deepEqual([two.heart, two.grit], [6, 4], 'both kit Immediates were the first two cards you dug');
+  const three = Dig.start(cards, ['PW-02', 'ON-33'].map(by), { seed: 1 }); Dig.dig(three); Dig.dig(three);
+  assert.equal(three.line.length, 2); assert.equal(three.ongoing.length, 1, 'digging the kit puts the cards in play');
+  const rev = Dig.start(cards, ['ON-33', 'PW-02'].map(by), { seed: 1 }); assert.deepEqual(rev.mine.slice(0, 2).map(c => c.id), ['ON-33', 'PW-02'], 'the order you chose');
 });
 
 test('digging a Geode scores 1 gem and discards it; the Mine shrinks', () => {
@@ -65,7 +68,7 @@ test('digging a Geode scores 1 gem and discards it; the Mine shrinks', () => {
 test('Monster damage: each copy dug deals the next number in its set — A: 1,3,5,7; B: 2,4,6; sets count separately', () => {
   const st = game({ mine: ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01'], start: { heart: 12, grit: 6 }, dice: Array(10).fill(6) });
   const seen = [];
-  for (let i = 0; i < 7; i++) { Dig.dig(st); seen.push(st.fight.damage); for (let g = 0; g < 4; g++) Dig.spendGrit(st); Dig.roll(st); Dig.face(st); st.grit = 6; }
+  for (let i = 0; i < 7; i++) { Dig.dig(st); seen.push(st.fight.damage); for (let g = 0; g < 4; g++) Dig.spendGrit(st); Dig.roll(st); Dig.autoFace(st); st.grit = 6; }
   assert.deepEqual(seen, [1, 2, 3, 4, 5, 6, 7]);
 });
 
@@ -117,7 +120,7 @@ test('below the Pet: Power cards at or under the result trigger, others do not; 
 
 test('"Resolve all triggered cards, then take damage": healing first can keep you alive', () => {
   const st = game({ mine: ['MO-01', 'MO-01', 'MO-01'], power: ['PW-15'], start: { heart: 1, grit: 0 }, dice: [1, 1, 6] });
-  Dig.dig(st); Dig.roll(st); Dig.face(st);                 // 1 damage at 1 heart, nothing triggers (result 1) -> BOOM
+  Dig.dig(st); Dig.roll(st); Dig.autoFace(st);                 // 1 damage at 1 heart, nothing triggers (result 1) -> BOOM
   assert.equal(st.over.kind, 'boom');
   const st2 = game({ mine: ['MO-01'], power: ['PW-15'], start: { heart: 1 }, dice: [6] });
   fight(st2);                                              // result 6: Sloth +2, then 1 damage
@@ -128,7 +131,7 @@ test('BOOM when health reaches 0: the Dig ends, no gems are kept, Monsters survi
   const st = game({ mine: ['TR-01', 'MO-01', 'MO-01'], start: { heart: 2 }, dice: [1, 1, 1] });
   Dig.dig(st); fight(st);                                  // geode, then Monster 1: 1 damage
   assert.equal(st.heart, 1);
-  Dig.dig(st); Dig.roll(st); Dig.face(st);                 // Monster 2: 3 damage
+  Dig.dig(st); Dig.roll(st); Dig.autoFace(st);                 // Monster 2: 3 damage
   assert.equal(st.over.kind, 'boom'); assert.equal(st.heart, 0);
   assert.equal(st.survived, 1); assert.ok(!Dig.can(st).dig && !Dig.can(st).bank && !Dig.dig(st));
 });
@@ -137,7 +140,7 @@ test('banking: between cards only; you keep the gems from Geodes and survived Mo
   const st = game({ mine: ['TR-01', 'TR-01', 'MO-01', 'TR-01'], start: { heart: 6 }, dice: [2] });
   Dig.dig(st); Dig.dig(st); Dig.dig(st);                   // two Geodes and a Monster in progress
   assert.ok(!Dig.can(st).bank && !Dig.bank(st), 'not while a Monster is unresolved');
-  Dig.roll(st); Dig.face(st);
+  Dig.roll(st); Dig.autoFace(st);
   assert.ok(Dig.bank(st));
   assert.deepEqual([st.over.kind, st.over.total, st.over.geodes, st.over.monsters, st.over.survived], ['bank', 3, 2, 1, 1]);
 });
@@ -145,7 +148,7 @@ test('banking: between cards only; you keep the gems from Geodes and survived Mo
 test('Beyond the Mine: after the Mine runs out, Bonus Monsters deal 8, 9, ... and are worth 2 gems', () => {
   const st = game({ mine: [], start: { heart: 12, grit: 6 }, dice: [1, 1] });
   Dig.dig(st); assert.equal(st.fight.damage, 8); assert.ok(st.fight.monster.bonus);
-  Dig.roll(st); Dig.face(st);
+  Dig.roll(st); Dig.autoFace(st);
   assert.equal(st.heart, 4); assert.equal(st.monsterGems, 2);
   Dig.dig(st); assert.equal(st.fight.damage, 9);
 });
@@ -182,13 +185,13 @@ test('Block, Venom Spider (half damage, rounded down) and Lucky Cricket', () => 
   fight(blk);                                              // damage 1, block 1+2: no damage
   assert.equal(blk.heart, 6);
   const half = game({ mine: ['MO-01', 'MO-01'], power: ['PW-16'], start: { heart: 12, grit: 6 }, dice: [6, 6] });
-  Dig.dig(half); Dig.roll(half); Dig.face(half);           // 1 damage halved = 0
+  Dig.dig(half); Dig.roll(half); Dig.autoFace(half);           // 1 damage halved = 0
   assert.equal(half.heart, 12);
-  Dig.dig(half); Dig.roll(half); Dig.face(half);           // 3 damage halved = 1
+  Dig.dig(half); Dig.roll(half); Dig.autoFace(half);           // 3 damage halved = 1
   assert.equal(half.heart, 11);
   const cricket = game({ mine: ['MO-01', 'MO-01'], power: ['PW-14'], start: { heart: 3 }, dice: [6, 6] });
-  Dig.dig(cricket); Dig.roll(cricket); Dig.face(cricket);  // 1 damage -> 2
-  Dig.dig(cricket); Dig.roll(cricket); Dig.face(cricket);  // 3 damage would BOOM at 2 -> survive with 1
+  Dig.dig(cricket); Dig.roll(cricket); Dig.autoFace(cricket);  // 1 damage -> 2
+  Dig.dig(cricket); Dig.roll(cricket); Dig.autoFace(cricket);  // 3 damage would BOOM at 2 -> survive with 1
   assert.equal(cricket.over, null); assert.equal(cricket.heart, 1);
 });
 
@@ -221,7 +224,7 @@ test('Magpie and Echo copy the top Immediate card in the discard pile', () => {
 
 test('Snowball Beetle moves itself down 1 after it triggers; Wrench Rat moves your highest Power (not the Pet) down 2', () => {
   const st = game({ mine: ['MO-01', 'MO-01'], power: ['PW-25'], start: { heart: 12 }, dice: [8, 8] });
-  Dig.dig(st); Dig.roll(st); Dig.face(st);
+  Dig.dig(st); Dig.roll(st); Dig.autoFace(st);
   assert.equal(st.line.find(e => e.card.id === 'PW-25').at, 7);
   const w = game({ mine: ['IM-34'], power: ['PW-25', 'PW-02'] });
   Dig.dig(w); assert.equal(w.line.find(e => e.card.id === 'PW-25').at, 6); assert.equal(w.line.find(e => e.pet).at, 10);
@@ -251,7 +254,7 @@ test('Four-Leaf Clover: your next Monster is a 10 without a roll (the Pet defeat
   const st = game({ mine: ['IM-07', 'MO-01'], start: { heart: 6 } });
   Dig.dig(st); Dig.dig(st);
   assert.equal(st.fight.phase, 'after'); assert.equal(Dig.result(st).total, 10); assert.ok(!Dig.can(st).roll && !Dig.can(st).reroll && !Dig.can(st).bonus);
-  Dig.face(st); assert.equal(st.heart, 6); assert.equal(st.defeated, 1);
+  Dig.autoFace(st); assert.equal(st.heart, 6); assert.equal(st.defeated, 1);
 });
 
 test('Pet Treat makes the Pet trigger 1 lower, and it stays lower until Prep', () => {
@@ -300,10 +303,10 @@ test('roll bonuses: Tune-Up, Redline (3 Health or less), Monster Scope / Giant S
   const rl = game({ mine: ['MO-01'], ongoing: ['ON-27'], start: { heart: 3 }, dice: d.slice() }); Dig.dig(rl); Dig.roll(rl); assert.equal(Dig.result(rl).total, 6);
   const rl2 = game({ mine: ['MO-01'], ongoing: ['ON-27'], start: { heart: 4 }, dice: d.slice() }); Dig.dig(rl2); Dig.roll(rl2); assert.equal(Dig.result(rl2).total, 4);
   const ms = game({ mine: ['MO-01', 'MO-01', 'MO-01', 'MO-01'], ongoing: ['ON-20'], start: { heart: 12, grit: 6 }, dice: [4, 4, 4, 4] });
-  const got = []; for (let i = 0; i < 4; i++) { Dig.dig(ms); Dig.roll(ms); got.push(Dig.result(ms).total); Dig.face(ms); }
+  const got = []; for (let i = 0; i < 4; i++) { Dig.dig(ms); Dig.roll(ms); got.push(Dig.result(ms).total); Dig.autoFace(ms); }
   assert.deepEqual(got, [4, 4, 4, 6], 'only the 7-damage fourth Monster gets +2');
   const gs = game({ mine: ['MO-01', 'MO-01', 'MO-01', 'MO-01'], ongoing: ['ON-17'], start: { heart: 12 }, dice: [4, 4, 4, 4] });
-  for (let i = 0; i < 3; i++) { Dig.dig(gs); Dig.roll(gs); Dig.face(gs); } Dig.dig(gs); Dig.roll(gs); assert.equal(Dig.result(gs).total, 7);
+  for (let i = 0; i < 3; i++) { Dig.dig(gs); Dig.roll(gs); Dig.autoFace(gs); } Dig.dig(gs); Dig.roll(gs); assert.equal(Dig.result(gs).total, 7);
   const dg = game({ mine: ['MO-01'], ongoing: ['ON-11'], dice: [4] }); dg.survived = 6; Dig.dig(dg); Dig.roll(dg); assert.equal(Dig.result(dg).total, 6);
   const fw = game({ mine: ['MO-01'], ongoing: ['ON-15'], dice: [4] }); fw.discard = Array(5).fill(0).map(() => ({ ...by('IM-13') })); Dig.dig(fw); Dig.roll(fw); assert.equal(Dig.result(fw).total, 7);
 });
@@ -312,7 +315,7 @@ test('result changes: Floor Jack (below 4 becomes 4), Backfire (1 becomes 10), W
   const fj = game({ mine: ['MO-01'], ongoing: ['ON-14'], dice: [2] }); Dig.dig(fj); Dig.roll(fj); assert.equal(Dig.result(fj).total, 4);
   const bf = game({ mine: ['MO-01'], ongoing: ['ON-03'], dice: [1] }); Dig.dig(bf); Dig.roll(bf); assert.equal(Dig.result(bf).total, 10);
   const wb = game({ mine: ['MO-01', 'MO-01'], ongoing: ['ON-37'], start: { heart: 12 }, dice: [3, 3] });
-  Dig.dig(wb); Dig.roll(wb); assert.equal(Dig.result(wb).total, 6); Dig.face(wb);
+  Dig.dig(wb); Dig.roll(wb); assert.equal(Dig.result(wb).total, 6); Dig.autoFace(wb);
   Dig.dig(wb); Dig.roll(wb); assert.equal(Dig.result(wb).total, 3, 'only the first Monster');
   const both = game({ mine: ['MO-01'], ongoing: ['ON-37', 'ON-14'], dice: [1] }); Dig.dig(both); Dig.roll(both); assert.equal(Dig.result(both).total, 4, '1 doubled is 2, then the floor makes it 4');
 });
@@ -320,7 +323,7 @@ test('result changes: Floor Jack (below 4 becomes 4), Backfire (1 becomes 10), W
 test('Pet Whistle: the Pet triggers on 9', () => {
   const st = game({ mine: ['MO-01'], ongoing: ['ON-25'], start: { grit: 6 }, dice: [6] }); Dig.dig(st);
   assert.equal(st.line.find(e => e.pet).at, 9);
-  for (let i = 0; i < 3; i++) Dig.spendGrit(st); Dig.roll(st); Dig.face(st); assert.equal(st.defeated, 1);
+  for (let i = 0; i < 3; i++) Dig.spendGrit(st); Dig.roll(st); Dig.autoFace(st); assert.equal(st.defeated, 1);
 });
 
 test('Cowcatcher: your first Monster each Dig deals no damage; Bumper blocks 1 from every Monster', () => {
@@ -345,7 +348,7 @@ test('"Whenever you gain" cards: Adrenaline Pump, Nurse Bot (gain 1 more), Pep H
 test('dig watchers: Confetti Cannon and Disco Ball (Immediate), Danger Siren (Monster with 6+ damage)', () => {
   const st = game({ mine: ['IM-10'], ongoing: ['ON-07', 'ON-12'], start: { grit: 0, heart: 6 } }); Dig.dig(st); assert.deepEqual([st.grit, st.heart], [5, 7]);
   const ds = game({ mine: ['MO-01', 'MO-01', 'MO-01', 'MO-01'], ongoing: ['ON-10'], start: { heart: 12, grit: 0 }, dice: [6, 6, 6, 6] });
-  for (let i = 0; i < 3; i++) { Dig.dig(ds); Dig.roll(ds); Dig.face(ds); } assert.equal(ds.grit, 0); Dig.dig(ds); assert.equal(ds.grit, 2, 'the 7 damage Monster, before you roll');
+  for (let i = 0; i < 3; i++) { Dig.dig(ds); Dig.roll(ds); Dig.autoFace(ds); } assert.equal(ds.grit, 0); Dig.dig(ds); assert.equal(ds.grit, 2, 'the 7 damage Monster, before you roll');
 });
 
 test('damage and defeat watchers: Patch Kit, Stubborn Engine, Rage Valve / Crumple Zone (3+/5+), Monster Jerky, Salvage Claw, Trophy Case, Victory Bell', () => {
@@ -364,17 +367,17 @@ test('"Whenever 4+ cards trigger on one roll" (Applause Meter) and Grit Caddy (s
 });
 
 test('Generator gives Grit at the start of each Dig; Drone Booster makes the first Grit you spend before a roll worth +2', () => {
-  const g = Dig.start(cards, ['ON-16'].map(by), { seed: 1 }); assert.equal(g.grit, 2);
+  const g = Dig.start(cards, ['ON-16'].map(by), { seed: 1 }); assert.equal(g.grit, 0, 'not in play until you dig it'); Dig.dig(g); assert.equal(g.grit, 2, 'the Starter Kit is how a Dig starts');
   const st = game({ mine: ['MO-01'], ongoing: ['ON-13'], start: { grit: 3 }, dice: [2] }); Dig.dig(st); Dig.spendGrit(st); Dig.spendGrit(st); Dig.roll(st);
   assert.equal(Dig.result(st).total, 2 + 2 + 1);
 });
 
 test('Panic Button: the first time each Dig a roll would BOOM you, a free reroll (once); Second Spark: a result of 3 or less rerolls free', () => {
   const st = game({ mine: ['MO-02', 'MO-02', 'MO-02'], ongoing: ['ON-22'], start: { heart: 2 }, dice: [1, 6] });
-  Dig.dig(st); Dig.roll(st); Dig.face(st);                 // 2 damage at 2 heart: reroll to 6 (no triggers beyond Pet) -> still 2 damage... BOOM anyway
+  Dig.dig(st); Dig.roll(st); Dig.autoFace(st);                 // 2 damage at 2 heart: reroll to 6 (no triggers beyond Pet) -> still 2 damage... BOOM anyway
   assert.ok(st.panicUsed && /free reroll/.test(text(st)));
   const saved = game({ mine: ['MO-01', 'MO-01'], power: ['PW-15'], ongoing: ['ON-22'], start: { heart: 1 }, dice: [1, 6] });
-  Dig.dig(saved); Dig.roll(saved); Dig.face(saved); assert.equal(saved.over, null, 'rerolled into 6: Moss Sloth heals 2 before the damage');
+  Dig.dig(saved); Dig.roll(saved); Dig.autoFace(saved); assert.equal(saved.over, null, 'rerolled into 6: Moss Sloth heals 2 before the damage');
   const ss = game({ mine: ['MO-01'], ongoing: ['ON-29'], dice: [2, 5, 6] }); Dig.dig(ss); Dig.roll(ss); assert.equal(Dig.result(ss).total, 5, 'free reroll from 2'); 
   const once = game({ mine: ['MO-01'], ongoing: ['ON-29'], dice: [1, 2, 6] }); Dig.dig(once); Dig.roll(once); assert.equal(Dig.result(once).total, 2, 'only one free reroll');
 });
@@ -397,7 +400,7 @@ test('Workbench trades 3 Grit for a Reroll or a Reroll for 3 Grit any time; Clon
 test('after the end of a Dig nothing can be done', () => {
   const st = game({ mine: ['TR-01'] }); Dig.dig(st); Dig.bank(st);
   const c = Dig.can(st); assert.ok(!Object.values(c).some(Boolean));
-  assert.ok(!Dig.dig(st) && !Dig.bank(st) && !Dig.roll(st) && !Dig.face(st));
+  assert.ok(!Dig.dig(st) && !Dig.bank(st) && !Dig.roll(st) && !Dig.autoFace(st));
 });
 
 test('random play never breaks the rules: tracks stay inside their caps, no NaN, every Dig ends, and the log never says undefined', () => {
@@ -413,7 +416,7 @@ test('random play never breaks the rules: tracks stay inside their caps, no NaN,
       const pick = rr();
       if (c.choose) { const e = st.line[Math.floor(rr() * st.line.length)]; Dig.chooseClone(st, e); }
       else if (st.fight && st.fight.phase === 'before') { if (c.grit && rr() < 0.5) Dig.spendGrit(st); else Dig.roll(st); }
-      else if (st.fight) { if (c.bonus && rr() < 0.3) Dig.buyBonus(st); else if (c.reroll && rr() < 0.4) Dig.reroll(st); else Dig.face(st); }
+      else if (st.fight) { if (c.bonus && rr() < 0.3) Dig.buyBonus(st); else if (c.reroll && rr() < 0.4) Dig.reroll(st); else Dig.autoFace(st); }
       else if (c.bank && pick < 0.04) Dig.bank(st); else Dig.dig(st);
       for (const k of ['heart', 'grit', 'reroll']) assert.ok(Number.isInteger(st[k]) && st[k] >= 0 && st[k] <= caps[k], `seed ${seed}: ${k}=${st[k]}`);
       assert.ok(st.line.every(e => Number.isInteger(e.at) && e.at >= 1 && e.at <= 10), `seed ${seed}: line ${JSON.stringify(st.line.map(e => e.at))}`);
@@ -429,7 +432,7 @@ const put = (id, uid = 70000 + n++) => ({ ...by(id), uid });
 test('audit: Magpie copying Sneak Attack mid-fight defeats the extra Monster and still lets you face the first one', () => {
   const st = game({ mine: ['MO-01', 'MO-02'], power: ['PW-22'], start: { heart: 6 }, dice: [8] });
   st.discard.push(put('IM-28'));
-  Dig.dig(st); Dig.roll(st); Dig.face(st);
+  Dig.dig(st); Dig.roll(st); Dig.autoFace(st);
   assert.equal(st.over, null); assert.equal(st.fight, null);
   assert.equal(st.survived, 2, 'both Monsters survived'); assert.equal(st.defeated, 1, 'only the Sneak Attack one was defeated');
   assert.equal(st.heart, 5, 'the first Monster still dealt its 1 damage');
@@ -452,17 +455,17 @@ test('audit: Twin Drill keeps the higher RESULT (Backfire turns a 1 into a 10), 
 });
 test('audit: damage watchers see the damage actually taken (Lucky Cricket saves you, so Patch Kit and Crumple Zone do not fire for what was saved)', () => {
   const st = game({ mine: ['MO-01'], power: ['PW-14'], ongoing: ['ON-23', 'ON-30'], start: { heart: 1, grit: 0 }, dice: [6] });
-  Dig.dig(st); Dig.roll(st); Dig.face(st);
+  Dig.dig(st); Dig.roll(st); Dig.autoFace(st);
   assert.deepEqual([st.heart, st.grit], [1, 0], 'nothing was taken, so no Patch Kit or Stubborn Engine');
   const big = game({ mine: ['MO-01', 'MO-01', 'MO-01', 'MO-01'], power: ['PW-14'], ongoing: ['ON-09'], start: { heart: 12, reroll: 0 }, dice: [6, 6, 6, 6] });
-  for (let i = 0; i < 3; i++) { Dig.dig(big); Dig.roll(big); Dig.face(big); } big.heart = 3; big.reroll = 0;
-  Dig.dig(big); Dig.roll(big); Dig.face(big);                        // 7 damage at 3 Health: Lucky Cricket takes it down to 2 damage
+  for (let i = 0; i < 3; i++) { Dig.dig(big); Dig.roll(big); Dig.autoFace(big); } big.heart = 3; big.reroll = 0;
+  Dig.dig(big); Dig.roll(big); Dig.autoFace(big);                        // 7 damage at 3 Health: Lucky Cricket takes it down to 2 damage
   assert.equal(big.heart, 1); assert.equal(big.reroll, 0, 'only 2 was taken: Crumple Zone needs 5+');
 });
 test('audit: a cloned card is not "another card" for itself (Conga Crab, Unlucky Duck)', () => {
-  const crab = game({ mine: ['MO-01'], power: ['PW-11'], start: { heart: 6, grit: 0 }, dice: [6] }); crab.line.find(e => e.card.id === 'PW-11').cloned = true; Dig.dig(crab); Dig.roll(crab); Dig.face(crab);
+  const crab = game({ mine: ['MO-01'], power: ['PW-11'], start: { heart: 6, grit: 0 }, dice: [6] }); crab.line.find(e => e.card.id === 'PW-11').cloned = true; Dig.dig(crab); Dig.roll(crab); Dig.autoFace(crab);
   assert.equal(crab.grit, 0);
-  const duck = game({ mine: ['MO-01'], power: ['PW-05'], start: { heart: 6, reroll: 0 }, dice: [3] }); duck.line.find(e => e.card.id === 'PW-05').cloned = true; Dig.dig(duck); Dig.roll(duck); Dig.face(duck);
+  const duck = game({ mine: ['MO-01'], power: ['PW-05'], start: { heart: 6, reroll: 0 }, dice: [3] }); duck.line.find(e => e.card.id === 'PW-05').cloned = true; Dig.dig(duck); Dig.roll(duck); Dig.autoFace(duck);
   assert.equal(duck.reroll, 2, 'it triggers twice and nothing else triggers');
 });
 test('audit: a Monster dug by Sneak Attack still counts as a Monster dug (Danger Siren); Wormhole revealing an Immediate card is not a second dig (Disco Ball)', () => {
@@ -484,7 +487,7 @@ test('dense random play (8-14 kit cards, a stocked discard, a tiny Mine full of 
       const c = Dig.can(st);
       if (c.choose) { Dig.chooseClone(st, st.line[Math.floor(rr() * st.line.length)]); continue; }
       if (st.fight && st.fight.phase === 'before') { if (c.grit && rr() < .5) Dig.spendGrit(st); else Dig.roll(st); }
-      else if (st.fight) { if (c.bonus && rr() < .3) Dig.buyBonus(st); else if (c.reroll && rr() < .4) Dig.reroll(st); else Dig.face(st); }
+      else if (st.fight) { if (c.bonus && rr() < .3) Dig.buyBonus(st); else if (c.reroll && rr() < .4) Dig.reroll(st); else Dig.autoFace(st); }
       else if (c.bank && rr() < .03) Dig.bank(st); else if (c.dig) Dig.dig(st); else assert.fail(`seed ${seed}: no move`);
       for (const k of ['heart', 'grit', 'reroll']) assert.ok(Number.isInteger(st[k]) && st[k] >= 0 && st[k] <= caps[k], `seed ${seed}: ${k}=${st[k]}`);
       assert.ok(st.line.every(e => e.at >= 1 && e.at <= 10));
@@ -492,4 +495,74 @@ test('dense random play (8-14 kit cards, a stocked discard, a tiny Mine full of 
     assert.ok(st.over, `seed ${seed}: did not end`);
     assert.ok(!st.log.some(l => /undefined|NaN/.test(l.text)), `seed ${seed}`);
   }
+});
+
+// ---------- the player chooses which eligible Power cards to trigger, and in what order (owner) ----------
+const entryOf = (st, id) => st.line.find(e => e.card.id === id);
+test('triggers are your choice: only cards at or below the result are eligible; one you do not trigger does nothing; a card triggers once', () => {
+  const st = game({ mine: ['MO-01'], power: ['PW-02', 'PW-15', 'PW-06'], start: { heart: 6, grit: 0 }, dice: [3] });
+  Dig.dig(st); Dig.roll(st);                                      // result 3: Newt (1) and Gecko (2) are eligible; Sloth (6) is not
+  assert.deepEqual(Dig.eligible(st).map(e => e.card.id), ['PW-06', 'PW-02'], 'highest number first');
+  assert.ok(!Dig.trigger(st, entryOf(st, 'PW-15')), 'above the result');
+  assert.ok(Dig.trigger(st, entryOf(st, 'PW-02'))); assert.equal(st.heart, 7);
+  assert.ok(!Dig.trigger(st, entryOf(st, 'PW-02')), 'only once');
+  Dig.face(st);                                                   // the Gecko was never triggered: no Grit; then 1 damage
+  assert.deepEqual([st.heart, st.grit], [6, 0]);
+});
+test('skipping every trigger is allowed — you just take the damage', () => {
+  const st = game({ mine: ['MO-01'], power: ['PW-02'], start: { heart: 6 }, dice: [5] });
+  Dig.dig(st); Dig.roll(st); assert.ok(Dig.can(st).trigger); Dig.face(st);
+  assert.equal(st.heart, 5); assert.equal(st.survived, 1);
+});
+test('once you start triggering, Grit and Rerolls are over for this roll', () => {
+  const st = game({ mine: ['MO-01'], power: ['PW-02'], start: { heart: 6, grit: 6, reroll: 2 }, dice: [5, 6] });
+  Dig.dig(st); Dig.roll(st); assert.ok(Dig.can(st).bonus && Dig.can(st).reroll);
+  Dig.trigger(st, entryOf(st, 'PW-02')); assert.ok(!Dig.can(st).bonus && !Dig.can(st).reroll);
+});
+test('the order you choose can matter: Snowball Beetle moves itself down, and Block waits for the damage whatever the order', () => {
+  const a = game({ mine: ['MO-01', 'MO-01'], power: ['PW-09', 'PW-02'], start: { heart: 5 }, dice: [6, 6] });
+  Dig.dig(a); Dig.roll(a); Dig.trigger(a, entryOf(a, 'PW-09')); Dig.trigger(a, entryOf(a, 'PW-02')); Dig.face(a);
+  assert.equal(a.heart, 6, 'Newt +1, Block 1 stopped the 1 damage');
+  const b = game({ mine: ['MO-01'], power: ['PW-09', 'PW-02'], start: { heart: 5 }, dice: [6] });
+  Dig.dig(b); Dig.roll(b); Dig.trigger(b, entryOf(b, 'PW-02')); Dig.trigger(b, entryOf(b, 'PW-09')); Dig.face(b);
+  assert.equal(b.heart, 6, 'the other order: same result');
+});
+test('Conga Crab and Unlucky Duck count the other cards you chose, once you have chosen', () => {
+  const crab = game({ mine: ['MO-01', 'MO-01'], power: ['PW-11', 'PW-06', 'PW-10'], start: { heart: 6, grit: 0 }, dice: [6, 6] });
+  Dig.dig(crab); Dig.roll(crab);
+  Dig.trigger(crab, entryOf(crab, 'PW-11')); Dig.trigger(crab, entryOf(crab, 'PW-06')); Dig.trigger(crab, entryOf(crab, 'PW-10'));
+  assert.equal(crab.grit, 1 + 2, 'Gecko and Gopher paid out; the Crab waits'); Dig.face(crab); assert.equal(crab.grit, 3 + 2, 'then the Crab counted the 2 others');
+  const alone = game({ mine: ['MO-01'], power: ['PW-11', 'PW-06'], start: { heart: 6, grit: 0 }, dice: [6] });
+  Dig.dig(alone); Dig.roll(alone); Dig.trigger(alone, entryOf(alone, 'PW-11')); Dig.face(alone); assert.equal(alone.grit, 0, 'chosen alone: no others');
+  const duck = game({ mine: ['MO-01', 'MO-01'], power: ['PW-05', 'PW-06'], start: { heart: 12, reroll: 0 }, dice: [6, 6] });
+  Dig.dig(duck); Dig.roll(duck); Dig.trigger(duck, entryOf(duck, 'PW-05')); Dig.face(duck); assert.equal(duck.reroll, 1, 'chosen alone: +1');
+  Dig.dig(duck); Dig.roll(duck); Dig.trigger(duck, entryOf(duck, 'PW-05')); Dig.trigger(duck, entryOf(duck, 'PW-06')); Dig.face(duck); assert.equal(duck.reroll, 1, 'with another card: nothing');
+});
+test('Applause Meter fires when the fourth different card triggers', () => {
+  const st = game({ mine: ['MO-01'], power: ['PW-02', 'PW-06', 'PW-09', 'PW-10'], ongoing: ['ON-02'], start: { heart: 6, reroll: 0 }, dice: [4] });
+  Dig.dig(st); Dig.roll(st);
+  for (const id of ['PW-02', 'PW-06', 'PW-09']) Dig.trigger(st, entryOf(st, id)); assert.equal(st.reroll, 0);
+  Dig.trigger(st, entryOf(st, 'PW-10')); assert.equal(st.reroll, 1);
+});
+test('triggerAll (what the AI and a hurried player use) is highest number first; the Pet defeats the Monster only if you trigger it', () => {
+  const st = game({ mine: ['MO-01', 'MO-01'], power: ['PW-02'], start: { heart: 6, grit: 6 }, dice: [6, 6] });
+  Dig.dig(st); for (let i = 0; i < 4; i++) Dig.spendGrit(st); Dig.roll(st);   // 10: the Pet is eligible
+  assert.ok(Dig.eligible(st).some(e => e.pet)); Dig.face(st);
+  assert.equal(st.defeated, 0, 'you did not trigger the Pet'); assert.equal(st.heart, 5);
+  st.grit = 6; Dig.dig(st); for (let i = 0; i < 4; i++) Dig.spendGrit(st); Dig.roll(st); Dig.triggerAll(st); Dig.face(st);
+  assert.equal(st.defeated, 1);
+});
+test('Panic Button: the free reroll sends you back to choose your triggers again', () => {
+  const st = game({ mine: ['MO-01'], power: ['PW-15'], ongoing: ['ON-22'], start: { heart: 1 }, dice: [6, 6] });
+  Dig.dig(st); Dig.roll(st); Dig.trigger(st, entryOf(st, 'PW-15'));            // +2 heart (3), then 1 damage cannot BOOM... make it BOOM:
+  st.heart = 1;
+  Dig.face(st);
+  assert.ok(st.fight, 'still facing the Monster'); assert.ok(st.panicUsed); assert.deepEqual(st.fight.trig, []); assert.ok(Dig.can(st).trigger);
+});
+test('a Dig saved in the middle of choosing triggers resumes with the same choices made', () => {
+  const st = game({ mine: ['MO-01'], power: ['PW-02', 'PW-06'], start: { heart: 6, grit: 0 }, dice: [6] });
+  Dig.dig(st); Dig.roll(st); Dig.trigger(st, entryOf(st, 'PW-06'));
+  const back = Dig.load(cards, JSON.parse(JSON.stringify(Dig.save(st))));
+  assert.deepEqual(Dig.eligible(back).map(e => e.card.id), ['PW-02']); assert.equal(back.fight.trig.length, 1);
+  Dig.trigger(back, entryOf(back, 'PW-02')); Dig.face(back); assert.equal(back.grit, 1); assert.equal(back.heart, 6 + 1 - 1);
 });

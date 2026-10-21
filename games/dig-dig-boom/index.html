@@ -120,6 +120,8 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .piece .ic { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -.2em; }
 #play .piece.pick { outline: 4px solid var(--accent); animation: pulse 1.2s ease-in-out infinite; }
 #play .piece.trig { box-shadow: 0 0 0 3px #fff, 0 0 12px 4px var(--accent); }
+#play .piece.elig { box-shadow: 0 0 0 3px #fff, 0 0 12px 4px var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+#play .piece.done { opacity: .6; }
 #play .piece .h .tg { margin-left: auto; font-size: 10px; font-weight: 800; background: #1d1712; color: #fff; border-radius: 6px; padding: 1px 5px; white-space: nowrap; }
 #play .wbtn { flex: none; min-height: 44px; min-width: 76px; border-radius: 10px; background: #3a2b20; border: 2px solid var(--accent); font-weight: 800; font-size: 14px; color: #fff; }
 #play .wbtn:disabled { opacity: .3; border-color: var(--line); }
@@ -689,19 +691,12 @@ const Dig = (() => {
     if (pet) { st.pet = copy(pet); st.line.push({ card: st.pet, at: pet.number, base: pet.number, pet: true }); }
     const kitTop = [];
     for (const c of opts.extra || []) mine.push(copy(c));
-    for (const c of kit) {
-      const k = copy(c); st.kit.push(k);
-      if (c.type === 'Power') st.line.push({ card: k, at: c.number, base: c.number });
-      else if (c.type === 'Ongoing') { st.ongoing.push(k); if (compile(k).ongoing.flags.clone) st.pending = st.pending || { kind: 'clone', card: k }; }
-      else if (RL.kitImmediates === 'top') kitTop.push(k);
-      else mine.push(k);
-    }
+    for (const c of kit) { const k = copy(c); k.fromKit = true; st.kit.push(k); kitTop.push(k); }
     st.mine = shuffle(st, mine);
-    if (kitTop.length) { st.mine.unshift(...kitTop); st.known = kitTop.length; }     // Starter Kit Immediate cards: on top of the Mine, face up
+    if (kitTop.length) { st.mine.unshift(...kitTop); st.known = kitTop.length; }     // Starter Kit cards: on top of the Mine, face up, in the order you chose (owner)
     refreshPet(st);
     log(st, 'sys', `New Dig (seed ${seed}). Mine: ${st.mine.length} cards. ${st.pet ? st.pet.name + ' is on the line.' : ''}`);
     if (st.kit.length) log(st, 'sys', `Starter Kit: ${st.kit.map(k => k.name).join(', ')}.`);
-    for (const o of st.ongoing) for (const e of compile(o).ongoing.startDig) run(st, [e], { src: o });
     return st;
   }
   function log(st, kind, text, extra) { st.log.push({ kind, text, ...(extra || {}) }); }
@@ -737,7 +732,7 @@ const Dig = (() => {
       for (const w of compile(o).ongoing.watchers) {
         if (w.ev !== ev) continue;
         const v = ev === 'takeDamage' ? data.n : ev === 'digMonster' ? data.damage : ev === 'spendGrit' ? data.n : ev === 'triggers' ? data.n : 1;
-        if (v < w.min) continue;
+        if (ev === 'triggers' ? v !== w.min : v < w.min) continue;
         if (w.react.op === 'getBack') { st.grit = Math.min(R.caps.grit, st.grit + w.react.n); log(st, 'effect', `${o.name}: get ${w.react.n} {grit} back`); }
         else run(st, [w.react], { src: o, depth });
       }
@@ -877,7 +872,10 @@ const Dig = (() => {
     else { st.ongoing.push(c); log(st, 'dig', `${c.name} goes in your Ongoing area`); if (compile(c).ongoing.flags.clone) st.pending = { kind: 'clone', card: c }; }
     const b = compile(c);
     if (c.type === 'Power' && b.dug.length) run(st, b.dug, { src: c, depth });
-    if (c.type === 'Ongoing') { refreshPet(st); }
+    if (c.type === 'Ongoing') {
+      refreshPet(st);
+      if (c.fromKit && st.monstersDug === 0 && !over(st)) for (const e of b.ongoing.startDig) run(st, [e], { src: c, depth });     // "at the start of each Dig": your kit is how a Dig starts
+    }
   }
   function playImmediate(st, c, depth, revealed = false) {
     const ctx = { src: c, depth };
@@ -918,7 +916,7 @@ const Dig = (() => {
     const dmg = m.bonus ? m.damageNow : b.ladder[Math.min(n, b.ladder.length) - 1];
     const prev = st.fight;                                    // a Monster dug by Sneak Attack while another is being faced must not replace it
     const f = st.fight = { monster: m, damage: dmg, step: m.bonus ? undefined : Math.min(n, b.ladder.length), phase: 'before', die: null, grit: 0, gritSteps: [], bought: 0, gritSpent: 0, first: st.monstersDug === 1, fixed: null,
-      block: 0, halve: false, noDamage: false, defeat: false, surviveAt: null, sparkUsed: false, rolls: 0, trig: [], gritFired: false };
+      block: 0, halve: false, noDamage: false, defeat: false, surviveAt: null, sparkUsed: false, rolls: 0, trig: [], deferred: [], gritFired: false };
     log(st, 'dig', `${m.name}${m.bonus ? '' : ' #' + n} — deals ${dmg} {damage}`);
     if (opt.autoDefeat) { fire(st, 'digMonster', { damage: dmg }, 1); f.defeat = true; log(st, 'effect', `The Monster is defeated without a roll`); if (!over(st)) finishFight(st, true); st.fight = over(st) ? null : prev; return; }
     fire(st, 'digMonster', { damage: dmg }, 1);
@@ -1000,17 +998,29 @@ const Dig = (() => {
   }
 
   // ---------------- facing the Monster: trigger the line, then take damage ----------------
-  function collectTriggers(st, r) {
-    const list = [];
-    for (const e of st.line) if (e.at <= r) { list.push(e); if (e.cloned) list.push(e); }
-    return list.sort((a, b) => b.at - a.at);
+  // After the roll you choose which eligible Power cards to trigger, and in which order (owner). Damage is the last thing that happens.
+  function eligible(st) {
+    const f = st.fight; if (!f || f.phase !== 'after' || over(st)) return [];
+    const r = resultTotal(st);
+    return st.line.filter(e => e.at <= r && f.trig.filter(x => x === e).length < (e.cloned ? 2 : 1)).sort((a, b) => b.at - a.at);
   }
-  function triggerPass(st) {
-    const f = st.fight, r = resultTotal(st), trig = collectTriggers(st, r);
-    f.trig = trig; f.block = 0; f.halve = false; f.noDamage = false; f.defeat = false; f.surviveAt = null;
-    log(st, 'roll', `Result ${r}: ${trig.length ? trig.map(e => e.card.name).join(', ') + ' trigger' + (trig.length === 1 ? 's' : '') : 'no cards trigger'}`);
-    for (const e of trig) { if (over(st)) return; run(st, compile(e.card).effects, { src: e.card, result: r, trig, depth: 0 }); }
-    fire(st, 'triggers', { n: trig.length }, 1);
+  // Effects that need to know which OTHER cards triggered ("for each other card that triggers", "if no other card triggers") wait until you have chosen.
+  const needsFinal = effs => effs.some(e => (e.op === 'gainPer' && e.per === 'otherTriggers') || (e.op === 'if' && e.cond && e.cond.noOther) || (e.op === 'seq' && needsFinal(e.list)));
+  function trigger(st, entry) {
+    const f = st.fight; if (!f || over(st) || !eligible(st).includes(entry)) return false;
+    f.trig.push(entry);
+    const effs = compile(entry.card).effects;
+    log(st, 'roll', `You trigger ${entry.card.name}${needsFinal(effs) ? ' (it counts the other cards once you have chosen)' : ''}`);
+    if (needsFinal(effs)) f.deferred.push(entry); else run(st, effs, { src: entry.card, result: resultTotal(st), trig: f.trig, depth: 0 });
+    if (!over(st)) fire(st, 'triggers', { n: new Set(f.trig.map(e => e.card)).size }, 1);
+    return true;
+  }
+  function triggerAll(st) {                                // the order a hurried player would use: highest number first
+    for (let n = 0; n < 60 && st.fight && !over(st); n++) { const el = eligible(st); if (!el.length) break; trigger(st, el[0]); }
+  }
+  function runDeferred(st) {
+    const f = st.fight; const list = f.deferred.splice(0);
+    for (const e of list) { if (over(st)) return; run(st, compile(e.card).effects, { src: e.card, result: resultTotal(st), trig: f.trig, depth: 0 }); }
   }
   function previewDamage(st) {
     const f = st.fight; if (f.defeat || f.noDamage) return 0;
@@ -1021,19 +1031,26 @@ const Dig = (() => {
     else { d = Math.max(0, d - f.block - bump); if (f.halve) d = Math.floor(d / 2); }
     return d;
   }
+  // End the fight: whatever you chose not to trigger does not happen; then damage, if any (Block is part of it).
   function face(st) {
     if (!can(st).face) return false;
     const f = st.fight;
-    triggerPass(st); if (over(st)) return true;
+    runDeferred(st); if (over(st)) return true;
     let dmg = previewDamage(st);
     if (!f.defeat && dmg >= st.heart && f.surviveAt === null && flag(st, 'panic') && !st.panicUsed && f.fixed === null) {
       st.panicUsed = true; log(st, 'effect', `${st.ongoing.find(o => compile(o).ongoing.flags.panic).name}: this would BOOM you — a free reroll`);
       f.die = rollDie(st); f.rolls++;
       log(st, 'roll', `Rerolled: ${f.die} → ${resultTotal(st)}`);
-      if (RL.panicRetriggers) { triggerPass(st); if (over(st)) return true; }
+      if (RL.panicRetriggers) { f.trig = []; f.deferred = []; f.block = 0; f.halve = false; f.noDamage = false; f.defeat = false; f.surviveAt = null; log(st, 'roll', `Choose which cards to trigger again`); return true; }
       dmg = previewDamage(st);
     }
     finishFight(st, false, dmg); return true;
+  }
+  // For the AI and for tests: trigger everything eligible, highest number first, then face it.
+  function autoFace(st) {
+    if (!can(st).face) return false;
+    for (let i = 0; i < 4 && st.fight && !over(st) && can(st).face; i++) { triggerAll(st); face(st); }
+    return true;
   }
   function finishFight(st, auto, dmg = 0) {
     const f = st.fight, m = f.monster;
@@ -1075,7 +1092,7 @@ const Dig = (() => {
       mine: st.mine.map(refOf), discard: st.discard.map(refOf), ongoing: st.ongoing.map(refOf), kit: st.kit.map(refOf), pet: refOf(st.pet), last: refOf(st.last),
       line: st.line.map(e => ({ card: refOf(e.card), at: e.at, base: e.base, pet: !!e.pet, cloned: !!e.cloned })),
       pending: st.pending && { kind: st.pending.kind, card: refOf(st.pending.card) },
-      fight: st.fight && { ...st.fight, monster: refOf(st.fight.monster), trig: [] },
+      fight: st.fight && { ...st.fight, monster: refOf(st.fight.monster), trig: (st.fight.trig || []).map(e => e.card.uid), deferred: (st.fight.deferred || []).map(e => e.card.uid) },
       petLower: st.petLower, setCount: st.setCount, beyond: st.beyond, digs: st.digs, monstersDug: st.monstersDug, survived: st.survived, defeated: st.defeated,
       geodeGems: st.geodeGems, monsterGems: st.monsterGems, panicUsed: st.panicUsed, heart: st.heart, grit: st.grit, reroll: st.reroll, rules: st.rules, board: st.board, pledge: st.pledge, best: st.best, boardApplied: !!st.boardApplied };
   }
@@ -1093,9 +1110,10 @@ const Dig = (() => {
       mine: d.mine.map(deref), discard: d.discard.map(deref), ongoing: d.ongoing.map(deref), kit: d.kit.map(deref), pet: deref(d.pet), last: deref(d.last),
       line: d.line.map(e => ({ card: deref(e.card), at: e.at, base: e.base, ...(e.pet ? { pet: true } : {}), ...(e.cloned ? { cloned: true } : {}) })),
       pending: d.pending && { kind: d.pending.kind, card: deref(d.pending.card) },
-      fight: d.fight && { ...d.fight, monster: deref(d.fight.monster), trig: [] },
+      fight: null,
       petLower: d.petLower, setCount: d.setCount, beyond: d.beyond, digs: d.digs, monstersDug: d.monstersDug, survived: d.survived, defeated: d.defeated,
       geodeGems: d.geodeGems, monsterGems: d.monsterGems, panicUsed: d.panicUsed, heart: d.heart, grit: d.grit, reroll: d.reroll, rules: d.rules, board: d.board, pledge: d.pledge, best: d.best, boardApplied: !!d.boardApplied };
+    if (d.fight) { const byUid = u => st.line.find(e => e.card.uid === u); st.fight = { ...d.fight, monster: deref(d.fight.monster), trig: (d.fight.trig || []).map(byUid).filter(Boolean), deferred: (d.fight.deferred || []).map(byUid).filter(Boolean) }; }
     for (const k of memo.keys()) uid = Math.max(uid, k + 1);
     return st;
   }
@@ -1118,13 +1136,14 @@ const Dig = (() => {
       grit: !!f && !st.over && f.phase === 'before' && st.grit >= 1,
       refund: !!f && !st.over && f.phase === 'before' && f.gritSteps.length > 0,
       roll: !!f && !st.over && f.phase === 'before',
-      bonus: !!f && !st.over && f.phase === 'after' && f.fixed === null && st.grit >= R.gritAfter.cost,
-      reroll: !!f && !st.over && f.phase === 'after' && f.fixed === null && (st.reroll >= R.rerollCost || (!!flag(st, 'thorned') && st.heart > flag(st, 'thorned'))),
+      bonus: !!f && !st.over && f.phase === 'after' && f.fixed === null && !f.trig.length && st.grit >= R.gritAfter.cost,
+      reroll: !!f && !st.over && f.phase === 'after' && f.fixed === null && !f.trig.length && (st.reroll >= R.rerollCost || (!!flag(st, 'thorned') && st.heart > flag(st, 'thorned'))),
       face: !!f && !st.over && f.phase === 'after',
+      trigger: !!f && !st.over && f.phase === 'after' && eligible(st).length > 0,
       choose: !!st.pending && !st.over,
     };
   }
-  return { save, load, compile, supported, parseEffects, parseOngoing, start, can, pledge, canPledge, dig, spendGrit, refundGrit, roll, buyBonus, reroll, face, bank, chooseClone, trade, score, result, makeRng, shuffle, flag, previewDamage };
+  return { save, load, compile, supported, parseEffects, parseOngoing, start, can, pledge, canPledge, dig, spendGrit, refundGrit, roll, buyBonus, reroll, face, autoFace, eligible, trigger, triggerAll, bank, chooseClone, trade, score, result, makeRng, shuffle, flag, previewDamage };
 })();
 </script>
 
@@ -1328,7 +1347,7 @@ const Run = (() => {
   // 5-6. Reset and ready: a fresh Drill, a Mine of the 25 starting cards plus every card you own that is not in the kit.
   function beginDig(run, opts = {}) {
     const pr = run.prep; if (!pr || pr.step !== 'kit') return false;
-    run.kit = run.owned.filter(c => pr.kitPick.includes(c.uid));
+    run.kit = pr.kitPick.map(id => run.owned.find(c => c.uid === id)).filter(Boolean);       // in the order you chose
     const rest = run.owned.filter(c => !pr.kitPick.includes(c.uid));
     run.dig = Dig.start(run.all, run.kit, { seed: opts.seed === undefined ? (run.rng() * 4294967296) >>> 0 : opts.seed, dice: opts.dice, extra: rest,
       board: { crown: Board.tracker(run.board), final: run.round === run.rounds, leadN: Board.leadN(run.board, run.me) } });
@@ -1419,7 +1438,7 @@ const AI = (() => {
       const pet = st.line.find(e => e.pet), total = Dig.result(st).total, need = (pet ? pet.at : R.pet.at) - total;
       if (need > 0 && c.bonus && need <= Math.floor(st.grit / R.gritAfter.cost)) { Dig.buyBonus(st); return true; }      // Grit to reach the Pet
       if (c.reroll && total <= A.rerollAtOrBelow && f.rolls < A.maxRolls) { Dig.reroll(st); return true; }
-      Dig.face(st); return true;
+      Dig.autoFace(st); return true;
     }
     if (c.bank && (st.survived >= st.board.leadN || (st.survived >= 1 && st.heart <= A.bankAtHealth))) { Run.bank(run); return true; }
     if (st.heart >= A.pledgeMinHealth && Dig.canPledge(st, st.survived + 1) && Board.canPledge(run.board, run.me, st.survived, st.survived + 1)) { Run.pledge(run, st.survived + 1); return true; }
@@ -1907,8 +1926,8 @@ const Match = (() => {
       } else rows.push(`<div class="pstep"><h3>${num(3)}Booster Pack</h3><p>${info.name} Pack · kept ${run.owned.length ? 'and now own' : ''}: ${run.owned.map(c => A.esc(c.name)).join(', ') || 'nothing'}</p></div>`);
     }
     if (step === 'kit') {
-      rows.push(`<div class="pstep live"><h3>${num(4)}Starter Kit — up to ${pr.kitMax}</h3><p class="note">Start the Dig with these in play (${pr.kitPick.length}/${pr.kitMax}). Every other card you own is shuffled into your Mine. Any card can be in your kit: a Power or Ongoing card starts in play, an Immediate card goes on top of your Mine so you dig it first.</p>
-        <div class="grid">${run.owned.map(c => piece(c, { act: 'kitpick', cls: pr.kitPick.includes(c.uid) ? 'sel' : '', tag: pr.kitPick.includes(c.uid) ? '✓ kit' : '' })).join('')}</div></div>
+      rows.push(`<div class="pstep live"><h3>${num(4)}Starter Kit — up to ${pr.kitMax}</h3><p class="note">Start the Dig with these in play (${pr.kitPick.length}/${pr.kitMax}). Your kit goes on top of your Mine, face up, in the order you tap them (1st is dug first); every other card you own is shuffled into your Mine. Any card can be in the kit.</p>
+        <div class="grid">${run.owned.map(c => piece(c, { act: 'kitpick', cls: pr.kitPick.includes(c.uid) ? 'sel' : '', tag: pr.kitPick.includes(c.uid) ? `kit ${pr.kitPick.indexOf(c.uid) + 1}` : '' })).join('')}</div></div>
         <div class="pstep"><h3>${num(5)}Reset, then ready</h3><p class="note">Health ${R.start.heart}, Grit ${R.start.grit}, Rerolls ${R.start.reroll}. Your Mine: the ${25} starting cards + ${run.owned.length - pr.kitPick.length} of yours.</p></div>`);
     }
     const need2 = step === 'keep' ? Run.keepCount(run) : 0, info2 = step === 'pack' ? Run.packInfo(run) : null;
@@ -1961,15 +1980,16 @@ const Match = (() => {
   }
   function lineHTML(st) {
     const f = st.fight, res = f && f.phase === 'after' ? Dig.result(st) : null, total = res ? res.total : null;
+    const elig = f && f.phase === 'after' ? Dig.eligible(st) : [];
     const cols = [];
     for (let n = R.line.min; n <= R.line.max; n++) {
       const here = st.line.filter(e => e.at === n);
       const cls = total === null ? '' : n <= total ? 'on' : 'off';
-      cols.push(`<div class="lcol ${cls}">${here.map(e => piece(e.card, {
-        act: 'card', cls: (st.pending && st.pending.kind === 'clone' ? 'pick ' : '') + (total !== null && e.at <= total ? 'trig' : ''),
-        tag: e.pet ? 'PET' : e.cloned ? '×2' : e.at < e.base ? '↓' + e.base : '', num: false })).join('')}<span class="lnum">${n}</span></div>`);
+      cols.push(`<div class="lcol ${cls}">${here.map(e => { const done = f ? f.trig.filter(x => x === e).length : 0; return piece(e.card, {
+        act: 'card', cls: (st.pending && st.pending.kind === 'clone' ? 'pick ' : '') + (elig.includes(e) ? 'elig ' : '') + (done && !elig.includes(e) ? 'done' : ''),
+        tag: (done ? '✓ ' : '') + (e.pet ? 'PET' : e.cloned ? '×2' : e.at < e.base ? '↓' + e.base : ''), num: false }); }).join('')}<span class="lnum">${n}</span></div>`);
     }
-    return `<section class="line"><div class="linehead"><span>Power line — a result triggers every card at that number or lower</span><span>${total !== null ? 'Result ' + total : ''}</span></div><div class="lcols">${cols.join('')}</div></section>`;
+    return `<section class="line"><div class="linehead"><span>Power line — ${elig.length ? '<b style="color:var(--accent)">tap the cards you want to trigger</b>' : 'a result makes every card at that number or lower eligible'}</span><span>${elig.length > 1 ? `<button class="chip" data-p="triggerall">Trigger all ${elig.length}</button> ` : ''}${total !== null ? 'Result ' + total : ''}</span></div><div class="lcols">${cols.join('')}</div></section>`;
   }
   function fightHTML(st, can) {
     const f = st.fight, res = Dig.result(st), after = f.phase === 'after';
@@ -1979,7 +1999,9 @@ const Match = (() => {
       ? `<div class="calc"><b>Result ${res.total}</b>${res.parts.map(p => p.set ? `becomes ${p.v}` : `${p.label} ${p.v >= 0 && p.label !== 'Die' && p.label !== 'Fixed' ? '+' : ''}${p.v}`).join(' · ')}</div>`
       : `<div class="calc">This Monster deals <b style="display:inline">${f.damage}</b> ${ic('damage', ' style="width:20px;height:20px;vertical-align:-4px"')}</div>`;
     const hint = after
-      ? (f.fixed !== null ? 'Tap the Monster to face it' : [can.bonus ? `Grit: ${R.gritAfter.cost} for +${R.gritAfter.bonus}` : '', can.reroll ? 'Rerolls: reroll' : '', 'tap the Monster to face it'].filter(Boolean).join(' · '))
+      ? (S.armed === 'face' ? `Tap the Monster again: damage, skipping ${Dig.eligible(st).length} card${Dig.eligible(st).length === 1 ? '' : 's'}`
+        : can.trigger ? `${[can.bonus ? `Grit: ${R.gritAfter.cost} for +${R.gritAfter.bonus}` : '', can.reroll ? 'Rerolls: reroll' : ''].filter(Boolean).join(' · ') || 'Choose your cards on the line'} · then the Monster takes its damage`
+        : 'Tap the Monster to take the damage')
       : (st.grit ? 'Tap Grit: +1 · tap the die to roll' : 'Tap the die to roll');
     return `<button class="mcard ${after ? 'live' : ''}" data-p="face" ${after ? '' : 'disabled'}>${A.playCard(f.monster, S.ms || 0.71, { step: f.step })}</button>
       <div class="rollp">${die}<div class="tokens">${tokens}</div>${calc}<div class="hint">${hint}</div></div>`;
@@ -2022,7 +2044,7 @@ const Match = (() => {
       <p>This is a solo Dig: dig through your Mine one card at a time. Bank to keep your gems, or push on and risk BOOM. Everything is a tap on the table:</p>
       <ul><li><b>Mine</b>: tap to dig the top card. Geodes score ${R.geodeGems} gem. Immediate cards happen at once. Power cards go on the line at their number; Ongoing cards stay in your Ongoing area.</li>
       <li><b>Monster</b>: tap the Grit track to spend ${R.gritBefore} Grit for +1 on the roll (tap a spent Grit token to take it back), tap the die to roll (a d${R.die}). After the roll, tap Grit to spend ${R.gritAfter.cost} for +${R.gritAfter.bonus}, or tap Rerolls to reroll. Then tap the Monster to face it.</li>
-      <li><b>Facing it</b>: every card on the Power line at the result or lower triggers (the Pet is at ${R.pet.at}; if it triggers, the Monster is defeated and you take no damage). Then you take the Monster's damage. Health at 0 is BOOM.</li>
+      <li><b>Facing it</b>: every Power card at the result or lower is <i>eligible</i>. Tap the ones you want to trigger, in the order you like (the Pet is at ${R.pet.at}; if you trigger it, the Monster is defeated and you take no damage), or tap Trigger all. Then tap the Monster: damage is the last thing that happens, and Block is part of it. Skipping your cards and taking the damage is always allowed (it asks for a second tap). Health at 0 is BOOM.</li>
       <li><b>Bank</b>: tap the Bank pile between cards to end the Dig and keep your gems. Not while a Monster is in front of you.</li>
       <li><b>Any card</b>: tap it to see it full size, tap again to close.</li>
       <li><b>Beyond the Mine</b>: when the Mine runs out, Bonus Monsters keep coming: ${R.beyond.firstDamage}, ${R.beyond.firstDamage + 1}, … damage, worth ${R.beyond.gems} gems.</li></ul>
@@ -2063,6 +2085,7 @@ const Match = (() => {
   function act(a, el) {
     const st = S.st, f = st && st.fight, ds = el.dataset; let digged = false;
     if (a !== 'startrun' && a !== 'practice') S.confirmNew = null;
+    if (a !== 'face') S.armed = null;
     switch (a) {
       case 'menu': if (S.panel !== 'menu') S.back = S.panel; S.panel = 'menu'; S.help = false; break;
       case 'resume': S.panel = S.back || 'menu'; break;
@@ -2095,13 +2118,14 @@ const Match = (() => {
       case 'print': S.help = false; UI.setMode('print'); return;
       case 'unzoom': S.zoom = null; break;
       case 'zoom': S.zoom = findCard(ds.uid); break;
-      case 'card': { const c = findCard(ds.uid), e = st && st.line.find(x => x.card === c); if (st && st.pending && e) Dig.chooseClone(st, e); else S.zoom = c; break; }
+      case 'card': { const c = findCard(ds.uid), e = st && st.line.find(x => x.card === c); if (st && st.pending && e) Dig.chooseClone(st, e); else if (e && f && f.phase === 'after' && Dig.eligible(st).includes(e)) Dig.trigger(st, e); else S.zoom = c; break; }
+      case 'triggerall': if (st) Dig.triggerAll(st); break;
       case 'dig': if (st) { const before = st.digs; Dig.dig(st); if (S.match && st.digs > before) digged = true; } break;
       case 'grit': if (f) { if (f.phase === 'before') Dig.spendGrit(st); else Dig.buyBonus(st); } break;
       case 'refund': Dig.refundGrit(st); break;
       case 'roll': Dig.roll(st); break;
       case 'reroll': if (f && f.phase === 'after') Dig.reroll(st); break;
-      case 'face': Dig.face(st); break;
+      case 'face': { const left = st && f ? Dig.eligible(st).length : 0; if (left && S.armed !== 'face') { S.armed = 'face'; break; } S.armed = null; Dig.face(st); break; }
       case 'bank': if (S.run) Run.bank(S.run); else Dig.bank(st); break;
       case 'trade': Dig.trade(st, el.dataset.v); break;
       case 'heart': break;
