@@ -1107,16 +1107,16 @@ const Dig = (() => {
     }
     return o;
   }
-  const cache = new Map();
+  const cache = new Map();                                  // by card id; the text is checked too (a Bonus Monster's text changes with its damage)
   function compile(card) {
-    if (cache.has(card.id + '|' + card.text)) return cache.get(card.id + '|' + card.text);
+    const hit = cache.get(card.id); if (hit && hit.text === card.text) return hit.b;
     const b = { kind: card.type, effects: [], dug: [], unsupported: [] };
     if (card.type === 'Treasure') b.worth = Engine.gemWorth(card.text);
     else if (card.type === 'Monster') { b.ladder = Engine.damageSteps(card.text); if (!b.ladder) b.unsupported.push(card.text); }
     else if (card.type === 'Ongoing') { b.ongoing = parseOngoing(card.text); b.unsupported = b.ongoing.unsupported; }
     else { const e = parseEffects(card.text); b.effects = e.effects; b.dug = e.dug; b.unsupported = e.unsupported; }
     if (card.type === 'Treasure' && b.worth === null) b.unsupported.push(card.text);
-    cache.set(card.id + '|' + card.text, b); return b;
+    cache.set(card.id, { text: card.text, b }); return b;
   }
   const supported = card => compile(card).unsupported.length === 0;
 
@@ -1542,6 +1542,14 @@ const Dig = (() => {
     for (const k of memo.keys()) uid = Math.max(uid, k + 1);
     return st;
   }
+  // A copy of a Dig to try things on (the AI thinks ahead on copies). Cards never change, so they are shared; everything that does change is copied. Its own random numbers (a seed), and no log.
+  function clone(st, seed) {
+    const lineMap = new Map(), line = st.line.map(e => { const n = { ...e }; lineMap.set(e, n); return n; }), remap = list => (list || []).map(e => lineMap.get(e) || e);
+    return { ...st, seed: null, rng: makeRng(seed === undefined ? 1 : seed), dice: null, log: [], over: st.over && { ...st.over }, flags: { ...st.flags },
+      mine: st.mine.slice(), discard: st.discard.slice(), monsterPile: st.monsterPile.slice(), ongoing: st.ongoing.slice(), kit: st.kit, line,
+      pending: st.pending && { ...st.pending }, fight: st.fight && { ...st.fight, trig: remap(st.fight.trig), deferred: remap(st.fight.deferred) },
+      setCount: { ...st.setCount }, board: st.board && { ...st.board }, rules: st.rules };
+  }
   function score(st) { return { geodes: st.geodeGems, monsters: st.monsterGems, total: st.geodeGems + st.monsterGems, survived: st.survived }; }
   // The Leaderboard (v2.7): once you have survived as many Monsters as the Crown tracker, you may pledge your current number or 1 more.
   function canPledge(st, n) {
@@ -1570,7 +1578,7 @@ const Dig = (() => {
       choose: !!st.pending && !st.over,
     };
   }
-  return { save, load, compile, supported, parseEffects, parseOngoing, start, can, pledge, canPledge, dig, roll, reroll, face, autoFace, eligible, trigger, triggerAll, bank, chooseClone, hold, score, result, makeRng, shuffle, flag, previewDamage };
+  return { save, load, compile, supported, parseEffects, parseOngoing, start, clone, can, pledge, canPledge, dig, roll, reroll, face, autoFace, eligible, trigger, triggerAll, bank, chooseClone, hold, score, result, makeRng, shuffle, flag, previewDamage };
 })();
 </script>
 
@@ -1933,6 +1941,7 @@ const Match = (() => {
   const rollDie = m => (m.dice && m.dice.length ? m.dice.shift() : 1 + m.rng.int(R_.die));
   const R_ = DDB.rules;
   const human = m => m.runs[HUMAN], bot = m => m.runs[BOT];
+  const brain = m => m.brain || AI;                                // the AI's decisions (a simulation can give the seat another brain)
   function start(all, opts = {}) {
     const seed = opts.seed === undefined || opts.seed === null ? null : opts.seed >>> 0, rng = Dig.makeRng(seed), colors = DDB.table.playerColors;
     const board = Board.create([{ id: HUMAN, name: 'You', color: colors[0] }, { id: BOT, name: 'AI', color: colors[1], ai: true }]);
@@ -1947,7 +1956,7 @@ const Match = (() => {
     const ai = bot(m); if (!ai.dig || ai.dig.over || ai.phase !== 'dig') return false;
     const st = ai.dig, before = st.digs;
     for (let n = 0; n < 80 && !st.over; n++) {
-      if (!AI.act(ai)) break;
+      if (!brain(m).act(ai)) break;
       Run.checkOver(ai);
       if (st.digs > before && !st.fight && !st.pending) break;
     }
@@ -1959,7 +1968,7 @@ const Match = (() => {
   // Finish the AI's whole Dig at once (the Fast forward button, and tests). Everyone digs at their own pace; Prep waits for the last one.
   function settle(m) {
     const ai = bot(m), me = human(m); if (!me.dig || !me.dig.over || !ai.dig) return;
-    for (let n = 0; n < 600 && !ai.dig.over; n++) { if (!AI.act(ai)) { if (finalCheck(m)) continue; break; } Run.checkOver(ai); finalCheck(m); }
+    for (let n = 0; n < 600 && !ai.dig.over; n++) { if (!brain(m).act(ai)) { if (finalCheck(m)) continue; break; } Run.checkOver(ai); finalCheck(m); }
     if (!ai.dig.over) throw new Error('the AI could not finish its Dig');
     Run.checkOver(ai);
   }
@@ -1972,14 +1981,14 @@ const Match = (() => {
   // Prep happens at the same time: when you open your Booster Pack, so does the AI (yours is drawn first), and it makes its choices without seeing yours.
   function openPack(m) {
     const me = human(m); if (!Run.openPack(me)) return false;
-    AI.prep(bot(m)); return true;
+    brain(m).prep(bot(m)); return true;
   }
   // Both players begin the round (the AI finishes its Prep if it has not).
   function beginRound(m) {
     const me = human(m), ai = bot(m);
     if (!me.prep || me.prep.step !== 'kit') return false;
     if (!Run.beginDig(me)) return false;                         // yours first: before round 1 the card you chose leaves the deck, so the AI cannot take it
-    AI.prep(ai);
+    brain(m).prep(ai);
     return Run.beginDig(ai);
   }
   // Tap "To Prep": the round is over for both. The Board has already changed; now the Preps (or the end of the run).
