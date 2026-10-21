@@ -1703,7 +1703,7 @@ const Match = (() => {
   }
   function render() {
     if (document.body.dataset.mode !== 'cards') return;
-    const libLink = /^https?:$/.test(location.protocol) ? `<a class="back" href="${esc(D.library.href)}"><span>‹</span> ${esc(D.library.name)}</a>` : '';
+    const libLink = /^https?:$/.test(location.protocol) ? `<a class="back libback" href="${esc(D.library.href)}"><span>‹</span> ${esc(D.library.name)}</a>` : '';
     const scale = Math.min(innerWidth - 40, 1000) < 500 ? 0.78 : 1;
     let html = `<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">${libLink}${statusLine()}</div>
       <h1>${esc(D.title)} — the cards</h1>
@@ -2040,7 +2040,7 @@ const Match = (() => {
   function render() {
     if (document.body.dataset.mode !== 'play') return;
     const keep = $.querySelector('#setupScroll'), ks = keep ? keep.scrollTop : 0;
-    const libLink = /^https?:$/.test(location.protocol) ? `<a class="back" href="${A.esc(D.library.href)}"><span>‹</span> ${A.esc(D.library.name)}</a>` : '';
+    const libLink = /^https?:$/.test(location.protocol) ? `<a class="back libback" href="${A.esc(D.library.href)}"><span>‹</span> ${A.esc(D.library.name)}</a>` : '';
     const bar = `<div class="pbar">${libLink}<h1>Dig Dig BOOM!</h1><button class="chip" data-p="help">How it works</button><button class="chip" data-p="menu">Menu</button><button class="chip" data-p="cards">Cards</button></div>`;
     let body;
     if (S.panel === 'menu') body = menuHTML();

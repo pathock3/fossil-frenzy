@@ -41,9 +41,9 @@ test('library: every entry has what the shelf shows; entries without an address 
   assert.ok(LIBRARY.games.find(g => g.id === 'fossil-frenzy').listed);
 });
 
-test('library: Dig Dig BOOM! is a game here like the others, hidden from the shelf until the owner says so', () => {
+test('library: Dig Dig BOOM! is on the shelf like the others', () => {
   const d = LIBRARY.games.find(g => g.id === 'dig-dig-boom');
-  assert.equal(d.listed, false);
+  assert.equal(d.listed, true);
   assert.equal(d.path, 'games/dig-dig-boom/index.html');
 });
 
@@ -70,6 +70,8 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
   try {
     const page = await (await browser.newContext({ viewport: { width: 1024, height: 768 }, hasTouch: true, isMobile: true })).newPage();
     const errors = []; page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+    // Dig Dig BOOM! reads its cards from the owner's Google Sheet; the test must not depend on the network
+    await page.route('**/docs.google.com/**', r => r.fulfill({ status: 200, contentType: 'text/csv', body: 'ID,Name,Type,Number,Deck,Count,Card Text\n' }));
     await page.goto(base + '/index.html');
     assert.equal(await page.title(), 'Tabletop Library');
     assert.equal(await page.evaluate(() => getComputedStyle(document.body).overscrollBehaviorY), 'none', 'no pull-to-refresh on the shelf');

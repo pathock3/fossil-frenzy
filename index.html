@@ -83,13 +83,13 @@ const LIBRARY = {
     {
       id: 'dig-dig-boom',
       title: 'Dig Dig BOOM!',
-      tagline: 'The deckbuilder where you dig as deep as you dare — prototype of the v2.7 rules, reading its cards live from the design sheet.',
+      tagline: 'Dig as deep as you dare, then build a better mine — play a run against an AI, with the v2.7 cards read live from the design sheet.',
       players: '1–6 players',
       icon: '💣',
       art: 'dig-dig-boom',
       accent: '#c4553b',
       path: 'games/dig-dig-boom/index.html',
-      listed: false,           // a prototype: reachable at games/dig-dig-boom/, not on the shelf until the owner says so
+      listed: true,
     },
   ],
 };
@@ -163,15 +163,18 @@ const LIBRARY = {
         <rect x="52" y="346" width="196" height="24" rx="12" fill="#0b0620" fill-opacity=".88" stroke="#7affe6" stroke-opacity=".6"/>
         <text x="150" y="359" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="800" textLength="164" lengthAdjust="spacing" fill="#d9fff7">JUST ONE MORE…</text></svg>`;
     },
-    // Dig Dig Boom (placeholder cover until its own site is listed): a fizzing bomb in the dirt
-    'dig-dig-boom': () => `<svg viewBox="0 0 300 380" role="img" aria-label="Dig Dig Boom"><defs>
-        <linearGradient id="dbB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a2f1a"/><stop offset="1" stop-color="#2a0f0a"/></linearGradient>
-        <radialGradient id="dbG" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd24a" stop-opacity=".7"/><stop offset="1" stop-color="#ffd24a" stop-opacity="0"/></radialGradient></defs>
+    // Dig Dig BOOM! (placeholder cover art): a fizzing bomb in the dirt
+    'dig-dig-boom': () => `<svg viewBox="0 0 300 380" role="img" aria-label="Dig Dig BOOM!"><defs>
+        <linearGradient id="dbB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a331b"/><stop offset="1" stop-color="#2a0f0a"/></linearGradient>
+        <radialGradient id="dbG" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd24a" stop-opacity=".75"/><stop offset="1" stop-color="#ffd24a" stop-opacity="0"/></radialGradient></defs>
         <rect width="300" height="380" fill="url(#dbB)"/>
+        <rect x="18" y="0" width="14" height="250" fill="#5a3a1e"/><rect x="268" y="0" width="14" height="250" fill="#5a3a1e"/><rect x="10" y="22" width="280" height="14" rx="4" fill="#6b4426"/>
         <path d="M0 270 Q60 250 120 272 T240 268 T300 262 V380 H0Z" fill="#6b4426"/><path d="M0 305 Q70 288 130 308 T260 302 T300 300 V380 H0Z" fill="#4a2e18"/><path d="M0 338 Q80 326 150 340 T300 334 V380 H0Z" fill="#33200f"/>
-        <circle cx="208" cy="132" r="70" fill="url(#dbG)"/><circle cx="140" cy="222" r="72" fill="#17171c"/><ellipse cx="116" cy="186" rx="22" ry="14" fill="#fff" fill-opacity=".16" transform="rotate(-30 116 186)"/>
+        <polygon points="40,300 58,282 76,300 58,326" fill="#2fb7e6" stroke="#0a3f66" stroke-width="3"/><polygon points="236,312 250,296 266,312 250,334" fill="#2fb7e6" stroke="#0a3f66" stroke-width="3"/><polygon points="196,288 206,276 218,288 206,304" fill="#7fd8f5" stroke="#0a3f66" stroke-width="3"/>
+        <circle cx="208" cy="132" r="70" fill="url(#dbG)"/><circle cx="140" cy="222" r="72" fill="#17171c"/><circle cx="140" cy="222" r="72" fill="none" stroke="#3a3a44" stroke-width="5"/><ellipse cx="116" cy="186" rx="22" ry="14" fill="#fff" fill-opacity=".16" transform="rotate(-30 116 186)"/>
         <rect x="126" y="134" width="28" height="18" rx="4" fill="#3a3a44"/><path d="M142 134 Q150 100 190 106 T208 132" fill="none" stroke="#c9a46a" stroke-width="6" stroke-linecap="round"/>
         <polygon points="208,108 214,124 230,126 217,136 221,152 208,143 195,152 199,136 186,126 202,124" fill="#ffd24a" stroke="#ff8a1d" stroke-width="3"/>
+        <circle cx="232" cy="96" r="4" fill="#ffd24a"/><circle cx="180" cy="86" r="3" fill="#ff8a1d"/><circle cx="248" cy="128" r="3" fill="#ffd24a"/>
         <text x="150" y="62" text-anchor="middle" font-size="46" font-weight="900" fill="#ffd24a" stroke="#2a0f0a" stroke-width="8" stroke-linejoin="round" paint-order="stroke">DIG DIG</text>
         <text x="150" y="322" text-anchor="middle" font-size="58" font-weight="900" fill="#ff8a1d" stroke="#2a0f0a" stroke-width="9" stroke-linejoin="round" paint-order="stroke">BOOM!</text></svg>`,
   };

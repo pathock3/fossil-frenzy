@@ -1,6 +1,6 @@
 # Dig Dig BOOM! (v2.7) — browser prototype
 
-One file: `index.html`. Open it directly or from the build. Hidden from the library shelf until the owner says so (`listed: false` in the root `index.html`); reach it at `games/dig-dig-boom/`.
+One file: `index.html`. Open it directly or from the build. On the library shelf (`listed: true` in the root `index.html`); also at `games/dig-dig-boom/`.
 
 ## Where the rules live
 - **The Google Sheet** (cards: tab "v2.7 Draft", rules: tab "v2.7 Rules") is the source of every card. The page fetches it each time it opens; this browser keeps the last copy for offline play (`localStorage`, never in the repo). Test fixtures are in `tests/` (`cards-full.csv`, `fixture.csv`).
