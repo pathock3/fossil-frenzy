@@ -33,3 +33,15 @@ Read live from the sheet by the lab page ("Questions already written in your she
 18. **A Monster beyond the Mine** has no card, only a number: it appears when you dig from an empty Mine. — assumed
 19. **Damage you take** is reduced by Block *and* by Bumper; "first Monster deals no damage" (Cowcatcher) applies to the first Monster dug this Dig, including one you only revealed with Cave Scout until you actually face it. — assumed
 20. **Magpie/Echo** copy the top Immediate card of the discard pile, not the cards that copied it (two Echoes in a row copy nothing). — assumed
+
+## Added while building the run (Booster Pack, Prep, Leaderboard) for one player
+21. **Reward ladder:** the Rules tab says it "needs a new version". Placeholder in `DDB.run.ladder`: 0 gems = Bronze (draw 3, keep 1), 10 = Bronze+ (4, 1), 20 = Silver (4, 2), 30 = Gold (5, 3) — following your hint (20 gems = 2 keeps, 30 = 3). A BOOM opens a Bronze Pack. — open
+22. **Before round 1:** you have no cards to make a Starter Kit from, so a run opens with a Bronze Pack (`run.firstPack`) and a kit of 1. Is that how it starts? — open
+23. **Solo Crown Jewel:** the Crown tracker starts at 3 and the Crown is unclaimed. Banking with more Monsters survived than the tracker takes the Crown and sets the tracker to your score (so later rounds must beat your own best). Matching the tracker does not take it. — open
+24. **Final round, solo:** "no banking… keep going until you're in the lead or go BOOM." Implemented as: no banking until you have survived more than the tracker; then the Bank chest becomes "Take the Crown" and ends the run in a win. BOOM leaves the Crown on the table. — open
+25. **Pledge, solo:** with no opponents there is no "dibs", so a pledge only forces you to reach that number before banking (and BOOM drops it). Is a solo Pledge worth having at all? — open
+26. **BOOM and the Leaderboard:** a BOOM locks in nothing — Monsters survived in a Dig only count on the Leaderboard when you bank. — assumed (from "BOOM: remove your Pledge marker. Your best-Dig marker stays.")
+27. **Escape Bonus die:** the same d10, rolled once per round after you bank. — assumed
+28. **Which cards go to the Mine:** every Booster card you own that is not in your Starter Kit is shuffled into the next Mine, so the Mine grows by one card per card kept. Cards are never lost unless you use the optional Advanced trash. — assumed (from "shuffle everything else into your Mine")
+29. **Five rounds:** the Round tracker lists 1, 2, 2, 3 for four rounds; for five I use 1, 2, 2, 3, 3 (`rules.kitSizes` repeats the last number). — open
+30. **Where do cards go at Reset** that were in play (Power/Ongoing cards that were on the table)? They are shuffled back into the Mine like everything else, so a Starter Kit card also returns to the Mine and may be dug later unless you choose it for the kit again. — assumed

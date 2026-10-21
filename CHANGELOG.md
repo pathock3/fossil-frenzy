@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **Dig Dig BOOM! — a run for one player:** "Play a run" is 4 or 5 rounds of Dig then Prep: Escape Bonus, gem count, Booster Pack (reward ladder, placeholder until you rule), Starter Kit, reset, with a Leaderboard (best marker, live Pledge, Crown tracker at 3) and the Crown Jewel; the final round has no banking until you are in the lead. Practice Dig keeps the old "pick any kit" Dig. The die is a d10; Health is 0–10 and starts at 10.
 - **Dig Dig BOOM! — solo Dig (prototype step 3):** the game opens on a playable solo Dig. Choose a Starter Kit, then tap your Mine to dig; tap the Grit track to spend Grit before a roll, tap the die to roll, tap Grit (3 for +1) or Rerolls after it, tap the Monster to face it; every card on the Power line at the result or lower triggers, then damage; Bank from the chest between cards; BOOM ends the Dig. Every card in your sheet is understood by the rules engine, with a log of each effect. The card designs moved to the "Cards" button.
 - **Dig Dig BOOM! deck uses compact art** (your pick; rules text 17.5 pt on every card). Art stays placeholder for the prototype.
 - **Dig Dig BOOM! whole deck in the chosen design:** every card from your sheet is now drawn as Top Tab — Geodes use the slim-art + huge gem count (Stat 3), Monsters use art + big damage-ladder tiles + "1 gem if survived" (Stat 1). Rounds 1 and 2 are folded away under the deck. Two-line card names no longer touch the type word.

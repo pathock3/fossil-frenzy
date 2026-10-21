@@ -133,7 +133,7 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .lcol.off { opacity: .45; }
 #play .lnum { font-weight: 900; font-size: 15px; text-align: center; color: var(--dim); order: 99; margin-top: auto; padding-top: 2px; }
 #play .lcol.on .lnum { color: var(--accent); }
-#play .mat { flex: none; height: 286px; display: grid; grid-template-columns: 124px minmax(0, 1fr) 124px; gap: 10px; }
+#play .mat { flex: none; height: clamp(214px, 33vh, 286px); display: grid; grid-template-columns: 124px minmax(0, 1fr) 124px; gap: 10px; }
 #play .pile { border-radius: 14px; border: 3px dashed var(--line); background: rgba(255,255,255,.03); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 8px; color: var(--dim); font-weight: 800; font-size: 13px; text-align: center; min-width: 0; }
 #play .pile.live { border-color: var(--accent); border-style: solid; color: #fff; animation: pulse 1.4s ease-in-out infinite; }
 #play .cardback { width: 76px; height: 106px; border-radius: 10px; background: repeating-linear-gradient(45deg, #5b3b22 0 8px, #6e4829 8px 16px); border: 3px solid #a6753f; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 34px; font-weight: 900; text-shadow: 0 2px 4px #000; box-shadow: 3px 3px 0 #2a1a0d, 6px 6px 0 #1c1410; }
@@ -185,11 +185,37 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .note { font-size: 13px; color: var(--dim); line-height: 1.4; }
 #play .helptxt { font-size: 15px; line-height: 1.5; max-width: 760px; }
 #play .helptxt li { margin: 4px 0; }
+#play .btn:disabled { opacity: .4; }
+#play .menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin: 10px 0; max-width: 900px; }
+#play .bigopt { background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+#play .bigopt .btn { min-height: 64px; font-size: 22px; }
+#play .lb { flex: none; background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 5px 8px 6px; }
+#play .lbhead { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--dim); padding: 0 2px 3px; flex-wrap: wrap; }
+#play .lbcells { display: grid; gap: 3px; }
+#play .lbc { min-height: 48px; border-radius: 8px; background: rgba(255,255,255,.06); border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 2px 0; color: var(--dim); min-width: 0; }
+#play .lbc.free { background: rgba(255,255,255,.1); }
+#play .lbc.here { border-color: #fff; background: rgba(255,255,255,.2); color: #fff; }
+#play .lbc.open { border-color: var(--accent); animation: pulse 1.4s ease-in-out infinite; color: #fff; }
+#play .lbc .ln { font-weight: 800; font-size: 14px; }
+#play .lbc .lm { display: flex; align-items: center; justify-content: center; gap: 3px; min-height: 22px; }
+#play .mk { display: inline-block; width: 16px; height: 16px; border-radius: 50%; }
+#play .mk.best { background: var(--accent); border: 2px solid #5a3a00; }
+#play .mk.here { width: 0; height: 0; border-radius: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid #fff; }
+#play .mk.pledge { border: 3px solid #fff; background: transparent; }
+#play .crownmk { font-size: 22px; line-height: 1; color: #c9a227; font-weight: 400; }
+#play .crownmk.mine { color: #ffd54a; text-shadow: 0 0 8px #ffb13b; }
+#play .pstep { background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 10px 14px; margin: 10px 0; max-width: 900px; }
+#play .pstep.live { border-color: var(--accent); }
+#play .pstep h3 { margin: 0 0 4px; font-size: 17px; }
+#play .pstep p { margin: 4px 0; }
+#play .ladder { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--dim); margin: 6px 0; }
+#play .ladder .cur { color: var(--accent); font-weight: 800; }
+#play table.cmp { max-width: 700px; }
 @media (max-aspect-ratio: 1/1) {                       /* iPad held upright: the log goes under the table */
   #play .pmain { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) 150px; }
   #play .ongoing { width: 180px; }
 }
-@media (max-height: 700px) { #play .mat { height: 240px; } #play .tc { height: 28px; } }
+@media (max-height: 640px) { #play .tc { height: 28px; } #play .lbc { min-height: 42px; } #play .cardback { width: 64px; height: 90px; } }
 @media print { body { background: #fff; } .bar, .dir h2, .dir .why, .sub, h1, .status, .back, details, .cap { display: none; } .dir { border: 0; padding: 0; background: none; } }
 </style>
 </head>
@@ -642,7 +668,7 @@ const Dig = (() => {
   // ---------------- effects ----------------
   const per = (st, key, ctx) => {
     switch (key) {
-      case 'otherTriggers': return Math.max(0, ((ctx.trig && ctx.trig.length) || 1) - 1);
+      case 'otherTriggers': return Math.max(0, (ctx.trig ? new Set(ctx.trig.map(e => e.card)).size : 1) - 1);
       case 'ongoing': return st.ongoing.length;
       case 'immediateInDiscard': return st.discard.filter(c => c.type === 'Immediate').length;
       case 'immediateInDiscardThis': return st.discard.filter(c => c.type === 'Immediate').length + 1;
@@ -662,7 +688,7 @@ const Dig = (() => {
       case 'gainDmg': gain(st, 'heart', f ? f.damage : 0, src, depth); break;
       case 'gainPer': gain(st, e.res, e.n * per(st, e.per, ctx), src, depth); break;
       case 'if': {
-        const ok = e.cond.noOther ? ((ctx.trig && ctx.trig.length) || 1) <= 1 : e.cond.heartAtMost !== undefined ? st.heart <= e.cond.heartAtMost : true;
+        const ok = e.cond.noOther ? (ctx.trig ? new Set(ctx.trig.map(x => x.card)).size : 1) <= 1 : e.cond.heartAtMost !== undefined ? st.heart <= e.cond.heartAtMost : true;
         if (ok) apply(st, e.then, ctx); else log(st, 'effect', `${src}: its condition is not met`);
         break;
       }
@@ -742,12 +768,12 @@ const Dig = (() => {
         while (st.mine.length) { const c = st.mine.shift(); if (want.includes(c.type)) { hit = c; break; } seen.push(c); }
         st.mine.push(...seen); shuffle(st, st.mine); st.known = 0;
         if (!hit) log(st, 'effect', `${src}: no ${e.a} card in your Mine`);
-        else { log(st, 'effect', `${src}: found ${hit.name} (revealed ${seen.length} others, shuffled back)`); if (hit.type === 'Immediate') playImmediate(st, hit, depth + 1); else place(st, hit, depth + 1); }
+        else { log(st, 'effect', `${src}: found ${hit.name} (revealed ${seen.length} others, shuffled back)`); if (hit.type === 'Immediate') playImmediate(st, hit, depth + 1, true); else place(st, hit, depth + 1); }
         break;
       }
       case 'cave': {
-        let n = 0;
-        while (st.mine.length && !over(st)) {
+        let n = 0, guard = st.mine.length + R.maxChain;           // cards that slide back into the Mine (Boomerang) must not make this loop forever
+        while (st.mine.length && !over(st) && guard-- > 0) {
           const c = st.mine.shift(); st.known = Math.max(0, st.known - 1);
           if (c.type === 'Monster') { st.mine.unshift(c); st.known = 1; log(st, 'effect', `${src}: found ${c.name} — it goes back on top, face up`); return; }
           n++; log(st, 'dig', `${src}: digs ${c.name}`); resolveDug(st, c, depth + 1);
@@ -774,12 +800,12 @@ const Dig = (() => {
     if (c.type === 'Power' && b.dug.length) run(st, b.dug, { src: c, depth });
     if (c.type === 'Ongoing') { refreshPet(st); }
   }
-  function playImmediate(st, c, depth) {
+  function playImmediate(st, c, depth, revealed = false) {
     const ctx = { src: c, depth };
     log(st, 'dig', `${c.name} (Immediate)`);
     run(st, compile(c).effects, ctx);
     if (!ctx.moved) st.discard.push(c);
-    fire(st, 'digImmediate', {}, depth + 1);
+    if (!revealed) fire(st, 'digImmediate', {}, depth + 1);
   }
   function bonusMonster(st) {
     const dmg = R.beyond.firstDamage + st.beyond++;
@@ -811,10 +837,11 @@ const Dig = (() => {
     st.monstersDug++;
     const set = m.id, n = st.setCount[set] = (st.setCount[set] || 0) + 1, b = compile(m);
     const dmg = m.bonus ? m.damageNow : b.ladder[Math.min(n, b.ladder.length) - 1];
+    const prev = st.fight;                                    // a Monster dug by Sneak Attack while another is being faced must not replace it
     const f = st.fight = { monster: m, damage: dmg, phase: 'before', die: null, grit: 0, gritSteps: [], bought: 0, gritSpent: 0, first: st.monstersDug === 1, fixed: null,
       block: 0, halve: false, noDamage: false, defeat: false, surviveAt: null, sparkUsed: false, rolls: 0, trig: [], gritFired: false };
     log(st, 'dig', `${m.name}${m.bonus ? '' : ' #' + n} — deals ${dmg} {damage}`);
-    if (opt.autoDefeat) { f.defeat = true; log(st, 'effect', `The Monster is defeated without a roll`); finishFight(st, true); return; }
+    if (opt.autoDefeat) { fire(st, 'digMonster', { damage: dmg }, 1); f.defeat = true; log(st, 'effect', `The Monster is defeated without a roll`); if (!over(st)) finishFight(st, true); st.fight = over(st) ? null : prev; return; }
     fire(st, 'digMonster', { damage: dmg }, 1);
     if (over(st)) return;
     if (st.flags.clover !== undefined) { f.fixed = st.flags.clover; delete st.flags.clover; f.phase = 'after'; log(st, 'roll', `No roll: your result is ${f.fixed}`); }
@@ -865,7 +892,7 @@ const Dig = (() => {
   }
   function refundGrit(st) {
     if (!can(st).refund) return false;
-    const f = st.fight, v = f.gritSteps.pop(); st.grit++; f.grit -= v; f.gritSpent--; return true;
+    const f = st.fight, v = f.gritSteps.pop(); st.grit = Math.min(R.caps.grit, st.grit + 1); f.grit -= v; f.gritSpent--; return true;
   }
   function roll(st) {
     if (!can(st).roll) return false;
@@ -881,12 +908,14 @@ const Dig = (() => {
   function checkGritWatch(st) { const f = st.fight; if (f && !f.gritFired && f.gritSpent > 0) { fire(st, 'spendGrit', { n: f.gritSpent }, 1); if (f.gritSpent >= 1 && st.ongoing.some(o => compile(o).ongoing.watchers.some(w => w.ev === 'spendGrit' && f.gritSpent >= w.min))) f.gritFired = true; } }
   function reroll(st, opt = {}) {
     const c = can(st); if (!c.reroll) return false;
-    const f = st.fight, th = flag(st, 'thorned'), useHealth = opt.withHealth || (st.reroll <= 0 && th);
+    const f = st.fight, th = flag(st, 'thorned'), useHealth = !!th && (opt.withHealth || st.reroll <= 0);
     if (useHealth) { lose(st, th, 'Thorned Gadget'); if (over(st)) return true; } else st.reroll -= R.rerollCost;
     const old = f.die, nd = rollDie(st);
-    f.die = flag(st, 'twinDrill') ? Math.max(old, nd) : nd; f.rolls++;
+    f.die = nd;
+    if (flag(st, 'twinDrill') && !useHealth) { const rNew = resultTotal(st); f.die = old; const rOld = resultTotal(st); f.die = rNew >= rOld ? nd : old; }
+    f.rolls++;
     if (!RL.gritCarriesToReroll) { st.grit += f.grit; f.grit = 0; }
-    log(st, 'roll', `Reroll: ${nd}${f.die !== nd ? ' (keeps the higher, ' + f.die + ')' : ''} → ${resultTotal(st)}`);
+    log(st, 'roll', `Reroll: ${nd}${f.die !== nd ? ' (keeps the higher result: ' + resultTotal(st) + ')' : ''} → ${resultTotal(st)}`);
     if (!useHealth) fire(st, 'spendReroll', {}, 1);
     afterDie(st); return true;
   }
@@ -935,15 +964,16 @@ const Dig = (() => {
       st.monsterGems += g; log(st, 'effect', `${m.name} is defeated — worth ${g} {gem}`);
       st.fight = null; fire(st, 'defeat', {}, 1); return;
     }
+    let take = 0;
     if (dmg > 0) {
-      let take = dmg;
+      take = dmg;
       if (take >= st.heart && f.surviveAt !== null) { take = st.heart - f.surviveAt; log(st, 'effect', `Lucky save: you survive with ${f.surviveAt} {heart}`); }
       st.heart -= take; log(st, 'damage', `You take ${take} {damage} (${f.damage}${f.halve ? ', halved' : ''}${f.block || flag(st, 'bumper') ? ', blocked ' + (f.block + (flag(st, 'bumper') || 0)) : ''})`);
       if (st.heart <= 0) { st.heart = 0; st.fight = null; boom(st, `${m.name} took your last {heart}`); return; }
     } else log(st, 'damage', `You take no {damage}`);
     st.survived++; st.monsterGems += m.bonus ? R.beyond.gems : R.survivedGems;
     st.fight = null; log(st, 'effect', `You survive ${m.name}. Monsters survived: ${st.survived}`);
-    if (dmg > 0) fire(st, 'takeDamage', { n: dmg }, 1);
+    if (take > 0) fire(st, 'takeDamage', { n: take }, 1);
   }
 
   // ---------------- other actions ----------------
@@ -953,7 +983,7 @@ const Dig = (() => {
     e.cloned = true; log(st, 'effect', `${st.pending.card.name} is placed under ${e.card.name}: it triggers twice`); st.pending = null; return true;
   }
   function trade(st, dir) {                                  // Workbench
-    const w = flag(st, 'workbench'); if (!w || st.fight && st.fight.phase === 'before' && false) return false;
+    const w = flag(st, 'workbench'); if (!w || st.over) return false;
     if (dir === 'grit' && st.grit >= w.gritCost && st.reroll < R.caps.reroll) { st.grit -= w.gritCost; st.reroll = Math.min(R.caps.reroll, st.reroll + w.rerollGain); log(st, 'effect', `Workbench: ${w.gritCost} {grit} → ${w.rerollGain} {reroll}`); return true; }
     if (dir === 'reroll' && st.reroll >= w.rerollCost && st.grit < R.caps.grit) { st.reroll -= w.rerollCost; st.grit = Math.min(R.caps.grit, st.grit + w.gritGain); log(st, 'effect', `Workbench: ${w.rerollCost} {reroll} → ${w.gritGain} {grit}`); return true; }
     return false;
@@ -1533,7 +1563,7 @@ const Run = (() => {
 (() => {
   'use strict';
   const D = DDB, R = D.rules, UI = window.DigDigBoomUI, A = UI.api, $ = document.getElementById('play');
-  const S = { st: null, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', zoom: null, help: false, panel: 'setup', settings: null };
+  const S = { st: null, run: null, rounds: D.run.rounds, adv: D.run.advancedTrash, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', zoom: null, help: false, panel: 'menu' };
   const cards = () => UI.state.all;
   // Personal bests live in this browser only (best Monsters survived, best gems banked). Never needed for play.
   const BEST_KEY = 'ddb.solo.best';
@@ -1596,6 +1626,84 @@ const Run = (() => {
       <span class="note">${S.kit.length}/${S.kitSize} chosen · by the book, round 1 has a kit of ${R.kitSizes[0]}</span></div></div>`;
   }
 
+
+  // ----- the menu, the Leaderboard, Prep and the end of a run -----
+  function menuHTML() {
+    const b = readBest(), st = UI.state, offline = st.source !== 'sheet' && st.status !== 'loading';
+    return `<div class="panel setup"><div class="scroll"><h2>Dig Dig BOOM!</h2>
+      <p class="note">One player. ${offline ? '<b style="color:#ff9a8a">Your sheet could not be reached, so only the design sample is available — reload when you are online.</b>' : 'Cards and rules are read from your sheet each time this opens.'}</p>
+      <div class="menu">
+        <div class="bigopt"><button class="btn" data-p="startrun" ${cards().length ? '' : 'disabled'}>Play a run</button>
+          <p class="note">${S.rounds} rounds of Dig and Prep. Open Booster Packs, build your engine round by round, and try to take the Crown Jewel in the final round.</p>
+          <p class="note">Rounds: ${D.run.roundChoices.map(n => `<button class="chip ${S.rounds === n ? 'on' : ''}" data-p="rounds" data-v="${n}">${n}</button>`).join(' ')}
+            &nbsp;<button class="chip ${S.adv ? 'on' : ''}" data-p="adv">Advanced trash ${S.adv ? 'on' : 'off'}</button></p></div>
+        <div class="bigopt"><button class="btn alt" data-p="practice" ${cards().length ? '' : 'disabled'}>Practice Dig</button>
+          <p class="note">One Dig with any Starter Kit you like, to try cards out. No Prep, no Leaderboard.</p></div>
+      </div>
+      ${b.survived || b.gems ? `<p class="note">Best Practice Dig in this browser: ${b.survived} Monsters survived · ${b.gems} gems banked.</p>` : ''}
+    </div><div class="foot"><button class="chip" data-p="cards">Card designs</button><button class="chip" data-p="help">How it works</button></div></div>`;
+  }
+  // The Leaderboard: positions are Monsters survived. The Crown tracker starts at 3; your best locked-in score stays between rounds.
+  function lbHTML(run, st) {
+    const cr = run.crown, here = st && !st.over ? st.survived : -1, pl = st ? st.pledge : null;
+    const max = Math.max(8, cr.tracker + 2, run.best + 1, here + 2, (pl || 0) + 1);
+    let cells = '';
+    for (let n = 0; n <= max; n++) {
+      const open = st && Dig.canPledge(st, n);
+      const mk = (n === here ? '<i class="mk here" title="you are here"></i>' : '') + (n === run.best && run.best > 0 ? '<i class="mk best" title="your best"></i>' : '') + (pl === n ? '<i class="mk pledge" title="your pledge"></i>' : '');
+      cells += `<button class="lbc ${n === here ? 'here' : ''} ${n <= cr.tracker ? 'free' : ''} ${open ? 'open' : ''}" data-p="pledge" data-n="${n}" ${open ? '' : 'disabled'}><span class="ln">${n === 0 ? 'Start' : n}</span><span class="lm">${n === cr.tracker ? `<b class="crownmk ${cr.holder ? 'mine' : ''}">♛</b>` : ''}${mk}</span></button>`;
+    }
+    const hint = st && Dig.can(st).dig && st.survived >= cr.tracker && st.pledge === null ? ' · tap a number to pledge it' : '';
+    const status = st && st.pledge !== null ? ` · pledged ${st.pledge}` : '';
+    return `<section class="lb"><div class="lbhead"><span>Leaderboard · Round ${Math.min(run.round, run.rounds)} of ${run.rounds}${run.round >= run.rounds ? ' · final' : ''}</span><span>♛ Crown at ${cr.tracker} · ${cr.holder ? '<b style="color:var(--accent)">you hold the Crown Jewel</b>' : 'Crown Jewel on the table'}${status}${hint}</span></div>
+      <div class="lbcells" style="grid-template-columns:repeat(${max + 1},minmax(0,1fr))">${cells}</div></section>`;
+  }
+  function prepHTML() {
+    const run = S.run, pr = run.prep, step = pr.step;
+    const sm = c => ic(c, ' style="width:22px;height:22px;vertical-align:-4px"');
+    const rows = [];
+    if (pr.banked) rows.push(step === 'escape'
+      ? `<div class="pstep live"><h3>1 · Escape Bonus</h3><p class="note">You banked, so you add a roll of the d${R.die} in gems.</p><button class="die live" data-p="escape" style="margin:6px 0">Roll<small>tap</small></button></div>`
+      : `<div class="pstep"><h3>1 · Escape Bonus</h3><p>You rolled <b>${pr.escape}</b> ${sm('gem')}</p></div>`);
+    else if (pr.boom) rows.push(`<div class="pstep"><h3>1 · Escape Bonus</h3><p class="note">You went BOOM: no Escape Bonus.</p></div>`);
+    if (pr.gems !== null && !pr.first) rows.push(`<div class="pstep"><h3>2 · Gems</h3><p>${pr.banked ? `Geodes ${pr.geodes} + Monsters survived ${pr.monsters} + Escape Bonus ${pr.escape} = ` : 'BOOM: '}<b style="font-size:22px">${pr.gems}</b> ${sm('gem')}</p></div>`);
+    if (step !== 'escape') {
+      const info = Run.packInfo(run), first = pr.first;
+      const ladder = D.run.ladder.map(p => `<span class="${p.name === pr.pack.name ? 'cur' : ''}">${p.at}+ gems: ${p.name} (draw ${p.draw}, keep ${p.keep})</span>`).join('');
+      if (step === 'pack') {
+        const own = run.advancedTrash && run.owned.length ? `<p class="note">Optional rule — trash a card you own for +1 draw each (tap to trash it for good):</p><div class="grid">${run.owned.map(c => piece(c, { act: 'trashown', text: true })).join('')}</div>` : '';
+        rows.push(`<div class="pstep live"><h3>3 · Booster Pack</h3><p>${first ? 'Before round 1:' : pr.boom ? 'Since you went BOOM:' : `${pr.gems} gems:`} a <b>${info.name} Pack</b> — draw <b>${info.draw}</b>, keep <b>${info.keep}</b>.</p><div class="ladder">${ladder}</div>${own}<button class="btn" data-p="openpack" style="margin-top:8px">Open the ${info.name} Pack</button></div>`);
+      } else if (step === 'keep') {
+        const need = Run.keepCount(run);
+        rows.push(`<div class="pstep live"><h3>3 · Booster Pack — keep ${need}</h3><p class="note">${pr.picked.length}/${need} chosen. The rest go to the Trash.</p><div class="grid">${pr.offer.map(c => piece(c, { act: 'pick', cls: pr.picked.includes(c.uid) ? 'sel' : '', tag: pr.picked.includes(c.uid) ? '✓ keep' : '' })).join('')}</div>
+          <button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'} style="margin-top:8px">Keep ${pr.picked.length === need ? 'these' : 'cards'}</button></div>`);
+      } else rows.push(`<div class="pstep"><h3>3 · Booster Pack</h3><p>${info.name} Pack · kept ${run.owned.length ? 'and now own' : ''}: ${run.owned.map(c => A.esc(c.name)).join(', ') || 'nothing'}</p></div>`);
+    }
+    if (step === 'kit') {
+      rows.push(`<div class="pstep live"><h3>4 · Starter Kit — up to ${pr.kitMax}</h3><p class="note">Start the Dig with these in play (${pr.kitPick.length}/${pr.kitMax}). Every other card you own is shuffled into your Mine. Immediate cards do nothing in play, so a kit Immediate is shuffled into the Mine too.</p>
+        <div class="grid">${run.owned.map(c => piece(c, { act: 'kitpick', cls: pr.kitPick.includes(c.uid) ? 'sel' : '', tag: pr.kitPick.includes(c.uid) ? '✓ kit' : '' })).join('')}</div></div>
+        <div class="pstep"><h3>5 · Reset, then ready</h3><p class="note">Health ${R.start.heart}, Grit ${R.start.grit}, Rerolls ${R.start.reroll}. Your Mine: the ${25} starting cards + ${run.owned.length - pr.kitPick.length} of yours.</p></div>`);
+    }
+    const foot = step === 'kit' ? `<button class="btn" data-p="startround">Start round ${run.round}${run.round === run.rounds ? ' (final)' : ''}</button>` : '';
+    const best = run.history.length ? `<span class="note">Last Dig: ${run.history[run.history.length - 1].kind === 'bank' ? 'banked' : 'BOOM'} after ${run.history[run.history.length - 1].survived} Monsters.</span>` : '';
+    return `<div class="panel setup"><div class="scroll" id="setupScroll">
+      ${lbHTML(run, null)}
+      <h2>${pr.first ? 'Before round 1' : `Prep · round ${run.round} of ${run.rounds} next`}</h2>
+      <p class="note">Round tracker: round ${run.round} of ${run.rounds} · Starter Kit up to ${pr.kitMax} · Booster Deck: ${run.deck.length} cards left · you own ${run.owned.length}</p>
+      ${rows.join('')}</div><div class="foot">${foot}${best}<button class="chip" data-p="menu" style="margin-left:auto">Menu</button></div></div>`;
+  }
+  function doneHTML() {
+    const run = S.run, r = run.result, sm = c => ic(c, ' style="width:22px;height:22px;vertical-align:-4px"');
+    return `<div class="panel setup"><div class="scroll">
+      ${lbHTML(run, null)}
+      <h2>${r.crown ? '♛ You hold the Crown Jewel!' : 'The Crown Jewel stays on the table'}</h2>
+      <p class="helptxt">${r.crown ? `You finished with a best of <b>${r.best}</b> Monsters survived, and nobody to take the Crown from you.` : `Your best Dig was <b>${r.best}</b> Monsters survived; the final round had to beat ${r.tracker}.`}</p>
+      <table class="cmp"><tr><th>Round</th><th>How it ended</th><th>Monsters survived</th><th>Gems</th><th></th></tr>
+      ${run.history.map(h => `<tr><td>${h.round}</td><td>${h.kind === 'bank' ? 'Banked' : 'BOOM'}</td><td>${h.survived}</td><td>${h.kind === 'bank' ? h.geodes + h.monsters : 0} ${sm('gem')}</td><td>${h.stoleCrown ? '♛ took the Crown' : h.newBest ? 'new best' : ''}</td></tr>`).join('')}</table>
+      <p class="note">You own ${run.owned.length} Booster cards: ${run.owned.map(c => A.esc(c.name)).join(', ')}.</p>
+    </div><div class="foot"><button class="btn" data-p="startrun">New run</button><button class="chip" data-p="menu">Menu</button></div></div>`;
+  }
+
   // ----- the table -----
   function track(res, max, cur, live, color) {
     let cells = '';
@@ -1647,17 +1755,28 @@ const Run = (() => {
     const known = st.mine.slice(0, st.known).map(c => piece(c, { text: false, num: false, cls: '' })).join('');
     const mine = `<div class="stack" style="gap:6px"><button class="pile ${can.dig ? 'live' : ''}" data-p="dig" ${can.dig ? '' : 'disabled'} style="flex:1"><div class="cardback">${st.mine.length}</div><span>Mine<br><span class="cap2">${st.mine.length ? (can.dig ? 'tap to dig' : '') : 'empty: Bonus Monsters next'}</span></span></button>${known ? `<div class="known">${known}</div>` : ''}</div>`;
     const top = [...st.discard].reverse()[0];
+    const rb = st.board;
+    const bankWord = rb && rb.final ? 'Take the Crown' : 'Bank';
+    const bankSub = can.bank ? (rb && rb.final ? 'you are in the lead' : 'tap to keep them') : rb && rb.final ? `no banking until you pass ${rb.crown}` : st.pledge !== null && st.survived < st.pledge ? `pledged ${st.pledge}` : '';
     const right = `<div class="stack"><button class="pile" data-p="zoom" data-uid="${top ? top.uid : ''}" ${top ? '' : 'disabled'} style="${top ? 'color:#fff' : ''}">${top ? piece(top, { text: false, num: false }) : ''}<span>Discard · ${st.discard.length}</span></button>
-      <button class="pile ${can.bank ? 'live' : ''}" data-p="bank" ${can.bank ? '' : 'disabled'}><span class="gemline">${gems}${ic('gem')}</span><span>Bank<br><span class="cap2">${can.bank ? 'tap to keep them' : ''}</span></span></button></div>`;
+      <button class="pile ${can.bank ? 'live' : ''}" data-p="bank" ${can.bank ? '' : 'disabled'}><span class="gemline">${gems}${ic('gem')}</span><span>${bankWord}<br><span class="cap2">${bankSub}</span></span></button></div>`;
     let mid;
     if (f) mid = `<div class="dig">${fightHTML(st, can)}</div>`;
     else if (st.pending) mid = `<div class="dig idle"><div>${A.esc(st.pending.card.name)} goes under one of your Power cards.<br><b style="color:var(--accent)">Tap a Power card on the line.</b></div></div>`;
     else mid = `<div class="dig idle">${st.last ? `<button class="mcard" data-p="zoom" data-uid="${st.last.uid}">${A.playCard(st.last, 0.71)}</button>` : ''}<div>${st.last ? 'Last card dug.<br>' : ''}<b style="color:var(--accent)">${can.dig ? 'Tap your Mine to dig.' : ''}</b></div></div>`;
     const s = st.over ? Dig.score(st) : null;
-    const over = st.over ? (st.over.kind === 'boom'
+    let over = '';
+    if (st.over && S.run) {
+      const fin = S.run.round === S.run.rounds, next = `<div class="row2"><button class="btn" data-p="prep">${fin ? 'See the result' : 'To Prep'}</button></div>`;
+      over = st.over.kind === 'boom'
+        ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${A.esc(st.over.why).replace(/\{heart\}/g, '')}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this round — your best on the Leaderboard stays.</div>${next}</div>`
+        : `<div class="over"><h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="big"><b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${st.survived > S.run.crown.tracker ? ' — <b>you take the Crown Jewel</b>' : st.survived > S.run.best ? ' — a new best' : ''}<br><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} before the Escape Bonus</div>${next}</div>`;
+    } else if (st.over) {
+      over = (st.over.kind === 'boom'
       ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${A.esc(st.over.why).replace(/\{heart\}/g, '')}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this Dig.</div>`
-      : `<div class="over"><h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + (st.best ? `<div class="note">Best so far: ${st.best.now.survived} Monsters survived${st.best.newSurvived ? ' (new!)' : ''} · ${st.best.now.gems} gems banked${st.best.newGems ? ' (new!)' : ''}</div>` : '') + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>` : '';
-    return `${drillHTML(st, can)}${lineHTML(st)}<div class="mat" style="position:relative">${mine}${mid}${right}${over}</div>`;
+      : `<div class="over"><h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + (st.best ? `<div class="note">Best so far: ${st.best.now.survived} Monsters survived${st.best.newSurvived ? ' (new!)' : ''} · ${st.best.now.gems} gems banked${st.best.newGems ? ' (new!)' : ''}</div>` : '') + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>`;
+    }
+    return `${S.run ? lbHTML(S.run, st) : ''}${drillHTML(st, can)}${lineHTML(st)}<div class="mat" style="position:relative">${mine}${mid}${right}${over}</div>`;
   }
   function logHTML(st) {
     return `<aside class="plog"><h3>What happened</h3><div class="entries" id="logEntries">${st.log.map(l => `<div class="e k-${l.kind}">${T(l.text)}</div>`).join('')}</div></aside>`;
@@ -1671,6 +1790,8 @@ const Run = (() => {
       <li><b>Bank</b>: tap the Bank chest between cards to end the Dig and keep your gems. Not while a Monster is in front of you.</li>
       <li><b>Any card</b>: tap it to see it full size, tap again to close.</li>
       <li><b>Beyond the Mine</b>: when the Mine runs out, Bonus Monsters keep coming: ${R.beyond.firstDamage}, ${R.beyond.firstDamage + 1}, … damage, worth ${R.beyond.gems} gems.</li></ul>
+      <p><b>A run</b> (Play a run): ${D.run.rounds} rounds, each a Dig then a Prep. Before round 1 you open a ${D.run.firstPack} Pack. <b>Prep</b>: 1 Escape Bonus (if you banked: roll the die, add that many gems) · 2 count gems (Geodes + Monsters survived + Escape Bonus; BOOM is 0) · 3 Booster Pack from the reward ladder (BOOM: a ${D.run.boomPack} Pack) — draw some, keep some · 4 choose a Starter Kit from your cards (1, 2, 2, 3 by round) · 5 reset: a fresh Drill, and everything else you own is shuffled into your Mine. Only the cards you own and your best Dig carry over.</p>
+      <p><b>Leaderboard</b>: positions are Monsters survived. The Crown tracker starts at ${D.run.crownStart}. Before the Crown you dig or bank freely. Once you have survived that many, you may <b>pledge</b> your current number or 1 more (tap the number): you cannot bank until you reach it, and BOOM removes it. Bank above the tracker and you take the Crown Jewel and move the tracker. A BOOM locks in nothing, but your best stays. In the <b>final round</b> there is no banking until you are in the lead (past the tracker); then you take the Crown. Hold the Crown Jewel at the end and you win.</p>
       <p><b>Calls made where the rules are unclear</b> (all in QUESTIONS.md, one line each to change):</p>
       <ul><li>The die is a d${R.die}; Health starts at ${R.start.heart}, Grit ${R.start.grit}, Rerolls ${R.start.reroll}.</li>
       <li>Cards that trigger resolve highest number first, then damage is halved before Block is taken off.</li>
@@ -1684,9 +1805,12 @@ const Run = (() => {
     if (document.body.dataset.mode !== 'play') return;
     const keep = $.querySelector('#setupScroll'), ks = keep ? keep.scrollTop : 0;
     const libLink = /^https?:$/.test(location.protocol) ? `<a class="back" href="${A.esc(D.library.href)}"><span>‹</span> ${A.esc(D.library.name)}</a>` : '';
-    const bar = `<div class="pbar">${libLink}<h1>Dig Dig BOOM!</h1><button class="chip" data-p="help">How it works</button><button class="chip" data-p="setup">New Dig</button><button class="chip" data-p="cards">Cards</button></div>`;
+    const bar = `<div class="pbar">${libLink}<h1>Dig Dig BOOM!</h1><button class="chip" data-p="help">How it works</button><button class="chip" data-p="menu">Menu</button><button class="chip" data-p="cards">Cards</button></div>`;
     let body;
-    if (S.panel === 'setup' || !S.st) body = setupHTML();
+    if (S.panel === 'menu') body = menuHTML();
+    else if (S.panel === 'prep' && S.run) body = prepHTML();
+    else if (S.panel === 'done' && S.run) body = doneHTML();
+    else if (S.panel === 'setup' || !S.st) body = setupHTML();
     else body = `<div class="pmain"><div class="ptable">${tableHTML()}</div>${logHTML(S.st)}</div>`;
     const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, 1.35)}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}</div>` : '';
     $.innerHTML = bar + body + (S.help ? helpHTML() : '') + z;
@@ -1703,15 +1827,29 @@ const Run = (() => {
   function act(a, el) {
     const st = S.st, f = st && st.fight, ds = el.dataset;
     switch (a) {
+      case 'menu': S.panel = 'menu'; S.help = false; break;
+      case 'practice': S.run = null; S.panel = 'setup'; break;
+      case 'rounds': S.rounds = Number(ds.v); break;
+      case 'adv': S.adv = !S.adv; break;
+      case 'startrun': { S.run = Run.start(cards(), { rounds: S.rounds, advancedTrash: S.adv }); S.st = null; S.panel = 'prep'; S.zoom = null; break; }
+      case 'escape': Run.rollEscape(S.run); break;
+      case 'openpack': Run.openPack(S.run); break;
+      case 'trashown': Run.trashOwned(S.run, Number(ds.uid)); break;
+      case 'pick': Run.toggleKeep(S.run, Number(ds.uid)); break;
+      case 'keepgo': Run.confirmKeep(S.run); break;
+      case 'kitpick': Run.toggleKit(S.run, Number(ds.uid)); break;
+      case 'startround': if (Run.beginDig(S.run)) { S.st = S.run.dig; S.panel = 'dig'; } break;
+      case 'prep': Run.finishDig(S.run); S.panel = S.run.phase === 'done' ? 'done' : 'prep'; break;
+      case 'pledge': if (S.st) Dig.pledge(S.st, Number(ds.n)); break;
       case 'tab': S.tab = ds.v; break;
       case 'kit': { const c = cards().find(x => x.id === ds.id); if (!c || !Dig.supported(c)) break; const i = S.kit.indexOf(c.id); if (i >= 0) S.kit.splice(i, 1); else if (S.kit.length < S.kitSize) S.kit.push(c.id); break; }
       case 'size': S.kitSize = Math.max(0, Math.min(8, S.kitSize + Number(ds.d))); S.kit = S.kit.slice(0, S.kitSize); break;
       case 'stat': { const r = ds.r, v = S.start[r] + Number(ds.d); S.start[r] = Math.max(r === 'heart' ? 1 : 0, Math.min(R.caps[r], v)); break; }
       case 'random': { const pool = boosters().filter(Dig.supported); S.kit = []; const rr = Dig.makeRng((Math.random() * 1e9) | 0); while (S.kit.length < Math.min(S.kitSize, pool.length)) { const c = pool[Math.floor(rr() * pool.length)]; if (!S.kit.includes(c.id)) S.kit.push(c.id); } break; }
       case 'clear': S.kit = []; break;
-      case 'go': newDig(); break;
+      case 'go': S.run = null; newDig(); break;
       case 'again': S.seed = undefined; newDig(); break;
-      case 'setup': S.panel = 'setup'; S.help = false; break;
+      case 'setup': S.run = null; S.panel = 'setup'; S.help = false; break;
       case 'help': S.help = true; break;
       case 'closehelp': S.help = false; break;
       case 'cards': S.help = false; UI.setMode('cards'); return;
@@ -1728,7 +1866,7 @@ const Run = (() => {
       case 'trade': Dig.trade(st, el.dataset.v); break;
       case 'heart': break;
     }
-    if (S.st && S.st.over && !S.st.best) recordBest(S.st);
+    if (S.st && S.st.over && !S.st.best && !S.run) recordBest(S.st);
     render();
   }
   $.addEventListener('click', e => { const el = e.target.closest('[data-p]'); if (!el || el.disabled) return; e.preventDefault(); act(el.dataset.p, el); });

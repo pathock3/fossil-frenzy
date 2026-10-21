@@ -421,3 +421,73 @@ test('random play never breaks the rules: tracks stay inside their caps, no NaN,
     assert.ok(st.survived >= 0 && st.geodeGems >= 0);
   }
 });
+
+// ---------- found by an audit of the engine against every card text ----------
+const put = (id, uid = 70000 + n++) => ({ ...by(id), uid });
+test('audit: Magpie copying Sneak Attack mid-fight defeats the extra Monster and still lets you face the first one', () => {
+  const st = game({ mine: ['MO-01', 'MO-02'], power: ['PW-22'], start: { heart: 6 }, dice: [8] });
+  st.discard.push(put('IM-28'));
+  Dig.dig(st); Dig.roll(st); Dig.face(st);
+  assert.equal(st.over, null); assert.equal(st.fight, null);
+  assert.equal(st.survived, 2, 'both Monsters survived'); assert.equal(st.defeated, 1, 'only the Sneak Attack one was defeated');
+  assert.equal(st.heart, 5, 'the first Monster still dealt its 1 damage');
+});
+test('audit: Cave Scout digging Boomerang (or Echo and Rewind Tape bouncing) cannot loop forever', () => {
+  const a = game({ mine: ['IM-03', 'IM-02', 'TR-01', 'MO-01'] }); Dig.dig(a); assert.ok(!a.over);
+  const b = game({ mine: ['IM-03', 'IM-06', 'MO-01'] }); b.discard.push(put('IM-22')); Dig.dig(b); assert.ok(!b.over);
+});
+test('audit: Grit never goes over 6, not even by taking spent Grit back after a Workbench trade; Workbench is dead once the Dig ends', () => {
+  const st = game({ mine: ['MO-01'], ongoing: ['ON-36'], start: { grit: 1, reroll: 1 } });
+  Dig.dig(st); Dig.spendGrit(st); assert.ok(Dig.trade(st, 'reroll')); assert.equal(st.grit, 3);
+  st.grit = 6; Dig.refundGrit(st); assert.equal(st.grit, 6);
+  const o = game({ mine: ['TR-01'], ongoing: ['ON-36'], start: { grit: 4 } }); Dig.dig(o); Dig.bank(o); assert.ok(!Dig.trade(o, 'grit'));
+});
+test('audit: Twin Drill keeps the higher RESULT (Backfire turns a 1 into a 10), and not when a Thorned Gadget paid Health instead of a Reroll', () => {
+  const st = game({ mine: ['MO-01'], ongoing: ['ON-34', 'ON-03'], start: { reroll: 1 }, dice: [1, 5] });
+  Dig.dig(st); Dig.roll(st); assert.equal(Dig.result(st).total, 10); Dig.reroll(st); assert.equal(Dig.result(st).total, 10);
+  const th = game({ mine: ['MO-01'], ongoing: ['ON-34', 'ON-31'], start: { reroll: 0, heart: 8 }, dice: [6, 2] });
+  Dig.dig(th); Dig.roll(th); Dig.reroll(th); assert.equal(Dig.result(th).total, 2, 'Twin Drill only applies when you spend a Reroll');
+});
+test('audit: damage watchers see the damage actually taken (Lucky Cricket saves you, so Patch Kit and Crumple Zone do not fire for what was saved)', () => {
+  const st = game({ mine: ['MO-01'], power: ['PW-14'], ongoing: ['ON-23', 'ON-30'], start: { heart: 1, grit: 0 }, dice: [6] });
+  Dig.dig(st); Dig.roll(st); Dig.face(st);
+  assert.deepEqual([st.heart, st.grit], [1, 0], 'nothing was taken, so no Patch Kit or Stubborn Engine');
+  const big = game({ mine: ['MO-01', 'MO-01', 'MO-01', 'MO-01'], power: ['PW-14'], ongoing: ['ON-09'], start: { heart: 12, reroll: 0 }, dice: [6, 6, 6, 6] });
+  for (let i = 0; i < 3; i++) { Dig.dig(big); Dig.roll(big); Dig.face(big); } big.heart = 3; big.reroll = 0;
+  Dig.dig(big); Dig.roll(big); Dig.face(big);                        // 7 damage at 3 Health: Lucky Cricket takes it down to 2 damage
+  assert.equal(big.heart, 1); assert.equal(big.reroll, 0, 'only 2 was taken: Crumple Zone needs 5+');
+});
+test('audit: a cloned card is not "another card" for itself (Conga Crab, Unlucky Duck)', () => {
+  const crab = game({ mine: ['MO-01'], power: ['PW-11'], start: { heart: 6, grit: 0 }, dice: [6] }); crab.line.find(e => e.card.id === 'PW-11').cloned = true; Dig.dig(crab); Dig.roll(crab); Dig.face(crab);
+  assert.equal(crab.grit, 0);
+  const duck = game({ mine: ['MO-01'], power: ['PW-05'], start: { heart: 6, reroll: 0 }, dice: [3] }); duck.line.find(e => e.card.id === 'PW-05').cloned = true; Dig.dig(duck); Dig.roll(duck); Dig.face(duck);
+  assert.equal(duck.reroll, 2, 'it triggers twice and nothing else triggers');
+});
+test('audit: a Monster dug by Sneak Attack still counts as a Monster dug (Danger Siren); Wormhole revealing an Immediate card is not a second dig (Disco Ball)', () => {
+  const st = game({ mine: ['IM-28', 'MO-01', 'MO-01', 'MO-01', 'MO-01'], ongoing: ['ON-10'], start: { grit: 0, heart: 12 } });
+  st.setCount['MO-01'] = 3; Dig.dig(st); assert.equal(st.grit, 2, 'the 7-damage Monster was dug, so +2 Grit');
+  const w = game({ mine: ['IM-33', 'TR-01', 'IM-13'], ongoing: ['ON-12'], start: { heart: 2 } }); Dig.dig(w);
+  assert.equal(w.heart, 2 + 4 + 1, 'Med Kit +4, and Disco Ball +1 once for the one card you dug');
+});
+
+test('dense random play (8-14 kit cards, a stocked discard, a tiny Mine full of chain Immediates) never hangs, crashes or breaks a track', () => {
+  const caps = DDB.rules.caps, boosters = cards.filter(c => c.deck === 'Booster'), imm = boosters.filter(c => c.type === 'Immediate');
+  for (let seed = 1; seed <= 250; seed++) {
+    const rr = Dig.makeRng(seed * 31), pick = list => list[Math.floor(rr() * list.length)];
+    const kit = Array.from({ length: 8 + (seed % 7) }, () => pick(boosters));
+    const st = Dig.start(cards, kit, { seed });
+    if (seed % 2) { st.mine = Array.from({ length: 6 + (seed % 5) }, () => ({ ...pick([...imm, by('MO-01'), by('TR-01'), by('MO-02')]), uid: 95000 + n++ })); st.discard = Array.from({ length: 3 }, () => ({ ...pick(imm), uid: 96000 + n++ })); }
+    st.known = 0; let steps = 0;
+    while (!st.over && steps++ < 500) {
+      const c = Dig.can(st);
+      if (c.choose) { Dig.chooseClone(st, st.line[Math.floor(rr() * st.line.length)]); continue; }
+      if (st.fight && st.fight.phase === 'before') { if (c.grit && rr() < .5) Dig.spendGrit(st); else Dig.roll(st); }
+      else if (st.fight) { if (c.bonus && rr() < .3) Dig.buyBonus(st); else if (c.reroll && rr() < .4) Dig.reroll(st); else Dig.face(st); }
+      else if (c.bank && rr() < .03) Dig.bank(st); else if (c.dig) Dig.dig(st); else assert.fail(`seed ${seed}: no move`);
+      for (const k of ['heart', 'grit', 'reroll']) assert.ok(Number.isInteger(st[k]) && st[k] >= 0 && st[k] <= caps[k], `seed ${seed}: ${k}=${st[k]}`);
+      assert.ok(st.line.every(e => e.at >= 1 && e.at <= 10));
+    }
+    assert.ok(st.over, `seed ${seed}: did not end`);
+    assert.ok(!st.log.some(l => /undefined|NaN/.test(l.text)), `seed ${seed}`);
+  }
+});
