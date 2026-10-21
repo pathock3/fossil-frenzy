@@ -85,7 +85,7 @@ test('menu: only "Play a run" is out in the open; Practice Dig, the run options 
     assert.match(home, /against the AI/);
     await page.click('#play [data-p=more]');
     const menu = await page.locator('#play .menu').innerText();
-    assert.match(menu, /Practice Dig[\s\S]*Run options[\s\S]*Advanced trash[\s\S]*The cards/); assert.doesNotMatch(await page.locator('#play').innerText(), /Nobody|Opponent|[Pp]rint/);
+    assert.match(menu, /Practice Dig[\s\S]*Run options[\s\S]*The cards/); assert.doesNotMatch(menu, /[Tt]rash/); assert.doesNotMatch(await page.locator('#play').innerText(), /Nobody|Opponent|[Pp]rint/);
     await page.click('#play [data-p=menu]'); await page.waitForSelector('#play .homemenu');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -445,7 +445,7 @@ test('play: a reload puts you back exactly where you were — mid-fight in a run
 
 test('play: monkey test — random taps through whole runs at iPad sizes: no errors, the page never scrolls, a legal tap always exists until the run is done', { ...SKIP, timeout: 300000 }, async () => {
   const ALL = `(document.querySelector('#play .zoom') ? [document.querySelector('#play .zoom')] : [...document.querySelectorAll('#play [data-p]:not([disabled])')]).filter(e => e.getBoundingClientRect().width > 0 && (!(e.closest('.pbar') || e.closest('.foot')) || ['startround', 'prep', 'keepgo', 'again', 'openpack', 'ff'].includes(e.dataset.p)) && (r => e.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)))(e.getBoundingClientRect()))`;
-  const AVOID = ['menu', 'more', 'gmenu', 'gmenuclose', 'mainmenu', 'practice', 'cards', 'help', 'startrun', 'setup', 'rounds', 'adv', 'resume'];
+  const AVOID = ['menu', 'more', 'gmenu', 'gmenuclose', 'mainmenu', 'practice', 'cards', 'help', 'startrun', 'setup', 'rounds', 'resume'];
   for (const [vp, seed, ai] of [[{ width: 1180, height: 820 }, 1, true], [{ width: 820, height: 1180 }, 2, false], [{ width: 1024, height: 700 }, 3, true]]) {
     const { browser, page, errors } = await open({ viewport: vp, menu: true });
     try {

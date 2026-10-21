@@ -516,7 +516,6 @@ const DDB = {
     ],
     startGems: 1,                                        // round 1 has no pack: you choose your Starter Kit from every Booster card, or take the gem instead and start with this many gems
     boomPack: 'Bronze',                                  // "If you went BOOM, open a Bronze Pack"
-    advancedTrash: false,                                // optional rule: trash Booster cards before opening a pack for +1 draw each
   },
   // ---- The phrase book: card text -> effect. [op, regular expression]. Unmatched text is shown as "not implemented yet" ----
   phrases: {
@@ -1373,7 +1372,7 @@ const Run = (() => {
     run.crown = { tracker: Board.tracker(run.board), holder: Board.holder(run.board) === run.me };
     const m = Board.marker(run.board, run.me, 'best'); run.best = m ? m.n : 0;
   }
-  // all: every card of the sheet. opts: { rounds, seed, dice, advancedTrash }
+  // all: every card of the sheet. opts: { rounds, seed, dice }
   // The Booster Deck: every Booster card by its count, shuffled.
   function makeDeck(all, rng) {
     const deck = []; for (const c of all) if (c.deck === RN.boosterDeck && Dig.supported(c)) for (let i = 0; i < (c.count || 1); i++) deck.push(copy(c));          // cards whose text the game cannot play yet (Grit is cut: see QUESTIONS.md) wait outside the deck
@@ -1384,7 +1383,6 @@ const Run = (() => {
     const seed = opts.seed === undefined || opts.seed === null ? null : opts.seed >>> 0;
     const me = opts.me || ME, sh = opts.shared;
     const run = { seed, rng: Dig.makeRng(seed), dice: opts.dice ? opts.dice.slice() : null, all, rounds: opts.rounds || RN.rounds, round: 1, phase: 'prep',
-      advancedTrash: opts.advancedTrash === undefined ? RN.advancedTrash : opts.advancedTrash,
       owned: [], kit: [], trash: sh ? sh.trash : [], deck: sh ? sh.deck : [], me, shared: !!sh, board: sh ? sh.board : Board.create([{ id: me, name: 'You', color: DDB.table.playerColors[0] }]), crown: { tracker: RN.crownStart, holder: false }, best: 0, history: [], dig: null, prep: null, log: [], result: null };
     if (!sh) run.deck = makeDeck(all, run.rng);
     sync(run);
@@ -1397,7 +1395,7 @@ const Run = (() => {
     const banked = !!over && over.kind === 'bank';
     const base = over ? { geodes: over.kind === 'bank' ? over.geodes : 0, monsters: over.kind === 'bank' ? over.monsters : 0 } : { geodes: 0, monsters: 0 };
     return { step: banked ? 'escape' : over ? 'pack' : 'kit', banked, boom: !!over && over.kind === 'boom', first: !over, gem: false, geodes: base.geodes, monsters: base.monsters, escape: null, gems: null, pack: null,
-      trashed: 0, offer: [], picked: [], extra: [], kitPick: [], kitMax: kitSize(run, run.round) };
+      offer: [], picked: [], extra: [], kitPick: [], kitMax: kitSize(run, run.round) };
   }
   function setPack(run) {
     const pr = run.prep;
@@ -1416,18 +1414,12 @@ const Run = (() => {
     pr.escape = v; pr.step = 'pack'; setPack(run);
     log(run, `Escape Bonus: ${pr.escape} gems. ${pr.geodes} + ${pr.monsters} + ${pr.escape} = ${pr.gems} gems.`); return true;
   }
-  function packInfo(run) { const pr = run.prep; if (!pr.pack) setPack(run); return { name: pr.pack.name, draw: pr.pack.draw + pr.trashed, keep: pr.pack.keep }; }
-  // optional rule: before opening a pack, trash any of your Booster cards for +1 draw each
-  function trashOwned(run, id) {
-    const pr = run.prep; if (!run.advancedTrash || !pr || pr.step !== 'pack') return false;
-    const i = run.owned.findIndex(c => c.uid === id); if (i < 0) return false;
-    run.trash.push(...run.owned.splice(i, 1)); pr.trashed++; return true;
-  }
+  function packInfo(run) { const pr = run.prep; if (!pr.pack) setPack(run); return { name: pr.pack.name, draw: pr.pack.draw, keep: pr.pack.keep }; }
   // 3. Booster Pack: draw, then keep some.
   function openPack(run) {
     const pr = run.prep; if (!pr || pr.step !== 'pack') return false;
     if (!pr.pack) setPack(run);
-    const n = pr.pack.draw + pr.trashed; pr.offer = run.deck.splice(0, n); pr.picked = []; pr.step = 'keep';
+    const n = pr.pack.draw; pr.offer = run.deck.splice(0, n); pr.picked = []; pr.step = 'keep';
     log(run, `${pr.pack.name} Pack: drew ${pr.offer.length}${pr.offer.length ? ': ' + pr.offer.map(c => c.name).join(', ') : ''}; keep ${Math.min(pr.pack.keep, pr.offer.length)}.`);
     return true;
   }
@@ -1499,7 +1491,7 @@ const Run = (() => {
   const refOf = c => ({ id: c.id, uid: c.uid });
   function save(run) {
     const pr = run.prep;
-    return { v: 3, shared: run.shared, ...(run.shared ? {} : { board: run.board, deck: run.deck.map(refOf), trash: run.trash.map(refOf) }), me: run.me, seed: run.seed, rng: run.rng.state(), dice: run.dice, rounds: run.rounds, round: run.round, phase: run.phase, advancedTrash: run.advancedTrash,
+    return { v: 3, shared: run.shared, ...(run.shared ? {} : { board: run.board, deck: run.deck.map(refOf), trash: run.trash.map(refOf) }), me: run.me, seed: run.seed, rng: run.rng.state(), dice: run.dice, rounds: run.rounds, round: run.round, phase: run.phase,
       owned: run.owned.map(refOf), kit: run.kit.map(refOf), history: run.history, log: run.log, result: run.result, endInfo: run.endInfo,
       prep: pr && { ...pr, pack: pr.pack && pr.pack.name, offer: pr.offer.map(refOf), extra: pr.extra.map(refOf) },
       dig: run.dig && Dig.save(run.dig) };
@@ -1509,7 +1501,7 @@ const Run = (() => {
     const memo = new Map();
     const deref = r => { if (memo.has(r.uid)) return memo.get(r.uid); const base = all.find(x => x.id === r.id); if (!base) throw new Error('the sheet no longer has card ' + r.id); const c = { ...base, uid: r.uid }; memo.set(r.uid, c); return c; };
     const rng = Dig.makeRng(d.seed); rng.restore(d.rng);
-    const run = { seed: d.seed, rng, dice: d.dice, all, rounds: d.rounds, round: d.round, phase: d.phase, advancedTrash: d.advancedTrash,
+    const run = { seed: d.seed, rng, dice: d.dice, all, rounds: d.rounds, round: d.round, phase: d.phase,
       me: d.me, shared: !!d.shared, board: d.shared ? shared.board : d.board, crown: null, best: 0, owned: d.owned.map(deref), kit: d.kit.map(deref), trash: d.shared ? shared.trash : d.trash.map(deref), deck: d.shared ? shared.deck : d.deck.map(deref), history: d.history, log: d.log, result: d.result, endInfo: d.endInfo,
       prep: d.prep && { ...d.prep, pack: d.prep.pack ? packFor(d.prep.pack) : null, offer: d.prep.offer.map(deref), extra: d.prep.extra.map(deref) },
       dig: d.dig ? Dig.load(all, d.dig) : null };
@@ -1551,7 +1543,7 @@ const Run = (() => {
     checkOver(r); return true;
   }
   const reserve = n => { uid = Math.max(uid, n + 1); };
-  return { makeDeck, starterPool, toggleGem, setEscape, reserve, pledge, bank, finalCheck, refresh, checkOver, sync, save, load, start, rollEscape, packInfo, trashOwned, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
+  return { makeDeck, starterPool, toggleGem, setEscape, reserve, pledge, bank, finalCheck, refresh, checkOver, sync, save, load, start, rollEscape, packInfo, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
 })();
 
 /* =====================================================================
@@ -1916,7 +1908,7 @@ const Match = (() => {
   'use strict';
   const D = DDB, R = D.rules, UI = window.DigDigBoomUI, A = UI.api, $ = document.getElementById('play');
   // S.opp: always true in the app (owner: one AI opponent, no option to play without); the solo Run path stays in the engine and tests switch it off.
-  const S = { st: null, run: null, rounds: D.run.rounds, adv: D.run.advancedTrash, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', kitTab: 'Power', fxEsc: null, gmenu: false, zoom: null, help: false, panel: 'menu', back: null, restored: false, confirmNew: null, match: null, opp: true };
+  const S = { st: null, run: null, rounds: D.run.rounds, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', kitTab: 'Power', fxEsc: null, gmenu: false, zoom: null, help: false, panel: 'menu', back: null, restored: false, confirmNew: null, match: null, opp: true };
   const cards = () => UI.state.all;
   // Personal bests live in this browser only (best Monsters survived, best gems banked). Never needed for play.
   const BEST_KEY = 'ddb.solo.best';
@@ -1934,7 +1926,7 @@ const Match = (() => {
     try {
       const panel = S.panel === 'menu' || S.panel === 'more' ? S.back : S.panel;
       if (!panel || (!S.st && !S.run)) { localStorage.removeItem(SAVE_KEY); return; }
-      localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 2, panel, match: S.match ? Match.save(S.match) : null, run: S.run && !S.match ? Run.save(S.run) : null, st: !S.run && S.st ? Dig.save(S.st) : null, opp: S.opp, kit: S.kit, kitSize: S.kitSize, start: S.start, rounds: S.rounds, adv: S.adv }));
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 2, panel, match: S.match ? Match.save(S.match) : null, run: S.run && !S.match ? Run.save(S.run) : null, st: !S.run && S.st ? Dig.save(S.st) : null, opp: S.opp, kit: S.kit, kitSize: S.kitSize, start: S.start, rounds: S.rounds}));
     } catch (e) { /* private window or full: fine, it just will not resume */ }
   }
   function restore() {
@@ -1944,7 +1936,7 @@ const Match = (() => {
       const raw = localStorage.getItem(SAVE_KEY); if (!raw) return;
       const d = JSON.parse(raw); if (d.v !== 2) return;
       const match = d.match ? Match.load(cards(), d.match) : null, run = match ? Match.human(match) : d.run ? Run.load(cards(), d.run) : null, st = run ? run.dig : d.st ? Dig.load(cards(), d.st) : null;
-      S.match = match; S.opp = d.opp !== false; S.run = run; S.st = st; S.fx = fxOf(st); S.kit = d.kit || []; S.kitSize = d.kitSize; S.start = d.start; S.rounds = d.rounds; S.adv = d.adv; S.panel = d.panel; S.back = d.panel;
+      S.match = match; S.opp = d.opp !== false; S.run = run; S.st = st; S.fx = fxOf(st); S.kit = d.kit || []; S.kitSize = d.kitSize; S.start = d.start; S.rounds = d.rounds; S.panel = d.panel; S.back = d.panel;
     } catch (e) { try { localStorage.removeItem(SAVE_KEY); } catch (e2) { /* ignore */ } S.run = null; S.match = null; S.st = null; S.panel = 'menu'; }
   }
   const typeIcon = t => `<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#${D.types[t].icon}"/></svg>`;
@@ -2048,7 +2040,6 @@ const Match = (() => {
           ${b.survived || b.gems ? `<p class="note">Your best Practice Dig: ${b.survived} Monsters survived · ${b.gems} gems banked.</p>` : ''}</div>
         <div class="bigopt"><h3>Run options</h3>
           <p class="note">Rounds: ${D.run.roundChoices.map(n => `<button class="chip ${S.rounds === n ? 'on' : ''}" data-p="rounds" data-v="${n}">${n}</button>`).join(' ')}</p>
-          <p class="note"><button class="chip ${S.adv ? 'on' : ''}" data-p="adv">Advanced trash ${S.adv ? 'on' : 'off'}</button><br>An optional rule: before you open a Booster Pack you may trash cards you own, and draw one extra card for each.</p></div>
         <div class="bigopt"><h3>The cards</h3><p class="note">Every card of your sheet, as designed.</p><button class="btn alt" data-p="cards">See the cards</button></div>
       </div>
     </div><div class="foot"><button class="chip" data-p="menu">‹ Main menu</button></div></div>`;
@@ -2094,8 +2085,7 @@ const Match = (() => {
     if (step === 'escape') body = `${eq}<button class="bigdie" data-p="escape" aria-label="Roll the Escape Bonus">${d10('', 'idle')}<span class="tapword">Tap</span></button>`;
     else if (step === 'pack') {
       const info = Run.packInfo(run), col = (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a', plus = /\+$/.test(info.name);
-      body = `${eq}<button class="pack" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>`
-        + (run.advancedTrash && run.owned.length ? `<div class="cards">${run.owned.map(c => pcard(c, .5, { act: 'trashown' })).join('')}</div>` : '');
+      body = `${eq}<button class="pack" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>`;
     } else if (step === 'keep') {
       const need = Run.keepCount(run), sc = cardScale(Math.min(pr.offer.length, 4), .92, .62);
       body = `<div class="cards">${pr.offer.map(c => pcard(c, sc, { act: 'pick', sel: pr.picked.includes(c.uid), badge: pr.picked.includes(c.uid) ? '✓' : '' })).join('')}</div><div class="kitbar">${dots(need, pr.picked.length)}</div>`;
@@ -2286,11 +2276,9 @@ const Match = (() => {
       case 'resume': S.panel = S.back || 'menu'; break;
       case 'practice': if (resumable() && S.confirmNew !== 'practice') { S.confirmNew = 'practice'; break; } S.confirmNew = null; S.run = null; S.match = null; S.st = null; S.panel = 'setup'; S.back = null; break;
       case 'rounds': S.rounds = Number(ds.v); break;
-      case 'adv': S.adv = !S.adv; break;
-      case 'startrun': { if (resumable() && S.confirmNew !== 'startrun') { S.confirmNew = 'startrun'; break; } S.confirmNew = null; if (S.opp) { S.match = Match.start(cards(), { rounds: S.rounds, advancedTrash: S.adv }); S.run = Match.human(S.match); } else { S.match = null; S.run = Run.start(cards(), { rounds: S.rounds, advancedTrash: S.adv }); } S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
+      case 'startrun': { if (resumable() && S.confirmNew !== 'startrun') { S.confirmNew = 'startrun'; break; } S.confirmNew = null; if (S.opp) { S.match = Match.start(cards(), { rounds: S.rounds }); S.run = Match.human(S.match); } else { S.match = null; S.run = Run.start(cards(), { rounds: S.rounds }); } S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
       case 'escape': if (S.match) Match.rollEscape(S.match); else Run.rollEscape(S.run); break;
       case 'openpack': if (S.match) Match.openPack(S.match); else Run.openPack(S.run); break;
-      case 'trashown': Run.trashOwned(S.run, Number(ds.uid)); break;
       case 'pick': Run.toggleKeep(S.run, Number(ds.uid)); break;
       case 'keepgo': Run.confirmKeep(S.run); break;
       case 'kitpick': Run.toggleKit(S.run, Number(ds.uid)); break;

@@ -36,7 +36,6 @@ Each is a note you wrote on a card. Card text is quoted exactly.
 45. **AI clock:** it digs one card every 1.1 seconds on its own while you play (a Monster, with its rolls, counts as one card). When your Dig is over and it is not, a Fast forward button on the BOOM/Banked panel makes it 0.06 seconds a card. Prep waits for it. — my call
 46. **Prep at the same time:** the AI opens its Booster Pack the moment you open yours (yours is drawn first), then keeps cards and chooses its kit without seeing yours. Its Escape Bonus is the same single roll as yours. — my call
 47. **Final round details I filled in** (the race itself is your ruling: nobody banks, the leader may wait, everyone else keeps digging): everyone's score is the better of their locked-in best and their live marker, so a player holding the Crown from an earlier round is in the lead from the start; a player who goes BOOM keeps only their earlier best; ties go to whoever reached the number first; alone at the table, you win the moment you are past the Crown tracker (matching it does not count). The round ends when everyone but the leader has gone BOOM. — assumed
-48. **Lucky Coin** (your idea, ruled: in play every Dig with the Drill Pup, outside the Starter Kit). I compare the damage printed on the Monster with your current Health, before any Block (so the +1 cannot flicker on and off as you trigger cards). It is an Ongoing card, so Tool Shed and Duct Tape count it. I added it to your sheet as ON-38 in the Starting deck. Is +1 the right size, or +2? — my call
 49. **Encountering a Monster moves your marker** (your ruling). If it BOOMs you, the marker is removed (your best stays). In the final round that means digging a Monster can take the lead from someone the instant it is revealed. A Monster revealed by Cave Scout and put back does not count until you dig it. — assumed (the last sentence)
 
 ## Grit is cut: proposed replacements (awaiting your approval; until then these 35 cards are out of the Booster Deck)
@@ -80,3 +79,6 @@ Immediate cards:
 - IM-18 Pet Treat: "Your Pet triggers 1 lower until Prep" (a player-chosen move, and it was almost always right) → "+2 {heart} and +1 {reroll}" — or a fresh idea.
 - IM-34 Wrench Rat: "Move your highest Power card (not your Pet) down 2" → "+1 {reroll} for each Power card on your line (not your Pet)".
 Question on a card that stays: Pet Whistle (Ongoing) "Your Pet triggers on 9 instead of 10" lowers the Pet's number permanently by a card effect, not a player move. Does that stay?
+
+## Decided for the prototype
+- Advanced trash is not in the prototype (it stays in the rule book as an optional rule). Lucky Coin stays +1. The 35 Grit/move cards stay out of the game in the proposed form above; variety of Booster cards is a late-stage pivot.

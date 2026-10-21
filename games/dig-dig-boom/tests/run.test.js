@@ -220,16 +220,6 @@ test('Mystery Box: when kept from a Booster Pack, also keep the top card of the 
   assert.equal(run.owned.length, 2); assert.equal(run.prep.extra.length, 1); assert.equal(run.deck.length, deckSize - 3 - 1, '3 drawn for the pack (the test swaps them for chosen ones) and 1 more taken from the top');
 });
 
-test('optional Advanced trash: before opening a pack, trash a card you own for +1 draw each (off by default)', () => {
-  const run = firstRound({ keepIds: ['PW-02'] }); Run.toggleKit(run, run.owned[0].uid); Run.beginDig(run, { seed: 1 });
-  play(run, ['TR-01'], ['dig', 'bank'], 1); Run.finishDig(run); run.dice = [3]; Run.rollEscape(run);
-  assert.ok(!Run.trashOwned(run, run.owned[0].uid), 'off by default');
-  const on = firstRound({ keepIds: ['PW-02'], advancedTrash: true }); Run.toggleKit(on, on.owned[0].uid); Run.beginDig(on, { seed: 1 });
-  play(on, ['TR-01'], ['dig', 'bank'], 1); Run.finishDig(on); on.dice = [3]; Run.rollEscape(on);
-  assert.ok(Run.trashOwned(on, on.owned[0].uid)); assert.equal(on.owned.length, 0); assert.deepEqual(Run.packInfo(on), { name: 'Bronze', draw: 4, keep: 1 });
-  Run.openPack(on); assert.equal(on.prep.offer.length, 4);
-});
-
 test('random runs of 5 rounds always finish, never lose or duplicate a Booster card, and the Dig screen always has a legal move', () => {
   const total = deckSize;
   for (let seed = 1; seed <= 60; seed++) {
