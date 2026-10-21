@@ -81,8 +81,8 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play { height: 100%; display: flex; flex-direction: column; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
 #play .pbar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; flex: none; }
 #play .pbar h1 { margin: 0 auto 0 4px; font-size: 20px; }
-#play .pbar .chip { min-height: 40px; padding: 6px 12px; font-size: 14px; }
-#play .pbar .back { min-height: 40px; padding: 6px 12px 6px 8px; font-size: 14px; }
+#play .pbar .chip { padding: 6px 12px; font-size: 14px; }
+#play .pbar .back { min-height: 44px; padding: 6px 12px 6px 8px; font-size: 14px; }
 #play .pmain { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 10px; padding: 0 10px 10px; }
 #play .ptable { min-height: 0; display: flex; flex-direction: column; gap: 8px; position: relative; }
 #play .plog { min-height: 0; display: flex; flex-direction: column; background: var(--panel); border: 2px solid var(--line); border-radius: 14px; overflow: hidden; }
@@ -108,7 +108,10 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .tc.now { opacity: 1; background: var(--tc); color: #fff; font-size: 20px; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
 #play .ongoing { width: 250px; flex: none; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
 #play .ongoing h4, #play .linehead { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
-#play .ongoing .list { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; max-height: 112px; overscroll-behavior: contain; }
+#play .ongoing .list { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; align-content: start; overflow-y: auto; max-height: 112px; overscroll-behavior: contain; }
+#play .ongoing .piece { min-height: 46px; }
+#play .ongoing .piece .h { min-height: 38px; font-size: 12px; overflow-wrap: normal; word-break: normal; }
+#play .ongoing .list .note { grid-column: 1 / -1; }
 #play .piece { position: relative; border-radius: 9px; border: 3px solid var(--c); background: #fffaf0; color: #1d1712; text-align: left; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; width: 100%; }
 #play .piece .h { background: var(--c); color: var(--on); font-weight: 800; font-size: 13px; line-height: 1.1; padding: 3px 6px; display: flex; align-items: center; gap: 5px; }
 #play .piece .h svg { width: 15px; height: 15px; flex: none; }
@@ -117,8 +120,8 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .piece .ic { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -.2em; }
 #play .piece.pick { outline: 4px solid var(--accent); animation: pulse 1.2s ease-in-out infinite; }
 #play .piece.trig { box-shadow: 0 0 0 3px #fff, 0 0 12px 4px var(--accent); }
-#play .piece .tag { position: absolute; right: 3px; bottom: 3px; font-size: 10px; font-weight: 800; background: #1d1712; color: #fff; border-radius: 6px; padding: 1px 5px; }
-#play .wbtn { flex: none; min-height: 40px; min-width: 76px; border-radius: 10px; background: #3a2b20; border: 2px solid var(--accent); font-weight: 800; font-size: 14px; color: #fff; }
+#play .piece .h .tg { margin-left: auto; font-size: 10px; font-weight: 800; background: #1d1712; color: #fff; border-radius: 6px; padding: 1px 5px; white-space: nowrap; }
+#play .wbtn { flex: none; min-height: 44px; min-width: 76px; border-radius: 10px; background: #3a2b20; border: 2px solid var(--accent); font-weight: 800; font-size: 14px; color: #fff; }
 #play .wbtn:disabled { opacity: .3; border-color: var(--line); }
 #play .piece .wb { display: flex; gap: 4px; padding: 0 6px 5px; }
 #play .piece .wb button { flex: 1; min-height: 34px; border-radius: 8px; background: #2a1f18; color: #fff; font-weight: 800; font-size: 13px; }
@@ -127,14 +130,16 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .linehead { display: flex; justify-content: space-between; padding: 0 2px 4px; flex: none; }
 #play .lcols { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
 #play .lcol .piece .h svg { display: none; }
-#play .lcol .piece .h { font-size: 12px; padding: 3px 4px; overflow-wrap: anywhere; }
+#play .lcol .piece { flex: none; }
+#play .lcol .piece .h { font-size: 11.5px; padding: 3px 4px; overflow-wrap: normal; word-break: normal; hyphens: none; }
 #play .lcol { display: flex; flex-direction: column; gap: 3px; border-radius: 8px; padding: 2px; background: rgba(255,255,255,.04); min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 #play .lcol.on { background: rgba(255,177,59,.18); outline: 2px solid var(--accent); }
 #play .lcol.off { opacity: .45; }
 #play .lnum { font-weight: 900; font-size: 15px; text-align: center; color: var(--dim); order: 99; margin-top: auto; padding-top: 2px; }
 #play .lcol.on .lnum { color: var(--accent); }
-#play .mat { flex: none; height: clamp(214px, 33vh, 286px); display: grid; grid-template-columns: 124px minmax(0, 1fr) 124px; gap: 10px; }
+#play .mat { flex: none; height: var(--mat-h, 286px); display: grid; grid-template-columns: 124px minmax(0, 1fr) 124px; gap: 10px; }
 #play .pile { border-radius: 14px; border: 3px dashed var(--line); background: rgba(255,255,255,.03); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 8px; color: var(--dim); font-weight: 800; font-size: 13px; text-align: center; min-width: 0; }
+#play .pile.bankp { border-color: #2b6f9c; }
 #play .pile.live { border-color: var(--accent); border-style: solid; color: #fff; animation: pulse 1.4s ease-in-out infinite; }
 #play .cardback { width: 76px; height: 106px; border-radius: 10px; background: repeating-linear-gradient(45deg, #5b3b22 0 8px, #6e4829 8px 16px); border: 3px solid #a6753f; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 34px; font-weight: 900; text-shadow: 0 2px 4px #000; box-shadow: 3px 3px 0 #2a1a0d, 6px 6px 0 #1c1410; }
 #play .pile .cap2 { font-size: 12px; color: var(--dim); font-weight: 700; }
@@ -148,24 +153,26 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .dig.idle { color: var(--dim); font-size: 18px; text-align: center; line-height: 1.4; }
 #play .mcard { display: block; border-radius: 12px; flex: none; position: relative; }
 #play .mcard.live { outline: 4px solid var(--accent); outline-offset: 3px; animation: pulse 1.2s ease-in-out infinite; }
-#play .rollp { display: flex; flex-direction: column; gap: 8px; align-items: stretch; min-width: 0; flex: 1; max-width: 250px; }
-#play .die { width: 108px; height: 108px; margin: 0 auto; border-radius: 22px; background: #fffaf0; color: #1d1712; font-weight: 900; font-size: 64px; display: flex; align-items: center; justify-content: center; border: 5px solid #1d1712; box-shadow: 0 4px 0 #000; }
-#play .die.live { flex-direction: column; border-color: var(--accent); animation: pulse 1.2s ease-in-out infinite; font-size: 26px; }
+#play .rollp { display: flex; flex-direction: column; gap: 4px; align-items: stretch; min-width: 0; flex: 1; max-width: 250px; }
+#play .die { width: calc(var(--mat-h, 286px) * .38); height: calc(var(--mat-h, 286px) * .38); margin: 0 auto; border-radius: 22px; background: #fffaf0; color: #1d1712; font-weight: 900; font-size: calc(var(--mat-h, 286px) * .22); display: flex; align-items: center; justify-content: center; border: 5px solid #1d1712; box-shadow: 0 4px 0 #000; }
+#play .die.live { flex-direction: column; border-color: var(--accent); animation: pulse 1.2s ease-in-out infinite; font-size: calc(var(--mat-h, 286px) * .1); }
 #play .die small { font-size: 15px; display: block; }
 #play .calc { text-align: center; font-size: 15px; line-height: 1.35; color: var(--dim); }
-#play .calc b { color: #fff; font-size: 26px; display: block; }
-#play .tokens { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; min-height: 36px; }
-#play .tokens button { width: 40px; height: 40px; border-radius: 10px; background: #fffaf0; border: 2px solid #f4a022; display: flex; align-items: center; justify-content: center; }
+#play .calc b { color: #fff; font-size: 24px; display: block; }
+#play .tokens { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; min-height: 0; }
+#play .tokens button { width: 44px; height: 44px; border-radius: 10px; background: #fffaf0; border: 2px solid #f4a022; display: flex; align-items: center; justify-content: center; }
 #play .tokens svg { width: 28px; height: 28px; }
-#play .hint { font-size: 14px; color: var(--accent); text-align: center; line-height: 1.3; font-weight: 700; }
-#play .over { position: absolute; inset: 0; z-index: 5; background: rgba(28,20,16,.94); border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 16px; }
+#play .hint { font-size: 13px; color: var(--accent); text-align: center; line-height: 1.3; font-weight: 700; }
+#play .over { position: absolute; inset: 0; z-index: 5; background: #1c1410; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 16px; }
 #play .over h2 { font-size: 46px; margin: 0; }
+#play .over .ic, #play .calc .ic, #play .hint .ic { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -.2em; }
 #play .over.boom h2 { color: #ff5b4a; }
 #play .over .big { font-size: 22px; line-height: 1.5; }
 #play .over .row2 { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
 #play .btn { min-height: 56px; padding: 12px 22px; border-radius: 14px; background: var(--accent); color: #1c1410; font-weight: 900; font-size: 18px; }
 #play .btn.alt { background: var(--panel); color: var(--text); border: 2px solid var(--line); }
 #play .zoom { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.72); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+#play .zoom .closehint { color: #fff; opacity: .75; font-size: 14px; }
 #play .zoom .warn { color: #ffb4a8; font-size: 14px; max-width: 340px; text-align: center; }
 #play .panel { position: fixed; inset: 0; z-index: 15; background: var(--bg); display: flex; flex-direction: column; padding: max(10px, env(safe-area-inset-top)) 14px 10px; }
 #play .panel.setup { position: static; flex: 1; min-height: 0; z-index: auto; padding: 0 14px 10px; }
@@ -175,11 +182,11 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
 #play .grid .piece { min-height: 70px; }
 #play .piece.off { opacity: .45; }
-#play .grid .piece.sel { outline: 4px solid var(--accent); }
+#play .grid .piece.sel { outline: 4px solid var(--accent); background: #fff0c8; }
 #play .grid .piece .t { font-size: 14px; }
 #play .grid .piece .h { font-size: 15px; }
 #play .stepper { display: inline-flex; align-items: center; gap: 4px; background: var(--panel); border: 2px solid var(--line); border-radius: 99px; padding: 2px; }
-#play .stepper button { width: 40px; height: 40px; border-radius: 99px; font-size: 22px; font-weight: 900; background: #3a2b20; }
+#play .stepper button { width: 44px; height: 44px; border-radius: 99px; font-size: 22px; font-weight: 900; background: #3a2b20; }
 #play .stepper span { min-width: 34px; text-align: center; font-weight: 800; }
 #play .foot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--line); }
 #play .note { font-size: 13px; color: var(--dim); line-height: 1.4; }
@@ -190,13 +197,15 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .bigopt { background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 #play .bigopt .btn { min-height: 64px; font-size: 22px; }
 #play .lb { flex: none; background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 5px 8px 6px; }
-#play .lbhead { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--dim); padding: 0 2px 3px; flex-wrap: wrap; }
+#play .lbhead { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--dim); padding: 0 2px 3px; flex-wrap: wrap; }
 #play .lbcells { display: grid; gap: 3px; }
 #play .lbc { min-height: 48px; border-radius: 8px; background: rgba(255,255,255,.06); border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 2px 0; color: var(--dim); min-width: 0; }
 #play .lbc.free { background: rgba(255,255,255,.1); }
 #play .lbc.here { border-color: #fff; background: rgba(255,255,255,.2); color: #fff; }
 #play .lbc.open { border-color: var(--accent); animation: pulse 1.4s ease-in-out infinite; color: #fff; }
 #play .lbc .ln { font-weight: 800; font-size: 14px; }
+#play .lbc .pl { font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); }
+#play .lbhead .ph { color: var(--accent); font-weight: 800; }
 #play .lbc .lm { display: flex; align-items: center; justify-content: center; gap: 3px; min-height: 22px; }
 #play .mk { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; font-style: normal; font-weight: 900; color: #1d1712; }
 #play .mk.best { background: var(--accent); border: 2px solid #5a3a00; }
@@ -215,12 +224,14 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
   #play .pmain { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) 150px; }
   #play .ongoing { width: 180px; }
 }
+#play .menu .btn.alt { }
+#play .menu .confirm { background: #a8201f; color: #fff; }
 @media (max-height: 640px) { #play .tc { height: 28px; } #play .lbc { min-height: 42px; } #play .cardback { width: 64px; height: 90px; } }
 /* ---------- print and play sheets ---------- */
 body[data-mode=print] #app, body[data-mode=print] #play, body[data-mode=cards] #printv, body[data-mode=play] #printv { display: none; }
 body[data-mode=print] { padding: 0; }
 #printv .ptool { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 14px; background: var(--bg); border-bottom: 1px solid var(--line); }
-#printv .ptool .chip { min-height: 40px; padding: 6px 12px; font-size: 14px; }
+#printv .ptool .chip { min-height: 44px; padding: 6px 12px; font-size: 14px; }
 #printv .ptool .go { background: var(--accent); color: #1c1410; border-color: var(--accent); }
 #printv .sheets { padding: 16px 0 40px; display: flex; flex-direction: column; align-items: center; gap: 18px; overflow-x: auto; }
 #printv .sheet { position: relative; background: #fff; color: #111; flex: none; overflow: hidden; box-shadow: 0 2px 14px rgba(0,0,0,.55); page-break-after: always; break-after: page; font-family: "Avenir Next", "Helvetica Neue", Arial, system-ui, sans-serif; }
@@ -759,7 +770,7 @@ const Dig = (() => {
       case 'survive1': if (f) { f.surviveAt = e.n; log(st, 'effect', `${src}: if this Monster would BOOM you, you survive with ${e.n} {heart}`); } break;
       case 'halve': if (f) { f.halve = true; log(st, 'effect', `${src}: this Monster deals half {damage}`); } break;
       case 'defeat': if (f) { f.defeat = true; log(st, 'effect', `${src}: the Monster is defeated`); } break;
-      case 'noDamage': if (f) { f.noDamage = true; log(st, 'effect', `${src}: you take no {damage}`); } break;
+      case 'noDamage': if (f) { f.noDamage = true; log(st, 'effect', `${src}: you take no damage`); } break;
       case 'falcon': {
         if (!f) break;
         const d = rollDie(st); let r = d + modsTotal(st, f) + (RL.falconIncludesGrit ? f.grit + f.bought * R.gritAfter.bonus : 0);
@@ -900,7 +911,7 @@ const Dig = (() => {
     const set = m.id, n = st.setCount[set] = (st.setCount[set] || 0) + 1, b = compile(m);
     const dmg = m.bonus ? m.damageNow : b.ladder[Math.min(n, b.ladder.length) - 1];
     const prev = st.fight;                                    // a Monster dug by Sneak Attack while another is being faced must not replace it
-    const f = st.fight = { monster: m, damage: dmg, phase: 'before', die: null, grit: 0, gritSteps: [], bought: 0, gritSpent: 0, first: st.monstersDug === 1, fixed: null,
+    const f = st.fight = { monster: m, damage: dmg, step: m.bonus ? undefined : Math.min(n, b.ladder.length), phase: 'before', die: null, grit: 0, gritSteps: [], bought: 0, gritSpent: 0, first: st.monstersDug === 1, fixed: null,
       block: 0, halve: false, noDamage: false, defeat: false, surviveAt: null, sparkUsed: false, rolls: 0, trig: [], gritFired: false };
     log(st, 'dig', `${m.name}${m.bonus ? '' : ' #' + n} — deals ${dmg} {damage}`);
     if (opt.autoDefeat) { fire(st, 'digMonster', { damage: dmg }, 1); f.defeat = true; log(st, 'effect', `The Monster is defeated without a roll`); if (!over(st)) finishFight(st, true); st.fight = over(st) ? null : prev; return; }
@@ -1032,7 +1043,7 @@ const Dig = (() => {
       if (take >= st.heart && f.surviveAt !== null) { take = st.heart - f.surviveAt; log(st, 'effect', `Lucky save: you survive with ${f.surviveAt} {heart}`); }
       st.heart -= take; log(st, 'damage', `You take ${take} {damage} (${f.damage}${f.halve ? ', halved' : ''}${f.block || flag(st, 'bumper') ? ', blocked ' + (f.block + (flag(st, 'bumper') || 0)) : ''})`);
       if (st.heart <= 0) { st.heart = 0; st.fight = null; boom(st, `${m.name} took your last {heart}`); return; }
-    } else log(st, 'damage', `You take no {damage}`);
+    } else log(st, 'damage', `You take no damage`);
     st.survived++; st.monsterGems += m.bonus ? R.beyond.gems : R.survivedGems;
     st.fight = null; log(st, 'effect', `You survive ${m.name}. Monsters survived: ${st.survived}`);
     if (take > 0) fire(st, 'takeDamage', { n: take }, 1);
@@ -1457,11 +1468,14 @@ const Run = (() => {
   }
   const gemIcon = (sz, extra = '') => `<svg viewBox="0 0 24 24" style="width:${u(sz)};height:${u(sz)};flex:none;${extra}"><use href="#i-gem"/></svg>`;
   const dmgIcon = sz => `<svg viewBox="0 0 24 24" style="width:${u(sz)};height:${u(sz)};flex:none"><use href="#i-damage"/></svg>`;
-  function stepTiles(steps, x, y, w, h, fs) {
+  function stepTiles(steps, x, y, w, h, fs, cur) {          // cur: which step this Monster is on (1 = the first), or undefined
     const n = steps.length, gap = 8, tw = (w - gap * (n - 1)) / n;
-    return steps.map((v, i) => box(x + i * (tw + gap), y, tw, h, '', `background:#cf2f2f;color:#fff;border-radius:${u(10)};border:${u(3)} solid #1d1712;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:${u(fs)}`, String(v))).join('');
+    return steps.map((v, i) => {
+      const on = cur === undefined || cur === i + 1, now = cur === i + 1;
+      return box(x + i * (tw + gap), y, tw, h, '', `background:${on ? '#cf2f2f' : '#8a6b68'};color:#fff;border-radius:${u(10)};border:${u(3)} solid #1d1712;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:${u(fs)};${now ? `box-shadow:0 0 0 ${u(4)} #fff,0 0 0 ${u(8)} #1d1712;z-index:2` : ''}`, String(v));
+    }).join('');
   }
-  function buildR2(c, tw, art, stat) {
+  function buildR2(c, tw, art, stat, step) {
     const W = 275, a = R2.art[art];
     let s = tab(c, W);
     const steps = c.type === 'Monster' ? E.damageSteps(c.text) : null, worth = c.type === 'Treasure' ? E.gemWorth(c.text) : null;
@@ -1476,7 +1490,7 @@ const Run = (() => {
       s += artBox(28, 100, W - 56, 118, c);
       if (steps) {
         s += box(31, 226, 213, 22, 'typeword', `font-size:${u(13)};color:#7a1d1d;display:flex;align-items:center;gap:${u(6)}`, `${dmgIcon(18)} DAMAGE, IN ORDER`);
-        s += stepTiles(steps, 31, 250, 213, 62, steps.length > 4 ? 34 : 46);
+        s += stepTiles(steps, 31, 250, 213, 62, steps.length > 4 ? 34 : 46, step);
       } else s += box(31, 226, 213, 90, 'stat', `font-size:${u(104)};display:flex;align-items:center;justify-content:center;gap:${u(10)};color:#1d1712`, `${gems}${gemIcon(90)}`);
       s += box(31, 318, 213, 26, 'stat', `font-size:${u(18)};display:flex;align-items:center;justify-content:center;gap:${u(6)};background:#2b86d1;color:#fff;border-radius:${u(8)}`, `${gems}${gemIcon(18)} ${worthTxt}`);
     } else {                   // two big tiles under a slim art strip
@@ -1489,10 +1503,10 @@ const Run = (() => {
     }
     return s;
   }
-  function r2Card(c, tw, art, stat, scale) {
+  function r2Card(c, tw, art, stat, scale, step) {
     const g = state.guides, inset = n => `left:${u(n)};top:${u(n)};right:${u(n)};bottom:${u(n)}`;
     const gd = g ? `<div class="guides"><i class="bleed" style="${inset(0)}"></i><i class="trim" style="${inset(C.bleed)}"></i><i class="safe" style="${inset(C.bleed + C.safe)}"></i></div>` : '';
-    const card = `<div class="card${state.round && g ? ' round' : ''}" data-id="${esc(c.id)}" data-dir="B2" data-art="${art}" data-stat="${stat}" style="--u:${scale}px;width:${u(275)};height:${u(375)}" role="img" aria-label="${esc(c.name)}, ${esc(c.type)}${c.number !== null ? ', ' + c.number : ''}. ${esc(c.text)}">${buildR2(c, tw, art, stat)}${gd}</div>`;
+    const card = `<div class="card${state.round && g ? ' round' : ''}" data-id="${esc(c.id)}" data-dir="B2" data-art="${art}" data-stat="${stat}" style="--u:${scale}px;width:${u(275)};height:${u(375)}" role="img" aria-label="${esc(c.name)}, ${esc(c.type)}${c.number !== null ? ', ' + c.number : ''}. ${esc(c.text)}">${buildR2(c, tw, art, stat, step)}${gd}</div>`;
     return g ? card : `<div style="position:relative;--u:${scale}px;width:${u(250)};height:${u(350)};overflow:hidden;border-radius:${u(12.5)};flex:none"><div style="position:absolute;left:${u(-12.5)};top:${u(-12.5)}">${card}</div></div>`;
   }
   // ---------------- the chosen design: Top Tab, Geode = stat 3, Monster = stat 1, standard art ----------------
@@ -1506,7 +1520,7 @@ const Run = (() => {
     for (const c of state.all) if (c.type !== 'Monster' && c.type !== 'Treasure') tw = Math.min(tw, fitFont(textHTML(c.text), b.w, b.h));
     twCache = { key, tw }; return tw;
   }
-  function playCard(c, scale) { const g = state.guides; state.guides = false; try { return r2Card(c, deckTextSize(), 'compact', statFor(c), scale); } finally { state.guides = g; } }
+  function playCard(c, scale, opts = {}) { const g = state.guides; state.guides = false; try { return r2Card(c, deckTextSize(), 'compact', statFor(c), scale, opts.step); } finally { state.guides = g; } }
   // For print sheets: a card at `scale` px per 0.01 in, square-cornered; with bleed the whole 2.75 x 3.75 in, otherwise as cut (2.5 x 3.5 in).
   function printCard(c, scale, bleed) {
     const card = `<div class="card" data-id="${esc(c.id)}" style="--u:${scale}px;width:${u(275)};height:${u(375)}">${buildR2(c, deckTextSize(), 'compact', statFor(c))}</div>`;
@@ -1580,7 +1594,7 @@ const Run = (() => {
 (() => {
   'use strict';
   const D = DDB, R = D.rules, UI = window.DigDigBoomUI, A = UI.api, $ = document.getElementById('play');
-  const S = { st: null, run: null, rounds: D.run.rounds, adv: D.run.advancedTrash, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', zoom: null, help: false, panel: 'menu', back: null, restored: false };
+  const S = { st: null, run: null, rounds: D.run.rounds, adv: D.run.advancedTrash, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', zoom: null, help: false, panel: 'menu', back: null, restored: false, confirmNew: null };
   const cards = () => UI.state.all;
   // Personal bests live in this browser only (best Monsters survived, best gems banked). Never needed for play.
   const BEST_KEY = 'ddb.solo.best';
@@ -1618,8 +1632,8 @@ const Run = (() => {
   // ----- a card as a table piece: coloured header (icon, name, number) and its effect text -----
   function piece(c, o = {}) {
     const t = D.types[c.type], num = c.number !== null ? `<span class="n">${c.number}</span>` : '';
-    const tag = o.tag ? `<span class="tag">${A.esc(o.tag)}</span>` : '';
-    const body = `<span class="h">${typeIcon(c.type)}<span>${A.esc(c.name)}</span>${o.num === false ? '' : num}</span>${o.text === false ? '' : `<span class="t">${T(c.text)}</span>`}${o.extra || ''}${tag}`;
+    const tag = o.tag ? `<span class="tg">${A.esc(o.tag)}</span>` : '';
+    const body = `<span class="h">${typeIcon(c.type)}<span>${A.esc(c.name)}</span>${tag}${o.num === false ? '' : num}</span>${o.text === false ? '' : `<span class="t">${T(c.text)}</span>`}${o.extra || ''}`;
     const attrs = `class="piece ${o.cls || ''}" style="--c:${t.color};--on:${t.on}"`;
     return o.act ? `<button ${attrs} data-p="${o.act}" data-uid="${c.uid === undefined ? '' : c.uid}" data-id="${A.esc(c.id)}">${body}</button>` : `<div ${attrs}>${body}</div>`;
   }
@@ -1642,7 +1656,7 @@ const Run = (() => {
       <h2>Choose your Starter Kit</h2>
       <p class="note">Your Mine is the ${all.filter(c => c.deck === R.startingDeck && c.type !== 'Power').reduce((a, c) => a + c.count, 0)} Starting cards. Pick Booster cards to start this Dig with: Power and Ongoing cards are in play from the start; Immediate cards are shuffled into your Mine.${offline ? ' <b style="color:#ff9a8a">Your sheet could not be reached, so only the design sample is available — reload when you are online.</b>' : ''}</p>
       <div class="tabs">
-        ${['Power', 'Ongoing', 'Immediate'].map(t => `<button class="chip ${S.tab === t ? 'on' : ''}" data-p="tab" data-v="${t}">${t} (${count(t)})</button>`).join('')}
+        ${['Power', 'Ongoing', 'Immediate'].map(t => `<button class="chip ${S.tab === t ? 'on' : ''}" data-p="tab" data-v="${t}">${t} (${count(t)})${S.kit.filter(id => (list.find(c => c.id === id) || {}).type === t).length ? ' · ' + S.kit.filter(id => (list.find(c => c.id === id) || {}).type === t).length + ' in kit' : ''}</button>`).join('')}
         <span class="note" style="margin-left:auto">Kit size ${stepper('size', S.kitSize)}</span>
         <button class="chip" data-p="random">Random kit</button>
         <button class="chip" data-p="clear">Clear</button>
@@ -1659,27 +1673,30 @@ const Run = (() => {
     </div>
     <div class="foot"><button class="btn" data-p="go">Start the Dig${S.kit.length ? ' with ' + S.kit.length + ' kit card' + (S.kit.length === 1 ? '' : 's') : ''}</button>
       <button class="chip" data-p="cards">Card designs</button><button class="chip" data-p="help">How it works</button>
-      <span class="note">${S.kit.length}/${S.kitSize} chosen · by the book, round 1 has a kit of ${R.kitSizes[0]}</span></div></div>`;
+      <span class="note">${S.kit.length} of ${S.kitSize} chosen</span></div></div>`;
   }
 
 
   // ----- the menu, the Leaderboard, Prep and the end of a run -----
   function menuHTML() {
     const b = readBest(), st = UI.state, offline = st.source !== 'sheet' && st.status !== 'loading';
-    return `<div class="panel setup"><div class="scroll"><h2>Dig Dig BOOM!</h2>
+    const inProgress = !!S.back && ((S.run && S.run.phase !== 'done') || (!S.run && S.st && !S.st.over));
+    const newBtn = (act, label, primary) => `<button class="btn ${S.confirmNew === act ? 'confirm' : primary && !inProgress ? '' : 'alt'}" data-p="${act}" ${cards().length ? '' : 'disabled'}>${S.confirmNew === act ? 'Tap again: this replaces your game' : label}</button>`;
+    return `<div class="panel setup"><div class="scroll">
       <p class="note">One player. ${offline ? '<b style="color:#ff9a8a">Your sheet could not be reached, so only the design sample is available — reload when you are online.</b>' : 'Cards and rules are read from your sheet each time this opens.'}</p>
       <div class="menu">
-        ${S.back && ((S.run && S.run.phase !== 'done') || (!S.run && S.st && !S.st.over)) ? `<div class="bigopt"><button class="btn" data-p="resume">Continue</button><p class="note">${S.run ? `Your run — round ${Math.min(S.run.round, S.run.rounds)} of ${S.run.rounds}, ${S.back === 'prep' ? 'Prep' : 'Dig'}.` : 'Your Practice Dig.'}</p></div>` : ''}
-        <div class="bigopt"><button class="btn" data-p="startrun" ${cards().length ? '' : 'disabled'}>Play a run</button>
+        ${inProgress ? `<div class="bigopt"><button class="btn" data-p="resume">Continue</button><p class="note">${S.run ? `Your run — round ${Math.min(S.run.round, S.run.rounds)} of ${S.run.rounds}, ${S.back === 'prep' ? 'Prep' : 'Dig'}.` : 'Your Practice Dig.'}</p></div>` : ''}
+        <div class="bigopt">${newBtn('startrun', 'Play a run', true)}
           <p class="note">${S.rounds} rounds of Dig and Prep. Open Booster Packs, build your engine round by round, and try to take the Crown Jewel in the final round.</p>
           <p class="note">Rounds: ${D.run.roundChoices.map(n => `<button class="chip ${S.rounds === n ? 'on' : ''}" data-p="rounds" data-v="${n}">${n}</button>`).join(' ')}
             &nbsp;<button class="chip ${S.adv ? 'on' : ''}" data-p="adv">Advanced trash ${S.adv ? 'on' : 'off'}</button></p></div>
-        <div class="bigopt"><button class="btn alt" data-p="practice" ${cards().length ? '' : 'disabled'}>Practice Dig</button>
+        <div class="bigopt">${newBtn('practice', 'Practice Dig', false)}
           <p class="note">One Dig with any Starter Kit you like, to try cards out. No Prep, no Leaderboard.</p></div>
       </div>
       ${b.survived || b.gems ? `<p class="note">Best Practice Dig in this browser: ${b.survived} Monsters survived · ${b.gems} gems banked.</p>` : ''}
-    </div><div class="foot"><button class="chip" data-p="cards">Card designs</button><button class="chip" data-p="print">Print &amp; play sheets</button><button class="chip" data-p="help">How it works</button></div></div>`;
+    </div><div class="foot"><button class="chip" data-p="cards">Cards</button><button class="chip" data-p="print">Print &amp; play sheets</button></div></div>`;
   }
+  const resumable = () => !!S.back && ((S.run && S.run.phase !== 'done') || (!S.run && S.st && !S.st.over));
   // The Leaderboard: positions are Monsters survived. The Crown tracker starts at 3; your best locked-in score stays between rounds.
   function lbHTML(run, st) {
     const cr = run.crown, here = st && !st.over ? st.survived : -1, bm = Board.marker(run.board, run.me, 'best'), pm = Board.marker(run.board, run.me, 'pledge'), pl = pm ? pm.n : null;
@@ -1689,9 +1706,9 @@ const Run = (() => {
       const open = st && Dig.canPledge(st, n) && Board.canPledge(run.board, run.me, st.survived, n);
       const rk = m => (m.rank > 1 ? m.rank : '');
       const mk = (n === here ? '<i class="mk here" title="you are here"></i>' : '') + (bm && n === bm.n ? `<i class="mk best" title="your best">${rk(bm)}</i>` : '') + (pm && n === pm.n ? `<i class="mk pledge" title="your pledge">${rk(pm)}</i>` : '');
-      cells += `<button class="lbc ${n === here ? 'here' : ''} ${n <= cr.tracker ? 'free' : ''} ${open ? 'open' : ''}" data-p="pledge" data-n="${n}" ${open ? '' : 'disabled'}><span class="ln">${n === 0 ? 'Start' : n}</span><span class="lm">${n === cr.tracker ? `<b class="crownmk ${cr.holder ? 'mine' : ''}">♛</b>` : ''}${mk}</span></button>`;
+      cells += `<button class="lbc ${n === here ? 'here' : ''} ${n <= cr.tracker ? 'free' : ''} ${open ? 'open' : ''}" data-p="pledge" data-n="${n}" ${open ? '' : 'disabled'}><span class="ln">${n === 0 ? 'Start' : n}</span><span class="lm">${open ? '<span class="pl">pledge</span>' : ''}${n === cr.tracker ? `<b class="crownmk ${cr.holder ? 'mine' : ''}">♛</b>` : ''}${mk}</span></button>`;
     }
-    const hint = st && Dig.can(st).dig && st.survived >= cr.tracker && st.pledge === null ? ' · tap a number to pledge it' : '';
+    const hint = st && Dig.can(st).dig && st.survived >= cr.tracker ? ' · <span class="ph">you may pledge: tap a glowing number</span>' : '';
     const status = st && st.pledge !== null ? ` · pledged ${st.pledge}` : '';
     return `<section class="lb"><div class="lbhead"><span>Leaderboard · Round ${Math.min(run.round, run.rounds)} of ${run.rounds}${run.round >= run.rounds ? ' · final' : ''}</span><span>♛ Crown at ${cr.tracker} · ${cr.holder ? '<b style="color:var(--accent)">you hold the Crown Jewel</b>' : 'Crown Jewel on the table'}${status}${hint}</span></div>
       <div class="lbcells" style="grid-template-columns:repeat(${max + 1},minmax(0,1fr))">${cells}</div></section>`;
@@ -1699,34 +1716,34 @@ const Run = (() => {
   function prepHTML() {
     const run = S.run, pr = run.prep, step = pr.step;
     const sm = c => ic(c, ' style="width:22px;height:22px;vertical-align:-4px"');
-    const rows = [];
+    const rows = [], num = n => (pr.first ? '' : n + ' · ');
     if (pr.banked) rows.push(step === 'escape'
-      ? `<div class="pstep live"><h3>1 · Escape Bonus</h3><p class="note">You banked, so you add a roll of the d${R.die} in gems.</p><button class="die live" data-p="escape" style="margin:6px 0">Roll<small>tap</small></button></div>`
-      : `<div class="pstep"><h3>1 · Escape Bonus</h3><p>You rolled <b>${pr.escape}</b> ${sm('gem')}</p></div>`);
-    else if (pr.boom) rows.push(`<div class="pstep"><h3>1 · Escape Bonus</h3><p class="note">You went BOOM: no Escape Bonus.</p></div>`);
-    if (pr.gems !== null && !pr.first) rows.push(`<div class="pstep"><h3>2 · Gems</h3><p>${pr.banked ? `Geodes ${pr.geodes} + Monsters survived ${pr.monsters} + Escape Bonus ${pr.escape} = ` : 'BOOM: '}<b style="font-size:22px">${pr.gems}</b> ${sm('gem')}</p></div>`);
+      ? `<div class="pstep live"><h3>${num(1)}Escape Bonus</h3><p class="note">You banked, so you add a roll of the d${R.die} in gems.</p><button class="die live" data-p="escape" style="margin:6px 0">Roll<small>tap</small></button></div>`
+      : `<div class="pstep"><h3>${num(1)}Escape Bonus</h3><p>You rolled <b>${pr.escape}</b> ${sm('gem')}</p></div>`);
+    else if (pr.boom) rows.push(`<div class="pstep"><h3>${num(1)}Escape Bonus</h3><p class="note">You went BOOM: no Escape Bonus.</p></div>`);
+    if (pr.gems !== null && !pr.first) rows.push(`<div class="pstep"><h3>${num(2)}Gems</h3><p>${pr.banked ? `Geodes ${pr.geodes} + Monsters survived ${pr.monsters} + Escape Bonus ${pr.escape} = ` : 'BOOM: '}<b style="font-size:22px">${pr.gems}</b> ${sm('gem')}</p></div>`);
     if (step !== 'escape') {
       const info = Run.packInfo(run), first = pr.first;
       const ladder = D.run.ladder.map(p => `<span class="${p.name === pr.pack.name ? 'cur' : ''}">${p.at}+ gems: ${p.name} (draw ${p.draw}, keep ${p.keep})</span>`).join('');
       if (step === 'pack') {
         const own = run.advancedTrash && run.owned.length ? `<p class="note">Optional rule — trash a card you own for +1 draw each (tap to trash it for good):</p><div class="grid">${run.owned.map(c => piece(c, { act: 'trashown', text: true })).join('')}</div>` : '';
-        rows.push(`<div class="pstep live"><h3>3 · Booster Pack</h3><p>${first ? 'Before round 1:' : pr.boom ? 'Since you went BOOM:' : `${pr.gems} gems:`} a <b>${info.name} Pack</b> — draw <b>${info.draw}</b>, keep <b>${info.keep}</b>.</p><div class="ladder">${ladder}</div>${own}<button class="btn" data-p="openpack" style="margin-top:8px">Open the ${info.name} Pack</button></div>`);
+        rows.push(`<div class="pstep live"><h3>${num(3)}Booster Pack</h3><p>${first ? 'Before round 1:' : pr.boom ? 'Since you went BOOM:' : `${pr.gems} gems:`} a <b>${info.name} Pack</b> — draw <b>${info.draw}</b>, keep <b>${info.keep}</b>.</p><div class="ladder">${ladder}</div>${own}<button class="btn" data-p="openpack" style="margin-top:8px">Open the ${info.name} Pack</button></div>`);
       } else if (step === 'keep') {
         const need = Run.keepCount(run);
-        rows.push(`<div class="pstep live"><h3>3 · Booster Pack — keep ${need}</h3><p class="note">${pr.picked.length}/${need} chosen. The rest go to the Trash.</p><div class="grid">${pr.offer.map(c => piece(c, { act: 'pick', cls: pr.picked.includes(c.uid) ? 'sel' : '', tag: pr.picked.includes(c.uid) ? '✓ keep' : '' })).join('')}</div>
+        rows.push(`<div class="pstep live"><h3>${num(3)}Booster Pack — keep ${need}</h3><p class="note">${pr.picked.length}/${need} chosen. The rest go to the Trash.</p><div class="grid">${pr.offer.map(c => piece(c, { act: 'pick', cls: pr.picked.includes(c.uid) ? 'sel' : '', tag: pr.picked.includes(c.uid) ? '✓ keep' : '' })).join('')}</div>
           <button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'} style="margin-top:8px">Keep ${pr.picked.length === need ? 'these' : 'cards'}</button></div>`);
-      } else rows.push(`<div class="pstep"><h3>3 · Booster Pack</h3><p>${info.name} Pack · kept ${run.owned.length ? 'and now own' : ''}: ${run.owned.map(c => A.esc(c.name)).join(', ') || 'nothing'}</p></div>`);
+      } else rows.push(`<div class="pstep"><h3>${num(3)}Booster Pack</h3><p>${info.name} Pack · kept ${run.owned.length ? 'and now own' : ''}: ${run.owned.map(c => A.esc(c.name)).join(', ') || 'nothing'}</p></div>`);
     }
     if (step === 'kit') {
-      rows.push(`<div class="pstep live"><h3>4 · Starter Kit — up to ${pr.kitMax}</h3><p class="note">Start the Dig with these in play (${pr.kitPick.length}/${pr.kitMax}). Every other card you own is shuffled into your Mine. Any card can be in your kit: a Power or Ongoing card starts in play, an Immediate card goes on top of your Mine so you dig it first.</p>
+      rows.push(`<div class="pstep live"><h3>${num(4)}Starter Kit — up to ${pr.kitMax}</h3><p class="note">Start the Dig with these in play (${pr.kitPick.length}/${pr.kitMax}). Every other card you own is shuffled into your Mine. Any card can be in your kit: a Power or Ongoing card starts in play, an Immediate card goes on top of your Mine so you dig it first.</p>
         <div class="grid">${run.owned.map(c => piece(c, { act: 'kitpick', cls: pr.kitPick.includes(c.uid) ? 'sel' : '', tag: pr.kitPick.includes(c.uid) ? '✓ kit' : '' })).join('')}</div></div>
-        <div class="pstep"><h3>5 · Reset, then ready</h3><p class="note">Health ${R.start.heart}, Grit ${R.start.grit}, Rerolls ${R.start.reroll}. Your Mine: the ${25} starting cards + ${run.owned.length - pr.kitPick.length} of yours.</p></div>`);
+        <div class="pstep"><h3>${num(5)}Reset, then ready</h3><p class="note">Health ${R.start.heart}, Grit ${R.start.grit}, Rerolls ${R.start.reroll}. Your Mine: the ${25} starting cards + ${run.owned.length - pr.kitPick.length} of yours.</p></div>`);
     }
     const foot = step === 'kit' ? `<button class="btn" data-p="startround">Start round ${run.round}${run.round === run.rounds ? ' (final)' : ''}</button>` : '';
     const best = run.history.length ? `<span class="note">Last Dig: ${run.history[run.history.length - 1].kind === 'bank' ? 'banked' : 'BOOM'} after ${run.history[run.history.length - 1].survived} Monsters.</span>` : '';
     return `<div class="panel setup"><div class="scroll" id="setupScroll">
       ${lbHTML(run, null)}
-      <h2>${pr.first ? 'Before round 1' : `Prep · round ${run.round} of ${run.rounds} next`}</h2>
+      <h2>${pr.first ? 'Before round 1' : `Prep · before round ${run.round} of ${run.rounds}`}</h2>
       <p class="note">Round tracker: round ${run.round} of ${run.rounds} · Starter Kit up to ${pr.kitMax} · Booster Deck: ${run.deck.length} cards left · you own ${run.owned.length}</p>
       ${rows.join('')}</div><div class="foot">${foot}${best}<button class="chip" data-p="menu" style="margin-left:auto">Menu</button></div></div>`;
   }
@@ -1750,7 +1767,7 @@ const Run = (() => {
   }
   function drillHTML(st, can) {
     const f = st.fight, gritLive = can.grit || can.bonus;
-    const ong = st.ongoing.map(o => piece(o, { act: 'zoom', num: false })).join('');
+    const ong = st.ongoing.map(o => piece(o, { act: 'zoom', num: false, text: false })).join('');
     const wb = Dig.flag(st, 'workbench');
     const wbBtn = (dir, ok, a, b) => `<button class="wbtn" data-p="trade" data-v="${dir}" ${ok ? '' : 'disabled'} aria-label="trade">${a}</button>`;
     const sm = c => ic(c, ' style="width:17px;height:17px;vertical-align:-3px"');
@@ -1782,13 +1799,14 @@ const Run = (() => {
       ? `<div class="calc"><b>Result ${res.total}</b>${res.parts.map(p => p.set ? `becomes ${p.v}` : `${p.label} ${p.v >= 0 && p.label !== 'Die' && p.label !== 'Fixed' ? '+' : ''}${p.v}`).join(' · ')}</div>`
       : `<div class="calc">This Monster deals <b style="display:inline">${f.damage}</b> ${ic('damage', ' style="width:20px;height:20px;vertical-align:-4px"')}</div>`;
     const hint = after
-      ? (f.fixed !== null ? 'Tap the Monster to face it.' : [can.bonus ? `Grit: ${R.gritAfter.cost} for +${R.gritAfter.bonus}` : '', can.reroll ? 'Rerolls: reroll' : '', 'Tap the Monster to face it'].filter(Boolean).join(' · '))
-      : (st.grit ? 'Tap Grit to add +1 · tap the die to roll' : 'Tap the die to roll');
-    return `<button class="mcard ${after ? 'live' : ''}" data-p="face" ${after ? '' : 'disabled'}>${A.playCard(f.monster, 0.71)}</button>
+      ? (f.fixed !== null ? 'Tap the Monster to face it' : [can.bonus ? `Grit: ${R.gritAfter.cost} for +${R.gritAfter.bonus}` : '', can.reroll ? 'Rerolls: reroll' : '', 'tap the Monster to face it'].filter(Boolean).join(' · '))
+      : (st.grit ? 'Tap Grit: +1 · tap the die to roll' : 'Tap the die to roll');
+    return `<button class="mcard ${after ? 'live' : ''}" data-p="face" ${after ? '' : 'disabled'}>${A.playCard(f.monster, S.ms || 0.71, { step: f.step })}</button>
       <div class="rollp">${die}<div class="tokens">${tokens}</div>${calc}<div class="hint">${hint}</div></div>`;
   }
   function tableHTML() {
     const st = S.st, can = Dig.can(st), f = st.fight;
+    S.matH = Math.max(214, Math.min(286, Math.round(innerHeight * 0.33))); S.ms = (S.matH - 22) / 350;     // the table's height follows the screen; the Monster card fits it
     const gems = st.geodeGems + st.monsterGems;
     const known = st.mine.slice(0, st.known).map(c => piece(c, { text: false, num: false, cls: '' })).join('');
     const mine = `<div class="stack" style="gap:6px"><button class="pile ${can.dig ? 'live' : ''}" data-p="dig" ${can.dig ? '' : 'disabled'} style="flex:1"><div class="cardback">${st.mine.length}</div><span>Mine<br><span class="cap2">${st.mine.length ? (can.dig ? 'tap to dig' : '') : 'empty: Bonus Monsters next'}</span></span></button>${known ? `<div class="known">${known}</div>` : ''}</div>`;
@@ -1797,24 +1815,24 @@ const Run = (() => {
     const bankWord = rb && rb.final ? 'Take the Crown' : 'Bank';
     const bankSub = can.bank ? (rb && rb.final ? 'you are in the lead' : 'tap to keep them') : rb && rb.final ? `no banking until you pass ${rb.crown}` : st.pledge !== null && st.survived < st.pledge ? `pledged ${st.pledge}` : '';
     const right = `<div class="stack"><button class="pile" data-p="zoom" data-uid="${top ? top.uid : ''}" ${top ? '' : 'disabled'} style="${top ? 'color:#fff' : ''}">${top ? piece(top, { text: false, num: false }) : ''}<span>Discard · ${st.discard.length}</span></button>
-      <button class="pile ${can.bank ? 'live' : ''}" data-p="bank" ${can.bank ? '' : 'disabled'}><span class="gemline">${gems}${ic('gem')}</span><span>${bankWord}<br><span class="cap2">${bankSub}</span></span></button></div>`;
+       <button class="pile bankp ${can.bank ? 'live' : ''}" data-p="bank" ${can.bank ? '' : 'disabled'}><span class="gemline">${gems}${ic('gem')}</span><span>${bankWord}<br><span class="cap2">${bankSub}</span></span></button></div>`;
     let mid;
     if (f) mid = `<div class="dig">${fightHTML(st, can)}</div>`;
     else if (st.pending) mid = `<div class="dig idle"><div>${A.esc(st.pending.card.name)} goes under one of your Power cards.<br><b style="color:var(--accent)">Tap a Power card on the line.</b></div></div>`;
-    else mid = `<div class="dig idle">${st.last ? `<button class="mcard" data-p="zoom" data-uid="${st.last.uid}">${A.playCard(st.last, 0.71)}</button>` : ''}<div>${st.last ? 'Last card dug.<br>' : ''}<b style="color:var(--accent)">${can.dig ? 'Tap your Mine to dig.' : ''}</b></div></div>`;
+    else mid = `<div class="dig idle">${st.last ? `<button class="mcard" data-p="zoom" data-uid="${st.last.uid}">${A.playCard(st.last, S.ms || 0.71)}</button>` : ''}<div>${st.last ? 'Last card dug.<br>' : ''}<b style="color:var(--accent)">${can.dig ? 'Tap your Mine to dig.' : ''}</b></div></div>`;
     const s = st.over ? Dig.score(st) : null;
     let over = '';
     if (st.over && S.run) {
       const fin = S.run.round === S.run.rounds, next = `<div class="row2"><button class="btn" data-p="prep">${fin ? 'See the result' : 'To Prep'}</button></div>`;
       over = st.over.kind === 'boom'
-        ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${A.esc(st.over.why).replace(/\{heart\}/g, '')}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this round — your best on the Leaderboard stays.</div>${next}</div>`
+        ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${T(st.over.why)}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this round — your best on the Leaderboard stays.</div>${next}</div>`
         : `<div class="over"><h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="big"><b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${(S.run.endInfo || {}).stoleCrown ? ' — <b>you take the Crown Jewel</b>' : (S.run.endInfo || {}).newBest ? ' — a new best' : ''}<br><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} before the Escape Bonus</div>${next}</div>`;
     } else if (st.over) {
       over = (st.over.kind === 'boom'
-      ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${A.esc(st.over.why).replace(/\{heart\}/g, '')}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this Dig.</div>`
+      ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${T(st.over.why)}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this Dig.</div>`
       : `<div class="over"><h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + (st.best ? `<div class="note">Best so far: ${st.best.now.survived} Monsters survived${st.best.newSurvived ? ' (new!)' : ''} · ${st.best.now.gems} gems banked${st.best.newGems ? ' (new!)' : ''}</div>` : '') + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>`;
     }
-    return `${S.run ? lbHTML(S.run, st) : ''}${drillHTML(st, can)}${lineHTML(st)}<div class="mat" style="position:relative">${mine}${mid}${right}${over}</div>`;
+    return `${S.run ? lbHTML(S.run, st) : ''}${drillHTML(st, can)}${lineHTML(st)}<div class="mat" style="position:relative;--mat-h:${S.matH}px">${mine}${mid}${right}${over}</div>`;
   }
   function logHTML(st) {
     return `<aside class="plog"><h3>What happened</h3><div class="entries" id="logEntries">${st.log.map(l => `<div class="e k-${l.kind}">${T(l.text)}</div>`).join('')}</div></aside>`;
@@ -1825,11 +1843,11 @@ const Run = (() => {
       <ul><li><b>Mine</b>: tap to dig the top card. Geodes score ${R.geodeGems} gem. Immediate cards happen at once. Power cards go on the line at their number; Ongoing cards stay in your Ongoing area.</li>
       <li><b>Monster</b>: tap the Grit track to spend ${R.gritBefore} Grit for +1 on the roll (tap a spent Grit token to take it back), tap the die to roll (a d${R.die}). After the roll, tap Grit to spend ${R.gritAfter.cost} for +${R.gritAfter.bonus}, or tap Rerolls to reroll. Then tap the Monster to face it.</li>
       <li><b>Facing it</b>: every card on the Power line at the result or lower triggers (the Pet is at ${R.pet.at}; if it triggers, the Monster is defeated and you take no damage). Then you take the Monster's damage. Health at 0 is BOOM.</li>
-      <li><b>Bank</b>: tap the Bank chest between cards to end the Dig and keep your gems. Not while a Monster is in front of you.</li>
+      <li><b>Bank</b>: tap the Bank pile between cards to end the Dig and keep your gems. Not while a Monster is in front of you.</li>
       <li><b>Any card</b>: tap it to see it full size, tap again to close.</li>
       <li><b>Beyond the Mine</b>: when the Mine runs out, Bonus Monsters keep coming: ${R.beyond.firstDamage}, ${R.beyond.firstDamage + 1}, … damage, worth ${R.beyond.gems} gems.</li></ul>
-      <p><b>A run</b> (Play a run): ${D.run.rounds} rounds, each a Dig then a Prep. Before round 1 you open a ${D.run.firstPack} Pack. <b>Prep</b>: 1 Escape Bonus (if you banked: roll the die, add that many gems) · 2 count gems (Geodes + Monsters survived + Escape Bonus; BOOM is 0) · 3 Booster Pack from the reward ladder (BOOM: a ${D.run.boomPack} Pack) — draw some, keep some · 4 choose a Starter Kit from your cards (1, 2, 2, 3 by round) · 5 reset: a fresh Drill, and everything else you own is shuffled into your Mine. Only the cards you own and your best Dig carry over.</p>
-      <p><b>Leaderboard</b>: positions are Monsters survived. The Crown tracker starts at ${D.run.crownStart}. Before the Crown you dig or bank freely. Once you have survived that many, you may <b>pledge</b> your current number or 1 more (tap the number): you cannot bank until you reach it, and BOOM removes it. Bank above the tracker and you take the Crown Jewel and move the tracker. A BOOM locks in nothing, but your best stays. In the <b>final round</b> there is no banking until you are in the lead (past the tracker); then you take the Crown. Hold the Crown Jewel at the end and you win.</p>
+      <p><b>A run</b> (Play a run): ${D.run.roundChoices.join(' or ')} rounds, each a Dig then a Prep. Before round 1 you open a ${D.run.firstPack} Pack. <b>Prep</b>: 1 Escape Bonus (if you banked: roll the die, add that many gems) · 2 count gems (Geodes + Monsters survived + Escape Bonus; BOOM is 0) · 3 Booster Pack from the reward ladder (BOOM: a ${D.run.boomPack} Pack) — draw some, keep some · 4 choose a Starter Kit from your cards (1, 2, 2, 3 by round) · 5 reset: a fresh Drill, and everything else you own is shuffled into your Mine. Only the cards you own and your best Dig carry over.</p>
+      <p><b>Leaderboard</b>: positions are Monsters survived. The Crown tracker starts at ${D.run.crownStart}. Before the Crown you dig or bank freely. Once you have survived that many, you may <b>pledge</b> your current number or 1 more (tap the number): you cannot bank until you reach it, and BOOM removes it. Bank above the tracker and you take the Crown Jewel and move the tracker. A BOOM locks in nothing, but your best stays. In the <b>final round</b> there is no banking until you are in the lead (past the tracker); then you take the Crown. Hold the Crown Jewel at the end and you win. On the Leaderboard: the triangle is where you are now, the dot is your best locked-in Dig, the ring is your pledge, the crown is the Crown tracker.</p>
       <p><b>Calls made where the rules are unclear</b> (all in QUESTIONS.md, one line each to change):</p>
       <ul><li>The die is a d${R.die}; Health starts at ${R.start.heart}, Grit ${R.start.grit}, Rerolls ${R.start.reroll}.</li>
       <li>Cards that trigger resolve highest number first, then damage is halved before Block is taken off.</li>
@@ -1850,7 +1868,7 @@ const Run = (() => {
     else if (S.panel === 'done' && S.run) body = doneHTML();
     else if (S.panel === 'setup' || !S.st) body = setupHTML();
     else body = `<div class="pmain"><div class="ptable">${tableHTML()}</div>${logHTML(S.st)}</div>`;
-    const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, 1.35)}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}</div>` : '';
+    const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, Math.min(1.35, (innerHeight - 70) / 350))}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}<div class="closehint">tap anywhere to close</div></div>` : '';
     $.innerHTML = bar + body + (S.help ? helpHTML() : '') + z;
     const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
     const lg = $.querySelector('#logEntries'); if (lg) lg.scrollTop = lg.scrollHeight;
@@ -1864,13 +1882,14 @@ const Run = (() => {
   }
   function act(a, el) {
     const st = S.st, f = st && st.fight, ds = el.dataset;
+    if (a !== 'startrun' && a !== 'practice') S.confirmNew = null;
     switch (a) {
       case 'menu': if (S.panel !== 'menu') S.back = S.panel; S.panel = 'menu'; S.help = false; break;
       case 'resume': S.panel = S.back || 'menu'; break;
-      case 'practice': S.run = null; S.st = null; S.panel = 'setup'; S.back = null; break;
+      case 'practice': if (resumable() && S.confirmNew !== 'practice') { S.confirmNew = 'practice'; break; } S.confirmNew = null; S.run = null; S.st = null; S.panel = 'setup'; S.back = null; break;
       case 'rounds': S.rounds = Number(ds.v); break;
       case 'adv': S.adv = !S.adv; break;
-      case 'startrun': { S.run = Run.start(cards(), { rounds: S.rounds, advancedTrash: S.adv }); S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
+      case 'startrun': { if (resumable() && S.confirmNew !== 'startrun') { S.confirmNew = 'startrun'; break; } S.confirmNew = null; S.run = Run.start(cards(), { rounds: S.rounds, advancedTrash: S.adv }); S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
       case 'escape': Run.rollEscape(S.run); break;
       case 'openpack': Run.openPack(S.run); break;
       case 'trashown': Run.trashOwned(S.run, Number(ds.uid)); break;

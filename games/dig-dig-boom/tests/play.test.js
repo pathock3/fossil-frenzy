@@ -56,11 +56,11 @@ test('play: Starter Kit — pick up to the kit size, tap again to put one back; 
   try {
     const pick = async (tab, name) => { await page.click(`#play .tabs [data-v=${tab}]`); await page.click(`#play .grid .piece:has-text("${name}")`); };
     await pick('Power', 'Nurse Newt'); await pick('Ongoing', 'Tune-Up'); await pick('Immediate', 'Med Kit');
-    assert.match(await page.locator('#play .foot .note').innerText(), /3\/3 chosen/);
+    assert.match(await page.locator('#play .foot .note').innerText(), /3 of 3 chosen/);
     await pick('Immediate', 'Iron Vein');                      // a fourth: not allowed at size 3
-    assert.match(await page.locator('#play .foot .note').innerText(), /3\/3 chosen/);
+    assert.match(await page.locator('#play .foot .note').innerText(), /3 of 3 chosen/);
     await pick('Immediate', 'Med Kit');                        // put it back
-    assert.match(await page.locator('#play .foot .note').innerText(), /2\/3 chosen/);
+    assert.match(await page.locator('#play .foot .note').innerText(), /2 of 3 chosen/);
     await page.click('#play [data-p=go]'); await page.waitForSelector('#play .ptable');
     assert.equal(await page.locator('#play .lcol .piece').count(), 2, 'the Pet and Nurse Newt');
     assert.equal(await page.locator('#play .ongoing .piece').count(), 1);
@@ -195,7 +195,7 @@ test('play: a seed replays the same Dig; your best (Monsters survived, gems bank
   try {
     await page.click('#play details summary'); await page.fill('#seedIn', '42'); await page.click('#play [data-p=go]'); await page.waitForSelector('#play .ptable');
     const a = await page.evaluate(() => window.DigDigBoomPlay.S.st.mine.map(c => c.id).join(','));
-    await page.click('#play .pbar [data-p=menu]'); await page.click('#play [data-p=practice]'); await page.click('#play details summary'); await page.fill('#seedIn', '42'); await page.click('#play [data-p=go]');
+    await page.click('#play .pbar [data-p=menu]'); await page.click('#play [data-p=practice]'); if (await page.locator('#play .confirm').count()) await page.click('#play [data-p=practice]'); await page.click('#play details summary'); await page.fill('#seedIn', '42'); await page.click('#play [data-p=go]');
     assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.st.mine.map(c => c.id).join(',')), a);
     assert.match(await page.locator('#logEntries').innerText(), /seed 42/);
     await begin(page, { mine: ['TR-01', 'TR-01', 'MO-01'], dice: [6], start: { heart: 6 } });
@@ -336,7 +336,7 @@ test('play: a reload puts you back exactly where you were — mid-fight in a run
     await page.click('#play .pbar [data-p=menu]'); assert.match(await page.locator('#play .menu').innerText(), /Continue[\s\S]*round 1 of 4, Dig/);
     await page.click('#play [data-p=resume]'); await page.waitForSelector('#play .ptable');
     // a Practice Dig resumes too
-    await page.click('#play .pbar [data-p=menu]'); await page.click('#play [data-p=practice]'); await page.click('#play [data-p=random]'); await page.click('#play [data-p=go]'); await page.waitForSelector('#play .ptable');
+    await page.click('#play .pbar [data-p=menu]'); await page.click('#play [data-p=practice]'); if (await page.locator('#play .confirm').count()) await page.click('#play [data-p=practice]'); await page.click('#play [data-p=random]'); await page.click('#play [data-p=go]'); await page.waitForSelector('#play .ptable');
     await page.click('#play [data-p=dig]'); const n = await page.evaluate(() => window.DigDigBoomPlay.S.st.mine.length);
     await page.reload(); await page.waitForSelector('#play .ptable');
     assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.st.mine.length), n); assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.run), null);
