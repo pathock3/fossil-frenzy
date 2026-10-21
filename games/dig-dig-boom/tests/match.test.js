@@ -5,7 +5,8 @@ const fs = require('fs'), path = require('path');
 const { Dig, Board, Run, AI, Match, Engine, DDB } = require('./load.js');
 const cards = Engine.cards(Engine.parseCSV(fs.readFileSync(path.join(__dirname, 'cards-full.csv'), 'utf8')), DDB.columns);
 const by = id => cards.find(c => c.id === id);
-const boosterTotal = cards.filter(c => c.deck === 'Booster').reduce((a, c) => a + c.count, 0);
+// the Booster Deck holds only the cards the game can play (every Grit card is left out)
+const boosterTotal = cards.filter(c => c.deck === 'Booster' && Dig.supported(c)).reduce((a, c) => a + c.count, 0);
 const roundtrip = o => JSON.parse(JSON.stringify(o));
 
 // Play one whole round for the human with the same basic policy as the AI (so the test needs no screen), the AI stepping once per card dug.
@@ -22,7 +23,7 @@ function playRound(m, { humanPolicy = AI.act } = {}) {
 function prepHuman(m) {
   const me = Match.human(m);
   if (me.prep.step === 'escape') Match.rollEscape(m);
-  assert.ok(Match.openPack(m)); AI.prep(me);          // the AI opens its pack as you open yours
+  if (me.prep.first) AI.prep(me); else { assert.ok(Match.openPack(m)); AI.prep(me); }          // round 1: a card from every Booster card; later: the AI opens its pack as you open yours
   assert.equal(me.prep.step, 'kit'); assert.ok(Match.beginRound(m));
 }
 function playMatch(seed, rounds = 3) {
@@ -35,7 +36,7 @@ function playMatch(seed, rounds = 3) {
 }
 
 test('the Board updates by itself: your live marker follows every Monster you encounter, a BOOM clears it, a bank locks the score in', () => {
-  const run = Run.start(cards, { seed: 5, rounds: 2 }); Run.openPack(run); Run.toggleKeep(run, run.prep.offer[0].uid); Run.confirmKeep(run); Run.beginDig(run, { seed: 1 });
+  const run = Run.start(cards, { seed: 5, rounds: 2 }); Run.toggleKit(run, run.deck[0].uid); Run.beginDig(run, { seed: 1 });
   const st = run.dig; st.mine = ['MO-01', 'MO-02', 'MO-01', 'MO-02'].map((id, i) => ({ ...by(id), uid: 9900 + i })); st.dice = Array(30).fill(10);
   Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge'), null, 'nothing survived yet');
   for (let i = 1; i <= 3; i++) { Dig.dig(st); Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge').n, i, 'the marker moves the moment you ENCOUNTER the Monster, before you face it'); Dig.roll(st); Dig.autoFace(st); Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge').n, i, 'and stays there once you survive it'); }
@@ -53,20 +54,21 @@ test('the live marker takes the best open spot under each number, so the first t
   assert.deepEqual([Board.marker(b, 'a', 'best').rank, Board.marker(b, 'b', 'best').rank], [1, 2], 'the spots you reached first are the spots you lock in');
 });
 
-test('a match: you and the AI share a Leaderboard, one Booster Deck and one Trash; you prep at the same time, the AI opening its pack when you open yours', () => {
+test('a match: you and the AI share a Leaderboard, one Booster Deck and one Trash; before round 1 each picks a Starter Kit from every Booster card, and the AI cannot take yours', () => {
   const m = Match.start(cards, { seed: 3, rounds: 3 });
-  assert.equal(Match.human(m).board, Match.bot(m).board); assert.equal(Match.human(m).deck, Match.bot(m).deck);
+  const me = Match.human(m), ai = Match.bot(m);
+  assert.equal(me.board, ai.board); assert.equal(me.deck, ai.deck);
   assert.deepEqual(m.board.players.map(p => p.id), ['me', 'ai']);
-  const ai = Match.bot(m); assert.equal(ai.prep.step, 'pack', 'the AI has not opened anything before you');
-  assert.ok(Match.openPack(m)); assert.equal(Match.human(m).prep.step, 'keep'); assert.equal(Match.human(m).prep.offer.length, 3);
-  assert.equal(ai.prep.step, 'kit'); assert.equal(ai.owned.length, 1); assert.equal(ai.prep.kitPick.length, 1);
-  assert.equal(Match.human(m).owned.length, 0, 'you have not chosen yet'); AI.prep(Match.human(m));
-  assert.equal(m.deck.length + m.trash.length + Match.human(m).owned.length + ai.owned.length, boosterTotal);
+  assert.equal(ai.prep.step, 'kit'); assert.equal(me.prep.step, 'kit');
+  const mine = Run.starterPool(me)[0]; assert.ok(Run.toggleKit(me, mine.uid));
+  assert.ok(Match.beginRound(m));
+  assert.equal(me.owned.length, 1); assert.equal(ai.owned.length, 1); assert.equal(ai.kit.length, 1); assert.notEqual(ai.owned[0].uid, mine.uid, 'two different cards');
+  assert.equal(m.deck.length + m.trash.length + me.owned.length + ai.owned.length, boosterTotal);
 });
 
 test('a step of the AI is one card dug (the screen\'s clock calls it); settle finishes its Dig', () => {
   const m = Match.start(cards, { seed: 4, rounds: 2 });
-  Match.openPack(m); AI.prep(Match.human(m)); Match.beginRound(m);
+  AI.prep(Match.human(m)); Match.beginRound(m);
   const ai = Match.bot(m); const d0 = ai.dig.digs;
   Match.aiStep(m); assert.equal(ai.dig.digs, d0 + 1, 'one card');
   Match.aiStep(m); assert.equal(ai.dig.digs, d0 + 2);
@@ -76,7 +78,7 @@ test('a step of the AI is one card dug (the screen\'s clock calls it); settle fi
 
 const aiDig = (seed, rounds, heart) => {
   const m = Match.start(cards, { seed, rounds });
-  Match.openPack(m); AI.prep(Match.human(m)); Match.beginRound(m);
+  AI.prep(Match.human(m)); Match.beginRound(m);
   const ai = Match.bot(m), st = ai.dig; st.mine = Array.from({ length: 8 }, (_, i) => ({ ...by(i % 2 ? 'MO-02' : 'MO-01'), uid: 9700 + i })); st.dice = Array(60).fill(10); st.heart = heart;
   return { m, ai, st };
 };
@@ -110,18 +112,35 @@ test('the AI does not bank for the lead while it is confident it can go further 
   assert.equal(lo.st.over.kind, 'bank'); assert.equal(lo.st.survived, 1, 'low on Health: it banks after the first Monster');
 });
 
-test('the AI spends Grit for any useful effect (the Pet first), and rerolls when it wants an effect it did not get', () => {
-  const fight = (grit, lineAts, dice, rerolls = 0) => {
-    const { ai, st } = aiDig(7, 2, 10); st.grit = grit; st.reroll = rerolls; st.dice = dice.slice();
+test('the AI rerolls when it wants an effect it did not get (the Pet first), only while it has Rerolls, and no more than its limit', () => {
+  const fight = (lineAts, dice, rerolls = 0) => {
+    const { ai, st } = aiDig(7, 2, 10); st.reroll = rerolls; st.dice = dice.slice();
     st.line = lineAts.map(([id, at, pet]) => ({ card: { ...by(id), uid: 9800 + at }, at, base: at, ...(pet ? { pet: true } : {}) }));
     st.mine = [{ ...by('MO-01'), uid: 9899 }, ...st.mine]; Dig.dig(st); Dig.roll(st);
     return { ai, st };
   };
-  let { ai, st } = fight(6, [['PW-02', 10, true]], [7]);                 // 7 on the die, Pet at 10: 3 more needs 9 Grit: out of reach (2 buys)
-  assert.equal(Dig.result(st).total, 7); AI.act(ai); assert.equal(st.grit, 6, 'cannot reach the Pet by Grit, and has no rerolls: it keeps its Grit and takes the damage');
-  ({ ai, st } = fight(6, [['PW-02', 9, true]], [7])); AI.act(ai); AI.act(ai); assert.equal(st.grit, 0, 'two Grit buys (6 Grit) reach the Pet at 9'); assert.equal(Dig.result(st).total, 9);
-  ({ ai, st } = fight(3, [['TR-01', 8]], [7])); AI.act(ai); assert.equal(st.grit, 0, 'any useful card: 3 Grit for +1 reaches the 8'); assert.equal(Dig.result(st).total, 8);
-  ({ ai, st } = fight(0, [['PW-02', 10, true]], [2, 9], 2)); AI.act(ai); assert.equal(st.fight.rolls, 2, 'the Pet is out of reach: it rerolled');
+  let { ai, st } = fight([['PW-01', 10, true]], [7]);                    // 7 on the die, Pet at 10, no Rerolls: nothing to do but face it
+  assert.equal(Dig.result(st).total, 7); AI.act(ai); assert.equal(st.fight, null, 'it took its result and faced the Monster'); assert.equal(st.survived, 1); assert.equal(st.defeated, 0);
+  ({ ai, st } = fight([['PW-01', 10, true]], [7, 10], 1)); AI.act(ai); assert.equal(st.fight.rolls, 2, 'the Pet is out of reach and it has a Reroll: it rerolled'); assert.equal(st.reroll, 0);
+  assert.equal(Dig.result(st).total, 10); AI.act(ai); assert.equal(st.defeated, 1, 'the Pet is in reach: it triggered it');
+  ({ ai, st } = fight([['PW-01', 9, true]], [9, 2], 2)); AI.act(ai); assert.equal(st.fight, null, 'the Pet is at 9 and it rolled 9: no reroll'); assert.equal(st.defeated, 1); assert.equal(st.reroll, 2);
+  ({ ai, st } = fight([['PW-01', 10, true], ['PW-02', 1]], [5, 10], 1)); AI.act(ai); assert.equal(st.fight.rolls, 2, 'Nurse Newt is already eligible, but the Pet comes first: it rerolled for the Pet');
+  ({ ai, st } = fight([['PW-01', 10, true]], [2, 3, 4, 5, 6], 3)); AI.act(ai); AI.act(ai); assert.equal(st.fight.rolls, 3); assert.equal(st.reroll, 1);
+  AI.act(ai); assert.equal(st.fight, null, 'three rolls is its limit: it faces the Monster with a Reroll left'); assert.equal(st.reroll, 1);
+  ({ ai, st } = fight([['PW-01', 10, true]], [10], 3)); AI.act(ai); assert.equal(st.reroll, 3, 'a result it is happy with is never rerolled');
+});
+
+test('before round 1 the AI picks its Starter Kit at random from every Booster card: only cards the game can play, never the one you took, and not always the same', () => {
+  const picked = new Set();
+  for (let seed = 1; seed <= 40; seed++) {
+    const m = Match.start(cards, { seed, rounds: 3 }), me = Match.human(m), ai = Match.bot(m);
+    const mine = Run.starterPool(me)[seed % 10]; assert.ok(Run.toggleKit(me, mine.uid)); assert.ok(Match.beginRound(m), 'you begin first, then the AI');
+    assert.equal(ai.owned.length, 1); assert.equal(ai.kit.length, 1); assert.ok(Dig.supported(ai.kit[0]));
+    assert.notEqual(ai.kit[0].id, mine.id, `seed ${seed}: the card you took has left the Booster Deck`);
+    assert.equal(ai.dig.mine[0].id, ai.kit[0].id, 'it is on top of the AI\'s Mine'); assert.equal(me.dig.mine[0].id, mine.id);
+    picked.add(ai.kit[0].id);
+  }
+  assert.ok(picked.size > 10, 'random: ' + picked.size + ' different cards in 40 matches');
 });
 
 test('a whole match: the AI and a second AI-policy player finish 3 rounds, every card is somewhere, and the Board is consistent', () => {
@@ -142,7 +161,7 @@ test('a whole match: the AI and a second AI-policy player finish 3 rounds, every
 test('the Escape Bonus is one roll for the table: whoever banked adds the same number', () => {
   const m = Match.start(cards, { seed: 8, rounds: 2, dice: [7] });
   const me = Match.human(m), ai = Match.bot(m);
-  Match.openPack(m); AI.prep(me); Match.beginRound(m);
+  AI.prep(me); Match.beginRound(m);
   me.dig.mine = ['TR-01', 'TR-01'].map((id, i) => ({ ...by(id), uid: 9600 + i })); Dig.dig(me.dig); Dig.bank(me.dig); Run.checkOver(me);
   ai.dig.mine = ['TR-01'].map((id, i) => ({ ...by(id), uid: 9650 + i })); ai.dig.over || (Dig.dig(ai.dig), Dig.bank(ai.dig)); Run.checkOver(ai);
   assert.ok(Match.finishRound(m));
@@ -154,7 +173,7 @@ test('the Escape Bonus is one roll for the table: whoever banked adds the same n
 test('if you go BOOM but the AI banked, the Escape Bonus is rolled for it without waiting for you', () => {
   const m = Match.start(cards, { seed: 9, rounds: 2, dice: [4] });
   const me = Match.human(m), ai = Match.bot(m);
-  Match.openPack(m); AI.prep(me); Match.beginRound(m);
+  AI.prep(me); Match.beginRound(m);
   me.dig.heart = 1; me.dig.mine = [{ ...by('MO-01'), uid: 9500 }]; me.dig.dice = [1]; Dig.dig(me.dig); Dig.roll(me.dig); Dig.autoFace(me.dig); Run.checkOver(me);
   ai.dig.mine = ['TR-01', 'TR-01'].map((id, i) => ({ ...by(id), uid: 9550 + i })); Dig.dig(ai.dig); Dig.bank(ai.dig); Run.checkOver(ai);
   Match.finishRound(m);
@@ -164,7 +183,7 @@ test('if you go BOOM but the AI banked, the Escape Bonus is rolled for it withou
 test('a match saves and resumes exactly, mid-Dig and mid-Prep', () => {
   for (let seed = 1; seed <= 12; seed++) {
     const a = Match.start(cards, { seed, rounds: 3 });
-    Match.openPack(a); AI.prep(Match.human(a)); Match.beginRound(a);
+    AI.prep(Match.human(a)); Match.beginRound(a);
     const stepA = m => { const me = Match.human(m), st = me.dig; if (st.over) return false; const before = st.digs; AI.act(me); Run.checkOver(me); if (st.digs > before && !st.over) Match.aiStep(m); return true; };
     for (let i = 0; i < 6 + seed; i++) stepA(a);
     const b = Match.load(cards, roundtrip(Match.save(a)));

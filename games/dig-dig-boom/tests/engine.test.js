@@ -30,18 +30,18 @@ test('cards: every type in the sheet is a known type with a colour, an icon and 
   assert.deepEqual(Object.keys(DDB.types).sort(), ['Immediate', 'Monster', 'Ongoing', 'Power', 'Treasure']);
 });
 
-test('questions: notes that start with "Question:" are collected; design notes are never part of the card text', () => {
-  const cards = E.cards(rows(), DDB.columns), qs = E.questions(cards);
-  assert.deepEqual(qs.map(q => q.id), ['PW-04', 'PW-21', 'ON-14']);
-  assert.match(qs[2].q, /floor be 4, 5 or 6/);
+test('design notes in the sheet (Why, Notes) are never part of the card text, and the page shows no list of questions', () => {
+  const cards = E.cards(rows(), DDB.columns);
   assert.ok(cards.every(c => !/Why|Notes|Question/i.test(c.text)));
+  assert.equal(E.questions, undefined, 'the engine no longer collects questions: they live in QUESTIONS.md, not in the game');
 });
 
-test('tokens: {heart} {grit} {reroll} {damage} {gem} become icons; unknown codes stay as text', () => {
-  const t = E.tokens('+1 {reroll}. When dug, +2 {grit} {nope}', DDB.iconCodes);
-  assert.deepEqual(t.filter(x => x.t === 'icon').map(x => x.v), ['reroll', 'grit']);
-  assert.equal(t.map(x => x.v).join('').includes('{nope}'), true);
-  assert.deepEqual(Object.keys(DDB.iconCodes).sort(), ['damage', 'gem', 'grit', 'heart', 'reroll']);
+test('tokens: {heart} {reroll} {damage} {gem} become icons; unknown codes — {grit} is one now (Grit is cut) — stay as text', () => {
+  const t = E.tokens('+1 {reroll}. When dug, +2 {grit} {nope} {heart}', DDB.iconCodes);
+  assert.deepEqual(t.filter(x => x.t === 'icon').map(x => x.v), ['reroll', 'heart']);
+  const flat = t.map(x => x.t === 'icon' ? '<' + x.v + '>' : x.v).join('');
+  assert.ok(flat.includes('{nope}') && flat.includes('{grit}'), 'unknown codes, Grit included, are left as they were written');
+  assert.deepEqual(Object.keys(DDB.iconCodes).sort(), ['damage', 'gem', 'heart', 'reroll']);
 });
 
 test('fitting: the largest size that still fits, in quarter steps', () => {

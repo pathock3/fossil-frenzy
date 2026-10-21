@@ -32,7 +32,7 @@ test('cards: reads the sheet live (not a copy), says so, and draws every card of
   try {
     assert.match(await page.locator('.status').first().innerText(), /Live from your sheet · 11 cards/);
     assert.ok(requests.some(u => /docs\.google\.com\/spreadsheets\/d\/e\/2PACX-[\w-]+\/pub\?gid=2&single=true&output=csv/.test(u)), 'it asked the published sheet for the card tab');
-    assert.equal(await page.locator('#deckRow .card').count(), 16);
+    assert.equal(await page.locator('#deckRow .card').count(), 13);
     const labels = await page.locator('#deckRow .card').evaluateAll(els => els.map(e => e.getAttribute('aria-label')));
     for (const t of types) assert.ok(labels.some(x => x.includes(', ' + t)), 'a ' + t + ' card');
     assert.equal(await page.locator('text=/Round 1|Round 2|direction/i').count(), 0, 'the old design explorations are gone');
@@ -78,28 +78,6 @@ test('cards: the rules text is one size on every card, set by the longest card, 
   } finally { await browser.close(); }
 });
 
-test('cards: print guides (bleed, trim, safe zone) toggle, and everything printed sits inside the safe zone', SKIP, async () => {
-  const { browser, page, errors } = await open();
-  try {
-    assert.equal(await page.locator('#deckRow .guides').count(), 16, 'guides on by default');
-    const bad = await page.evaluate(() => {
-      const out = [];
-      document.querySelectorAll('#deckRow .card').forEach(card => {
-        const cr = card.getBoundingClientRect(), u = cr.width / 275, safe = 25 * u - 1.5;
-        card.querySelectorAll('.name, .typeword, .num, .art, .text, .disc').forEach(el => {
-          const r = el.getBoundingClientRect();
-          if (r.left < cr.left + safe || r.top < cr.top + safe || r.right > cr.right - safe || r.bottom > cr.bottom - safe) out.push(card.dataset.id + ':' + el.className);
-        });
-      });
-      return out;
-    });
-    assert.deepEqual(bad, [], 'nothing close to the cut line');
-    await page.tap('[data-act=guides]');
-    assert.equal(await page.locator('#deckRow .guides').count(), 0);
-    assert.equal(await page.locator('#deckRow .cell > div').first().evaluate(e => e.style.overflow), 'hidden', 'with guides off you see the card cut at the trim line');
-    assert.deepEqual(errors, []);
-  } finally { await browser.close(); }
-});
 
 test('cards: greyscale and colour-blind views are one tap away; the page works on an iPad and a phone without horizontal scroll', SKIP, async () => {
   for (const viewport of [{ width: 1024, height: 768 }, { width: 390, height: 844 }]) {
@@ -120,7 +98,7 @@ test('cards: every card in the chosen design — Geode a huge gem count, Monster
     const geode = cards.find(c => c.id === 'TR-01'), monster = cards.find(c => c.id === 'MO-01');
     assert.equal(geode.stat, '3'); assert.equal(monster.stat, '1');
     assert.ok(await page.locator('#deckRow .card[data-id=MO-01]').evaluate(e => [...e.querySelectorAll('div')].filter(d => /^[1357]$/.test(d.textContent.trim())).length >= 4), 'four damage tiles 1 3 5 7');
-    assert.ok(await page.locator('#deckRow .card[data-id=TR-01]').first().evaluate(e => parseFloat(getComputedStyle([...e.querySelectorAll('div')].find(d => d.textContent.trim() === '1')).fontSize) > 100), 'the gem count is huge');
+    assert.ok(await page.locator('#deckRow .card[data-id=TR-01]').first().evaluate(e => parseFloat(getComputedStyle(e.querySelector('.gemtile')).fontSize) > 100), 'the gem count is huge');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -137,7 +115,7 @@ test('cards: offline, the copy of the sheet this browser saved last time is used
     await page.reload(); await page.waitForSelector('#deckRow .card');
     const t = await page.locator('.status').first().innerText();
     assert.match(t, /Could not reach the sheet/); assert.match(t, /Using the copy from/);
-    assert.equal(await page.locator('#deckRow .card').count(), 16, 'all the cards, not just the sample');
+    assert.equal(await page.locator('#deckRow .card').count(), 13, 'all the cards the game can play, not just the sample');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

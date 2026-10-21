@@ -4,8 +4,8 @@ Only questions still waiting for the owner are listed (**open**), plus calls I m
 
 ## Written in the sheet itself (Notes column, "Question:")
 Each is a note you wrote on a card. Card text is quoted exactly.
-- **Prickly Porcupine** (Power, number 1): "Lose 1 {heart}, then +2 {grit}". Your note: Masochist traded for arrows (now Rerolls) — is Grit the right reward here? — open
-- **Falcon Finisher** (Power, number 8): "Roll again. If it's 10 or more, defeat this Monster". Your note: should Grit and bonuses add to this second roll? Right now the second roll counts only the cards' roll bonuses (like Tune-Up), not Grit you spent. — open
+- **Prickly Porcupine** (Power, number 1): see the Grit list below (Grit is cut; proposed: lose 1 Health, then +1 Reroll).
+- **Falcon Finisher** (Power, number 8): "Roll again. If it's 10 or more, defeat this Monster". Your note: should bonuses add to this second roll? Right now the second roll counts the cards' roll bonuses (like Tune-Up), and nothing else (Grit is cut). — open
 - **Floor Jack** (Ongoing): "If your result is less than 4, it becomes 4". Your note: should the floor be 4, 5 or 6? — open
 - **Shoo Spray** (Immediate): "+2 {grit}. Move the top card of your Mine to the bottom without looking". Your note: is a blind move fun, or does it feel like nothing happened? — open (a design question, not a rules one)
 - **Wormhole** (Immediate): "Reveal cards from your Mine until you find an Immediate card. Do it, then shuffle the rest back". Your note: is chaining into another Immediate card the fun part of Portal, or was it the free choice? — open (design)
@@ -38,3 +38,45 @@ Each is a note you wrote on a card. Card text is quoted exactly.
 47. **Final round details I filled in** (the race itself is your ruling: nobody banks, the leader may wait, everyone else keeps digging): everyone's score is the better of their locked-in best and their live marker, so a player holding the Crown from an earlier round is in the lead from the start; a player who goes BOOM keeps only their earlier best; ties go to whoever reached the number first; alone at the table, you win the moment you are past the Crown tracker (matching it does not count). The round ends when everyone but the leader has gone BOOM. — assumed
 48. **Lucky Coin** (your idea, ruled: in play every Dig with the Drill Pup, outside the Starter Kit). I compare the damage printed on the Monster with your current Health, before any Block (so the +1 cannot flicker on and off as you trigger cards). It is an Ongoing card, so Tool Shed and Duct Tape count it. I added it to your sheet as ON-38 in the Starting deck. Is +1 the right size, or +2? — my call
 49. **Encountering a Monster moves your marker** (your ruling). If it BOOMs you, the marker is removed (your best stays). In the final round that means digging a Monster can take the lead from someone the instant it is revealed. A Monster revealed by Cave Scout and put back does not count until you dig it. — assumed (the last sentence)
+
+## Grit is cut: proposed replacements (awaiting your approval; until then these 35 cards are out of the Booster Deck)
+Rules for the proposals: Grit becomes Rerolls or Health (never "+N to the roll"); Power cards may use the new Burnout wording ("…, then move this card up N (max 10)"); nothing lets a player move cards along the line.
+Power cards (the number is where the card sits):
+- PW-04 Prickly Porcupine (1): "Lose 1 {heart}, then +2 {grit}" → "Lose 1 {heart}, then +1 {reroll}" (Health for Rerolls every roll).
+- PW-06 Gritty Gecko (2): "+1 {grit}" → "+1 {reroll}, then move this card up 4 (max 10)" (a Burnout card: a Reroll on your first Monsters, then it fades).
+- PW-08 Helper Hamster (3): "+1 {grit} and +1 {heart}" → "+2 {heart}, then move this card up 2 (max 10)" (early healing that fades).
+- PW-10 Grit Gopher (4): "+2 {grit}" → "+1 {reroll}" (the name is about Grit: rename it, e.g. Gopher).
+- PW-11 Conga Crab (5): "+1 {grit} for each other card that triggers" → "+1 {heart} for each other card that triggers".
+- PW-13 Good Boy (5): "+1 {grit} and +1 {heart}" → "+1 {reroll} and +1 {heart}".
+- PW-18 Energy Bat (7): "+1 {reroll}. When dug, +2 {grit}" → "+1 {reroll}. When dug, +2 {heart}".
+- PW-23 Muscle Mole (8): "+2 {grit}. When dug, +1 {grit}" → "+3 {heart}. When dug, +1 {reroll}".
+- PW-25 Snowball Beetle (8): "+1 {grit}, then move this card down 1" (cards never move down) → "+1 {heart} for each Monster you've survived this Dig" (it snowballs by itself, no moving).
+- PW-26 Busy Finch (9): "+1 {reroll}. When dug, +1 {grit}" → "+1 {reroll}. When dug, +1 {heart}".
+- PW-29 Hype Squirrel (10): "+3 {grit}" → "+1 {reroll} and +3 {heart}".
+- PW-30 Jackpot Ferret (10): "+1 {reroll}, +1 {grit} and +2 {heart}" → "+2 {reroll} and +2 {heart}".
+Ongoing cards:
+- ON-01 Adrenaline Pump: "Whenever you gain {heart}, +1 {grit}" → "Whenever you gain {heart}, +1 {reroll}" (strong with Nurse Newt at 1: a Reroll every roll, capped at 3; fine?).
+- ON-07 Confetti Cannon: "Whenever you dig an Immediate card, +1 {grit}" → "…, +1 {reroll}".
+- ON-10 Danger Siren: "Whenever you dig a Monster with 6+ {damage}, +2 {grit}" → "…, +1 {reroll}".
+- ON-13 Drone Booster: "The first {grit} you spend before each roll gives +2" → "The first {reroll} you spend each Dig costs nothing" (new wording needed).
+- ON-16 Generator: "At the start of each Dig, +2 {grit}" → "At the start of each Dig, +1 {reroll}".
+- ON-18 Grit Caddy: "Whenever you spend 3+ {grit} on one roll, get 1 back" → "Whenever you spend a {reroll}, +1 {heart}".
+- ON-24 Pep Horn: "Whenever you gain {grit}, gain 1 more" → "Whenever you gain {reroll}, gain 1 more".
+- ON-26 Rage Valve: "Whenever you take 3+ {damage}, +2 {grit}" → "Whenever you take 3+ {damage}, +2 {heart}".
+- ON-28 Salvage Claw: "Whenever you defeat a Monster, +1 {grit} and +1 {heart}" → "…, +1 {reroll} and +1 {heart}".
+- ON-30 Stubborn Engine: "Whenever you take {damage}, +1 {grit}" → "Whenever you take {damage}, +1 {reroll}".
+- ON-32 Trophy Case: "Whenever you defeat a Monster, +2 {grit}" → "Whenever you defeat a Monster, +2 {heart}".
+- ON-36 Workbench: "Any time, trade 3 {grit} for 1 {reroll}, or 1 {reroll} for 3 {grit}" (a trade is a decision and an economy) → "Whenever you gain {reroll}, +1 {heart}".
+Immediate cards:
+- IM-02 Boomerang: "+2 {grit}. Slide this card back into the middle of your Mine" → "+1 {reroll}. Slide this card back into the middle of your Mine".
+- IM-09 Hot Spring: "+2 {grit} and +3 {heart}" → "+1 {reroll} and +3 {heart}".
+- IM-10 Iron Vein: "+4 {grit}" → "+2 {reroll} and +2 {heart}".
+- IM-12 Lunchbox: "+1 {grit}, +1 {reroll} and +2 {heart}" → "+1 {reroll} and +2 {heart}" (so Lunchbox, Hot Spring and Spare Parts are near twins: say if you want one of them to be something else).
+- IM-15 Mystery Box B: "+2 {grit}. When kept…" → "+1 {reroll} and +1 {heart}. When kept…" (A is +3 Health, C is +1 Reroll).
+- IM-19 Pocket Scanner: "+1 {grit}. Look at the top 3 cards of your Mine" → "+1 {heart}. Look at the top 3 cards of your Mine".
+- IM-27 Shoo Spray: "+2 {grit}. Move the top card of your Mine to the bottom without looking" → "+1 {reroll}. Move the top card of your Mine to the bottom without looking" (moving a card in the Mine is not moving along the line; the earlier "is a blind move fun?" question still stands).
+- IM-29 Spare Parts (2 copies): "+1 {reroll} and +1 {grit}" → "+1 {reroll} and +1 {heart}".
+- IM-31 Tool Shed: "+1 {grit} for each Ongoing card you have" → "+1 {reroll} for each Ongoing card you have" (the Lucky Coin counts; Rerolls cap at 3).
+- IM-18 Pet Treat: "Your Pet triggers 1 lower until Prep" (a player-chosen move, and it was almost always right) → "+2 {heart} and +1 {reroll}" — or a fresh idea.
+- IM-34 Wrench Rat: "Move your highest Power card (not your Pet) down 2" → "+1 {reroll} for each Power card on your line (not your Pet)".
+Question on a card that stays: Pet Whistle (Ongoing) "Your Pet triggers on 9 instead of 10" lowers the Pet's number permanently by a card effect, not a player move. Does that stay?
