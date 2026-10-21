@@ -144,6 +144,118 @@ const DDB = {
   labIds: ['PW-18', 'PW-21', 'ON-22', 'IM-24', 'TR-01', 'MO-01'],
   round2: { textIds: ['PW-18', 'PW-21', 'ON-22', 'IM-24'], statIds: ['TR-01', 'MO-01', 'MO-02'] },
   texts: { longestHint: 'IM-24' },
+  // ---- The rules of a Dig (v2.7 Rules tab). Numbers here are the rules; the engine (script "dig") only does what they say. ----
+  rules: {
+    die: 6,                                              // sides of the die (QUESTIONS #11: not stated in the Rules tab)
+    caps: { heart: 12, grit: 6, reroll: 3 },             // Drill tracks: Health 0-12, Grit 0-6, Rerolls 0-3
+    start: { heart: 6, grit: 0, reroll: 0 },             // each track's starred reset space (QUESTIONS #12: not stated)
+    gritBefore: 1,                                       // Grit spent before the roll: +1 each
+    gritAfter: { cost: 3, bonus: 1 },                    // Grit spent after seeing the roll: 3 for +1
+    rerollCost: 1,
+    pet: { at: 10 },                                     // the Pet (the Starting Power card) sits on the Power line at 10
+    line: { min: 1, max: 10 },
+    startingDeck: 'Starting',                            // the Deck column value for the Mine's cards and the Pet
+    survivedGems: 1, geodeGems: 1,
+    beyond: { firstDamage: 8, gems: 2 },                 // Monsters after the Mine runs out: 8, 9, ... and worth 2 gems
+    kitSizes: [1, 2, 2, 3],                              // Round tracker: Starter Kit cards per round (testing)
+    maxChain: 6,                                         // safety limit on effects that trigger effects
+    rulings: {                                           // each one is a question in QUESTIONS.md; change the value to change the rule
+      transformOrder: ['double', 'becomes', 'floor'],    // #9  what happens to the result, in order, after bonuses are added
+      damageOrder: 'halveThenBlock',                     // #2
+      gritCarriesToReroll: true,                         // #4  grit already spent stays on a rerolled die
+      bankWhen: 'anytime',                               // #6  between cards (not mid-fight); there is no Pledge in a solo Dig
+      gainAtCapFires: false,                             // #13 "Whenever you gain" needs the track to actually move
+      panicRetriggers: true,                             // #10 a free reroll triggers the line again
+      falconIncludesGrit: false,                         // sheet question on Falcon Finisher
+      kitImmediates: 'mine',                             // #14 Immediate Starter Kit cards are shuffled into the Mine
+    },
+  },
+  // ---- The phrase book: card text -> effect. [op, regular expression]. Unmatched text is shown as "not implemented yet" ----
+  phrases: {
+    whole: [                                             // matched against the entire card text first
+      ['falcon',  "^Roll again\\. If it's (\\d+) or more, defeat this Monster$"],
+      ['clover',  "^Don't roll for your next Monster\\. Your result is (\\d+)$"],
+      ['crystal', "^Look at the top (\\d+) cards of your Mine\\. Play any Power or Ongoing cards you see; put the rest back$"],
+      ['radar',   "^Look at the top (\\d+) cards of your Mine\\. \\+(\\d+) \\{heart\\} per Monster, then shuffle them back on top$"],
+      ['stink',   "^Look at the top (\\d+) cards of your Mine\\. Move any Monsters to the bottom$"],
+      ['oldmap',  "^Look at the top card of your Mine\\. If it's a Monster, move it to the bottom$"],
+      ['cave',    "^Keep digging until you dig a Monster\\. Put it back on top of your Mine, face up$"],
+      ['sneak',   "^Dig a card\\. If it's a Monster, defeat it$"],
+      ['reveal',  "^Reveal cards from your Mine until you find (?:a|an) (Power or Ongoing|Immediate) card\\. (?:Play it and|Do it, then) shuffle the rest back$"],
+      ['clone',   "^Place under one of your Power cards\\. That card triggers twice$"],
+    ],
+    sentence: [                                          // one sentence of an Immediate or Power card (also the part after "When dug,")
+      ['list',      "^(?:Lose \\d+ \\{heart\\}|\\+\\d+ \\{(?:heart|grit|reroll)\\})(?:(?:, then |, and |, | and )(?:Lose \\d+ \\{heart\\}|\\+\\d+ \\{(?:heart|grit|reroll)\\}))*$"],
+      ['gainHalf',  "^Gain \\{heart\\} equal to half your result, rounded down$"],
+      ['gainDmg',   "^Gain \\{heart\\} equal to this Monster's \\{damage\\}$"],
+      ['gainPer',   "^\\+(\\d+) \\{(heart|grit|reroll)\\} (?:for each|per) (.+)$"],
+      ['ifNoOther', "^If no other card triggers, (.+)$"],
+      ['ifHeart',   "^If you have (\\d+) \\{heart\\} or less, (.+)$"],
+      ['block',     "^Block (\\d+) \\{damage\\}$"],
+      ['survive1',  "^If this Monster would make you BOOM, survive with (\\d+) \\{heart\\}$"],
+      ['halve',     "^This Monster deals half \\{damage\\}, rounded down$"],
+      ['defeat',    "^Defeat the Monster$"],
+      ['noDamage',  "^You take no \\{damage\\}$"],
+      ['echo',      "^Do the effect of the top Immediate card in your discard pile$"],
+      ['thenMove',  "^(.+), then move this card down (\\d+)$"],
+      ['moveHigh',  "^Move your highest Power card \\(not your Pet\\) down (\\d+)$"],
+      ['slide',     "^Slide this card back into the middle of your Mine$"],
+      ['petTreat',  "^Your Pet triggers (\\d+) lower until Prep$"],
+      ['look',      "^Look at the top (\\d+) cards of your Mine$"],
+      ['setHeart',  "^Set your \\{heart\\} to (\\d+)$"],
+      ['fill',      "^Fill up your \\{reroll\\}$"],
+      ['rewind',    "^Put the top Immediate card of your discard pile on top of your Mine$"],
+      ['shoo',      "^Move the top card of your Mine to the bottom without looking$"],
+      ['wishing',   "^Shuffle the top (\\d+) Immediate cards of your discard pile back into your Mine$"],
+      ['whenKept',  "^When kept from a Booster Pack, .*$"],
+    ],
+    per: [                                               // what "for each ..." counts
+      ['otherTriggers', "^other card that triggers$"],
+      ['ongoing',       "^Ongoing card you have$"],
+      ['immediateInDiscardThis', "^Immediate card in your discard pile, including this one$"],
+      ['immediateInDiscard',     "^Immediate card in your discard pile$"],
+      ['defeatedDig',   "^Monster you've defeated this Dig$"],
+      ['survivedDig',   "^Monster you've survived this Dig$"],
+    ],
+    ongoing: [                                           // Ongoing cards: the whole text
+      ['whenever',   "^Whenever (.+?), (.+)$"],
+      ['startDig',   "^At the start of each Dig, (.+)$"],
+      ['modPlain',   "^\\+(\\d+) to your rolls$"],
+      ['modPer',     "^\\+(\\d+) to your rolls for every (\\d+) Monsters you've survived this Dig$"],
+      ['modImm',     "^\\+(\\d+) to your rolls for each Immediate card in your discard pile, up to \\+(\\d+)$"],
+      ['modVs',      "^\\+(\\d+) to your rolls against Monsters with (\\d+)\\+ \\{damage\\}$"],
+      ['modLow',     "^While you have (\\d+) \\{heart\\} or less, \\+(\\d+) to your rolls$"],
+      ['becomes',    "^If your result is (\\d+), it becomes a (\\d+)$"],
+      ['floor',      "^If your result is less than (\\d+), it becomes (\\d+)$"],
+      ['sparkLow',   "^If your result is (\\d+) or less, reroll for free$"],
+      ['double',     "^Double your result against your first Monster each Dig$"],
+      ['bounty',     "^Monsters you defeat are worth (\\d+) \\{gem\\}$"],
+      ['bumper',     "^Block (\\d+) \\{damage\\} from every Monster$"],
+      ['cowcatcher', "^Your first Monster each Dig deals no \\{damage\\}$"],
+      ['panic',      "^The first time each Dig a roll would make you BOOM, reroll it for free$"],
+      ['whistle',    "^Your Pet triggers on (\\d+) instead of (\\d+)$"],
+      ['drone',      "^The first \\{grit\\} you spend before each roll gives \\+(\\d+)$"],
+      ['thorned',    "^You may lose (\\d+) \\{heart\\} instead of spending a \\{reroll\\}$"],
+      ['workbench',  "^Any time, trade (\\d+) \\{grit\\} for (\\d+) \\{reroll\\}, or (\\d+) \\{reroll\\} for (\\d+) \\{grit\\}$"],
+    ],
+    events: [                                            // what comes after "Whenever"
+      ['gainHeart',   "^you gain \\{heart\\}$"],
+      ['gainGrit',    "^you gain \\{grit\\}$"],
+      ['digImmediate', "^you dig an Immediate card$"],
+      ['digMonster',  "^you dig a Monster with (\\d+)\\+ \\{damage\\}$"],
+      ['takeDamage',  "^you take (?:(\\d+)\\+ )?\\{damage\\}$"],
+      ['defeat',      "^you defeat a Monster$"],
+      ['spendReroll', "^you spend a \\{reroll\\}$"],
+      ['spendGrit',   "^you spend (\\d+)\\+ \\{grit\\} on one roll$"],
+      ['triggers',    "^(\\d+)\\+ cards trigger on one roll$"],
+    ],
+    reactions: [                                         // what a "Whenever ..." card does
+      ['gainMore', "^gain (\\d+) more$"],
+      ['getBack',  "^get (\\d+) back$"],
+      ['keepHigher', "^keep the higher result$"],
+      ['list',     "^(?:\\+\\d+ \\{(?:heart|grit|reroll)\\})(?:(?:, | and )(?:\\+\\d+ \\{(?:heart|grit|reroll)\\}))*$"],
+    ],
+  },
 };
 // Design-time sample ONLY (a snapshot of six rows, taken 2026-10-21): shown, clearly labelled, if the sheet cannot be fetched.
 const DDB_SAMPLE_CSV = `ID,Name,Type,Number,Deck,Count,Card Text,Status,Was,Why,Trigger,Grit When Dug,Rerolls When Dug,Health When Dug,Bonus Cards When Kept,Uses Grit,Notes,Old Name
@@ -218,6 +330,514 @@ const Engine = (() => {
   const gemWorth = text => { const m = /^\s*(\d+)\s*\{gem\}\s*$/.exec(text); return m ? Number(m[1]) : null; };
   const formatSize = u => (u / 100).toFixed(2) + ' in (' + (u * 0.01 * 72).toFixed(1) + ' pt)';
   return { parseCSV, table, cards, questions, tokens, largestFitting, damageSteps, gemWorth, formatSize };
+})();
+</script>
+
+<script id="dig">
+/* =====================================================================
+   DIG — the rules of one Dig (v2.7). No DOM. All numbers come from DDB.rules; card text is read through DDB.phrases.
+   state = one player's Dig. Actions mutate it and write to state.log. Cards are plain objects from Engine.cards().
+   ===================================================================== */
+const Dig = (() => {
+  const R = DDB.rules, P = DDB.phrases, RL = R.rulings;
+  const RES = ['heart', 'grit', 'reroll'];
+  const rx = list => list.map(([op, re]) => [op, new RegExp(re)]);
+  const PH = { whole: rx(P.whole), sentence: rx(P.sentence), per: rx(P.per), ongoing: rx(P.ongoing), events: rx(P.events), reactions: rx(P.reactions) };
+  const match = (list, s) => { for (const [op, re] of list) { const m = re.exec(s); if (m) return { op, m }; } return null; };
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  // ---------------- random numbers (seedable, so tests and bug reports can replay a Dig) ----------------
+  function makeRng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function shuffle(state, arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(state.rng() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+
+  // ---------------- card text -> behaviour ----------------
+  function listItems(text) { const out = []; const re = /(Lose |\+)(\d+) \{(heart|grit|reroll)\}/g; let m; while ((m = re.exec(text))) out.push({ lose: m[1] === 'Lose ', n: Number(m[2]), res: m[3] }); return out; }
+  function parseSentence(s) {
+    const h = match(PH.sentence, s); if (!h) return null; const m = h.m;
+    switch (h.op) {
+      case 'list': return { op: 'list', items: listItems(s) };
+      case 'gainHalf': case 'gainDmg': case 'block': case 'survive1': case 'halve': case 'defeat': case 'noDamage': case 'echo': case 'slide': case 'fill': case 'rewind': case 'shoo': case 'whenKept':
+        return { op: h.op, n: m[1] ? Number(m[1]) : undefined };
+      case 'gainPer': { const per = match(PH.per, m[3]); return per ? { op: 'gainPer', n: Number(m[1]), res: m[2], per: per.op } : null; }
+      case 'ifNoOther': { const t = parseSentence(m[1]); return t ? { op: 'if', cond: { noOther: true }, then: t } : null; }
+      case 'ifHeart': { const t = parseSentence(m[2]); return t ? { op: 'if', cond: { heartAtMost: Number(m[1]) }, then: t } : null; }
+      case 'thenMove': { const t = parseSentence(m[1]); return t ? { op: 'seq', list: [t, { op: 'moveSelf', n: Number(m[2]) }] } : null; }
+      case 'moveHigh': return { op: 'moveHigh', n: Number(m[1]) };
+      case 'petTreat': return { op: 'petTreat', n: Number(m[1]) };
+      case 'look': return { op: 'look', n: Number(m[1]) };
+      case 'setHeart': return { op: 'setHeart', n: Number(m[1]) };
+      case 'wishing': return { op: 'wishing', n: Number(m[1]) };
+    }
+    return null;
+  }
+  const splitSentences = text => text.replace(/\.\s*$/, '').split(/\.\s+(?=[A-Z+])/);
+  function parseEffects(text) {
+    const w = match(PH.whole, text);
+    if (w) { const m = w.m; return { effects: [{ op: w.op, a: m[1] === undefined ? undefined : (isNaN(Number(m[1])) ? m[1] : Number(m[1])), b: m[2] === undefined ? undefined : Number(m[2]) }], dug: [], unsupported: [] }; }
+    const effects = [], dug = [], unsupported = [];
+    for (const s of splitSentences(text)) {
+      const wd = /^When dug, (.+)$/.exec(s);
+      const e = parseSentence(wd ? wd[1] : s);
+      if (!e) unsupported.push(s); else (wd ? dug : effects).push(e);
+    }
+    return { effects, dug, unsupported };
+  }
+  function parseOngoing(text) {
+    const o = { watchers: [], mods: [], transforms: [], flags: {}, startDig: [], unsupported: [] };
+    const w = match(PH.whole, text); if (w && w.op === 'clone') { o.flags.clone = true; return o; }
+    const h = match(PH.ongoing, text); if (!h) { o.unsupported.push(text); return o; }
+    const m = h.m, n = i => Number(m[i]);
+    switch (h.op) {
+      case 'whenever': {
+        const ev = match(PH.events, m[1]), re = match(PH.reactions, m[2]);
+        if (!ev || !re) { o.unsupported.push(text); break; }
+        const min = ev.m[1] === undefined ? 1 : Number(ev.m[1]);
+        if (re.op === 'gainMore') o.flags['amp_' + (ev.op === 'gainHeart' ? 'heart' : 'grit')] = Number(re.m[1]);
+        else if (re.op === 'keepHigher') o.flags.twinDrill = true;
+        else o.watchers.push({ ev: ev.op, min, react: re.op === 'getBack' ? { op: 'getBack', n: Number(re.m[1]) } : { op: 'list', items: listItems(m[2]) } });
+        break;
+      }
+      case 'startDig': o.startDig.push({ op: 'list', items: listItems(m[1]) }); break;
+      case 'modPlain': o.mods.push({ plus: n(1) }); break;
+      case 'modPer': o.mods.push({ plus: n(1), perSurvived: n(2) }); break;
+      case 'modImm': o.mods.push({ plus: n(1), perImmediate: true, cap: n(2) }); break;
+      case 'modVs': o.mods.push({ plus: n(1), vsDamage: n(2) }); break;
+      case 'modLow': o.mods.push({ plus: n(2), heartAtMost: n(1) }); break;
+      case 'becomes': o.transforms.push({ kind: 'becomes', from: n(1), to: n(2) }); break;
+      case 'floor': o.transforms.push({ kind: 'floor', below: n(1), to: n(2) }); break;
+      case 'sparkLow': o.flags.sparkLow = n(1); break;
+      case 'double': o.transforms.push({ kind: 'double' }); break;
+      case 'bounty': o.flags.bounty = n(1); break;
+      case 'bumper': o.flags.bumper = n(1); break;
+      case 'cowcatcher': o.flags.cowcatcher = true; break;
+      case 'panic': o.flags.panic = true; break;
+      case 'whistle': o.flags.whistle = n(1); break;
+      case 'drone': o.flags.drone = n(1); break;
+      case 'thorned': o.flags.thorned = n(1); break;
+      case 'workbench': o.flags.workbench = { gritCost: n(1), rerollGain: n(2), rerollCost: n(3), gritGain: n(4) }; break;
+    }
+    return o;
+  }
+  const cache = new Map();
+  function compile(card) {
+    if (cache.has(card.id + '|' + card.text)) return cache.get(card.id + '|' + card.text);
+    const b = { kind: card.type, effects: [], dug: [], unsupported: [] };
+    if (card.type === 'Treasure') b.worth = Engine.gemWorth(card.text);
+    else if (card.type === 'Monster') { b.ladder = Engine.damageSteps(card.text); if (!b.ladder) b.unsupported.push(card.text); }
+    else if (card.type === 'Ongoing') { b.ongoing = parseOngoing(card.text); b.unsupported = b.ongoing.unsupported; }
+    else { const e = parseEffects(card.text); b.effects = e.effects; b.dug = e.dug; b.unsupported = e.unsupported; }
+    if (card.type === 'Treasure' && b.worth === null) b.unsupported.push(card.text);
+    cache.set(card.id + '|' + card.text, b); return b;
+  }
+  const supported = card => compile(card).unsupported.length === 0;
+
+  // ---------------- a Dig ----------------
+  let uid = 1;
+  const copy = card => ({ ...card, uid: uid++ });
+  const copies = card => Array.from({ length: card.count || 1 }, () => copy(card));
+  // allCards: every card of the sheet. kit: Booster cards chosen for the Starter Kit. opts: { seed, start, dice }
+  function start(allCards, kit = [], opts = {}) {
+    const seed = opts.seed === undefined ? (Math.random() * 4294967296) >>> 0 : opts.seed;
+    const st = { seed, rng: makeRng(seed), dice: opts.dice ? opts.dice.slice() : null, log: [], over: null, fight: null, pending: null, flags: {}, known: 0,
+      mine: [], discard: [], line: [], ongoing: [], petLower: 0, setCount: {}, beyond: 0,
+      digs: 0, monstersDug: 0, survived: 0, defeated: 0, geodeGems: 0, monsterGems: 0, panicUsed: false,
+      heart: 0, grit: 0, reroll: 0, rules: { ...R.start, ...(opts.start || {}) }, kit: [] };
+    st.heart = st.rules.heart; st.grit = st.rules.grit; st.reroll = st.rules.reroll;
+    const starting = allCards.filter(c => c.deck === R.startingDeck);
+    const pet = starting.find(c => c.type === 'Power');
+    const mine = []; for (const c of starting) if (c !== pet) mine.push(...copies(c));
+    if (pet) { st.pet = copy(pet); st.line.push({ card: st.pet, at: pet.number, base: pet.number, pet: true }); }
+    for (const c of kit) {
+      const k = copy(c); st.kit.push(k);
+      if (c.type === 'Power') st.line.push({ card: k, at: c.number, base: c.number });
+      else if (c.type === 'Ongoing') { st.ongoing.push(k); if (compile(k).ongoing.flags.clone) st.pending = st.pending || { kind: 'clone', card: k }; }
+      else mine.push(k);
+    }
+    st.mine = shuffle(st, mine);
+    refreshPet(st);
+    log(st, 'sys', `New Dig. Mine: ${st.mine.length} cards. ${st.pet ? st.pet.name + ' is on the line.' : ''}`);
+    if (st.kit.length) log(st, 'sys', `Starter Kit: ${st.kit.map(k => k.name).join(', ')}.`);
+    for (const o of st.ongoing) for (const e of compile(o).ongoing.startDig) run(st, [e], { src: o });
+    return st;
+  }
+  function log(st, kind, text, extra) { st.log.push({ kind, text, ...(extra || {}) }); }
+  const flag = (st, name) => { let v; for (const o of st.ongoing) { const f = compile(o).ongoing.flags[name]; if (f !== undefined && (v === undefined || f > v || f === true)) v = f; } return v; };
+  const anyFlag = (st, name) => st.ongoing.some(o => compile(o).ongoing.flags[name] !== undefined);
+  function refreshPet(st) {
+    const e = st.line.find(x => x.pet); if (!e) return;
+    const w = flag(st, 'whistle');
+    e.at = clamp(Math.min(e.base, w === undefined ? e.base : w) - st.petLower, R.line.min, R.line.max);
+  }
+  const over = st => !!st.over;
+
+  // ---------------- resources ----------------
+  function amplifier(st, res) { let n = 0; for (const o of st.ongoing) n += compile(o).ongoing.flags['amp_' + res] || 0; return n; }
+  function gain(st, res, n, src, depth = 0) {
+    if (over(st) || n <= 0) return;
+    const bonus = depth >= R.maxChain ? 0 : amplifier(st, res); const want = n + bonus;
+    const before = st[res], cap = R.caps[res]; st[res] = Math.min(cap, before + want); const got = st[res] - before;
+    log(st, 'effect', `${src}: +${n}${bonus ? ' (+' + bonus + ' more)' : ''} {${res}}${got < want ? ' (the track is full at ' + cap + ')' : ''}`);
+    if ((got > 0 || RL.gainAtCapFires) && depth < R.maxChain && (res === 'heart' || res === 'grit')) fire(st, res === 'heart' ? 'gainHeart' : 'gainGrit', { n: got }, depth + 1);
+  }
+  function lose(st, n, src) {
+    if (over(st) || n <= 0) return;
+    st.heart = Math.max(0, st.heart - n); log(st, 'effect', `${src}: lose ${n} {heart}`);
+    if (st.heart === 0) boom(st, `${src} cost your last {heart}`);
+  }
+  function boom(st, why) { if (st.over) return; st.over = { kind: 'boom', why }; st.fight = null; log(st, 'boom', `BOOM! ${why}.`); }
+
+  // ---------------- watchers: "Whenever ..." Ongoing cards ----------------
+  function fire(st, ev, data, depth) {
+    if (over(st)) return;
+    for (const o of st.ongoing.slice()) {
+      for (const w of compile(o).ongoing.watchers) {
+        if (w.ev !== ev) continue;
+        const v = ev === 'takeDamage' ? data.n : ev === 'digMonster' ? data.damage : ev === 'spendGrit' ? data.n : ev === 'triggers' ? data.n : 1;
+        if (v < w.min) continue;
+        if (w.react.op === 'getBack') { st.grit = Math.min(R.caps.grit, st.grit + w.react.n); log(st, 'effect', `${o.name}: get ${w.react.n} {grit} back`); }
+        else run(st, [w.react], { src: o, depth });
+      }
+    }
+  }
+
+  // ---------------- effects ----------------
+  const per = (st, key, ctx) => {
+    switch (key) {
+      case 'otherTriggers': return Math.max(0, ((ctx.trig && ctx.trig.length) || 1) - 1);
+      case 'ongoing': return st.ongoing.length;
+      case 'immediateInDiscard': return st.discard.filter(c => c.type === 'Immediate').length;
+      case 'immediateInDiscardThis': return st.discard.filter(c => c.type === 'Immediate').length + 1;
+      case 'defeatedDig': return st.defeated;
+      case 'survivedDig': return st.survived;
+    }
+    return 0;
+  };
+  function run(st, effs, ctx) {
+    for (const e of effs) { if (over(st)) return; apply(st, e, ctx); }
+  }
+  function apply(st, e, ctx) {
+    const src = ctx.src ? ctx.src.name : 'Rules', depth = ctx.depth || 0, f = st.fight;
+    switch (e.op) {
+      case 'list': for (const it of e.items) { if (over(st)) return; if (it.lose) lose(st, it.n, src); else gain(st, it.res, it.n, src, depth); } break;
+      case 'gainHalf': gain(st, 'heart', Math.floor((ctx.result || 0) / 2), src, depth); break;
+      case 'gainDmg': gain(st, 'heart', f ? f.damage : 0, src, depth); break;
+      case 'gainPer': gain(st, e.res, e.n * per(st, e.per, ctx), src, depth); break;
+      case 'if': {
+        const ok = e.cond.noOther ? ((ctx.trig && ctx.trig.length) || 1) <= 1 : e.cond.heartAtMost !== undefined ? st.heart <= e.cond.heartAtMost : true;
+        if (ok) apply(st, e.then, ctx); else log(st, 'effect', `${src}: its condition is not met`);
+        break;
+      }
+      case 'seq': for (const x of e.list) apply(st, x, ctx); break;
+      case 'block': if (f) { f.block += e.n; log(st, 'effect', `${src}: block ${e.n} {damage}`); } break;
+      case 'survive1': if (f) { f.surviveAt = e.n; log(st, 'effect', `${src}: if this Monster would BOOM you, you survive with ${e.n} {heart}`); } break;
+      case 'halve': if (f) { f.halve = true; log(st, 'effect', `${src}: this Monster deals half {damage}`); } break;
+      case 'defeat': if (f) { f.defeat = true; log(st, 'effect', `${src}: the Monster is defeated`); } break;
+      case 'noDamage': if (f) { f.noDamage = true; log(st, 'effect', `${src}: you take no {damage}`); } break;
+      case 'falcon': {
+        if (!f) break;
+        const d = rollDie(st); let r = d + modsTotal(st, f) + (RL.falconIncludesGrit ? f.grit + f.bought * R.gritAfter.bonus : 0);
+        r = transform(st, f, r);
+        log(st, 'roll', `${src}: rolls again — ${d} → ${r}`);
+        if (r >= e.a) { f.defeat = true; log(st, 'effect', `${src}: ${r} is ${e.a} or more — the Monster is defeated`); } else log(st, 'effect', `${src}: ${r} is not enough`);
+        break;
+      }
+      case 'moveSelf': { const en = st.line.find(x => x.card === ctx.src); if (en && !en.pet) { en.at = Math.max(R.line.min, en.at - e.n); log(st, 'effect', `${src} moves down to ${en.at}`); } break; }
+      case 'moveHigh': {
+        const c = st.line.filter(x => !x.pet).sort((a, b) => b.at - a.at)[0];
+        if (c) { c.at = Math.max(R.line.min, c.at - e.n); log(st, 'effect', `${src}: ${c.card.name} moves down to ${c.at}`); } else log(st, 'effect', `${src}: no Power card to move`);
+        break;
+      }
+      case 'petTreat': st.petLower += e.n; refreshPet(st); log(st, 'effect', `${src}: your Pet now triggers on ${st.line.find(x => x.pet).at}`); break;
+      case 'echo': {
+        const top = [...st.discard].reverse().find(c => c.type === 'Immediate');
+        const b = top && compile(top);
+        if (!top) log(st, 'effect', `${src}: no Immediate card in your discard pile`);
+        else if (b.effects.some(x => x.op === 'echo') || (ctx.depth || 0) >= R.maxChain) log(st, 'effect', `${src}: the top Immediate is ${top.name} — nothing to copy`);
+        else { log(st, 'effect', `${src}: does ${top.name}`); run(st, b.effects, { ...ctx, src: top, depth: (ctx.depth || 0) + 1 }); }
+        break;
+      }
+      case 'slide': {
+        const at = Math.floor(st.mine.length / 2); st.mine.splice(at, 0, ctx.src); ctx.moved = true; st.known = Math.min(st.known, at);
+        log(st, 'effect', `${src} slides into the middle of your Mine`); break;
+      }
+      case 'look': { st.known = Math.max(st.known, Math.min(e.n, st.mine.length)); log(st, 'effect', `${src}: look at the top ${e.n}: ${peekNames(st, e.n)}`); break; }
+      case 'setHeart': st.heart = clamp(e.n, 0, R.caps.heart); log(st, 'effect', `${src}: {heart} set to ${st.heart}`); break;
+      case 'fill': st.reroll = R.caps.reroll; log(st, 'effect', `${src}: {reroll} filled to ${st.reroll}`); break;
+      case 'rewind': {
+        const i = lastIndex(st.discard, c => c.type === 'Immediate');
+        if (i < 0) log(st, 'effect', `${src}: no Immediate card in your discard pile`);
+        else { const [c] = st.discard.splice(i, 1); st.mine.unshift(c); st.known = Math.min(st.mine.length, st.known + 1); log(st, 'effect', `${src}: ${c.name} goes on top of your Mine`); }
+        break;
+      }
+      case 'shoo': if (st.mine.length) { st.mine.push(st.mine.shift()); st.known = Math.max(0, st.known - 1); log(st, 'effect', `${src}: the top card of your Mine goes to the bottom, unseen`); } break;
+      case 'wishing': {
+        const moved = []; for (let k = 0; k < e.n; k++) { const i = lastIndex(st.discard, c => c.type === 'Immediate'); if (i < 0) break; moved.push(st.discard.splice(i, 1)[0]); }
+        st.mine.push(...moved); shuffle(st, st.mine); st.known = 0; log(st, 'effect', `${src}: ${moved.length ? moved.map(c => c.name).join(', ') + ' shuffled back into your Mine' : 'no Immediate cards in your discard pile'}`); break;
+      }
+      case 'clover': st.flags.clover = e.a; log(st, 'effect', `${src}: your next Monster is a ${e.a} without rolling`); break;
+      case 'oldmap': {
+        const top = st.mine[0];
+        if (!top) break;
+        if (top.type === 'Monster') { st.mine.push(st.mine.shift()); st.known = 0; log(st, 'effect', `${src}: top card is ${top.name} — moved to the bottom`); } else { st.known = Math.max(st.known, 1); log(st, 'effect', `${src}: top card is ${top.name} — it stays`); }
+        break;
+      }
+      case 'stink': {
+        const n = Math.min(e.a, st.mine.length), top = st.mine.splice(0, n), keep = top.filter(c => c.type !== 'Monster'), gone = top.filter(c => c.type === 'Monster');
+        st.mine = [...keep, ...st.mine, ...gone]; st.known = keep.length; log(st, 'effect', `${src}: top ${n}: ${top.map(c => c.name).join(', ')} — ${gone.length} Monster(s) to the bottom`); break;
+      }
+      case 'radar': {
+        const n = Math.min(e.a, st.mine.length), top = st.mine.splice(0, n), mons = top.filter(c => c.type === 'Monster').length;
+        shuffle(st, top); st.mine.unshift(...top); st.known = 0;
+        log(st, 'effect', `${src}: top ${n} had ${mons} Monster(s); shuffled back on top`); gain(st, 'heart', e.b * mons, src, depth); break;
+      }
+      case 'crystal': {
+        const n = Math.min(e.a, st.mine.length), top = st.mine.splice(0, n);
+        const play = top.filter(c => c.type === 'Power' || c.type === 'Ongoing'), back = top.filter(c => !(c.type === 'Power' || c.type === 'Ongoing'));
+        st.mine.unshift(...back); st.known = back.length; log(st, 'effect', `${src}: top ${n}: ${top.map(c => c.name).join(', ')}`);
+        for (const c of play) { if (over(st)) break; place(st, c, depth + 1); }
+        break;
+      }
+      case 'reveal': {
+        const want = e.a === 'Immediate' ? ['Immediate'] : ['Power', 'Ongoing'], seen = [];
+        let hit = null;
+        while (st.mine.length) { const c = st.mine.shift(); if (want.includes(c.type)) { hit = c; break; } seen.push(c); }
+        st.mine.push(...seen); shuffle(st, st.mine); st.known = 0;
+        if (!hit) log(st, 'effect', `${src}: no ${e.a} card in your Mine`);
+        else { log(st, 'effect', `${src}: found ${hit.name} (revealed ${seen.length} others, shuffled back)`); if (hit.type === 'Immediate') playImmediate(st, hit, depth + 1); else place(st, hit, depth + 1); }
+        break;
+      }
+      case 'cave': {
+        let n = 0;
+        while (st.mine.length && !over(st)) {
+          const c = st.mine.shift(); st.known = Math.max(0, st.known - 1);
+          if (c.type === 'Monster') { st.mine.unshift(c); st.known = 1; log(st, 'effect', `${src}: found ${c.name} — it goes back on top, face up`); return; }
+          n++; log(st, 'dig', `${src}: digs ${c.name}`); resolveDug(st, c, depth + 1);
+        }
+        log(st, 'effect', `${src}: dug ${n} cards and found no Monster`); break;
+      }
+      case 'sneak': {
+        const c = st.mine.shift(); st.known = Math.max(0, st.known - 1);
+        if (!c) { log(st, 'effect', `${src}: your Mine is empty`); break; }
+        log(st, 'dig', `${src}: digs ${c.name}`); resolveDug(st, c, depth + 1, { autoDefeat: true }); break;
+      }
+      case 'clone': break;                                // an Ongoing card; handled when placed
+      case 'whenKept': break;                             // only matters in Prep (Booster Pack)
+    }
+  }
+  const lastIndex = (arr, fn) => { for (let i = arr.length - 1; i >= 0; i--) if (fn(arr[i])) return i; return -1; };
+  const peekNames = (st, n) => st.mine.slice(0, n).map(c => c.name).join(', ') || 'nothing';
+
+  // ---------------- digging ----------------
+  function place(st, c, depth) {                           // a Power or Ongoing card comes into play
+    if (c.type === 'Power') { st.line.push({ card: c, at: c.number, base: c.number }); log(st, 'dig', `${c.name} goes on the Power line at ${c.number}`); }
+    else { st.ongoing.push(c); log(st, 'dig', `${c.name} goes in your Ongoing area`); if (compile(c).ongoing.flags.clone) st.pending = { kind: 'clone', card: c }; }
+    const b = compile(c);
+    if (c.type === 'Power' && b.dug.length) run(st, b.dug, { src: c, depth });
+    if (c.type === 'Ongoing') { refreshPet(st); }
+  }
+  function playImmediate(st, c, depth) {
+    const ctx = { src: c, depth };
+    log(st, 'dig', `${c.name} (Immediate)`);
+    run(st, compile(c).effects, ctx);
+    if (!ctx.moved) st.discard.push(c);
+    fire(st, 'digImmediate', {}, depth + 1);
+  }
+  function bonusMonster(st) {
+    const dmg = R.beyond.firstDamage + st.beyond++;
+    return { id: 'BONUS', name: 'Bonus Monster', type: 'Monster', number: null, deck: '', count: 1, text: `{damage} ${dmg}`, bonus: true, uid: uid++, damageNow: dmg };
+  }
+  function resolveDug(st, c, depth = 0, opt = {}) {
+    if (over(st)) return;
+    const b = compile(c);
+    if (c.type === 'Treasure') { st.discard.push(c); st.geodeGems += b.worth || 0; log(st, 'dig', `${c.name}: +${b.worth} {gem}`); }
+    else if (c.type === 'Immediate') playImmediate(st, c, depth);
+    else if (c.type === 'Power' || c.type === 'Ongoing') place(st, c, depth);
+    else if (c.type === 'Monster') startFight(st, c, opt);
+    refreshPet(st);
+  }
+  function dig(st) {
+    if (!can(st).dig) return false;
+    st.digs++;
+    let c = st.mine.shift(); st.known = Math.max(0, st.known - 1);
+    if (!c) { c = bonusMonster(st); log(st, 'dig', `Your Mine is empty — a ${c.name} appears`); }
+    else log(st, 'dig', `You dig ${c.name}`);
+    resolveDug(st, c);
+    return true;
+  }
+
+  // ---------------- the Monster roll ----------------
+  function rollDie(st) { if (st.dice && st.dice.length) return st.dice.shift(); return 1 + Math.floor(st.rng() * R.die); }
+  function startFight(st, m, opt = {}) {
+    st.monstersDug++;
+    const set = m.id, n = st.setCount[set] = (st.setCount[set] || 0) + 1, b = compile(m);
+    const dmg = m.bonus ? m.damageNow : b.ladder[Math.min(n, b.ladder.length) - 1];
+    const f = st.fight = { monster: m, damage: dmg, phase: 'before', die: null, grit: 0, gritSteps: [], bought: 0, gritSpent: 0, first: st.monstersDug === 1, fixed: null,
+      block: 0, halve: false, noDamage: false, defeat: false, surviveAt: null, sparkUsed: false, rolls: 0, trig: [], gritFired: false };
+    log(st, 'dig', `${m.name}${m.bonus ? '' : ' #' + n} — deals ${dmg} {damage}`);
+    if (opt.autoDefeat) { f.defeat = true; log(st, 'effect', `The Monster is defeated without a roll`); finishFight(st, true); return; }
+    fire(st, 'digMonster', { damage: dmg }, 1);
+    if (over(st)) return;
+    if (st.flags.clover !== undefined) { f.fixed = st.flags.clover; delete st.flags.clover; f.phase = 'after'; log(st, 'roll', `No roll: your result is ${f.fixed}`); }
+  }
+  function modsTotal(st, f) {
+    let t = 0;
+    for (const o of st.ongoing) for (const m of compile(o).ongoing.mods) {
+      if (m.vsDamage !== undefined && !(f.damage >= m.vsDamage)) continue;
+      if (m.heartAtMost !== undefined && !(st.heart <= m.heartAtMost)) continue;
+      let v = m.plus;
+      if (m.perSurvived) v = m.plus * Math.floor(st.survived / m.perSurvived);
+      if (m.perImmediate) v = Math.min(m.cap, m.plus * st.discard.filter(c => c.type === 'Immediate').length);
+      t += v;
+    }
+    return t;
+  }
+  function transform(st, f, r) {
+    const ts = []; for (const o of st.ongoing) ts.push(...compile(o).ongoing.transforms);
+    for (const kind of RL.transformOrder) for (const t of ts) {
+      if (t.kind !== kind) continue;
+      if (kind === 'double' && f.first) r *= 2;
+      else if (kind === 'becomes' && r === t.from) r = t.to;
+      else if (kind === 'floor' && r < t.below) r = t.to;
+    }
+    return r;
+  }
+  // The result now, with the pieces that make it up (for the table to show).
+  function result(st) {
+    const f = st.fight; if (!f) return null;
+    if (f.fixed !== null) return { total: f.fixed, parts: [{ label: 'Fixed', v: f.fixed }] };
+    if (f.die === null) return { total: 0, parts: [] };
+    const parts = [{ label: 'Die', v: f.die }]; let r = f.die;
+    if (f.grit) { parts.push({ label: 'Grit', v: f.grit }); r += f.grit; }
+    if (f.bought) { parts.push({ label: 'Grit (after)', v: f.bought * R.gritAfter.bonus }); r += f.bought * R.gritAfter.bonus; }
+    const mt = modsTotal(st, f); if (mt) { parts.push({ label: 'Cards', v: mt }); r += mt; }
+    const t = transform(st, f, r); if (t !== r) parts.push({ label: 'Cards change it to', v: t, set: true });
+    return { total: t, parts, raw: r };
+  }
+  const resultTotal = st => { const r = result(st); return r ? r.total : 0; };
+  function afterDie(st) {                                   // a die was just rolled: free rerolls from Ongoing cards
+    const f = st.fight, lim = flag(st, 'sparkLow');
+    if (lim !== undefined && !f.sparkUsed) { const r = result(st); if ((r.raw === undefined ? r.total : r.raw) <= lim) { f.sparkUsed = true; log(st, 'roll', `Your result is ${lim} or less — a free reroll`); f.die = rollDie(st); f.rolls++; log(st, 'roll', `Rerolled: ${f.die} → ${resultTotal(st)}`); } }
+  }
+  function spendGrit(st) {                                  // before the roll: +1 each (the Drone Booster makes the first worth more)
+    if (!can(st).grit) return false;
+    const f = st.fight, drone = flag(st, 'drone'), v = f.gritSteps.length === 0 && drone ? drone : R.gritBefore;
+    st.grit--; f.grit += v; f.gritSteps.push(v); f.gritSpent++; log(st, 'effect', `Grit spent: +${v} to the roll`); return true;
+  }
+  function refundGrit(st) {
+    if (!can(st).refund) return false;
+    const f = st.fight, v = f.gritSteps.pop(); st.grit++; f.grit -= v; f.gritSpent--; return true;
+  }
+  function roll(st) {
+    if (!can(st).roll) return false;
+    const f = st.fight; f.die = rollDie(st); f.rolls++; f.phase = 'after';
+    log(st, 'roll', `You roll ${f.die}` + (f.grit ? ` +${f.grit} Grit` : '') + ` → ${resultTotal(st)}`);
+    afterDie(st); checkGritWatch(st); return true;
+  }
+  function buyBonus(st) {
+    if (!can(st).bonus) return false;
+    const f = st.fight; st.grit -= R.gritAfter.cost; f.bought++; f.gritSpent += R.gritAfter.cost;
+    log(st, 'effect', `${R.gritAfter.cost} Grit spent: +${R.gritAfter.bonus} → ${resultTotal(st)}`); checkGritWatch(st); return true;
+  }
+  function checkGritWatch(st) { const f = st.fight; if (f && !f.gritFired && f.gritSpent > 0) { fire(st, 'spendGrit', { n: f.gritSpent }, 1); if (f.gritSpent >= 1 && st.ongoing.some(o => compile(o).ongoing.watchers.some(w => w.ev === 'spendGrit' && f.gritSpent >= w.min))) f.gritFired = true; } }
+  function reroll(st, opt = {}) {
+    const c = can(st); if (!c.reroll) return false;
+    const f = st.fight, th = flag(st, 'thorned'), useHealth = opt.withHealth || (st.reroll <= 0 && th);
+    if (useHealth) { lose(st, th, 'Thorned Gadget'); if (over(st)) return true; } else st.reroll -= R.rerollCost;
+    const old = f.die, nd = rollDie(st);
+    f.die = flag(st, 'twinDrill') ? Math.max(old, nd) : nd; f.rolls++;
+    if (!RL.gritCarriesToReroll) { st.grit += f.grit; f.grit = 0; }
+    log(st, 'roll', `Reroll: ${nd}${f.die !== nd ? ' (keeps the higher, ' + f.die + ')' : ''} → ${resultTotal(st)}`);
+    if (!useHealth) fire(st, 'spendReroll', {}, 1);
+    afterDie(st); return true;
+  }
+
+  // ---------------- facing the Monster: trigger the line, then take damage ----------------
+  function collectTriggers(st, r) {
+    const list = [];
+    for (const e of st.line) if (e.at <= r) { list.push(e); if (e.cloned) list.push(e); }
+    return list.sort((a, b) => b.at - a.at);
+  }
+  function triggerPass(st) {
+    const f = st.fight, r = resultTotal(st), trig = collectTriggers(st, r);
+    f.trig = trig; f.block = 0; f.halve = false; f.noDamage = false; f.defeat = false; f.surviveAt = null;
+    log(st, 'roll', `Result ${r}: ${trig.length ? trig.map(e => e.card.name).join(', ') + ' trigger' + (trig.length === 1 ? 's' : '') : 'no cards trigger'}`);
+    for (const e of trig) { if (over(st)) return; run(st, compile(e.card).effects, { src: e.card, result: r, trig, depth: 0 }); }
+    fire(st, 'triggers', { n: trig.length }, 1);
+  }
+  function previewDamage(st) {
+    const f = st.fight; if (f.defeat || f.noDamage) return 0;
+    if (f.first && anyFlag(st, 'cowcatcher')) return 0;
+    const bump = flag(st, 'bumper') || 0;
+    let d = f.damage;
+    if (RL.damageOrder === 'halveThenBlock') { if (f.halve) d = Math.floor(d / 2); d = Math.max(0, d - f.block - bump); }
+    else { d = Math.max(0, d - f.block - bump); if (f.halve) d = Math.floor(d / 2); }
+    return d;
+  }
+  function face(st) {
+    if (!can(st).face) return false;
+    const f = st.fight;
+    triggerPass(st); if (over(st)) return true;
+    let dmg = previewDamage(st);
+    if (!f.defeat && dmg >= st.heart && f.surviveAt === null && flag(st, 'panic') && !st.panicUsed && f.fixed === null) {
+      st.panicUsed = true; log(st, 'effect', `${st.ongoing.find(o => compile(o).ongoing.flags.panic).name}: this would BOOM you — a free reroll`);
+      f.die = rollDie(st); f.rolls++;
+      log(st, 'roll', `Rerolled: ${f.die} → ${resultTotal(st)}`);
+      if (RL.panicRetriggers) { triggerPass(st); if (over(st)) return true; }
+      dmg = previewDamage(st);
+    }
+    finishFight(st, false, dmg); return true;
+  }
+  function finishFight(st, auto, dmg = 0) {
+    const f = st.fight, m = f.monster;
+    if (f.defeat) {
+      st.defeated++; st.survived++;
+      const bounty = flag(st, 'bounty') || 0, base = m.bonus ? R.beyond.gems : R.survivedGems, g = Math.max(bounty, base);
+      st.monsterGems += g; log(st, 'effect', `${m.name} is defeated — worth ${g} {gem}`);
+      st.fight = null; fire(st, 'defeat', {}, 1); return;
+    }
+    if (dmg > 0) {
+      let take = dmg;
+      if (take >= st.heart && f.surviveAt !== null) { take = st.heart - f.surviveAt; log(st, 'effect', `Lucky save: you survive with ${f.surviveAt} {heart}`); }
+      st.heart -= take; log(st, 'damage', `You take ${take} {damage} (${f.damage}${f.halve ? ', halved' : ''}${f.block || flag(st, 'bumper') ? ', blocked ' + (f.block + (flag(st, 'bumper') || 0)) : ''})`);
+      if (st.heart <= 0) { st.heart = 0; st.fight = null; boom(st, `${m.name} took your last {heart}`); return; }
+    } else log(st, 'damage', `You take no {damage}`);
+    st.survived++; st.monsterGems += m.bonus ? R.beyond.gems : R.survivedGems;
+    st.fight = null; log(st, 'effect', `You survive ${m.name}. Monsters survived: ${st.survived}`);
+    if (dmg > 0) fire(st, 'takeDamage', { n: dmg }, 1);
+  }
+
+  // ---------------- other actions ----------------
+  function chooseClone(st, entry) {
+    if (!st.pending || st.pending.kind !== 'clone') return false;
+    const e = st.line.find(x => x === entry); if (!e) return false;
+    e.cloned = true; log(st, 'effect', `${st.pending.card.name} is placed under ${e.card.name}: it triggers twice`); st.pending = null; return true;
+  }
+  function trade(st, dir) {                                  // Workbench
+    const w = flag(st, 'workbench'); if (!w || st.fight && st.fight.phase === 'before' && false) return false;
+    if (dir === 'grit' && st.grit >= w.gritCost && st.reroll < R.caps.reroll) { st.grit -= w.gritCost; st.reroll = Math.min(R.caps.reroll, st.reroll + w.rerollGain); log(st, 'effect', `Workbench: ${w.gritCost} {grit} → ${w.rerollGain} {reroll}`); return true; }
+    if (dir === 'reroll' && st.reroll >= w.rerollCost && st.grit < R.caps.grit) { st.reroll -= w.rerollCost; st.grit = Math.min(R.caps.grit, st.grit + w.gritGain); log(st, 'effect', `Workbench: ${w.rerollCost} {reroll} → ${w.gritGain} {grit}`); return true; }
+    return false;
+  }
+  function score(st) { return { geodes: st.geodeGems, monsters: st.monsterGems, total: st.geodeGems + st.monsterGems, survived: st.survived }; }
+  function bank(st) {
+    if (!can(st).bank) return false;
+    const s = score(st); st.over = { kind: 'bank', ...s }; log(st, 'sys', `You bank: ${s.total} {gem}, ${s.survived} Monster${s.survived === 1 ? '' : 's'} survived.`); return true;
+  }
+  function can(st) {
+    const f = st.fight, idle = !st.over && !f && !st.pending;
+    return {
+      dig: idle,
+      bank: idle && (RL.bankWhen === 'anytime' || st.survived >= 1),
+      grit: !!f && !st.over && f.phase === 'before' && st.grit >= 1,
+      refund: !!f && !st.over && f.phase === 'before' && f.gritSteps.length > 0,
+      roll: !!f && !st.over && f.phase === 'before',
+      bonus: !!f && !st.over && f.phase === 'after' && f.fixed === null && st.grit >= R.gritAfter.cost,
+      reroll: !!f && !st.over && f.phase === 'after' && f.fixed === null && (st.reroll >= R.rerollCost || (!!flag(st, 'thorned') && st.heart > flag(st, 'thorned'))),
+      face: !!f && !st.over && f.phase === 'after',
+      choose: !!st.pending && !st.over,
+    };
+  }
+  return { compile, supported, parseEffects, parseOngoing, start, can, dig, spendGrit, refundGrit, roll, buyBonus, reroll, face, bank, chooseClone, trade, score, result, makeRng, shuffle, flag, previewDamage };
 })();
 </script>
 
