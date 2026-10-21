@@ -1422,7 +1422,7 @@ const Dig = (() => {
   function setupHTML() {
     const all = cards(), st = UI.state;
     if (!all.length) return `<div class="panel setup"><h2>Dig Dig BOOM!</h2><p class="note">${st.status === 'loading' ? 'Reading your sheet…' : 'No cards yet.'}</p></div>`;
-    const list = boosters(), shown = list.filter(c => c.type === S.tab), bad = list.filter(c => !Dig.supported(c));
+    const list = boosters(), shown = list.filter(c => c.type === S.tab), bad = all.filter(c => !Dig.supported(c));
     const offline = st.source !== 'sheet';
     const count = n => list.filter(c => c.type === n).length;
     const stepper = (act, v, extra = '') => `<span class="stepper"><button data-p="${act}" data-d="-1" aria-label="less">−</button><span>${v}</span><button data-p="${act}" data-d="1" aria-label="more">+</button></span>${extra}`;
