@@ -330,6 +330,7 @@ const DDB = {
       (id, gid) => `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`,
     ],
     timeoutMs: 12000,
+    cacheKey: 'ddb.sheet.cache.v1',                    // this browser keeps the last copy it read, to work offline (nothing is stored in the game's files)
   },
   // Columns of the card tab. Print = shown on the card. Hint = used by game logic. Note = design notes, never printed.
   columns: { id: 'ID', name: 'Name', type: 'Type', number: 'Number', deck: 'Deck', count: 'Count', text: 'Card Text', trigger: 'Trigger', notes: 'Notes' },
@@ -1384,7 +1385,7 @@ const Run = (() => {
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const u = n => `calc(var(--u) * ${n})`;
   document.body.dataset.mode = location.hash === '#cards' ? 'cards' : 'play';
-  const state = { all: [], source: '', status: 'loading', error: '', view: 'color', guides: true, round: true };
+  const state = { all: [], source: '', status: 'loading', error: '', view: 'color', guides: true, round: true, filter: 'all' };
 
   // ---------------- the sheet ----------------
   async function fetchTab(gid) {
@@ -1406,8 +1407,12 @@ const Run = (() => {
     try {
       const text = await fetchTab(D.sheet.tabs.cards);
       state.all = E.cards(E.parseCSV(text), D.columns); state.source = 'sheet'; state.status = 'ok'; state.error = '';
+      try { localStorage.setItem(D.sheet.cacheKey, JSON.stringify({ t: Date.now(), text })); } catch (e2) { /* private window: fine */ }
     } catch (e) {
-      state.all = E.cards(E.parseCSV(DDB_SAMPLE_CSV), D.columns); state.source = 'sample'; state.status = 'offline'; state.error = e.message;
+      // Offline or the sheet is unreachable: use the copy this browser saved the last time it read the sheet (not part of the game's files), else the design sample.
+      let cached = null; try { cached = JSON.parse(localStorage.getItem(D.sheet.cacheKey)); } catch (e2) { /* none */ }
+      if (cached && cached.text) { state.all = E.cards(E.parseCSV(cached.text), D.columns); state.source = 'cache'; state.status = 'offline'; state.error = e.message; state.cachedAt = cached.t; }
+      else { state.all = E.cards(E.parseCSV(DDB_SAMPLE_CSV), D.columns); state.source = 'sample'; state.status = 'offline'; state.error = e.message; }
     }
     render(); document.dispatchEvent(new Event('ddb-cards'));
   }
@@ -1531,7 +1536,7 @@ const Run = (() => {
     const pool = state.all.filter(c => c.type !== 'Monster' && c.type !== 'Treasure');
     const b = R2.textBox('compact'); let tw = 44;
     for (const c of pool) tw = Math.min(tw, fitFont(textHTML(c.text), b.w, b.h));
-    const order = Object.keys(D.types), list = [...state.all].sort((a, b2) => order.indexOf(a.type) - order.indexOf(b2.type));
+    const order = Object.keys(D.types), list = state.all.filter(c => state.filter === 'all' || c.type === state.filter).sort((a, b2) => order.indexOf(a.type) - order.indexOf(b2.type));
     const cells = list.map(c => `<div class="cell">${r2Card(c, tw, 'compact', statFor(c), scale)}<span class="cap">${esc(c.id)} · ${esc(c.name)}${c.count > 1 ? ' ×' + c.count : ''}</span></div>`).join('');
     return `<section class="dir" id="deck" data-round="deck"><h2>The whole deck</h2>
       <p class="sub">Coloured border and header with the name, type and Power number; compact art, so the rules text gets the room. Geodes: slim art, then a huge gem count. Monsters: art, then the damage ladder in big tiles, with the gems a survived Monster is worth. Rules text is <b>${E.formatSize(tw)}</b> on every card. ${list.length} cards, live from your sheet.</p>
@@ -1546,6 +1551,7 @@ const Run = (() => {
   function statusLine() {
     if (state.status === 'loading') return '<span class="status">Reading your sheet…</span>';
     if (state.source === 'sheet') return `<span class="status"><b>Live from your sheet</b> · ${state.all.length} cards read just now</span>`;
+    if (state.source === 'cache') return `<span class="status bad"><b>Could not reach the sheet</b> (${esc(state.error)}). Using the copy from ${new Date(state.cachedAt).toLocaleString()}. <button class="chip" data-act="reload">Try again</button></span>`;
     return `<span class="status bad"><b>Could not reach the sheet</b> (${esc(state.error)}). Showing a 6-card design sample only. <button class="chip" data-act="reload">Try again</button></span>`;
   }
   function render() {
@@ -1559,6 +1565,7 @@ const Run = (() => {
         <button class="chip" data-act="mode" data-v="print">🖨 Print sheets</button>
         <button class="chip ${state.guides ? 'on' : ''}" data-act="guides">Print guides</button>
         <button class="chip ${state.round ? 'on' : ''}" data-act="round">Rounded corners</button>
+        <span class="note">Show</span> ${['all', ...Object.keys(D.types)].map(t => `<button class="chip ${state.filter === t ? 'on' : ''}" data-act="filter" data-v="${t}">${t === 'all' ? 'All' : t}</button>`).join('')}
         ${[['color', 'Colour'], ['gray', 'Greyscale'], ['deut', 'Red-green (deuteranopia)'], ['prot', 'Red-green (protanopia)']].map(([v, t]) => `<button class="chip ${state.view === v ? 'on' : ''}" data-act="view" data-v="${v}">${t}</button>`).join('')}
       </div>`;
     if (!state.all.length) { $app.innerHTML = html; return; }
@@ -1577,6 +1584,7 @@ const Run = (() => {
     if (a === 'guides') state.guides = !state.guides;
     else if (a === 'round') state.round = !state.round;
     else if (a === 'view') state.view = el.dataset.v;
+    else if (a === 'filter') state.filter = el.dataset.v;
     else if (a === 'reload') { load(); return; }
     else if (a === 'mode') { setMode(el.dataset.v); return; }
     render();
@@ -1616,7 +1624,7 @@ const Run = (() => {
     } catch (e) { /* private window or full: fine, it just will not resume */ }
   }
   function restore() {
-    if (S.restored || !cards().length || UI.state.source !== 'sheet') return;
+    if (S.restored || !cards().length || UI.state.source === 'sample') return;
     S.restored = true;
     try {
       const raw = localStorage.getItem(SAVE_KEY); if (!raw) return;
@@ -1649,7 +1657,7 @@ const Run = (() => {
     const all = cards(), st = UI.state;
     if (!all.length) return `<div class="panel setup"><h2>Dig Dig BOOM!</h2><p class="note">${st.status === 'loading' ? 'Reading your sheet…' : 'No cards yet.'}</p></div>`;
     const list = boosters(), shown = list.filter(c => c.type === S.tab), bad = all.filter(c => !Dig.supported(c));
-    const offline = st.source !== 'sheet';
+    const offline = st.source === 'sample';
     const count = n => list.filter(c => c.type === n).length;
     const stepper = (act, v, extra = '') => `<span class="stepper"><button data-p="${act}" data-d="-1" aria-label="less">−</button><span>${v}</span><button data-p="${act}" data-d="1" aria-label="more">+</button></span>${extra}`;
     return `<div class="panel setup"><div class="scroll" id="setupScroll">
@@ -1679,11 +1687,11 @@ const Run = (() => {
 
   // ----- the menu, the Leaderboard, Prep and the end of a run -----
   function menuHTML() {
-    const b = readBest(), st = UI.state, offline = st.source !== 'sheet' && st.status !== 'loading';
+    const b = readBest(), st = UI.state, offline = st.source === 'sample' && st.status !== 'loading';
     const inProgress = !!S.back && ((S.run && S.run.phase !== 'done') || (!S.run && S.st && !S.st.over));
     const newBtn = (act, label, primary) => `<button class="btn ${S.confirmNew === act ? 'confirm' : primary && !inProgress ? '' : 'alt'}" data-p="${act}" ${cards().length ? '' : 'disabled'}>${S.confirmNew === act ? 'Tap again: this replaces your game' : label}</button>`;
     return `<div class="panel setup"><div class="scroll">
-      <p class="note">One player. ${offline ? '<b style="color:#ff9a8a">Your sheet could not be reached, so only the design sample is available — reload when you are online.</b>' : 'Cards and rules are read from your sheet each time this opens.'}</p>
+      <p class="note">One player. ${offline ? '<b style="color:#ff9a8a">Your sheet could not be reached, so only the design sample is available — reload when you are online.</b>' : st.source === 'cache' ? '<b style="color:#ffb86b">Offline: playing with the copy of your sheet this browser saved last time.</b>' : 'Cards and rules are read from your sheet each time this opens.'}</p>
       <div class="menu">
         ${inProgress ? `<div class="bigopt"><button class="btn" data-p="resume">Continue</button><p class="note">${S.run ? `Your run — round ${Math.min(S.run.round, S.run.rounds)} of ${S.run.rounds}, ${S.back === 'prep' ? 'Prep' : 'Dig'}.` : 'Your Practice Dig.'}</p></div>` : ''}
         <div class="bigopt">${newBtn('startrun', 'Play a run', true)}
@@ -1727,11 +1735,10 @@ const Run = (() => {
       const ladder = D.run.ladder.map(p => `<span class="${p.name === pr.pack.name ? 'cur' : ''}">${p.at}+ gems: ${p.name} (draw ${p.draw}, keep ${p.keep})</span>`).join('');
       if (step === 'pack') {
         const own = run.advancedTrash && run.owned.length ? `<p class="note">Optional rule — trash a card you own for +1 draw each (tap to trash it for good):</p><div class="grid">${run.owned.map(c => piece(c, { act: 'trashown', text: true })).join('')}</div>` : '';
-        rows.push(`<div class="pstep live"><h3>${num(3)}Booster Pack</h3><p>${first ? 'Before round 1:' : pr.boom ? 'Since you went BOOM:' : `${pr.gems} gems:`} a <b>${info.name} Pack</b> — draw <b>${info.draw}</b>, keep <b>${info.keep}</b>.</p><div class="ladder">${ladder}</div>${own}<button class="btn" data-p="openpack" style="margin-top:8px">Open the ${info.name} Pack</button></div>`);
+        rows.push(`<div class="pstep live"><h3>${num(3)}Booster Pack</h3><p>${first ? 'Before round 1:' : pr.boom ? 'Since you went BOOM:' : `${pr.gems} gems:`} a <b>${info.name} Pack</b> — draw <b>${info.draw}</b>, keep <b>${info.keep}</b>.</p><div class="ladder">${ladder}</div>${own}</div>`);
       } else if (step === 'keep') {
         const need = Run.keepCount(run);
-        rows.push(`<div class="pstep live"><h3>${num(3)}Booster Pack — keep ${need}</h3><p class="note">${pr.picked.length}/${need} chosen. The rest go to the Trash.</p><div class="grid">${pr.offer.map(c => piece(c, { act: 'pick', cls: pr.picked.includes(c.uid) ? 'sel' : '', tag: pr.picked.includes(c.uid) ? '✓ keep' : '' })).join('')}</div>
-          <button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'} style="margin-top:8px">Keep ${pr.picked.length === need ? 'these' : 'cards'}</button></div>`);
+        rows.push(`<div class="pstep live"><h3>${num(3)}Booster Pack — keep ${need}</h3><p class="note">${pr.picked.length}/${need} chosen. The rest go to the Trash.</p><div class="grid">${pr.offer.map(c => piece(c, { act: 'pick', cls: pr.picked.includes(c.uid) ? 'sel' : '', tag: pr.picked.includes(c.uid) ? '✓ keep' : '' })).join('')}</div></div>`);
       } else rows.push(`<div class="pstep"><h3>${num(3)}Booster Pack</h3><p>${info.name} Pack · kept ${run.owned.length ? 'and now own' : ''}: ${run.owned.map(c => A.esc(c.name)).join(', ') || 'nothing'}</p></div>`);
     }
     if (step === 'kit') {
@@ -1739,7 +1746,10 @@ const Run = (() => {
         <div class="grid">${run.owned.map(c => piece(c, { act: 'kitpick', cls: pr.kitPick.includes(c.uid) ? 'sel' : '', tag: pr.kitPick.includes(c.uid) ? '✓ kit' : '' })).join('')}</div></div>
         <div class="pstep"><h3>${num(5)}Reset, then ready</h3><p class="note">Health ${R.start.heart}, Grit ${R.start.grit}, Rerolls ${R.start.reroll}. Your Mine: the ${25} starting cards + ${run.owned.length - pr.kitPick.length} of yours.</p></div>`);
     }
-    const foot = step === 'kit' ? `<button class="btn" data-p="startround">Start round ${run.round}${run.round === run.rounds ? ' (final)' : ''}</button>` : '';
+    const need2 = step === 'keep' ? Run.keepCount(run) : 0, info2 = step === 'pack' ? Run.packInfo(run) : null;
+    const foot = step === 'kit' ? `<button class="btn" data-p="startround">Start round ${run.round}${run.round === run.rounds ? ' (final)' : ''}</button>`
+      : step === 'pack' ? `<button class="btn" data-p="openpack">Open the ${info2.name} Pack</button>`
+      : step === 'keep' ? `<button class="btn" data-p="keepgo" ${pr.picked.length === need2 ? '' : 'disabled'}>${pr.picked.length === need2 ? 'Keep these' : `Choose ${need2 - pr.picked.length} more`}</button>` : '';
     const best = run.history.length ? `<span class="note">Last Dig: ${run.history[run.history.length - 1].kind === 'bank' ? 'banked' : 'BOOM'} after ${run.history[run.history.length - 1].survived} Monsters.</span>` : '';
     return `<div class="panel setup"><div class="scroll" id="setupScroll">
       ${lbHTML(run, null)}

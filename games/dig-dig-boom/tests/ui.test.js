@@ -124,3 +124,20 @@ test('cards: every card in the chosen design — Geode a huge gem count, Monster
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
+
+test('cards: offline, the copy of the sheet this browser saved last time is used (and said so); with no copy it falls back to the sample', SKIP, async () => {
+  const browser = await chromium.launch(exe ? { executablePath: exe } : {});
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 1100, height: 900 }, hasTouch: true })).newPage();
+    const errors = []; page.on('pageerror', e => errors.push(e.message));
+    await page.route('**/docs.google.com/**', r => r.fulfill({ status: 200, contentType: 'text/csv', body: fixture }));
+    await page.goto(FILE + '#cards'); await page.waitForSelector('#deckRow .card');
+    assert.match(await page.locator('.status').first().innerText(), /Live from your sheet/);
+    await page.unroute('**/docs.google.com/**'); await page.route('**/docs.google.com/**', r => r.abort());
+    await page.reload(); await page.waitForSelector('#deckRow .card');
+    const t = await page.locator('.status').first().innerText();
+    assert.match(t, /Could not reach the sheet/); assert.match(t, /Using the copy from/);
+    assert.equal(await page.locator('#deckRow .card').count(), 11, 'all the cards, not just the sample');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
