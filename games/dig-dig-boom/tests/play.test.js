@@ -351,10 +351,10 @@ test('look: every Geode is a different gem (six colours and cuts, three of each)
   const { browser, page, errors } = await open();
   try {
     await begin(page, { mine: ['TR-01', 'TR-01', 'TR-01', 'TR-01', 'TR-01', 'TR-01', 'TR-01'] });
-    const seen = [];
+    const seen = [];          // (the card on top is read: the one before it stays visible underneath while the new one flips over it)
     for (let i = 0; i < 6; i++) {
       await page.click('#play [data-p=dig]');
-      seen.push(await page.evaluate(() => { const c = document.querySelector('#play .mat .mcard .card'); const tile = c.querySelector('.gemtile'); return { bg: getComputedStyle(tile).backgroundImage, cut: [...c.querySelectorAll('use')].map(u => u.getAttribute('href')).find(h => h.startsWith('#gem-')) }; }));
+      seen.push(await page.evaluate(() => { const c = [...document.querySelectorAll('#play .mat .mcard .card')].pop(); const tile = c.querySelector('.gemtile'); return { bg: getComputedStyle(tile).backgroundImage, cut: [...c.querySelectorAll('use')].map(u => u.getAttribute('href')).find(h => h.startsWith('#gem-')) }; }));
     }
     assert.equal(new Set(seen.map(x => x.bg)).size, 6, 'six different gem colours in a row: ' + JSON.stringify(seen));
     assert.equal(new Set(seen.map(x => x.cut)).size, 6, 'and six different cuts, so colour is never the only clue');
