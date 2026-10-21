@@ -13,8 +13,8 @@ function playRound(m, { humanPolicy = AI.act } = {}) {
   const me = Match.human(m); let guard = 0;
   while (!me.dig.over && guard++ < 2000) {
     const st = me.dig, before = st.digs;
-    if (!humanPolicy(me)) throw new Error('the human policy is stuck');
-    Run.checkOver(me);
+    if (!humanPolicy(me)) { if (Match.finalCheck(m)) continue; if (!Match.aiStep(m)) throw new Error('the human policy is stuck'); continue; }       // the final-round leader waits while the AI digs
+    Run.checkOver(me); Match.finalCheck(m);
     if (st.digs > before && !me.dig.over) Match.aiStep(m);
   }
   assert.ok(me.dig.over, 'the human Dig ended');
@@ -81,13 +81,26 @@ const aiDig = (seed, rounds, heart) => {
   return { m, ai, st };
 };
 
-test('the AI banks to take the lead when it is not confident (low-ish Health), and in the final round only once it is in the lead', () => {
-  for (const rounds of [1, 2]) {
-    const { m, st } = aiDig(6, rounds, 5);
-    let steps = 0; while (!st.over && steps++ < 100) Match.aiStep(m);
-    assert.equal(st.over.kind, 'bank'); assert.equal(st.survived, 4, `${rounds} round(s): it stopped as soon as it was past the Crown tracker (3)`);
-    assert.equal(Board.holder(m.board), 'ai');
-  }
+test('the AI banks to take the lead when it is not confident (low-ish Health)', () => {
+  const { m, st } = aiDig(6, 2, 5);
+  let steps = 0; while (!st.over && steps++ < 100) Match.aiStep(m);
+  assert.equal(st.over.kind, 'bank'); assert.equal(st.survived, 4, 'it stopped as soon as it was past the Crown tracker (3)');
+  assert.equal(Board.holder(m.board), 'ai');
+});
+
+test('the final round is a race: the AI never banks, waits once it is in the lead, digs again if you pass it, and stands when you go BOOM', () => {
+  const { m, ai, st } = aiDig(6, 1, 5);
+  const me = Match.human(m);
+  let steps = 0; while (steps++ < 40) Match.aiStep(m);
+  assert.ok(!st.over, 'it did not bank'); assert.equal(st.survived, 4, 'it dug to 4 (past the tracker, ahead of you) and then waited');
+  assert.ok(!Dig.can(st).bank);
+  me.dig.mine = Array.from({ length: 8 }, (_, i) => ({ ...by(i % 2 ? 'MO-02' : 'MO-01'), uid: 9300 + i })); me.dig.dice = Array(40).fill(10);
+  for (let i = 0; i < 5; i++) { Dig.dig(me.dig); Dig.roll(me.dig); Dig.autoFace(me.dig); Run.refresh(me); }
+  assert.ok(me.dig.board.lead, 'you passed it with 5'); Match.aiStep(m); assert.equal(st.survived, 5, 'so it had to dig again (and matched you, but you were there first)');
+  Match.aiStep(m); assert.equal(st.survived, 6, 'and it digs on until it is ahead of you');
+  me.dig.heart = 1; me.dig.dice = [1]; Dig.dig(me.dig); Dig.roll(me.dig); Dig.autoFace(me.dig); Run.checkOver(me);
+  assert.equal(me.dig.over.kind, 'boom'); Match.aiStep(m);
+  assert.ok(st.over && st.over.held, 'you are out and it is in the lead: it stands'); assert.equal(Board.holder(m.board), 'ai');
 });
 
 test('the AI does not bank for the lead while it is confident it can go further (high Health), but banks at 3 Health or less', () => {

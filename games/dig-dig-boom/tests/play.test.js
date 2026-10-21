@@ -72,7 +72,7 @@ test('play: Starter Kit — pick up to the kit size, tap again to put one back; 
     assert.match(await page.locator('#play .foot .note').innerText(), /2 of 3 chosen/);
     await page.click('#play [data-p=go]'); await page.waitForSelector('#play .ptable');
     assert.equal(await page.locator('#play .lcol .piece').count(), 1, 'only the Pet is in play at the start');
-    assert.equal(await page.locator('#play .ongoing .piece').count(), 0);
+    assert.equal(await page.locator('#play .ongoing .piece').count(), 1, 'the Lucky Coin is in play from the start');
     assert.match(await page.locator('#play .mat .cardback').innerText(), /^27$/, 'the 25 plus the 2 kit cards');
     assert.equal(await page.locator('#play .known .piece').count(), 2, 'the kit is on top of the Mine, face up');
     assert.deepEqual(errors, []);
@@ -270,15 +270,16 @@ test('run: bank, roll the Escape Bonus, open the pack the gems earn, keep, choos
     assert.match(await page.locator('#play .panel').innerText(), /Starter Kit — up to 2/);
     await page.click('#play [data-p=startround]');
     assert.match(await page.locator('#play .lbhead').innerText(), /round 2 of 2 · final/i);
-    assert.match(await page.locator('#play [data-p=bank] ').innerText(), /Bank[\s\S]*final round: no banking until you lead/);
+    assert.match(await page.locator('#play [data-p=bank] ').innerText(), /Bank[\s\S]*final round: no banking/);
     // final round: beat the tracker (4) and take the Crown
     await page.evaluate(() => {
       const P = window.DigDigBoomPlay, st = P.S.st, all = window.DigDigBoomUI.state.all;
       st.mine = ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01'].map((id, i) => ({ ...all.find(c => c.id === id), uid: 8100 + i })); st.dice = Array(30).fill(10); P.render();
     });
-    for (let i = 0; i < 5; i++) { await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await faceIt(page); }
-    await page.click('#play [data-p=bank]');
-    assert.match(await page.locator('#play .over').innerText(), /In the lead!/);
+    assert.ok(await page.locator('#play [data-p=bank]').isDisabled(), 'the final round is a race: nobody banks');
+    assert.match(await page.locator('#play .lbhead').innerText(), /not in the lead: keep digging/i);
+    for (let i = 0; i < 5 && !(await page.locator('#play .over').count()); i++) { await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await faceIt(page); }
+    assert.match(await page.locator('#play .over').innerText(), /In the lead![\s\S]*Everyone else is out/);
     await page.click('#play [data-p=prep]');
     assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown Jewel!/);
     assert.match(await page.locator('#play table').innerText(), /Banked[\s\S]*Banked/);

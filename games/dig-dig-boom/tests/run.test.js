@@ -2,7 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path');
-const { Dig, Run, Engine, DDB } = require('./load.js');
+const { Dig, Board, Run, Engine, DDB } = require('./load.js');
 const cards = Engine.cards(Engine.parseCSV(fs.readFileSync(path.join(__dirname, 'cards-full.csv'), 'utf8')), DDB.columns);
 const by = id => cards.find(c => c.id === id);
 const RN = DDB.run;
@@ -130,7 +130,7 @@ test('the app has no pledging: even with the Crown reached, nothing can be pledg
   assert.equal(DDB.rules.pledges, false); assert.ok(!Dig.canPledge(st, 3) && !Dig.canPledge(st, 4)); assert.ok(!Run.pledge(run, 4)); assert.ok(Dig.can(st).bank);
 });
 
-test('the final round: no banking until you are in the lead (past the Crown tracker); then the run ends and the Crown Jewel is yours', () => {
+test('the final round is a race: nobody banks; alone at the table you are in the lead once you pass the Crown tracker, and then the run ends with the Crown Jewel yours', () => {
   const run = Run.start(cards, { seed: 14, rounds: 2 });
   Run.openPack(run); Run.toggleKeep(run, run.prep.offer[0].uid); Run.confirmKeep(run); Run.beginDig(run, { seed: 1 });
   play(run, ['TR-01'], ['dig', 'bank'], 1); Run.finishDig(run);                              // round 1: survived 0, banked
@@ -138,13 +138,34 @@ test('the final round: no banking until you are in the lead (past the Crown trac
   run.dice = [4]; Run.rollEscape(run); Run.openPack(run); for (const c of run.prep.offer.slice(0, Run.keepCount(run))) Run.toggleKeep(run, c.uid); Run.confirmKeep(run); Run.beginDig(run, { seed: 2 });
   const st = run.dig; assert.ok(st.board.final);
   st.mine = ['TR-01', 'MO-01', 'MO-02', 'MO-01', 'MO-02', 'TR-01'].map((id, i) => ({ ...by(id), uid: 9100 + i })); st.dice = Array(30).fill(10);
-  assert.ok(!Dig.can(st).bank, 'no banking in the final round');
-  Dig.dig(st); for (let i = 0; i < 3; i++) { Dig.dig(st); Dig.roll(st); Dig.autoFace(st); }
-  assert.equal(st.survived, 3); assert.ok(!Dig.can(st).bank, '3 only ties the Crown tracker');
-  Dig.dig(st); Dig.roll(st); Dig.autoFace(st);
-  assert.ok(Dig.can(st).bank, 'in the lead');
-  Dig.bank(st); Run.finishDig(run);
+  const step = () => { Dig.dig(st); if (st.fight) { Dig.roll(st); Dig.autoFace(st); } Run.finalCheck([run]); };
+  step(); assert.ok(!Dig.can(st).bank, 'no banking in the final round, not even after a Geode');
+  for (let i = 0; i < 3; i++) step();
+  assert.equal(st.survived, 3); assert.ok(!st.over, '3 only ties the Crown tracker: keep digging'); assert.ok(!st.board.lead && !Dig.can(st).bank);
+  step();
+  assert.ok(st.over && st.over.kind === 'bank' && st.over.held, 'past the tracker and nobody left to race: the Dig ends by itself');
+  Run.finishDig(run);
   assert.equal(run.phase, 'done'); assert.deepEqual(run.result, { crown: true, best: 4, tracker: 4 });
+});
+
+test('the final round against another player: the leader may wait, everyone else must keep digging; the round ends when only the leader is left', () => {
+  const board = Board.create([{ id: 'me' }, { id: 'ai' }]);
+  const mk = id => Run.start(cards, { seed: 3, rounds: 1, me: id, shared: { board, deck: Run.makeDeck(cards, Dig.makeRng(3)), trash: [] } });
+  const a = mk('me'), b = mk('ai');
+  for (const r of [a, b]) { Run.openPack(r); Run.toggleKeep(r, r.prep.offer[0].uid); Run.confirmKeep(r); Run.beginDig(r, { seed: 9 }); r.dig.mine = ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01', 'MO-02'].map((id, i) => ({ ...by(id), uid: 9200 + i })); r.dig.dice = Array(40).fill(10); }
+  const surv = (r, n) => { for (let i = 0; i < n; i++) { Dig.dig(r.dig); Dig.roll(r.dig); Dig.autoFace(r.dig); Run.refresh(r); } };
+  surv(a, 4); Run.refresh(b);
+  assert.ok(a.dig.board.lead && !b.dig.board.lead, 'a is in the lead at 4 (past the tracker, ahead of b)'); assert.ok(!Dig.can(a.dig).bank && !Dig.can(b.dig).bank, 'nobody banks');
+  assert.ok(!Run.finalCheck([a, b]), 'b is still digging: a simply waits'); assert.ok(!a.dig.over);
+  surv(b, 4); Run.refresh(a);
+  assert.ok(a.dig.board.lead && !b.dig.board.lead, 'b tying a at 4 does not pass a (a was there first)');
+  assert.equal(Board.finalLeader(board).pid, 'me', 'a reached 4 first: ties go to the better spot');
+  surv(b, 1); Run.refresh(a);
+  assert.ok(b.dig.board.lead && !a.dig.board.lead, 'b passed a: now a is not in the lead and has to dig again');
+  b.dig.heart = 1; b.dig.dice = [1]; Dig.dig(b.dig); Dig.roll(b.dig); Dig.autoFace(b.dig); Run.checkOver(b);
+  assert.equal(b.dig.over.kind, 'boom'); Run.refresh(a);
+  assert.ok(a.dig.board.lead, 'b went BOOM: its live marker is gone, a leads again');
+  assert.ok(Run.finalCheck([a, b]) && a.dig.over.kind === 'bank', 'only a is left and a is in the lead: a stands'); assert.equal(Board.holder(board), 'me');
 });
 
 test('the final round BOOM leaves the Crown on the table', () => {
@@ -188,6 +209,7 @@ test('random runs of 5 rounds always finish, never lose or duplicate a Booster c
         else if (st.fight) { if (c.reroll && rr() < .5) Dig.reroll(st); else Dig.autoFace(st); }
         else if (c.bank && st.survived >= 2 && rr() < .3) Dig.bank(st);
         else if (c.dig) Dig.dig(st); else assert.fail(`seed ${seed}: stuck ${JSON.stringify(c)}`);
+        if (!st.over) Run.finalCheck([run]);                  // the final round ends by itself once you are in the lead and nobody is left to race
       }
     }
     assert.equal(run.phase, 'done', `seed ${seed}`);
@@ -240,7 +262,7 @@ test('the Board changes the moment a Dig ends: a bank locks in and may take the 
 }));
 
 test('the Dig\'s copy of the Leaderboard is refreshed from the live Board before it is asked (another player can change what it takes to lead)', () => {
-  const run = Run.start(cards, { seed: 30, rounds: 2 }); Run.openPack(run); Run.toggleKeep(run, run.prep.offer[0].uid); Run.confirmKeep(run); Run.beginDig(run, { seed: 1 });
+  const run = Run.start(cards, { seed: 30, rounds: 3 }); Run.openPack(run); Run.toggleKeep(run, run.prep.offer[0].uid); Run.confirmKeep(run); Run.beginDig(run, { seed: 1 });
   run.board.players.push({ id: 'ai', name: 'AI', color: '#000' });
   const first = run.dig; Dig.bank(first); Run.checkOver(run); Run.finishDig(run);
   run.dice = [3]; Run.rollEscape(run); Run.openPack(run); for (const c of run.prep.offer.slice(0, Run.keepCount(run))) Run.toggleKeep(run, c.uid); Run.confirmKeep(run); Run.beginDig(run, { seed: 2 });
@@ -249,6 +271,6 @@ test('the Dig\'s copy of the Leaderboard is refreshed from the live Board before
   Board.lockIn(run.board, 'ai', 7);                       // the AI banks 7 while I am digging
   Run.refresh(run); assert.equal(st.board.leadN, 8); assert.equal(st.board.crown, 7);
   for (let i = 0; i < 7; i++) { Dig.dig(st); Dig.roll(st); Dig.autoFace(st); }
-  assert.ok(!Dig.can(st).bank, '7 only ties the AI, and the AI has the better spot: banking now would not lead');
-  Dig.dig(st); Dig.roll(st); Dig.autoFace(st); assert.ok(Dig.can(st).bank);
+  Run.refresh(run); assert.ok(!Board.wouldLead(run.board, 'me', st.survived), '7 only ties the AI, and the AI has the better spot: banking now would not take the lead');
+  Dig.dig(st); Dig.roll(st); Dig.autoFace(st); Run.refresh(run); assert.ok(Board.wouldLead(run.board, 'me', st.survived), '8 leads');
 });

@@ -28,9 +28,9 @@ test('print: every card of the sheet, by its count, in 3 x 3 sheets at exactly 2
   const { browser, page, errors } = await open();
   try {
     const f = await feet(page);
-    assert.equal(f.filter(t => /Cards \d+\/15/.test(t)).length, 15, '129 cards = 15 sheets of 9');
+    assert.equal(f.filter(t => /Cards \d+\/15/.test(t)).length, 15, '130 cards = 15 sheets of 9');
     assert.equal(f.filter(t => /Power line/.test(t)).length, 3); assert.equal(f.filter(t => /Drill/.test(t)).length, 1); assert.equal(f.filter(t => /Leaderboard/.test(t)).length, 1); assert.equal(f.filter(t => /Table mat/.test(t)).length, 1);
-    assert.equal(await page.locator('#printv .sheet .pc').count(), 129);
+    assert.equal(await page.locator('#printv .sheet .pc').count(), 130);
     const first = await page.locator('#printv .sheet .pc >> nth=0').evaluate(e => { const r = e.firstElementChild.getBoundingClientRect(); const sheet = e.closest('.sheet').getBoundingClientRect(); return { w: r.width, h: r.height, sw: sheet.width, sh: sheet.height }; });
     assert.deepEqual([Math.round(first.w), Math.round(first.h), Math.round(first.sw), Math.round(first.sh)], [240, 336, 816, 1056], '2.5 x 3.5 in on an 8.5 x 11 in sheet at 96 px per inch');
     assert.equal(await page.locator('#printv .sheet:first-child .mk').count(), 16, 'crop marks on every grid line');
@@ -51,7 +51,7 @@ test('print: A4, a print-shop mode with bleed (one 2.75 x 3.75 in page per card)
     const trims = await page.locator('#printv .drill').evaluateAll(els => els.map(e => e.style.borderColor || getComputedStyle(e).borderTopColor));
     assert.equal(new Set(trims).size, 3, 'each player has their own trim colour');
     await page.click('[data-pr=bleed]');
-    assert.equal(await page.locator('#printv .bleedpage').count(), 129);
+    assert.equal(await page.locator('#printv .bleedpage').count(), 130);
     assert.match(await page.locator('#printv style').innerText(), /size: 2\.75in 3\.75in/);
     const b = await page.locator('#printv .bleedpage >> nth=0').evaluate(e => { const r = e.getBoundingClientRect(), c = e.querySelector('.card').getBoundingClientRect(); return [r.width, r.height, c.width, c.height].map(Math.round); });
     assert.deepEqual(b, [264, 360, 264, 360], 'the page is the card plus its bleed');

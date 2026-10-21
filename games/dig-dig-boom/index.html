@@ -463,6 +463,7 @@ const DDB = {
       ['modImm',     "^\\+(\\d+) to your rolls for each Immediate card in your discard pile, up to \\+(\\d+)$"],
       ['modVs',      "^\\+(\\d+) to your rolls against Monsters with (\\d+)\\+ \\{damage\\}$"],
       ['modLow',     "^While you have (\\d+) \\{heart\\} or less, \\+(\\d+) to your rolls$"],
+      ['modLethal',  "^If the Monster's \\{damage\\} is (?:equal to or greater than|greater than or equal to) your \\{heart\\}, \\+(\\d+) to your rolls?$"],     // the starting Ongoing card: a little luck when a Monster could BOOM you
       ['becomes',    "^If your result is (\\d+), it becomes a (\\d+)$"],
       ['floor',      "^If your result is less than (\\d+), it becomes (\\d+)$"],
       ['sparkLow',   "^If your result is (\\d+) or less, reroll for free$"],
@@ -647,6 +648,7 @@ const Dig = (() => {
       case 'modImm': o.mods.push({ plus: n(1), perImmediate: true, cap: n(2) }); break;
       case 'modVs': o.mods.push({ plus: n(1), vsDamage: n(2) }); break;
       case 'modLow': o.mods.push({ plus: n(2), heartAtMost: n(1) }); break;
+      case 'modLethal': o.mods.push({ plus: n(1), lethal: true }); break;
       case 'becomes': o.transforms.push({ kind: 'becomes', from: n(1), to: n(2) }); break;
       case 'floor': o.transforms.push({ kind: 'floor', below: n(1), to: n(2) }); break;
       case 'sparkLow': o.flags.sparkLow = n(1); break;
@@ -690,7 +692,8 @@ const Dig = (() => {
     st.heart = st.rules.heart; st.grit = st.rules.grit; st.reroll = st.rules.reroll;
     const starting = allCards.filter(c => c.deck === R.startingDeck);
     const pet = starting.find(c => c.type === 'Power');
-    const mine = []; for (const c of starting) if (c !== pet) mine.push(...copies(c));
+    const mine = []; for (const c of starting) if (c !== pet && c.type !== 'Ongoing') mine.push(...copies(c));
+    for (const c of starting) if (c.type === 'Ongoing') for (const k of copies(c)) st.ongoing.push(k);          // your other starting card: in play from the start, and not part of your Starter Kit (owner)
     if (pet) { st.pet = copy(pet); st.line.push({ card: st.pet, at: pet.number, base: pet.number, pet: true }); }
     const kitTop = [];
     for (const c of opts.extra || []) mine.push(copy(c));
@@ -698,7 +701,7 @@ const Dig = (() => {
     st.mine = shuffle(st, mine);
     if (kitTop.length) { st.mine.unshift(...kitTop); st.known = kitTop.length; }     // Starter Kit cards: on top of the Mine, face up, in the order you chose (owner)
     refreshPet(st);
-    log(st, 'sys', `New Dig (seed ${seed}). Mine: ${st.mine.length} cards. ${st.pet ? st.pet.name + ' is on the line.' : ''}`);
+    log(st, 'sys', `New Dig (seed ${seed}). Mine: ${st.mine.length} cards. ${st.pet ? st.pet.name + ' is on the line.' : ''}${st.ongoing.length ? ' ' + st.ongoing.map(o => o.name).join(', ') + ' is in play.' : ''}`);
     if (st.kit.length) log(st, 'sys', `Starter Kit: ${st.kit.map(k => k.name).join(', ')}.`);
     return st;
   }
@@ -931,6 +934,7 @@ const Dig = (() => {
     for (const o of st.ongoing) for (const m of compile(o).ongoing.mods) {
       if (m.vsDamage !== undefined && !(f.damage >= m.vsDamage)) continue;
       if (m.heartAtMost !== undefined && !(st.heart <= m.heartAtMost)) continue;
+      if (m.lethal && !(f.damage >= st.heart)) continue;                       // the Monster's damage would take you to 0: you are at the brink
       let v = m.plus;
       if (m.perSurvived) v = m.plus * Math.floor(st.survived / m.perSurvived);
       if (m.perImmediate) v = Math.min(m.cap, m.plus * st.discard.filter(c => c.type === 'Immediate').length);
@@ -1131,11 +1135,16 @@ const Dig = (() => {
     if (!can(st).bank) return false;
     const s = score(st); st.over = { kind: 'bank', ...s }; log(st, 'sys', `You bank: ${s.total} {gem}, ${s.survived} Monster${s.survived === 1 ? '' : 's'} survived.`); return true;
   }
+  // The final round: whoever is in the lead when everyone else has gone BOOM stands (nothing to bank; the Dig simply ends with their score).
+  function hold(st) {
+    if (st.over || st.fight || st.pending || !(st.board && st.board.final)) return false;
+    const s = score(st); st.over = { kind: 'bank', held: true, ...s }; log(st, 'sys', `Everyone else is out: you stand with ${s.survived} Monster${s.survived === 1 ? '' : 's'} survived.`); return true;
+  }
   function can(st) {
     const f = st.fight, idle = !st.over && !f && !st.pending;
     return {
       dig: idle,
-      bank: idle && (RL.bankWhen === 'anytime' || st.survived >= 1) && (st.pledge === null || st.survived >= st.pledge) && !(st.board && st.board.final && st.survived < (st.board.leadN !== undefined ? st.board.leadN : st.board.crown + 1)),
+      bank: idle && !(st.board && st.board.final) && (RL.bankWhen === 'anytime' || st.survived >= 1) && (st.pledge === null || st.survived >= st.pledge),       // the final round is a race: nobody banks
       grit: !!f && !st.over && f.phase === 'before' && st.grit >= 1,
       refund: !!f && !st.over && f.phase === 'before' && f.gritSteps.length > 0,
       roll: !!f && !st.over && f.phase === 'before',
@@ -1146,7 +1155,7 @@ const Dig = (() => {
       choose: !!st.pending && !st.over,
     };
   }
-  return { save, load, compile, supported, parseEffects, parseOngoing, start, can, pledge, canPledge, dig, spendGrit, refundGrit, roll, buyBonus, reroll, face, autoFace, eligible, trigger, triggerAll, bank, chooseClone, trade, score, result, makeRng, shuffle, flag, previewDamage };
+  return { save, load, compile, supported, parseEffects, parseOngoing, start, can, pledge, canPledge, dig, spendGrit, refundGrit, roll, buyBonus, reroll, face, autoFace, eligible, trigger, triggerAll, bank, chooseClone, hold, trade, score, result, makeRng, shuffle, flag, previewDamage };
 })();
 </script>
 
@@ -1202,6 +1211,21 @@ const Board = (() => {
     if (m && m.n >= survived) return false;
     claim(b, id, 'pledge', survived); return true;
   }
+  // The final round is a race. Everyone's score is the better of their locked-in best and their live marker (a player who went BOOM keeps only their best).
+  // Whoever is highest (ties to the better spot, and past the Crown's starting number) is in the lead and may wait; everyone else has to keep digging.
+  function finalLeader(b) {
+    let lead = null;
+    for (const p of b.players) {
+      let m = null; for (const k of ['best', 'pledge']) { const x = marker(b, p.id, k); if (x && (!m || x.n > m.n || (x.n === m.n && x.rank < m.rank))) m = x; }
+      if (m && m.n > b.crownStart && (!lead || m.n > lead.n || (m.n === lead.n && m.rank < lead.rank))) lead = { pid: p.id, n: m.n, rank: m.rank };
+    }
+    return lead;
+  }
+  // Alone at the table there is nobody to race: you are in the lead once your live number is past the Crown tracker (matching it does not count).
+  function inLead(b, id) {
+    if (b.players.length === 1) { const m = marker(b, id, 'pledge'); return !!m && m.n > tracker(b); }
+    const l = finalLeader(b); return !!l && l.pid === id;
+  }
   // The spot a player would hold if they locked in n now (their pledge's spot if it is under n, else the best open one).
   function rankIf(b, id, n) {
     const pl = marker(b, id, 'pledge'); if (pl && pl.n === n) return pl.rank;
@@ -1238,7 +1262,7 @@ const Board = (() => {
     remove(b, id, 'pledge');
     return { rank, tookLead: before !== id && holder(b) === id, newBest };
   }
-  return { create, marker, leader, tracker, holder, canPledge, pledge, clearPledge, track, wouldLead, leadN, lockIn, rankIf };
+  return { create, marker, leader, tracker, holder, canPledge, pledge, clearPledge, track, wouldLead, leadN, lockIn, rankIf, finalLeader, inLead };
 })();
 </script>
 
@@ -1355,7 +1379,7 @@ const Run = (() => {
     run.dig = Dig.start(run.all, run.kit, { seed: opts.seed === undefined ? (run.rng() * 4294967296) >>> 0 : opts.seed, dice: opts.dice, extra: rest,
       board: { crown: Board.tracker(run.board), final: run.round === run.rounds, leadN: Board.leadN(run.board, run.me) } });
     run.phase = 'dig'; run.prep = null;
-    log(run, `Round ${run.round}${run.round === run.rounds ? ' (the final round: no banking until you are in the lead)' : ''}. Kit: ${run.kit.map(c => c.name).join(', ') || 'none'}.`);
+    log(run, `Round ${run.round}${run.round === run.rounds ? ' (the final round: a race, nobody banks; whoever is in the lead may wait)' : ''}. Kit: ${run.kit.map(c => c.name).join(', ') || 'none'}.`);
     return true;
   }
   // The Dig is over (banked or BOOM): update the Leaderboard, then Prep (or the end of the run).
@@ -1400,7 +1424,7 @@ const Run = (() => {
   function refresh(run) {
     const st = run.dig; if (!st || !st.board) return;
     if (!st.over && !st.boardApplied) Board.track(run.board, run.me, st.survived);      // the live marker follows your run
-    st.board.crown = Board.tracker(run.board); st.board.leadN = Board.leadN(run.board, run.me);
+    st.board.crown = Board.tracker(run.board); st.board.leadN = Board.leadN(run.board, run.me); st.board.lead = Board.inLead(run.board, run.me);
   }
   // The moment a Dig ends (bank or BOOM) the Board changes: a BOOM removes the Pledge marker, a bank locks the score in and may take the Crown right away.
   function checkOver(run) {
@@ -1419,8 +1443,17 @@ const Run = (() => {
     st.board.leadN = Board.leadN(run.board, run.me);          // your spot may now be good enough to lead at the Crown's own number
     return true;
   }
+  // The final round ends when nobody still digging has to: the players left standing are all out (BOOM) but one, and that one is in the lead.
+  // runs: every player's Run. Returns true if it ended someone's Dig.
+  function finalCheck(runs) {
+    const alive = runs.filter(r => r.phase === 'dig' && r.dig && !r.dig.over);
+    if (alive.length !== 1 || !alive[0].dig.board || !alive[0].dig.board.final) return false;
+    const r = alive[0]; refresh(r);
+    if (!r.dig.board.lead || !Dig.hold(r.dig)) return false;
+    checkOver(r); return true;
+  }
   const reserve = n => { uid = Math.max(uid, n + 1); };
-  return { makeDeck, setEscape, reserve, pledge, bank, refresh, checkOver, sync, save, load, start, rollEscape, packInfo, trashOwned, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
+  return { makeDeck, setEscape, reserve, pledge, bank, finalCheck, refresh, checkOver, sync, save, load, start, rollEscape, packInfo, trashOwned, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
 })();
 
 /* =====================================================================
@@ -1448,6 +1481,7 @@ const AI = (() => {
       if (c.reroll && wantsMore && f.rolls < A.maxRolls) { Dig.reroll(st); return true; }
       Dig.autoFace(st); return true;
     }
+    if (st.board.final && st.board.lead) return false;                       // in the final round the leader waits; everyone else has to keep digging
     const confident = st.heart >= A.confidentHealth;
     if (c.bank && st.survived >= 1 && (st.heart <= A.bankAtHealth || (!confident && st.survived >= st.board.leadN))) { Run.bank(run); return true; }
     if (c.dig) { Dig.dig(st); return true; }
@@ -1490,12 +1524,14 @@ const Match = (() => {
       if (st.digs > before && !st.fight && !st.pending) break;
     }
     if (!st.over) Run.refresh(ai);
-    m.aiDug++; return true;
+    finalCheck(m); m.aiDug++; return true;
   }
+  // The final round: when everyone but the leader is out, the leader's Dig simply ends.
+  function finalCheck(m) { return Run.finalCheck([human(m), bot(m)]); }
   // Finish the AI's whole Dig at once (the Fast forward button, and tests). Everyone digs at their own pace; Prep waits for the last one.
   function settle(m) {
     const ai = bot(m), me = human(m); if (!me.dig || !me.dig.over || !ai.dig) return;
-    for (let n = 0; n < 600 && !ai.dig.over; n++) { if (!AI.act(ai)) break; Run.checkOver(ai); }
+    for (let n = 0; n < 600 && !ai.dig.over; n++) { if (!AI.act(ai)) { if (finalCheck(m)) continue; break; } Run.checkOver(ai); finalCheck(m); }
     if (!ai.dig.over) throw new Error('the AI could not finish its Dig');
     Run.checkOver(ai);
   }
@@ -1548,7 +1584,7 @@ const Match = (() => {
     m.runs[HUMAN] = Run.load(all, d.runs[HUMAN], shared); m.runs[BOT] = Run.load(all, d.runs[BOT], shared);
     return m;
   }
-  return { start, aiStep, settle, rollEscape, openPack, beginRound, finishRound, save, load, human, bot, HUMAN, BOT };
+  return { start, aiStep, settle, finalCheck, rollEscape, openPack, beginRound, finishRound, save, load, human, bot, HUMAN, BOT };
 })();
 </script>
 
@@ -1839,7 +1875,7 @@ const Match = (() => {
     const stepper = (act, v, extra = '') => `<span class="stepper"><button data-p="${act}" data-d="-1" aria-label="less">−</button><span>${v}</span><button data-p="${act}" data-d="1" aria-label="more">+</button></span>${extra}`;
     return `<div class="panel setup"><div class="scroll" id="setupScroll">
       <h2>Choose your Starter Kit</h2>
-      <p class="note">Your Mine is the ${all.filter(c => c.deck === R.startingDeck && c.type !== 'Power').reduce((a, c) => a + c.count, 0)} Starting cards. Pick Booster cards to start this Dig with: Power and Ongoing cards are in play from the start; Immediate cards are shuffled into your Mine.${offline ? ' <b style="color:#ff9a8a">Your sheet could not be reached, so only the design sample is available — reload when you are online.</b>' : ''}</p>
+      <p class="note">Your Mine is the ${all.filter(c => c.deck === R.startingDeck && c.type !== 'Power' && c.type !== 'Ongoing').reduce((a, c) => a + c.count, 0)} Starting cards. Pick Booster cards to start this Dig with: Power and Ongoing cards are in play from the start; Immediate cards are shuffled into your Mine.${offline ? ' <b style="color:#ff9a8a">Your sheet could not be reached, so only the design sample is available — reload when you are online.</b>' : ''}</p>
       <div class="tabs">
         ${['Power', 'Ongoing', 'Immediate'].map(t => `<button class="chip ${S.tab === t ? 'on' : ''}" data-p="tab" data-v="${t}">${t} (${count(t)})${S.kit.filter(id => (list.find(c => c.id === id) || {}).type === t).length ? ' · ' + S.kit.filter(id => (list.find(c => c.id === id) || {}).type === t).length + ' in kit' : ''}</button>`).join('')}
         <span class="note" style="margin-left:auto">Kit size ${stepper('size', S.kitSize)}</span>
@@ -1902,9 +1938,10 @@ const Match = (() => {
       const dots = marks.filter(x => x.m.n === n).map(x => `<i class="mk ${x.k}" style="--pc:${x.p.color}" title="${A.esc(x.p.name)}: ${x.k === 'best' ? 'best Dig' : 'this Dig'}">${x.m.rank > 1 ? x.m.rank : ''}</i>`).join('');
       cells += `<div class="lbc ${n === here ? 'here' : ''} ${n <= tr ? 'free' : ''}"><span class="ln">${n === 0 ? 'Start' : n}</span><span class="lm">${n === tr ? `<b class="crownmk ${holder ? 'mine' : ''}">♛</b>` : ''}${dots}</span></div>`;
     }
+    const finalNote = run.round >= run.rounds && st && !st.over && st.board ? (st.board.lead ? ' · <b style="color:var(--accent)">you are in the lead: you may wait</b>' : ' · <b>not in the lead: keep digging</b>') : '';
     const who = holder === me ? '<b style="color:var(--accent)">you hold the Crown Jewel</b>' : holder ? `<b>${A.esc(nameOf(run, holder))} holds the Crown Jewel</b>` : 'Crown Jewel on the table';
     const legend = players.length > 1 ? players.map(p => `<span style="color:${p.color}">●</span> ${A.esc(p.name)}`).join(' &nbsp; ') + ' · ' : '';
-    return `<section class="lb"><div class="lbhead"><span>Leaderboard · Round ${Math.min(run.round, run.rounds)} of ${run.rounds}${run.round >= run.rounds ? ' · final' : ''}${players.length > 1 ? ' · ' + legend : ''}</span><span>♛ Crown at ${tr} · ${who}</span></div>
+    return `<section class="lb"><div class="lbhead"><span>Leaderboard · Round ${Math.min(run.round, run.rounds)} of ${run.rounds}${run.round >= run.rounds ? ' · final' : ''}${players.length > 1 ? ' · ' + legend : ''}</span><span>♛ Crown at ${tr} · ${who}${finalNote}</span></div>
       <div class="lbcells" style="grid-template-columns:repeat(${max + 1},minmax(0,1fr))">${cells}</div>${S.match && st ? `<div class="ailine">${A.esc(aiLine(S.match))}</div>` : ''}</section>`;
   }
   function aiPrepHTML(m) {
@@ -2021,7 +2058,7 @@ const Match = (() => {
     const mine = `<div class="stack" style="gap:6px"><button class="pile ${can.dig ? 'live' : ''}" data-p="dig" ${can.dig ? '' : 'disabled'} style="flex:1"><div class="cardback">${st.mine.length}</div><span>Mine<br><span class="cap2">${st.mine.length ? (can.dig ? 'tap to dig' : '') : 'empty: Bonus Monsters next'}</span></span></button>${known ? `<div class="known">${known}</div>` : ''}</div>`;
     const top = [...st.discard].reverse()[0];
     const rb = st.board;
-    const bankSub = can.bank ? (rb && rb.final ? 'you are in the lead' : 'tap to keep them') : rb && rb.final ? `final round: no banking until you lead` : '';
+    const bankSub = can.bank ? 'tap to keep them' : rb && rb.final ? 'final round: no banking' : '';
     const right = `<div class="stack"><button class="pile" data-p="zoom" data-uid="${top ? top.uid : ''}" ${top ? '' : 'disabled'} style="${top ? 'color:#fff' : ''}">${top ? piece(top, { text: false, num: false }) : ''}<span>Discard · ${st.discard.length}</span></button>
        <button class="pile bankp ${can.bank ? 'live' : ''}" data-p="bank" ${can.bank ? '' : 'disabled'}><span class="gemline">${gems}${ic('gem')}</span><span>Bank<br><span class="cap2">${bankSub}</span></span></button></div>`;
     let mid;
@@ -2036,7 +2073,7 @@ const Match = (() => {
         : `${S.match ? `<div class="note">${A.esc(aiLine(S.match))}</div>` : ''}<div class="row2"><button class="btn" data-p="prep">${fin ? 'See the result' : 'To Prep'}</button></div>`;
       over = st.over.kind === 'boom'
         ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${T(st.over.why)}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this round — your best on the Leaderboard stays.</div>${next}</div>`
-        : `<div class="over"><h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="big"><b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${(S.run.endInfo || {}).stoleCrown ? ' — <b>you take the Crown Jewel</b>' : (S.run.endInfo || {}).newBest ? ' — a new best' : ''}<br><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} before the Escape Bonus</div>${next}</div>`;
+        : `<div class="over"><h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="big"><b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${(S.run.endInfo || {}).stoleCrown ? ' — <b>you take the Crown Jewel</b>' : (S.run.endInfo || {}).newBest ? ' — a new best' : ''}${fin ? '<br>Everyone else is out.' : `<br><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} before the Escape Bonus`}</div>${next}</div>`;
     } else if (st.over) {
       over = (st.over.kind === 'boom'
       ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${T(st.over.why)}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this Dig.</div>`
@@ -2057,7 +2094,8 @@ const Match = (() => {
       <li><b>Any card</b>: tap it to see it full size, tap again to close.</li>
       <li><b>Beyond the Mine</b>: when the Mine runs out, Bonus Monsters keep coming: ${R.beyond.firstDamage}, ${R.beyond.firstDamage + 1}, … damage, worth ${R.beyond.gems} gems.</li></ul>
       <p><b>A run</b> (Play a run): ${D.run.roundChoices.join(' or ')} rounds, each a Dig then a Prep. Before round 1 you open a ${D.run.firstPack} Pack. <b>Prep</b>: 1 Escape Bonus (if you banked: roll the die, add that many gems) · 2 count gems (Geodes + Monsters survived + Escape Bonus; BOOM is 0) · 3 Booster Pack from the reward ladder (BOOM: a ${D.run.boomPack} Pack) — draw some, keep some · 4 choose a Starter Kit from your cards (1, 2, 2, 3 by round) · 5 reset: a fresh Drill, and everything else you own is shuffled into your Mine. Only the cards you own and your best Dig carry over.</p>
-      <p><b>Leaderboard</b>: positions are Monsters survived. The Crown tracker starts at ${D.run.crownStart}. Before the Crown you dig or bank freely. There is no pledging in this version: your marker on the Leaderboard moves by itself the moment you survive a Monster, so you always see where you stand. Bank above the tracker and you take the Crown Jewel and move the tracker. A BOOM locks in nothing, but your best stays. In the <b>final round</b> there is no banking until you are in the lead (past the tracker); banking then takes the Crown the usual way, and the round goes on until every player has banked or gone BOOM. Hold the Crown Jewel at the end and you win. On the Leaderboard: the ring is where you are in this Dig, the dot is your best locked-in Dig, the crown is the Crown tracker.</p>
+      <p><b>Leaderboard</b>: positions are Monsters survived. The Crown tracker starts at ${D.run.crownStart}. Before the Crown you dig or bank freely. There is no pledging in this version: your marker on the Leaderboard moves by itself the moment you survive a Monster, so you always see where you stand. Bank above the tracker and you take the Crown Jewel and move the tracker. A BOOM locks in nothing, but your best stays. The <b>final round</b> is a race: nobody banks. Whoever is in the lead (past the tracker, and ahead of everyone else's best and live number) may wait; everyone else has to keep digging, and rolling tens is how you catch up. If someone passes the leader, the old leader has to dig again. The round ends when everyone but the leader has gone BOOM, and the leader takes the Crown Jewel. Hold the Crown Jewel at the end and you win. On the Leaderboard: the ring is where you are in this Dig, the dot is your best locked-in Dig, the crown is the Crown tracker.</p>
+      <p><b>Your two starting cards</b> are in play at the start of every Dig and do not count against your Starter Kit: your Pet (a Power card at 10: defeat the Monster) and the starting Ongoing card beside it (when the Monster's damage is equal to or greater than your Health, +1 to your roll).</p>
       <p><b>The AI</b> digs on its own clock while you dig, and preps at the same time as you (it opens its Booster Pack when you open yours). When you are done and it is not, tap Fast forward. It spends Grit and Rerolls to get useful cards going, and keeps digging rather than banking while its Health is high.</p>
       <p><b>Calls made where the rules are unclear</b> (all in QUESTIONS.md, one line each to change):</p>
       <ul><li>The die is a d${R.die}; Health starts at ${R.start.heart}, Grit ${R.start.grit}, Rerolls ${R.start.reroll}.</li>
@@ -2096,7 +2134,7 @@ const Match = (() => {
   function aiTick() {
     clearTimeout(aiTimer); aiTimer = null;
     if (!aiDigging()) return;
-    Match.aiStep(S.match); persist();
+    Match.aiStep(S.match); if (S.run.dig && !S.run.dig.over) Run.refresh(S.run); persist();
     const lb = $.querySelector('section.lb');
     if (S.panel === 'dig' && !S.help && !S.zoom && lb && aiDigging()) { lb.outerHTML = lbHTML(S.run, S.st); scheduleAI(); }
     else if (S.panel === 'dig' && !S.help && !S.zoom) render();
@@ -2156,7 +2194,7 @@ const Match = (() => {
       case 'trade': Dig.trade(st, el.dataset.v); break;
       case 'heart': break;
     }
-    if (S.run) { Run.checkOver(S.run); if (S.run.phase === 'dig') Run.refresh(S.run); }
+    if (S.run) { Run.checkOver(S.run); if (S.run.phase === 'dig') Run.refresh(S.run); if (S.match) Match.finalCheck(S.match); else Run.finalCheck([S.run]); }
     if (S.st && S.st.over && !S.st.best && !S.run) recordBest(S.st);
     persist(); render();
   }

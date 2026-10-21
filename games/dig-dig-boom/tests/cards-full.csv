@@ -3,6 +3,7 @@ PW-01,Drill Pup,Power,10,Starting,1,Defeat the Monster. You take no {damage}.
 TR-01,Geode,Treasure,,Starting,18,1 {gem}
 MO-01,Monster A,Monster,,Starting,4,{damage} 1 → 3 → 5 → 7
 MO-02,Monster B,Monster,,Starting,3,{damage} 2 → 4 → 6
+ON-38,Lucky Coin,Ongoing,,Starting,1,"If the Monster's {damage} is equal to or greater than your {heart}, +1 to your roll"
 PW-02,Nurse Newt,Power,1,Booster,1,+1 {heart}
 PW-03,Picnic Ant,Power,1,Booster,1,"Gain {heart} equal to half your result, rounded down"
 PW-04,Prickly Porcupine,Power,1,Booster,1,"Lose 1 {heart}, then +2 {grit}"
