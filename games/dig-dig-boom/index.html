@@ -204,7 +204,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .mcard { overflow: visible; }
 #play .fx-flip { animation: flipin .5s cubic-bezier(.2,.8,.3,1) both; }
 #play .fx-slam { animation: slam .55s cubic-bezier(.2,.8,.3,1) both; }
-#play .fx-tumble { animation: tumble .5s cubic-bezier(.2,.8,.3,1) both; }
+#play .fx-tumble { animation: tumble 1.3s cubic-bezier(.2,.8,.3,1) both; }
 #play .burst { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
 #play .burst i { position: absolute; left: 50%; top: 46%; width: 22px; height: 22px; margin: -11px 0 0 -11px; animation: burst .8s cubic-bezier(.15,.7,.3,1) both; }
 #play .burst svg { width: 22px; height: 22px; }
@@ -221,7 +221,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .d10 .dnum { fill: #1d1712; font-weight: 900; font-size: 34px; font-family: inherit; }
 #play .d10 .dnum.ten { font-size: 28px; }
 #play .d10.idle .dbody { fill: #f5ead2; }
-#play .d10.fx-tumble { animation: tumble .85s cubic-bezier(.2,.8,.3,1) both; }
+#play .d10.fx-tumble { animation: tumble 1.3s cubic-bezier(.2,.8,.3,1) both; }
 #play .tapword { font-size: 15px; font-weight: 800; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; text-align: center; }
 #play .mpile { width: 200px; flex: none; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
 #play .mpile h4 { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
@@ -525,19 +525,11 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 
 /* where you are: only what you can do now is bright; a step line says which step you are on; a stamp says how the Monster ended */
 #play .deck:disabled, #play .pile:disabled { opacity: .38; filter: saturate(.5); }
-#play .steps { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; color: var(--dim); }
-#play .stp { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 8px; border-radius: 99px; border: 2px solid var(--line); background: rgba(0,0,0,.2); }
-#play .stp i { font-style: normal; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,.12); color: var(--text); font-size: 15px; }
-#play .stp.cur { color: #1c1410; background: var(--accent); border-color: #fff; }
-#play .stp.cur i { background: #1c1410; color: var(--accent); }
-#play .stp.done { color: var(--good); border-color: var(--good); }
-#play .stp.done i { background: var(--good); color: #0b3a22; }
-#play .sarr { font-size: 24px; color: var(--dim); }
 #play .stamp { position: absolute; left: 50%; top: 40%; z-index: 5; transform: translate(-50%, -50%) rotate(-14deg); padding: 4px 16px; border: 5px solid currentColor; border-radius: 10px; font-size: 32px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; background: rgba(255,255,255,.9); box-shadow: 0 6px 0 rgba(0,0,0,.35); animation: stampin .35s cubic-bezier(.2,.8,.3,1) both; pointer-events: none; }
 #play .stamp.survived { color: #168a4a; }
 #play .stamp.defeated { color: #7a3fb8; }
 @keyframes stampin { 0% { transform: translate(-50%, -50%) rotate(-14deg) scale(2.2); opacity: 0; } 70% { transform: translate(-50%, -50%) rotate(-14deg) scale(.94); opacity: 1; } 100% { transform: translate(-50%, -50%) rotate(-14deg) scale(1); opacity: 1; } }
-#play .action .d10.fx-tumble { animation-duration: .3s; }
+#play .action .d10.fx-tumble { animation-duration: .55s; }
 
 /* "Use all" is a real button: bright, raised, impossible to miss */
 #play .aprompt .chip[data-p=triggerall] { min-height: 52px; padding: 8px 22px; border-radius: 16px; border: 3px solid #e9d4ff; background: linear-gradient(180deg, #a15be0, #6d2fb0); color: #fff; font-size: 20px; font-weight: 900; box-shadow: 0 5px 0 #3b1766, 0 10px 18px rgba(0,0,0,.4); }
@@ -623,7 +615,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .gbubble .ic { width: 24px; height: 24px; }
 #play .grow { position: absolute; left: 0; right: 0; height: 0; display: flex; align-items: center; }
 #play .gat { position: absolute; left: 0; width: 56px; text-align: right; transform: translateY(-50%); font-size: 18px; font-weight: 800; color: var(--dim); }
-#play .gtick { position: absolute; left: 62px; width: 50px; height: 4px; transform: translateY(-50%); background: #6b4a27; border-radius: 2px; }
+#play .gtick { position: absolute; left: 62px; width: 148px; height: 3px; transform: translateY(-50%); background: #6b4a27; border-radius: 2px; }
 #play .gname { position: absolute; left: 216px; transform: translateY(-50%); font-size: 18px; font-weight: 800; color: #8a7a64; white-space: nowrap; }
 #play .gname b { display: inline-block; min-width: 40px; }
 #play .grow.reached .gname { color: var(--text); } #play .grow.reached .gtick { background: var(--pc); } #play .grow.reached .gat { color: var(--text); }
@@ -645,6 +637,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 @keyframes raysin { 0%, 25% { opacity: 0; transform: rotate(0) scale(.4); } 40% { opacity: 1; } 100% { opacity: 0; transform: rotate(40deg) scale(1.15); } }
 @keyframes shockin { 0% { opacity: 1; transform: scale(.3); } 100% { opacity: 0; transform: scale(3.2); } }
 @keyframes sparkout { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.3); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.2) rotate(120deg); } }
+#play .pile.bankp.live { animation: none; }
 </style>
 </head>
 <body>
@@ -1379,14 +1372,12 @@ const Dig = (() => {
     if (needsFinal(effs)) f.deferred.push(entry); else run(st, effs, { src: entry.card, result: resultTotal(st), trig: f.trig, depth: 0 });
     if (!over(st)) fire(st, 'triggers', { n: new Set(f.trig.map(e => e.card)).size }, 1);
     if (!hold && st.fight === f && !over(st) && f.deferred.length && !eligible(st).length) runDeferred(st);          // no other card can trigger any more: "if no other card triggers" is settled, so it happens now
-    if (!hold && st.fight === f && f.defeat && !over(st)) face(st);          // the Monster is defeated: nothing is left to do with it, so it goes to the pile by itself
     return true;
   }
   function triggerAll(st) {                                // the order a hurried player would use: highest number first
     const f = st.fight;
     for (let n = 0; n < 60 && st.fight && !over(st); n++) { const el = eligible(st); if (!el.length) break; trigger(st, el[0], true); }
     if (st.fight === f && f && f.deferred.length && !over(st)) runDeferred(st);
-    if (st.fight === f && f && f.defeat && !over(st)) face(st);          // everything chosen: a defeated Monster goes to the pile
   }
   function runDeferred(st) {
     const f = st.fight; const list = f.deferred.splice(0);
@@ -2385,7 +2376,7 @@ const Match = (() => {
   // The roll, played out: numbers flick past on the die and settle on the real result (already decided; this is only for the eye).
   function playDice() {
     $.querySelectorAll('.d10.fx-tumble .dnum[data-final]').forEach(el => {
-      const fast = !!el.closest('.action'), steps = fast ? 5 : 11, ms = fast ? 45 : 70;        // the roll in a fight happens a lot: quick; the Escape Bonus is a moment: slower
+      const fast = !!el.closest('.action'), steps = fast ? 8 : 18, ms = fast ? 55 : 85;        // the roll in a fight happens a lot: quick; the Escape Bonus is a moment: slower
       let n = 0; const fin = el.dataset.final, iv = setInterval(() => { n++; if (n >= steps || !el.isConnected) { clearInterval(iv); el.textContent = fin; return; } el.textContent = 1 + Math.floor(Math.random() * 10); }, ms);
     });
   }
@@ -2421,21 +2412,21 @@ const Match = (() => {
   }
   // The tally after a bank, shown one piece at a time while a thermometer fills up beside it: Treasure, a pause, Monsters, a pause, then you tap the die; and only when the die has landed does the pack appear.
   const TP = () => window.DDB_TALLY_PACE || 1;                         // tests speed this up
-  function tallyStage(run, pr) {                                       // 0 nothing yet · 1 Treasure · 2 Monsters · 3 the die waits for you · 4 the die has landed · 5 the pack
+  function tallyStage(run, pr) {                                       // 0 nothing yet · 1 Treasure · 2 Monsters · 3 the die waits for you · 4 the die rolls · 5 it is added: the total and the thermometer rise together · 6 the pack
     if (!S.tally || S.tally.run !== run || S.tally.key !== run.round) {
-      const t = S.tally = { run, key: run.round, stage: pr.escape !== null ? 5 : 0, shown: 0 };
+      const t = S.tally = { run, key: run.round, stage: pr.escape !== null ? 6 : 0, shown: 0 };
       const go = (n, ms) => setTimeout(() => { if (S.tally === t && t.stage < n) { t.stage = n; if (S.panel === 'prep' && S.run === run) render(); } }, ms * TP());
       if (t.stage < 3) { go(1, 500); go(2, 2200); go(3, 3900); }
     }
     return S.tally.stage;
   }
   // The reward ladder as a thermometer: the pack you would get at each number of gems, lit as the fill passes it.
-  function gemChart(lvl, final) {
+  function gemChart(lvl, final, countFrom) {
     const L = D.run.ladder, max = L[L.length - 1].at + 5, pct = v => Math.min(100, Math.max(0, v / max * 100)), from = S.tally ? S.tally.shown : 0, got = [...L].reverse().find(t => t.at <= lvl) || L[0];
     if (S.tally) S.tally.shown = pct(lvl);
     const rows = L.map(t => `<div class="grow ${t.at <= lvl ? 'reached' : ''} ${final && t === got ? 'got' : ''}" style="bottom:${pct(t.at)}%;--pc:${t.color}"><span class="gat">${t.at}</span><i class="gtick"></i><span class="gname"><b>${t.draw}:${t.keep}</b> ${A.esc(t.name)}</span></div>`).join('');
     const next = L.find(t => t.at > lvl);
-    return `<aside class="gchart" style="--lv:${pct(from)}%" data-to="${pct(lvl)}%" aria-label="${lvl} gems"><div class="gtube"><div class="gfill"></div></div><div class="gbubble">${lvl}${ic('gem')}</div>${rows}${final && next ? `<div class="gmore">${next.at - lvl} more for ${A.esc(next.name)}</div>` : ''}</aside>`;
+    return `<aside class="gchart" style="--lv:${from}%" data-to="${pct(lvl)}%" aria-label="${lvl} gems"><div class="gtube"><div class="gfill"></div></div><div class="gbubble"><b class="cnt" ${countFrom !== null && countFrom !== undefined ? `data-cf="${countFrom}" data-ct="${lvl}"` : ''}>${lvl}</b>${ic('gem')}</div>${rows}${final && next ? `<div class="gmore">${next.at - lvl} more for ${A.esc(next.name)}</div>` : ''}</aside>`;
   }
   function prepHTML() {
     const run = S.run, pr = run.prep, step = pr.step, rolled = pr.escape !== null;
@@ -2444,13 +2435,13 @@ const Match = (() => {
     // what you banked, as tiles: Geodes + Monsters survived + the Escape Bonus die = gems
     let body = '', foot = '';
     if (pr.banked && (step === 'escape' || step === 'pack')) {
-      const stage = tallyStage(run, pr), lvl = stage < 1 ? 0 : stage < 2 ? pr.geodes : stage < 4 ? pr.geodes + pr.monsters : pr.gems;
+      const stage = tallyStage(run, pr), lvl = stage < 1 ? 0 : stage < 2 ? pr.geodes : stage < 5 ? pr.geodes + pr.monsters : pr.gems;
       const pop = (n, html) => stage >= n ? html : '';
-      const eq = `<div class="eq">${pop(1, `<span class="t pop" title="Treasure">${ico('Treasure')}${pr.geodes}</span>`)}${pop(2, `<span class="op pop">+</span><span class="t pop" title="Monsters survived">${ico('Monster')}${pr.monsters}</span>`)}${pop(3, `<span class="op pop">+</span><span class="t die pop" title="Escape Bonus">${rolled ? d10(tumble ? '' : pr.escape, tumble ? 'fx-tumble' : '', pr.escape) : d10('?', 'idle')}</span>`)}${pop(4, `<span class="op pop">=</span><span class="t sum pop" title="Gems">${pr.gems}${ic('gem')}</span>`)}</div>`;
+      const eq = `<div class="eq">${pop(1, `<span class="t pop" title="Treasure">${ico('Treasure')}${pr.geodes}</span>`)}${pop(2, `<span class="op pop">+</span><span class="t pop" title="Monsters survived">${ico('Monster')}${pr.monsters}</span>`)}${pop(3, `<span class="op pop">+</span><span class="t die pop" title="Escape Bonus">${rolled ? d10(tumble ? '' : pr.escape, tumble ? 'fx-tumble' : '', pr.escape) : d10('?', 'idle')}</span>`)}${pop(5, `<span class="op pop">=</span><span class="t sum pop" title="Gems"><b class="cnt" data-cf="${pr.geodes + pr.monsters}" data-ct="${pr.gems}">${pr.gems}</b>${ic('gem')}</span>`)}</div>`;
       const dieBtn = stage === 3 && !rolled ? `<button class="bigdie" data-p="escape" aria-label="Roll the Escape Bonus">${d10('', 'idle')}<span class="tapword">Tap to roll</span></button>` : '';
       const info = rolled ? Run.packInfo(run) : null, col = info ? (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a' : '', plus = info && /\+$/.test(info.name);
-      const packBtn = stage >= 5 ? `<button class="pack pop" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>` : '';
-      body = `<div class="tallyrow" ${stage < 3 || (stage === 4) ? 'data-p="skiptally"' : ''}><div class="tallymain">${eq}${dieBtn}${packBtn}</div>${gemChart(lvl, stage >= 5)}</div>`;
+      const packBtn = stage >= 6 ? `<button class="pack pop" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>` : '';
+      body = `<div class="tallyrow" ${stage < 3 || stage === 4 || stage === 5 ? 'data-p="skiptally"' : ''}><div class="tallymain">${eq}${dieBtn}${packBtn}</div>${gemChart(lvl, stage >= 6, stage === 5 ? pr.geodes + pr.monsters : null)}</div>`;
     } else if (step === 'escape') body = `<button class="bigdie" data-p="escape" aria-label="Roll the Escape Bonus">${d10('', 'idle')}<span class="tapword">Tap</span></button>`;
     else if (step === 'pack') {
       const info = Run.packInfo(run), col = (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a', plus = /\+$/.test(info.name);
@@ -2540,8 +2531,7 @@ const Match = (() => {
     if (f) {
       const res = Dig.result(st), after = f.phase === 'after', elig = after ? Dig.eligible(st) : [];
       const rollKey = `${st.digs}:${f.rolls}:${f.die}`, shown = f.fixed !== null ? f.fixed : f.die, fresh = rollKey !== S.fx.roll;
-      const steps = cur => `<div class="steps" role="list"><span class="stp ${cur > 1 ? 'done' : 'cur'}" role="listitem"><i>${cur > 1 ? '✓' : '1'}</i>Roll</span><span class="sarr" aria-hidden="true">›</span><span class="stp ${cur === 2 ? 'cur' : ''}" role="listitem"><i>2</i>Take the damage</span></div>`;
-      if (!after) return `<div class="action">${steps(1)}<button class="dieb live" data-p="roll" aria-label="Roll the die">${d10('', 'idle')}<span class="tapword">Tap to roll</span></button></div>`;
+      if (!after) return `<div class="action"><button class="dieb live" data-p="roll" aria-label="Roll the die">${d10('', 'idle')}<span class="tapword">Tap to roll</span></button></div>`;
       // the die says the roll; only when cards changed it does one line add up: 7 +1 = 8
       const calc = res.parts.length > 1 ? `<div class="calc">${res.parts.map((p, i) => i === 0 ? p.v : p.set ? `→ ${p.v}` : `${p.v >= 0 ? '+' : '−'}${Math.abs(p.v)}`).join(' ')} = <b>${res.total}</b></div>` : '';
       const dmg = Dig.previewDamage(st);
@@ -2549,9 +2539,9 @@ const Match = (() => {
       const hasRR = st.reroll >= R.rerollCost || can.reroll, open = can.reroll, locked = !open && hasRR && f.fixed === null && f.trig.length > 0;
       const lock = open || locked ? `<span class="dlock ${open ? 'open' : 'shut'}" title="${open ? 'You can still reroll' : 'Locked in'}"><svg viewBox="0 0 24 24" aria-hidden="true">${open ? '<path d="M8 11V7.5a4 4 0 0 1 7.6-1.7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>' : '<path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>'}<rect x="4.5" y="11" width="15" height="10.5" rx="2.6" fill="currentColor"/></svg></span>` : '';
       const rr = open ? `<button class="rerollbtn" data-p="reroll" aria-label="Reroll">${ic('reroll')}<span>Reroll</span><small>${st.reroll} left</small></button>` : locked ? '<div class="lockednote">Locked in</div>' : '';
-      return `<div class="action">${steps(2)}${elig.length ? `<div class="aprompt">Tap glowing cards to use them${elig.length > 1 ? `<button class="chip" data-p="triggerall">Use all ${elig.length}</button>` : ''}</div>` : ''}
+      return `<div class="action">${elig.length > 1 ? `<div class="aprompt"><button class="chip" data-p="triggerall">Use all ${elig.length}</button></div>` : ''}
         <div class="arow"><div class="dieb">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}${lock}</div>
-          <div class="astack">${calc}${rr}<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''}" data-p="face">${dmg ? `Take ${dmg} damage` : 'Take no damage'}</button></div></div></div>`;
+          <div class="astack">${calc}${rr}<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''}" data-p="face">${f.defeat ? 'Monster defeated: continue' : dmg ? `Take ${dmg} damage` : 'Take no damage'}</button></div></div></div>`;
     }
     if (st.pending) return `<div class="action"><div class="aprompt">${A.esc(st.pending.card.name)}: tap a Power card</div></div>`;
     if (st.over) return '';
@@ -2638,6 +2628,7 @@ const Match = (() => {
     $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z;
     const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
     fitHero(); heroPlay(); fitTable(); playDice();
+    $.querySelectorAll('.cnt[data-cf]').forEach(el => { const a = Number(el.dataset.cf), z = Number(el.dataset.ct), t0 = performance.now(), dur = 1300 * TP(); el.textContent = a; const tick = now => { const k = Math.min(1, (now - t0) / Math.max(1, dur)); el.textContent = Math.round(a + (z - a) * (1 - Math.pow(1 - k, 3))); if (k < 1 && el.isConnected) requestAnimationFrame(tick); }; requestAnimationFrame(tick); });
     $.querySelectorAll('.gchart[data-to]').forEach(el => requestAnimationFrame(() => requestAnimationFrame(() => el.style.setProperty('--lv', el.dataset.to))));
     scheduleAI();
   }
@@ -2681,7 +2672,7 @@ const Match = (() => {
       case 'startrun': { if (resumable() && S.confirmNew !== 'startrun') { S.confirmNew = 'startrun'; break; } S.confirmNew = null; if (S.opp) { S.match = Match.start(cards(), { rounds: S.rounds }); S.run = Match.human(S.match); } else { S.match = null; S.run = Run.start(cards(), { rounds: S.rounds }); } S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
       case 'escape': {
         if (S.match) Match.rollEscape(S.match); else Run.rollEscape(S.run);
-        const t = S.tally; if (t && S.run.prep && S.run.prep.banked) { t.stage = 4; setTimeout(() => { if (S.tally === t && t.stage < 5) { t.stage = 5; if (S.panel === 'prep') render(); } }, 2300 * TP()); }
+        const t = S.tally; if (t && S.run.prep && S.run.prep.banked) { t.stage = 4; const up = n => ms => setTimeout(() => { if (S.tally === t && t.stage < n) { t.stage = n; if (S.panel === 'prep') render(); } }, ms * TP()); up(5)(1900); up(6)(3500); }
         break;
       }
       case 'openpack': if (S.match) Match.openPack(S.match); else Run.openPack(S.run); break;
@@ -2692,7 +2683,7 @@ const Match = (() => {
       }
       case 'keepgo': Run.confirmKeep(S.run); break;
       case 'continuereveal': Run.continueReveal(S.run); break;
-      case 'skiptally': if (S.tally) S.tally.stage = S.tally.stage >= 4 ? 5 : 3; break;          // the tally plays out on its own; a tap anywhere on it skips ahead
+      case 'skiptally': if (S.tally) S.tally.stage = S.tally.stage >= 4 ? 6 : 3; break;          // the tally plays out on its own; a tap anywhere on it skips ahead
       case 'kitpick': {                    // tap to choose, in the order you want them on top; tap a chosen one to take it back
         const uid = Number(ds.uid), pr = S.run.prep;
         if (!pr.kitPick.includes(uid) && pr.kitPick.length >= pr.kitMax) Run.toggleKit(S.run, pr.kitPick[pr.kitPick.length - 1]);

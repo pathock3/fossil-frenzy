@@ -128,7 +128,7 @@ test('Pet: a result of 10 or more triggers it — the Monster is defeated and yo
   fight(st);
   assert.equal(st.heart, 6); assert.equal(st.survived, 1); assert.equal(st.defeated, 1); assert.equal(st.monsterGems, 1);
   const tap = game({ mine: ['MO-01'], start: { heart: 6 }, dice: [10] }); Dig.dig(tap); Dig.roll(tap); assert.ok(Dig.trigger(tap, Dig.eligible(tap)[0]));
-  assert.equal(tap.fight, null, 'the Pet ends the fight at once'); assert.deepEqual([tap.heart, tap.survived, tap.defeated, tap.monsterGems], [6, 1, 1, 1]);
+  assert.ok(tap.fight && tap.fight.defeat, 'the Monster is defeated but the fight is not over: you may still use other cards'); Dig.face(tap); assert.equal(tap.fight, null); assert.deepEqual([tap.heart, tap.survived, tap.defeated, tap.monsterGems], [6, 1, 1, 1]);
 });
 
 test('a result above 10 triggers every card on the line', () => {
@@ -255,7 +255,7 @@ test('Falcon Finisher rolls again: 10 or more defeats the Monster at once; below
   win.ongoing = four();
   Dig.dig(win); Dig.roll(win);                              // 6+4 = 10: Falcon (8) is eligible
   assert.ok(Dig.trigger(win, entryOf(win, 'PW-21')));       // Falcon rolls 6+4 = 10 -> defeat
-  assert.equal(win.fight, null, 'the Monster is defeated: the fight is over at once'); assert.equal(win.defeated, 1); assert.equal(win.heart, 6);
+  assert.ok(win.fight.defeat, 'the Monster is defeated'); Dig.face(win); assert.equal(win.fight, null); assert.equal(win.defeated, 1); assert.equal(win.heart, 6);
   const lose = game({ mine: ['MO-02'], power: ['PW-21'], start: { heart: 6 }, dice: [6, 2] });
   fight(lose);                                              // result 6 does not reach Falcon (8)
   assert.equal(lose.heart, 4);
@@ -611,7 +611,7 @@ test('triggerAll (what the AI and a hurried player use) is highest number first;
   assert.ok(Dig.eligible(st).some(e => e.pet)); Dig.face(st);
   assert.equal(st.defeated, 0, 'you did not trigger the Pet'); assert.equal(st.heart, 5);
   Dig.dig(st); Dig.roll(st); Dig.triggerAll(st);
-  assert.equal(st.defeated, 1); assert.equal(st.fight, null, 'everything was triggered, then the defeat ended the fight'); assert.equal(st.heart, 5 + 1, 'Newt went too, and the second Monster dealt no damage');
+  assert.ok(st.fight.defeat); Dig.face(st); assert.equal(st.defeated, 1); assert.equal(st.fight, null, 'everything was triggered, then you continued'); assert.equal(st.heart, 5 + 1, 'Newt went too, and the second Monster dealt no damage');
 });
 test('Panic Button: the free reroll sends you back to choose your triggers again', () => {
   const st = game({ mine: ['MO-01'], power: ['PW-15'], ongoing: ['ON-22'], start: { heart: 1 }, dice: [6, 6] });
@@ -643,8 +643,8 @@ test('randomness: without a seed dice and shuffles come from the secure random s
 test('Monster pile: a Monster you are done with — defeated, or after its damage, or the one that BOOMs you — goes to the pile, so you can count each set', () => {
   const st = game({ mine: ['MO-01', 'MO-01', 'MO-02', 'MO-01'], start: { heart: 20 }, dice: [10, 5, 5, 1] });
   Dig.dig(st); Dig.roll(st); assert.deepEqual(Dig.eligible(st).map(e => e.pet), [true]);
-  Dig.trigger(st, Dig.eligible(st)[0]);
-  assert.equal(st.fight, null, 'tapping the Pet defeats the Monster at once: nothing left to tap'); assert.equal(st.survived, 1); assert.equal(st.defeated, 1); assert.deepEqual(st.monsterPile.map(c => c.id), ['MO-01']);
+  Dig.trigger(st, Dig.eligible(st)[0]); Dig.face(st);
+  assert.equal(st.fight, null); assert.equal(st.survived, 1); assert.equal(st.defeated, 1); assert.deepEqual(st.monsterPile.map(c => c.id), ['MO-01']);
   Dig.dig(st); Dig.roll(st); Dig.autoFace(st); Dig.dig(st); Dig.roll(st); Dig.autoFace(st);
   assert.deepEqual(st.monsterPile.map(c => c.id), ['MO-01', 'MO-01', 'MO-02'], 'by order met; the pile is not the discard'); assert.ok(!st.discard.some(c => c.type === 'Monster'));
   st.heart = 1; Dig.dig(st); Dig.roll(st); Dig.autoFace(st);
@@ -654,11 +654,11 @@ test('Monster pile: a Monster you are done with — defeated, or after its damag
 
 test('"Trigger all" still lets the other cards go before a defeating Pet ends the fight; tapping the Pet first ends it at once', () => {
   const st = game({ mine: ['MO-01'], power: ['PW-02', 'PW-28'], start: { heart: 3 }, dice: [10] });
-  Dig.dig(st); Dig.roll(st); Dig.triggerAll(st);
+  Dig.dig(st); Dig.roll(st); Dig.triggerAll(st); Dig.face(st);
   assert.equal(st.fight, null); assert.equal(st.heart, 3 + 1 + 5, 'Nurse Newt and Carrot Bunny both went, then the Pet');
   const tap = game({ mine: ['MO-01'], power: ['PW-02', 'PW-28'], start: { heart: 3 }, dice: [10] });
-  Dig.dig(tap); Dig.roll(tap); Dig.trigger(tap, entryOf(tap, 'PW-01') || tap.line.find(e => e.pet));
-  assert.equal(tap.fight, null, 'tapping the Pet first ends it at once'); assert.equal(tap.heart, 3, 'the others never went');
+  Dig.dig(tap); Dig.roll(tap); Dig.trigger(tap, tap.line.find(e => e.pet));
+  assert.ok(tap.fight.defeat, 'the Pet defeated it, and the fight waits for you'); Dig.trigger(tap, entryOf(tap, 'PW-02')); assert.equal(tap.heart, 3 + 1, 'you can still use another card after the defeat'); Dig.face(tap); assert.equal(tap.fight, null);
 });
 
 
@@ -761,13 +761,14 @@ test('Grit is cut: the effects of a Grit card are not played, and nothing in a D
   assert.equal(Dig.compile(by('PW-02')).unsupported.length, 0);
 });
 
-test('Defeat is immediate: a trigger that defeats the Monster ends the fight at once; "trigger all" waits until everything is triggered', () => {
+test('Defeating a Monster does not end the fight: you may still use other cards (heal, say), then continue', () => {
   const st = game({ mine: ['MO-01', 'MO-02'], power: ['PW-02'], start: { heart: 6 }, dice: [10, 10] });
   Dig.dig(st); Dig.roll(st);
   assert.ok(Dig.trigger(st, st.line.find(e => e.pet)), 'tap the Pet');
-  assert.equal(st.fight, null); assert.equal(st.survived, 1); assert.equal(st.defeated, 1); assert.deepEqual(st.monsterPile.map(c => c.id), ['MO-01']);
-  assert.ok(!Dig.face(st) && !Dig.can(st).face && Dig.can(st).dig, 'nothing left to face: you may dig on');
-  Dig.dig(st); Dig.roll(st); Dig.triggerAll(st);
-  assert.equal(st.fight, null); assert.equal(st.defeated, 2); assert.equal(st.heart, 7, 'Newt went too, before the fight ended'); assert.deepEqual(st.monsterPile.map(c => c.id), ['MO-01', 'MO-02']);
+  assert.ok(st.fight && st.fight.defeat && Dig.can(st).face && !Dig.can(st).dig, 'defeated, but the fight is still open: continue with face');
+  assert.ok(Dig.eligible(st).length > 0, 'Nurse Newt can still be used'); assert.ok(Dig.trigger(st, entryOf(st, 'PW-02'))); assert.equal(st.heart, 7);
+  assert.ok(Dig.face(st)); assert.equal(st.fight, null); assert.equal(st.survived, 1); assert.equal(st.defeated, 1); assert.deepEqual(st.monsterPile.map(c => c.id), ['MO-01']); assert.equal(st.heart, 7, 'no damage');
+  Dig.dig(st); Dig.roll(st); Dig.triggerAll(st); assert.ok(st.fight.defeat); Dig.face(st);
+  assert.equal(st.fight, null); assert.equal(st.defeated, 2); assert.equal(st.heart, 8, 'Newt went too'); assert.deepEqual(st.monsterPile.map(c => c.id), ['MO-01', 'MO-02']);
   assert.ok(!st.discard.some(c => c.type === 'Monster'), 'Monsters go to the pile, not the discard');
 });

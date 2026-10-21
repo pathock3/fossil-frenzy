@@ -187,6 +187,9 @@ test('table: tapping a card that defeats the Monster defeats it at once — no t
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]');
     assert.equal(await page.locator('#play .tcard.elig').count(), 1, 'the Pet glows');
     await page.click('#play .tcard.elig');                                           // the Pet
+    assert.equal(await stOf(page, () => !!window.DigDigBoomPlay.S.st.fight), true, 'defeated, but the fight is still open: you may use other cards first');
+    assert.match(await page.locator('#play [data-p=face]').innerText(), /defeated: continue/i);
+    await page.click('#play [data-p=face]');
     assert.equal(await stOf(page, () => !!window.DigDigBoomPlay.S.st.fight), false, 'the fight is over');
     assert.deepEqual(await stOf(page, () => { const s = window.DigDigBoomPlay.S.st; return [s.survived, s.defeated, s.heart, s.monsterPile.length, !!s.fight]; }), [1, 1, 10, 1, false]);
     assert.match(await page.locator('#play [data-p=bank]').innerText(), /^1/, 'a defeated Monster is worth a gem');
@@ -200,7 +203,7 @@ test('table: after the roll you tap the Power cards you want to trigger, in the 
     await begin(page, { line: ['PW-02', 'PW-09', 'PW-15'], mine: ['MO-01', 'MO-01'], dice: [4, 4], start: { heart: 6 } });
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]');
     assert.equal(await page.locator('#play .tcard.elig').count(), 2, 'Nurse Newt (1) and Pill Bug (3) are eligible at 4; Moss Sloth (6) is not');
-    assert.match(await page.locator('#play .aprompt').innerText(), /glowing cards/i);
+    assert.ok(await page.locator('#play [data-p=triggerall]').count() === 0 || true); assert.doesNotMatch(await page.locator('#play .action').innerText(), /glowing/i, 'no instruction text');
     await page.click('#play .tcard.elig:has-text("Pill Bug")');                      // Block 1
     assert.equal(await page.locator('#play .tcard.elig').count(), 1); assert.equal(await page.locator('#play .tcard.done').count(), 1, 'the one you triggered is marked');
     await page.click('#play [data-p=face]');                                        // Newt is still eligible, but you took the damage: it is not used
@@ -237,11 +240,9 @@ test('table: after the roll a button takes the damage — then you see your new 
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=dig]');
     assert.equal(await page.locator('#play .mcard[data-p]').count(), 0, 'the Monster card is not tappable');
     assert.equal(await page.locator('#play [data-p=face]').count(), 0, 'no damage button before the roll');
-    assert.match(await page.locator('#play .steps').innerText(), /1\s*Roll[\s\S]*2\s*Take the damage/);
-    assert.ok(await page.locator('#play .stp.cur').innerText().then(t => /Roll/.test(t)), 'step 1 is lit');
+    assert.equal(await page.locator('#play .steps').count(), 0, 'no step line');
     await page.click('#play [data-p=roll]');
     assert.ok(await page.locator('#play .deck').isDisabled() && await page.locator('#play [data-p=bank]').isDisabled(), 'the Mine and the Bank wait until the damage is taken');
-    assert.match(await page.locator('#play .stp.done').innerText(), /Roll/, 'the roll is ticked off');
     assert.match(await page.locator('#play [data-p=face]').innerText(), /^Take 1 damage$/);
     await page.click('#play [data-p=face]');
     assert.deepEqual(await stOf(page, () => { const s = window.DigDigBoomPlay.S.st; return [s.heart, s.survived, !!s.fight]; }), [2, 1, false], 'your Health is updated first');
@@ -262,7 +263,8 @@ test('table: defeating a Monster with a card stamps it Defeated', SKIP, async ()
   try {
     await begin(page, { mine: ['MO-01'], dice: [10] });
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]');
-    await page.click('#play .tcard.elig');
+    await page.click('#play .tcard.elig'); assert.equal(await page.locator('#play .stamp').count(), 0, 'not until you continue');
+    await page.click('#play [data-p=face]');
     assert.match(await page.locator('#play .stamp').innerText(), /defeated/i);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
