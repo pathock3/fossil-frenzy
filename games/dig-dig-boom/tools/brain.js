@@ -12,7 +12,9 @@ const DEFAULTS = {
   gamma: 0.7,           // how fast a lead matters less the more rounds remain
   rerollBelow: 3,       // the base policy rerolls when the plan leaves it with this much Health or less
   digCap: 70,
-  prepSims: 60,         // Digs played to judge one deck
+  prepSims: 60,
+  screenSims: 16,       // Digs to give each possible set of kept cards before the best few are looked at properly
+  finalists: 3,         // Digs played to judge one deck
   kitMargin: 0.003,     // a Kit place is only filled by a card that is at least this much better than a gem
   ladderT: [1, 2, 3, 4, 5, 6, 8],   // "bank at N Monsters survived" policies tried at the idle decision
 };
@@ -164,16 +166,29 @@ function makeBrain(over = {}) {
     return { kit, value: best };
   }
   const combos = (a, k) => k === 0 ? [[]] : a.length < k ? [] : combos(a.slice(1), k - 1).map(r => [a[0]].concat(r)).concat(combos(a.slice(1), k));
+  // The best Kit you could make from `pool` among a few ways of putting `extra` cards into your current best Kit.
+  function screen(run, ctx, owned, set, kit0, kitMax, n, seed0) {
+    const all = owned.concat(set), tries = [kit0];
+    for (const c of set) {
+      if (kit0.length < kitMax) tries.push(kit0.concat(c));
+      else for (let j = 0; j < kit0.length; j++) tries.push(kit0.map((x, i) => (i === j ? c : x)));
+    }
+    let best = -Infinity;
+    for (const kit of tries) best = Math.max(best, evalDeck(run, ctx, kit, all.filter(c => !kit.includes(c)), n, seed0, kitMax));
+    return best;
+  }
   function prep(run) {
     const pr = run.prep; if (!pr) return;
     if (pr.step === 'pack') Run.openPack(run);
     const n = P.prepSims, seed0 = 31337;
     if (run.prep.step === 'keep') {
-      const k = Run.keepCount(run), offer = run.prep.offer;
-      let bestSet = null, bv = -Infinity;
-      for (const set of combos(offer, k)) {
-        const owned = run.owned.concat(set), v = chooseKit(run, owned, run.prep.kitMax, n, seed0).value;
-        if (v > bv + 1e-9) { bv = v; bestSet = set; }
+      const k = Run.keepCount(run), offer = run.prep.offer, sets = combos(offer, k);
+      let bestSet = sets[0];
+      if (sets.length > 1) {
+        const kitMax = run.prep.kitMax, ctx = prepContext(run), kit0 = chooseKit(run, run.owned, kitMax, n, seed0).kit;
+        const scored = sets.map(set => ({ set, v: screen(run, ctx, run.owned, set, kit0, kitMax, P.screenSims, seed0) })).sort((x, y) => y.v - x.v).slice(0, P.finalists);
+        let bv = -Infinity;
+        for (const f of scored) { const v = chooseKit(run, run.owned.concat(f.set), kitMax, n, seed0).value; if (v > bv + 1e-9) { bv = v; bestSet = f.set; } }
       }
       for (const c of bestSet) Run.toggleKeep(run, c.uid);
       Run.confirmKeep(run);
