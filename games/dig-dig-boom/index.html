@@ -360,12 +360,12 @@ const Engine = (() => {
   const statFor = c => c.type === 'Treasure' ? 3 : c.type === 'Monster' ? 1 : 0;
   function deckHTML(scale) {
     const pool = state.all.filter(c => c.type !== 'Monster' && c.type !== 'Treasure');
-    const b = R2.textBox('standard'); let tw = 44;
+    const b = R2.textBox('compact'); let tw = 44;
     for (const c of pool) tw = Math.min(tw, fitFont(textHTML(c.text), b.w, b.h));
     const order = Object.keys(D.types), list = [...state.all].sort((a, b2) => order.indexOf(a.type) - order.indexOf(b2.type));
-    const cells = list.map(c => `<div class="cell">${r2Card(c, tw, 'standard', statFor(c), scale)}<span class="cap">${esc(c.id)} · ${esc(c.name)}${c.count > 1 ? ' ×' + c.count : ''}</span></div>`).join('');
+    const cells = list.map(c => `<div class="cell">${r2Card(c, tw, 'compact', statFor(c), scale)}<span class="cap">${esc(c.id)} · ${esc(c.name)}${c.count > 1 ? ' ×' + c.count : ''}</span></div>`).join('');
     return `<section class="dir" id="deck" data-round="deck"><span class="tag">Your picks, applied to every card</span><h2>The whole deck — Top Tab</h2>
-      <p class="sub">Coloured border and header with the name, type and Power number. Geodes: slim art, then a huge gem count. Monsters: art, then the damage ladder in big tiles, with the gems a survived Monster is worth. Rules text is <b>${E.formatSize(tw)}</b> on every card. ${list.length} cards, live from your sheet.</p>
+      <p class="sub">Coloured border and header with the name, type and Power number; compact art, so the rules text gets the room. Geodes: slim art, then a huge gem count. Monsters: art, then the damage ladder in big tiles, with the gems a survived Monster is worth. Rules text is <b>${E.formatSize(tw)}</b> on every card. ${list.length} cards, live from your sheet.</p>
       <div class="row" id="deckRow">${cells}</div></section>`;
   }
   function round2HTML(by, scale) {
