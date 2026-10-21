@@ -10,6 +10,9 @@ A collection of Patrick Blim-Hockberger's tabletop game designs, adapted as brow
 5. **Deployment is automatic**: Cloudflare runs `npm run build` = `npm test` then `tools/build.js` (copies the library page and every `games/*/index.html` into `_site/`, stamping commit · date · branch into each `<meta name="build">`), then deploys with `wrangler.jsonc`. A failing test fails the build, so the old version stays live. `main` is production; every other branch gets a preview link. `.github/workflows/ci.yml` also runs the tests on every push. Don't break the single-file-per-game build.
 6. **Commit after each working change** with a short message. Note user-visible changes in `CHANGELOG.md`.
 
+## Target device
+The primary target is the current base (non-Pro, non-Air) iPad **in landscape**, opened from the home screen as a web app: 1180 × 820 CSS pixels, with the status bar overlapping the top edge. Design and check at that size first; other sizes and portrait must work but are secondary. Keep content clear of the top status-bar area.
+
 ## Layout
 - `index.html` — the Tabletop Library front page; its data block lists the games. To add a game: create `games/<id>/` with `index.html` (build-stamp meta included), then add a catalogue entry. A test fails if they disagree.
 - `games/<id>/` — one game: `index.html`, its rulebook/source rules, `DECISIONS.md` (every ambiguous call), `tests/`, optional `tools/` (bot simulations) and `REPORT.md`.

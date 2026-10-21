@@ -15,7 +15,7 @@ const csv = fs.readFileSync(path.join(__dirname, 'cards-full.csv'), 'utf8');
 
 // Face the Monster the way a player who wants every card does: trigger each eligible Power card (a card that defeats the Monster ends the fight at once), then take the damage.
 async function faceIt(page) {
-  for (let i = 0; i < 20; i++) { const el = page.locator('#play .piece.elig').first(); if (!(await el.count())) break; await el.click(); }
+  for (let i = 0; i < 20; i++) { const el = page.locator('#play .tcard.elig').first(); if (!(await el.count())) break; await el.click(); }
   if (await page.locator('#play .mcard[data-p=face]').count()) await page.click('#play .mcard[data-p=face]');
 }
 
@@ -50,8 +50,9 @@ async function script(page, { mine = [], dice = [], start = {}, line = [], ongoi
 // Keep the first n offered cards that are not a Mystery Box (which would keep one more and make card counts depend on luck).
 async function keepNonMystery(page, n) {
   const idx = await page.evaluate(() => { const o = window.DigDigBoomPlay.S.run.prep.offer; return o.map((c, i) => [i, /When kept/.test(c.text)]).filter(([, m]) => !m).map(([i]) => i); });
-  for (const i of idx.slice(0, n)) await page.click(`#play [data-p=pick] >> nth=${i}`);
-  await page.click('#play [data-p=keepgo]');
+  const take = idx.slice(0, n);
+  for (const i of take) await page.click(`#play [data-p=pick] >> nth=${i}`);                          // tap to choose...
+  await page.click(`#play [data-p=pick] >> nth=${take[take.length - 1]}`);                           // ...tap the chosen one again to keep it
 }
 // A run from the main menu: the AI switched off unless asked (tests turn it on explicitly); round 1: open the Bronze Pack, keep a card, choose it as the Starter Kit, then the table.
 async function startRun(page, { opp = false, rounds } = {}) {
@@ -65,17 +66,18 @@ const logText = page => page.evaluate(() => window.DigDigBoomPlay.S.st.log.map(l
 const dieShows = (page, sel, v) => page.waitForFunction(([s, v]) => { const e = document.querySelector(s + ' .dnum'); return e && e.textContent === String(v); }, [sel, v], { timeout: 5000 });
 
 // ---------------------------------------------------------------- the main menu
-test('menu: the front of the box — the logo, real cards flipping (six Geodes, each its own gem, and both Monsters), one screen that never scrolls, nothing about printing', SKIP, async () => {
+test('menu: the front of the box — the logo and a tiny game playing itself (a deck flips gem, gem, monster… into one spot; one loop banks, the next goes BOOM), one screen that never scrolls, nothing about printing', SKIP, async () => {
   for (const viewport of [{ width: 1180, height: 820 }, { width: 1024, height: 700 }, { width: 820, height: 1180 }, { width: 700, height: 420 }]) {
     const { browser, page, errors } = await open({ viewport, menu: true });
     try {
-      await page.waitForSelector('#play .hero-stage .hfan');
-      assert.equal(await page.locator('#play .hfan').count(), 6, 'six Geodes');
-      const looks = await page.locator('#play .hfan .gemtile').evaluateAll(els => els.map(e => getComputedStyle(e).backgroundImage));
-      assert.equal(new Set(looks).size, 6, 'each in its own gem');
-      assert.equal(await page.locator('#play .hmon').count(), 2, 'both Monsters');
+      await page.addInitScript(() => { window.DDB_HERO_PACE = 0.05; }); await page.reload(); await page.waitForSelector('#play .hero2');
+      assert.equal(await page.locator('#play .hero2 .hc').count(), 11, 'a Health track, 0 to 10');
       assert.match(await page.locator('#play .logo').innerText(), /Dig Dig\s*BOOM!/);
       assert.ok(await page.locator('#play [data-p=startrun]').isVisible()); assert.ok(await page.locator('#play [data-p=more]').isVisible()); assert.ok(await page.locator('#play [data-p=help]').isVisible());
+      await page.waitForFunction(() => /Banked/.test(document.querySelector('.hbanner').textContent), null, { timeout: 8000 });
+      assert.ok(await page.locator('#play .hero2 .hslot .card').count() >= 1, 'cards land in one spot');
+      await page.waitForFunction(() => /BOOM/.test(document.querySelector('.hbanner').textContent), null, { timeout: 8000 });
+      assert.equal(await page.locator('#play .hero2 .hc.now').innerText(), '0', 'out of Health: BOOM');
       const m = await page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ih: innerHeight, overflow: [...document.querySelectorAll('#play .homemenu *')].some(e => e.getBoundingClientRect().bottom > innerHeight + 1) }));
       assert.ok(m.sh <= m.ih + 1 && !m.overflow, `one screen at ${viewport.width}x${viewport.height}`);
       assert.doesNotMatch(await page.locator('#play').innerText(), /[Pp]rint/);
@@ -84,16 +86,33 @@ test('menu: the front of the box — the logo, real cards flipping (six Geodes, 
   }
 });
 
-test('menu: only "Play a run" is out in the open; Practice Dig, the run options and the cards are buried in the Menu; there is always one AI opponent', SKIP, async () => {
+test('menu: Play, How to play and Settings and nothing else — no text under the buttons, no footnote; Settings has Rounds 2 to 7, the cards and a playtest, with a way back and no second Menu', SKIP, async () => {
   const { browser, page, errors } = await open({ menu: true });
   try {
     const home = await page.locator('#play .homemenu').innerText();
-    assert.match(home, /Play a run/); assert.doesNotMatch(home, /Practice Dig|The cards|See the cards|[Pp]rint|Nobody|Opponent/);
-    assert.match(home, /against the AI/);
+    assert.match(home, /Play/); assert.doesNotMatch(home, /Practice|The cards|See the cards|[Pp]rint|Nobody|Opponent|against the AI|Cards and rules|Version/);
+    assert.deepEqual((await page.locator('#play .homemenu button').allInnerTexts()).map(t => t.trim()), ['Play', 'How to play', 'Settings']);
     await page.click('#play [data-p=more]');
-    const menu = await page.locator('#play .menu').innerText();
-    assert.match(menu, /Practice Dig[\s\S]*Run options[\s\S]*The cards/); assert.doesNotMatch(menu, /[Tt]rash/); assert.doesNotMatch(await page.locator('#play').innerText(), /Nobody|Opponent|[Pp]rint/);
+    assert.equal(await page.locator('#play .pbar').count(), 0, 'no second Menu on the Settings screen');
+    assert.equal(await page.locator('#play [data-p=gmenu]').count(), 0);
+    const menu = await page.locator('#play .settings').innerText();
+    assert.match(menu, /Settings[\s\S]*Rounds[\s\S]*The cards[\s\S]*Playtest/); assert.doesNotMatch(menu, /[Tt]rash|Nobody|Opponent|[Pp]rint/);
+    assert.deepEqual((await page.locator('#play .seg button').allInnerTexts()).map(t => t.trim()), ['2', '3', '4', '5', '6', '7']);
+    await page.click('#play .seg button:has-text("7")'); assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.rounds), 7);
     await page.click('#play [data-p=menu]'); await page.waitForSelector('#play .homemenu');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('menu: How to play is three pictures and a line each — no wall of text, no link to the card designs', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await page.click('#play [data-p=help]');
+    assert.equal(await page.locator('#play .hcard').count(), 3);
+    assert.equal(await page.locator('#play .hcard .hpic .card, #play .hcard .hpic svg').count() >= 3, true, 'pictures, not paragraphs');
+    assert.equal(await page.locator('#play [data-p=cards]').count(), 0, 'no link to the card designs');
+    const words = (await page.locator('#play .how').innerText()).split(/\s+/).length; assert.ok(words < 110, 'the gist only: ' + words + ' words');
+    await page.click('#play [data-p=closehelp]'); await page.waitForSelector('#play .homemenu');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -123,10 +142,10 @@ test('practice: the Starter Kit chooser lists only cards the game can play; pick
     await pick('Immediate', 'Med Kit');                        // put it back
     assert.match(await page.locator('#play .foot .note').innerText(), /2 of 3 chosen/);
     await page.click('#play [data-p=go]'); await page.waitForSelector('#play .ptable');
-    assert.equal(await page.locator('#play .lcol .piece').count(), 1, 'only the Pet is in play at the start');
-    assert.equal(await page.locator('#play .ongoing .piece').count(), 1, 'the Lucky Coin is in play from the start');
-    assert.match(await page.locator('#play .mat .cardback').innerText(), /^27$/, 'the 25 plus the 2 kit cards');
-    assert.equal(await page.locator('#play .known .piece').count(), 2, 'the kit is on top of the Mine, face up');
+    assert.equal(await page.locator('#play .tcard:not(.inplay)').count(), 1, 'only the Pet is in play at the start');
+    assert.equal(await page.locator('#play .tcard.inplay').count(), 1, 'the Lucky Coin is in play from the start');
+    assert.match(await page.locator('#play .deck .cnt').innerText(), /^27$/, 'the 25 plus the 2 kit cards');
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.known), 2, 'the kit is on top of the Mine, face up'); assert.equal(await page.locator('#play .deck .card').count(), 1, 'the top card of the Mine is shown face up on the deck');
     assert.equal(await page.locator('#logEntries').count(), 0, 'there is no "What happened" panel');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -145,7 +164,7 @@ test('table: dig a Geode, then a Monster — tap the die, reroll, face it; the D
     assert.match(await page.locator('#play [data-p=roll]').innerText(), /Tap/i, 'the die says Tap, nothing more');
     assert.equal(await page.locator('#play .mset:has(.mb:text-is("A")) .lad i.met').count(), 1, 'Monster A is in front of you and counts');
     await page.click('#play [data-p=roll]'); await dieShows(page, '#play .dieb', 2);
-    assert.equal(await page.locator('#play .lcol.on').count(), 2, 'the line lights up to the result');
+    assert.equal(await page.locator('#play .tcard.off').count(), 1, 'the Pet (10) is beyond the result of 2 and dims');
     await page.click('#play .track[data-p=reroll]'); await dieShows(page, '#play .dieb', 5);   // the die rolled again
     await faceIt(page);
     assert.match(await logText(page), /You take 1 .*\nYou survive Monster A/);
@@ -161,8 +180,8 @@ test('table: tapping a card that defeats the Monster defeats it at once — no t
   try {
     await begin(page, { mine: ['MO-01', 'MO-02'], dice: [10, 10] });
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]');
-    assert.equal(await page.locator('#play .piece.elig').count(), 1, 'the Pet glows');
-    await page.click('#play .piece.elig');                                           // the Pet
+    assert.equal(await page.locator('#play .tcard.elig').count(), 1, 'the Pet glows');
+    await page.click('#play .tcard.elig');                                           // the Pet
     assert.equal(await page.locator('#play .mcard[data-p=face]').count(), 0, 'the fight is over');
     assert.deepEqual(await stOf(page, () => { const s = window.DigDigBoomPlay.S.st; return [s.survived, s.defeated, s.heart, s.monsterPile.length, !!s.fight]; }), [1, 1, 10, 1, false]);
     assert.match(await page.locator('#play [data-p=bank]').innerText(), /^1/, 'a defeated Monster is worth a gem');
@@ -175,17 +194,34 @@ test('table: after the roll you tap the Power cards you want to trigger, in the 
   try {
     await begin(page, { line: ['PW-02', 'PW-09', 'PW-15'], mine: ['MO-01', 'MO-01'], dice: [4, 4], start: { heart: 6 } });
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]');
-    assert.equal(await page.locator('#play .piece.elig').count(), 2, 'Nurse Newt (1) and Pill Bug (3) are eligible at 4; Moss Sloth (6) is not');
-    assert.match(await page.locator('#play .linehead').innerText(), /tap the glowing cards/i);
-    await page.click('#play .piece.elig:has-text("Pill Bug")');                      // Block 1
-    assert.equal(await page.locator('#play .piece.elig').count(), 1); assert.equal(await page.locator('#play .piece.done').count(), 1, 'the one you triggered is marked');
+    assert.equal(await page.locator('#play .tcard.elig').count(), 2, 'Nurse Newt (1) and Pill Bug (3) are eligible at 4; Moss Sloth (6) is not');
+    assert.match(await page.locator('#play .hint').innerText(), /tap a glowing card/i);
+    await page.click('#play .tcard.elig:has-text("Pill Bug")');                      // Block 1
+    assert.equal(await page.locator('#play .tcard.elig').count(), 1); assert.equal(await page.locator('#play .tcard.done').count(), 1, 'the one you triggered is marked');
     await page.click('#play .mcard[data-p=face]');                                   // Newt is still eligible, but you tapped the damage: it is not used
     assert.deepEqual(await stOf(page, () => [window.DigDigBoomPlay.S.st.heart, window.DigDigBoomPlay.S.st.survived]), [6, 1], 'Newt never triggered; the 1 damage was blocked');
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]');
     await page.click('#play [data-p=triggerall]');
-    assert.equal(await page.locator('#play .piece.elig').count(), 0);
+    assert.equal(await page.locator('#play .tcard.elig').count(), 0);
     await page.click('#play .mcard[data-p=face]');
     assert.deepEqual(await stOf(page, () => [window.DigDigBoomPlay.S.st.heart, window.DigDigBoomPlay.S.st.survived]), [5, 2], 'this time Newt healed 1 and Pill Bug blocked 1 of the 3 damage: 6 + 1 - 2');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('table: after the roll, tapping the Mine takes the damage and digs the next card; BOOM ends it', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await begin(page, { mine: ['MO-01', 'TR-01', 'MO-02', 'MO-01'], dice: [4, 1], start: { heart: 3 } });
+    assert.equal(await page.locator('#play .deck.live').count(), 1);
+    await page.click('#play [data-p=dig]');
+    assert.ok(await page.locator('#play .deck').isDisabled(), 'in front of a Monster, before the roll, the Mine waits');
+    await page.click('#play [data-p=roll]');
+    assert.ok(await page.locator('#play .deck').isEnabled(), 'after the roll the Mine is live: the cost of digging on is the damage');
+    await page.click('#play [data-p=dig]');
+    assert.deepEqual(await stOf(page, () => { const s = window.DigDigBoomPlay.S.st; return [s.heart, s.survived, s.last.type, !!s.fight]; }), [2, 1, 'Treasure', false], 'took the 1 damage, then dug the Geode');
+    await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await page.click('#play [data-p=dig]');
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.over && window.DigDigBoomPlay.S.st.over.kind), 'boom', 'the damage came first: BOOM, and no further card is dug');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -197,7 +233,7 @@ test('table: BOOM shows the end panel with New Dig; a new Dig starts fresh', SKI
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await faceIt(page);           // 2 damage: 3 -> 1
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await faceIt(page);           // 4 damage: BOOM
     const over = await page.locator('#play .over').innerText();
-    assert.match(over, /BOOM!/); assert.match(over, /1 Monster survived/); assert.doesNotMatch(over, /[Gg]rit/);
+    assert.match(over, /BOOM!/); assert.doesNotMatch(over, /survived/, 'BOOM loses everything: no score is shown'); assert.doesNotMatch(over, /[Gg]rit/);
     assert.ok(await page.locator('#play [data-p=dig]').isDisabled());
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.monsterPile.length), 2, 'even the one that BOOMed you is in the pile');
     await page.click('#play [data-p=again]');
@@ -232,10 +268,10 @@ test('table: Cloning Machine asks for a Power card by tapping it on the line; ta
     await begin(page, { mine: ['PW-02', 'ON-06', 'TR-01'] });
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=dig]');
     assert.ok(await page.locator('#play [data-p=dig]').isDisabled());
-    assert.match(await page.locator('#play .dig').innerText(), /tap a Power card/i);
-    await page.click('#play .lcol .piece:has-text("Nurse Newt")');
+    assert.match(await page.locator('#play .dicez').innerText(), /tap a Power card/i);
+    await page.click('#play .tcard:has-text("Nurse Newt")');
     assert.match(await logText(page), /triggers twice/);
-    await page.click('#play .lcol .piece:has-text("Nurse Newt")');       // now it zooms
+    await page.click('#play .tcard:has-text("Nurse Newt")');       // now it zooms
     assert.equal(await page.locator('#play .zoom .card').count(), 1);
     await page.click('#play .zoom'); assert.equal(await page.locator('#play .zoom').count(), 0);
     assert.deepEqual(errors, []);
@@ -255,11 +291,12 @@ test('table: the page is locked — no scrolling at iPad sizes, taps are at leas
       const m = await page.evaluate(() => {
         const box = s => { const e = document.querySelector(s), r = e && e.getBoundingClientRect(); return r && { w: r.width, h: r.height, b: r.bottom, r: r.right }; };
         return { sh: document.documentElement.scrollHeight, sw: document.documentElement.scrollWidth, ih: innerHeight, iw: innerWidth,
-          die: box('#play .dieb'), monster: box('#play .mcard'), bank: box('#play [data-p=bank]'), mat: box('#play .mat'), reroll: box('#play .track[data-p=reroll]'), log: !!document.querySelector('#play .plog') };
+          die: box('#play .dieb'), monster: box('#play .mcard'), bank: box('#play [data-p=bank]'), mat: box('#play .mat'), tableau: (() => { const cs = [...document.querySelectorAll('#play .tcard')].map(e => e.getBoundingClientRect()); return { b: Math.max(...cs.map(r => r.bottom)), l: Math.min(...cs.map(r => r.left)), r: Math.max(...cs.map(r => r.right)) }; })(), reroll: box('#play .track[data-p=reroll]'), log: !!document.querySelector('#play .plog') };
       });
       assert.ok(m.sh <= m.ih + 1 && m.sw <= m.iw + 1, `${orient} ${viewport.width}: page scrolls (${m.sw}x${m.sh} in ${m.iw}x${m.ih})`);
       for (const k of ['die', 'monster', 'bank', 'reroll']) assert.ok(m[k].w >= 44 && m[k].h >= 44, `${orient}: ${k} is ${m[k].w}x${m[k].h}`);
       assert.ok(m.mat.b <= m.ih + 1, `${orient}: the bottom of the table (${m.mat.b}) is below the screen (${m.ih})`);
+      assert.ok(m.tableau.b <= m.ih + 1 && m.tableau.l >= -1 && m.tableau.r <= m.iw + 1, `${orient}: the Power and Ongoing cards fit the screen ${JSON.stringify(m.tableau)}`);
       assert.equal(m.log, false);
       assert.deepEqual(errors, []);
     } finally { await browser.close(); }
@@ -310,15 +347,22 @@ test('run: round 1 opens a Bronze Pack (draw 3, keep 1), then you choose your St
     assert.equal(await page.locator('#play .pack b').innerText(), 'Bronze'); assert.match(await page.locator('#play .pack').innerText(), /Draw 3 · Keep 1/);
     assert.equal(await page.locator('#play .tabs').count(), 0, 'no catalogue of cards');
     await page.click('#play [data-p=openpack]'); assert.equal(await page.locator('#play [data-p=pick]').count(), 3);
-    assert.ok(await page.locator('#play [data-p=keepgo]').isDisabled());
+    assert.equal(await page.locator('#play [data-p=keepgo]').count(), 0, 'no Keep button: tap a card, tap it again');
+    await page.click('#play [data-p=pick] >> nth=0'); assert.equal(await page.locator('#play .pcard.sel').count(), 1, 'one tap chooses');
+    await page.click('#play [data-p=pick] >> nth=1'); assert.equal(await page.locator('#play .pcard.sel').count(), 1, 'tapping another card moves the choice');
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.run.prep.step), 'keep');
+    assert.match(await page.locator('#play .kitbar').innerText(), /Keep 1/);
     await keepNonMystery(page, 1);
     assert.equal(await page.locator('#play [data-p=kitpick]').count(), 1, 'one card to choose from: the one you kept');
     assert.equal(await page.locator('#play [data-p=kitgem]').count(), 0, 'no gem to pick: an empty place is a gem');
+    assert.match(await page.locator('#play .kitbar .count').innerText(), /^0 of 1$/, 'how many you may choose and how many you have');
+    assert.match(await page.locator('#play .kitnote').innerText(), /Pick cards to start with.*empty spot/i);
+    assert.equal(await page.locator('#play .pips2').count(), 0, 'no circles');
     assert.equal(await page.locator('#play [data-p=startround]').isEnabled(), true, 'you may start with the place empty');
     await page.click('#play [data-p=startround]'); await page.waitForSelector('#play .ptable');
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.geodeGems), 1, 'you started with a gem in the Bank');
     assert.match(await page.locator('#play [data-p=bank]').innerText(), /^1/);
-    assert.equal(await page.locator('#play .known .piece').count(), 0, 'the card you left out of the kit is shuffled into the Mine');
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.known), 0, 'the card you left out of the kit is shuffled into the Mine');
     assert.equal(await page.locator('#play .lb').count(), 1); assert.match(await page.locator('#play .lbhead').innerText(), /round 1 of 4/i);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -342,7 +386,7 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     assert.match(await page.locator('#play .eq .sum').innerText(), /13/); assert.equal(await page.locator('#play .pack b').innerText(), 'Silver');
     assert.match(await page.locator('#play .lb').innerText(), /♛ 4 · you/i);
     await page.click('#play [data-p=openpack]'); assert.equal(await page.locator('#play [data-p=pick]').count(), 4);
-    const w = await page.locator('#play [data-p=pick]').first().evaluate(e => e.getBoundingClientRect().width); assert.ok(w >= 200, 'whole cards, not a reduction: ' + w);
+    const w = await page.locator('#play [data-p=pick]').first().evaluate(e => e.offsetWidth); assert.ok(w >= 200, 'whole cards, not a reduction: ' + w);
     assert.doesNotMatch(await page.locator('#play .panel').innerText(), /[Ll]ast [Dd]ig|banked after/);
     await keepNonMystery(page, 2);
     assert.equal(await page.locator('#play [data-p=kitpick]').count(), 3, 'the card from round 1 and the two you kept');
@@ -409,7 +453,7 @@ test('menu: in a game there is no link out to the library — a Menu with a way 
     assert.match(await page.locator('#play .gmenu').innerText(), /Back to the game[\s\S]*How to play[\s\S]*Main menu/);
     await page.click('#play [data-p=gmenuclose]'); assert.equal(await page.locator('#play .gmenu').count(), 0);
     await page.click('#play .pbar [data-p=gmenu]'); await page.click('#play [data-p=mainmenu]');
-    assert.match(await page.locator('#play .homemenu').innerText(), /Continue[\s\S]*Round 1 of 4 · Dig[\s\S]*New run/);
+    assert.match(await page.locator('#play .homemenu').innerText(), /Continue[\s\S]*New run/);
     await page.click('#play [data-p=startrun]');                                       // the first tap only asks
     assert.match(await page.locator('#play .homemenu').innerText(), /Tap again to replace your game/); assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.digs), 1, 'nothing was replaced yet');
     await page.click('#play [data-p=resume]'); await page.waitForSelector('#play .ptable');
@@ -436,7 +480,7 @@ test('play: a reload puts you back exactly where you were — mid-fight in a run
     assert.deepEqual(after, before, 'the same Mine, die, log and line');
     await faceIt(page);
     assert.match(await logText(page), /survive Monster A/);
-    await page.click('#play .pbar [data-p=gmenu]'); await page.click('#play [data-p=mainmenu]'); assert.match(await page.locator('#play .homemenu').innerText(), /Continue[\s\S]*Round 1 of 4 · Dig/);
+    await page.click('#play .pbar [data-p=gmenu]'); await page.click('#play [data-p=mainmenu]'); assert.match(await page.locator('#play .homemenu').innerText(), /Continue/);
     await page.click('#play [data-p=resume]'); await page.waitForSelector('#play .ptable');
     // a Practice Dig resumes too
     await page.click('#play .pbar [data-p=gmenu]'); await page.click('#play [data-p=mainmenu]'); await page.click('#play [data-p=more]'); await page.click('#play [data-p=practice]'); if (await page.locator('#play .confirm').count()) await page.click('#play [data-p=practice]'); await page.click('#play [data-p=random]'); await page.click('#play [data-p=go]'); await page.waitForSelector('#play .ptable');
@@ -586,7 +630,7 @@ test('menu: opening the game from the shelf shows the main menu with Continue (n
     await fresh.goto(FILE); await fresh.waitForSelector('#play .home');
     await fresh.waitForTimeout(400);
     assert.equal(await fresh.locator('#play .ptable').count(), 0, 'not straight into the game');
-    assert.match(await fresh.locator('#play .homemenu').innerText(), /Continue[\s\S]*Round 1 of 4 · Dig/);
+    assert.match(await fresh.locator('#play .homemenu').innerText(), /Continue/);
     await fresh.click('#play [data-p=resume]'); await fresh.waitForSelector('#play .ptable');
     await fresh.reload(); await fresh.waitForSelector('#play .ptable');          // a reload resumes mid-game
     assert.deepEqual(errors, []);

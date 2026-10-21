@@ -54,6 +54,7 @@ summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .card .paper { background: #fffaf0; }
 .card .band { color: var(--on, #fff); }
 .card .name { font-weight: 800; line-height: 1; white-space: nowrap; letter-spacing: -.01em; }
+.card .name, .card .typeword { text-align: left; }
 .card .typeword { font-weight: 800; letter-spacing: .12em; text-transform: uppercase; line-height: 1; white-space: nowrap; }
 .card .text { font-weight: 600; line-height: 1.13; color: #1d1712; overflow: hidden; }
 .card .text .ic, .meas .ic { display: inline-block; width: 1.12em; height: 1.12em; vertical-align: -.2em; margin: 0 .04em; }
@@ -96,12 +97,6 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .tc { height: 34px; border-radius: 7px; background: #fffaf0; color: #1d1712; font-weight: 800; font-size: 17px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--tc, #888); opacity: .55; }
 #play .tc.lit { opacity: 1; background: color-mix(in srgb, var(--tc) 30%, #fffaf0); }
 #play .tc.now { opacity: 1; background: var(--tc); color: #fff; font-size: 20px; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
-#play .ongoing { width: 250px; flex: none; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
-#play .ongoing h4, #play .linehead { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
-#play .ongoing .list { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; align-content: start; overflow-y: auto; max-height: 112px; overscroll-behavior: contain; }
-#play .ongoing .piece { min-height: 46px; }
-#play .ongoing .piece .h { min-height: 38px; font-size: 12px; overflow-wrap: normal; word-break: normal; }
-#play .ongoing .list .note { grid-column: 1 / -1; }
 #play .piece { position: relative; border-radius: 9px; border: 3px solid var(--c); background: #fffaf0; color: #1d1712; text-align: left; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; width: 100%; }
 #play .piece .h { background: var(--c); color: var(--on); font-weight: 800; font-size: 13px; line-height: 1.1; padding: 3px 6px; display: flex; align-items: center; gap: 5px; }
 #play .piece .h svg { width: 15px; height: 15px; flex: none; }
@@ -113,37 +108,11 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .piece.elig { box-shadow: 0 0 0 3px #fff, 0 0 12px 4px var(--accent); animation: pulse 1.2s ease-in-out infinite; }
 #play .piece.done { opacity: .6; }
 #play .piece .h .tg { margin-left: auto; font-size: 10px; font-weight: 800; background: #1d1712; color: #fff; border-radius: 6px; padding: 1px 5px; white-space: nowrap; }
-#play .line { flex: 1; min-height: 120px; display: flex; flex-direction: column; background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 6px 8px 8px; }
-#play .linehead { display: flex; justify-content: space-between; padding: 0 2px 4px; flex: none; }
-#play .lcols { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
-#play .lcol .piece .h svg { display: none; }
-#play .lcol .piece { flex: none; }
-#play .lcol .piece .h { font-size: 11.5px; padding: 3px 4px; overflow-wrap: normal; word-break: normal; hyphens: none; }
-#play .lcol { display: flex; flex-direction: column; gap: 3px; border-radius: 8px; padding: 2px; background: rgba(255,255,255,.04); min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-#play .lcol.on { background: rgba(255,177,59,.18); outline: 2px solid var(--accent); }
-#play .lcol.off { opacity: .45; }
-#play .lnum { font-weight: 900; font-size: 15px; text-align: center; color: var(--dim); order: 99; margin-top: auto; padding-top: 2px; }
-#play .lcol.on .lnum { color: var(--accent); }
-#play .mat { flex: none; height: var(--mat-h, 286px); display: grid; grid-template-columns: 124px minmax(0, 1fr) 124px; gap: 10px; }
-#play .pile { border-radius: 14px; border: 3px dashed var(--line); background: rgba(255,255,255,.03); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 8px; color: var(--dim); font-weight: 800; font-size: 13px; text-align: center; min-width: 0; }
-#play .pile.bankp { border-color: #2b6f9c; }
-#play .pile.live { border-color: var(--accent); border-style: solid; color: #fff; animation: pulse 1.4s ease-in-out infinite; }
-#play .cardback { width: 76px; height: 106px; border-radius: 10px; background: repeating-linear-gradient(45deg, #5b3b22 0 8px, #6e4829 8px 16px); border: 3px solid #a6753f; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 34px; font-weight: 900; text-shadow: 0 2px 4px #000; box-shadow: 3px 3px 0 #2a1a0d, 6px 6px 0 #1c1410; }
-#play .pile .cap2 { font-size: 12px; color: var(--dim); font-weight: 700; }
-#play .known { display: flex; flex-direction: column; gap: 3px; width: 100%; }
-#play .known .piece .h { font-size: 11px; padding: 2px 5px; }
 #play .stack { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-#play .stack .pile { flex: 1; }
 #play .gemline { display: flex; align-items: center; gap: 4px; font-size: 24px; color: #fff; }
 #play .gemline svg { width: 26px; height: 26px; }
-#play .dig { min-width: 0; border-radius: 14px; background: rgba(255,255,255,.03); border: 2px solid var(--line); display: flex; gap: 12px; padding: 8px 12px; align-items: center; justify-content: center; }
-#play .dig.idle { color: var(--dim); font-size: 18px; text-align: center; line-height: 1.4; }
 #play .mcard { display: block; border-radius: 12px; flex: none; position: relative; }
 #play .mcard.live { outline: 4px solid var(--accent); outline-offset: 3px; animation: pulse 1.2s ease-in-out infinite; }
-#play .rollp { display: flex; flex-direction: column; gap: 4px; align-items: stretch; min-width: 0; flex: 1; max-width: 250px; }
-#play .die { width: calc(var(--mat-h, 286px) * .38); height: calc(var(--mat-h, 286px) * .38); margin: 0 auto; border-radius: 22px; background: #fffaf0; color: #1d1712; font-weight: 900; font-size: calc(var(--mat-h, 286px) * .22); display: flex; align-items: center; justify-content: center; border: 5px solid #1d1712; box-shadow: 0 4px 0 #000; }
-#play .die.live { flex-direction: column; border-color: var(--accent); animation: pulse 1.2s ease-in-out infinite; font-size: calc(var(--mat-h, 286px) * .1); }
-#play .die small { font-size: 15px; display: block; }
 #play .calc { text-align: center; font-size: 15px; line-height: 1.35; color: var(--dim); }
 #play .calc b { color: #fff; font-size: 34px; display: block; line-height: 1; }
 #play .calcparts { display: block; font-size: 13px; margin-top: 2px; }
@@ -217,9 +186,6 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .pbar h1 { display: flex; align-items: center; gap: 8px; font-size: 27px; font-weight: 900; letter-spacing: .01em; background: linear-gradient(180deg, #fff4bf 0%, #ffc23a 52%, #ec7a1c 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 0 #6b2f05); }
 #play .pbar h1 svg { width: 30px; height: 30px; flex: none; }
 #play .drill, #play .line, #play .lb, #play .dig { position: relative; background: radial-gradient(90% 110% at 50% 0%, rgba(255,177,59,.13), rgba(255,255,255,.02) 70%); border-color: #5d4631; }
-#play .pile { background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02)); }
-#play .pile.live { background: linear-gradient(180deg, rgba(255,177,59,.28), rgba(255,177,59,.08)); box-shadow: 0 0 18px rgba(255,177,59,.35); }
-#play .pile.bankp { border-color: #2f86c0; background: linear-gradient(180deg, rgba(47,134,192,.22), rgba(47,134,192,.06)); gap: 2px; padding: 6px 4px; }
 #play .pile.bankp.live { background: linear-gradient(180deg, rgba(255,177,59,.32), rgba(47,134,192,.12)); }
 #play .piece:not(.elig):not(.trig) { box-shadow: 0 2px 0 rgba(0,0,0,.4), 0 5px 8px rgba(0,0,0,.25); }
 #play .piece .h { background: linear-gradient(180deg, color-mix(in srgb, var(--c) 72%, #fff), var(--c) 70%); text-shadow: 0 1px 0 rgba(0,0,0,.18); }
@@ -233,7 +199,6 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #b5690d; }
 #play .btn.alt { background: linear-gradient(180deg, #3d2c1f, #2a1e15); box-shadow: 0 4px 0 #120c08; }
 #play .chip { background: linear-gradient(180deg, #3d2c1f, #2a1e15); }
-#play .cardback { background: radial-gradient(circle at 50% 36%, rgba(255,214,140,.45) 0, rgba(255,214,140,0) 56%), repeating-linear-gradient(45deg, #5b3b22 0 8px, #6e4829 8px 16px); border-color: #e7b866; box-shadow: 3px 3px 0 #2a1a0d, 6px 6px 0 #1c1410, 0 0 14px rgba(255,177,59,.25); position: relative; }
 #play .cardback::after { content: "✦"; position: absolute; top: 4px; left: 7px; font-size: 14px; color: #ffe29a; text-shadow: none; }
 #play .gemline.fx-bump { animation: bump .45s ease-out; }
 #play .over { overflow: hidden; background: radial-gradient(90% 90% at 50% 40%, #3a2417, #1c1410); }
@@ -251,9 +216,6 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 #play .confetti i { position: absolute; top: -26px; width: 22px; height: 22px; animation: fall 2.2s ease-in both; }
 #play .confetti svg { width: 22px; height: 22px; }
-#play .lcol { border-top: 4px solid hsl(var(--h, 30) 78% 55%); background: linear-gradient(180deg, hsl(var(--h, 30) 60% 50% / .14), rgba(255,255,255,.03) 60%); }
-#play .lnum { color: hsl(var(--h, 30) 85% 72%); font-size: 17px; }
-#play .lcol.on .lnum { color: #fff; }
 
 /* ---------- the die (a d10), the Monster pile, Prep as a table ---------- */
 #play .d10 { display: block; width: 100%; height: 100%; overflow: visible; }
@@ -263,8 +225,6 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .d10 .dnum.ten { font-size: 28px; }
 #play .d10.idle .dbody { fill: #f5ead2; }
 #play .d10.fx-tumble { animation: tumble .85s cubic-bezier(.2,.8,.3,1) both; }
-#play .dieb { width: calc(var(--mat-h, 286px) * .42); height: calc(var(--mat-h, 286px) * .42); margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; filter: drop-shadow(0 5px 0 rgba(0,0,0,.45)); }
-#play .dieb.live { animation: pulse 1.2s ease-in-out infinite; border-radius: 18px; }
 #play .tapword { font-size: 15px; font-weight: 800; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; text-align: center; }
 #play .mpile { width: 200px; flex: none; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
 #play .mpile h4 { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
@@ -273,7 +233,6 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .mset .lad { display: flex; gap: 3px; }
 #play .mset .lad i { font-style: normal; min-width: 26px; height: 30px; padding: 0 3px; border-radius: 7px; background: #cf2f2f; color: #fff; font-weight: 900; font-size: 15px; display: flex; align-items: center; justify-content: center; border: 2px solid #1d1712; }
 #play .mset .lad i.met { background: #5a4a46; color: #b8a89c; text-decoration: line-through; opacity: .85; }
-#play .knownmore { font-size: 12px; font-weight: 800; color: var(--dim); text-align: center; }
 /* Prep */
 #play .prep .scroll { display: flex; flex-direction: column; gap: 12px; }
 #play .prepstage { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 6px 0; }
@@ -296,9 +255,6 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .pcard.sel { box-shadow: 0 0 0 4px var(--accent), 0 0 22px 6px rgba(255,177,59,.55); transform: translateY(-6px); }
 #play .pcard .badge { position: absolute; left: -6px; top: -8px; z-index: 3; min-width: 32px; height: 32px; border-radius: 99px; background: var(--accent); color: #1c1410; font-weight: 900; font-size: 18px; display: flex; align-items: center; justify-content: center; border: 3px solid #fffaf0; box-shadow: 0 2px 0 rgba(0,0,0,.4); }
 #play .kitbar { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
-#play .pips2 { display: inline-flex; gap: 6px; }
-#play .pips2 i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--accent); }
-#play .pips2 i.on { background: var(--accent); }
 #play .foot .btn { min-width: 200px; }
 #play .gmenu-back { position: fixed; inset: 0; z-index: 18; background: rgba(0,0,0,.45); }
 #play .gmenu { position: fixed; z-index: 19; top: max(52px, calc(env(safe-area-inset-top) + 46px)); right: max(10px, env(safe-area-inset-right)); width: 240px; display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 16px; background: linear-gradient(180deg, #3d2c1f, #2a1e15); border: 2px solid #6a4e34; box-shadow: 0 14px 30px rgba(0,0,0,.55); }
@@ -322,26 +278,6 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .hero-art { position: relative; min-height: 0; height: 100%; display: flex; align-items: center; justify-content: center; }
 #play .hero-art::before { content: ""; position: absolute; inset: 6% 4%; background: radial-gradient(circle, rgba(255,160,50,.5), rgba(255,160,50,0) 66%); filter: blur(26px); }
 #play .hero-stage { position: relative; width: 560px; height: 620px; flex: none; transform: scale(var(--k, .8)); transform-origin: center; }
-#play .hmon { position: absolute; top: 8px; width: 250px; height: 350px; filter: drop-shadow(0 16px 20px rgba(0,0,0,.55)); animation: hfloat 5s ease-in-out infinite; }
-#play .hmon.m0 { left: 48px; transform: rotate(-6deg); z-index: 1; }
-#play .hmon.m1 { left: 262px; top: 34px; transform: rotate(6deg); animation-delay: -2.5s; }
-#play .hfan { position: absolute; width: 160px; height: 224px; left: calc(var(--x) - 80px); top: var(--y); transform: rotate(var(--r)); filter: drop-shadow(0 10px 12px rgba(0,0,0,.5)); }
-#play .hflip { position: absolute; inset: 0; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; animation: hflip 12s ease-in-out infinite; animation-delay: var(--d); }
-#play .hflip > .hb, #play .hflip > .hf { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 12px; overflow: hidden; }
-#play .hflip > .hf { transform: rotateY(180deg); }
-#play .hb { background: radial-gradient(circle at 50% 38%, rgba(255,214,140,.5) 0, rgba(255,214,140,0) 55%), repeating-linear-gradient(45deg, #5b3b22 0 9px, #6e4829 9px 18px); border: 4px solid #e7b866; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-#play .hb svg { width: 58%; height: 58%; filter: drop-shadow(0 3px 0 rgba(0,0,0,.45)); }
-#play .hb::before, #play .hb::after { content: "✦"; position: absolute; font-size: 20px; color: #ffe29a; }
-#play .hb::before { top: 6px; left: 10px; } #play .hb::after { bottom: 6px; right: 10px; }
-#play .hburst { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
-#play .hburst i { position: absolute; left: -12px; top: -12px; width: 24px; height: 24px; opacity: 0; animation: hburst 12s ease-out infinite; animation-delay: var(--d); }
-#play .hburst svg { width: 24px; height: 24px; }
-#play .hrise { position: absolute; bottom: -30px; left: var(--x); width: var(--s); height: var(--s); opacity: 0; animation: hrise var(--t) linear infinite; animation-delay: var(--d); pointer-events: none; }
-#play .hrise svg { width: 100%; height: 100%; }
-@keyframes hflip { 0%, 60% { transform: rotateY(0deg); } 64%, 80% { transform: rotateY(180deg); } 84%, 100% { transform: rotateY(0deg); } }
-@keyframes hburst { 0%, 62% { opacity: 0; transform: translate(0, 0) scale(.3); } 64% { opacity: 1; } 76% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(180deg); } 100% { opacity: 0; } }
-@keyframes hfloat { 50% { translate: 0 -9px; } }
-@keyframes hrise { 0% { transform: translateY(0) rotate(0); opacity: 0; } 12% { opacity: .85; } 80% { opacity: .7; } 100% { transform: translateY(-640px) rotate(240deg); opacity: 0; } }
 #play .homemenu { position: relative; display: flex; flex-direction: column; align-items: stretch; min-height: 0; }
 #play .logo { margin: 0 0 4px; line-height: .86; text-align: left; font-weight: 900; letter-spacing: -2px; filter: drop-shadow(0 4px 0 rgba(0,0,0,.45)); animation: logoin .7s ease-out .15s backwards; }
 #play .logo .l1 { display: block; font-size: clamp(38px, min(9vw, 9vh), 84px); background: linear-gradient(180deg, #ffe9a8 10%, #ffb62e 60%, #d9731a 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -374,7 +310,165 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .libback { position: absolute; z-index: 3; top: max(10px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px 10px 12px; min-height: 44px; border-radius: 99px; background: #2a1f18; border: 2px solid var(--accent); color: var(--text); font-size: 16px; font-weight: 800; box-shadow: 0 4px 0 rgba(0,0,0,.35); text-decoration: none; }
 #play .libback span { font-size: 22px; line-height: 1; color: var(--accent); }
 @media (max-height: 560px) { #play .mode span, #play .tagline, #play .homenote { display: none; } #play .mode.primary .pips { display: flex; } }
-@media (prefers-reduced-motion: reduce) { #play .logo, #play .logo .l2, #play .hmon, #play .hflip, #play .hburst i, #play .hrise { animation: none !important; } #play .hrise { display: none; } }
+
+/* ---------- the table: full-size cards laid out like physical components ---------- */
+#play .ptable { --ca: .7; --cb: .6; --ov: 0px; gap: 10px; padding-top: 2px; }
+#play .pmain { background: radial-gradient(120% 90% at 50% 30%, #4a2d18 0%, #2a1a0f 60%, #1b110a 100%); border-radius: 18px; margin: 0 8px 8px; padding: 10px; box-shadow: inset 0 0 0 3px #5a3c22, inset 0 0 40px rgba(0,0,0,.55); }
+#play .cw { display: block; position: relative; flex: none; width: calc(250px * var(--s)); height: calc(350px * var(--s)); }
+#play .cs { display: block; position: absolute; left: 0; top: 0; width: 250px; height: 350px; transform: scale(var(--s)); transform-origin: 0 0; }
+#play .cw .cs > div { filter: drop-shadow(0 6px 8px rgba(0,0,0,.55)); }
+#play .mat { position: relative; flex: none; display: flex; align-items: flex-start; gap: 10px; height: calc(350px * var(--ca) + 2px); }
+#play .stack { flex: none; }
+#play .deck { position: relative; display: block; flex: none; width: calc(250px * var(--ca)); height: calc(350px * var(--ca)); border-radius: 12px; }
+#play .deck::before, #play .deck::after { content: ""; position: absolute; inset: 0; border-radius: calc(12px * var(--ca)); background: #6e4829; border: 2px solid #a6753f; z-index: 0; }
+#play .deck::before { transform: translate(5px, 6px); } #play .deck::after { transform: translate(10px, 12px); background: #4b3019; }
+#play .deck .cw { z-index: 1; }
+#play .deck.live { outline: 4px solid var(--accent); outline-offset: 5px; animation: pulse 1.4s ease-in-out infinite; }
+#play .deck:disabled { opacity: 1; }
+#play .cardback { display: block; width: 250px; height: 350px; border-radius: 22px; background: radial-gradient(circle at 50% 42%, rgba(255,214,140,.5) 0, rgba(255,214,140,0) 55%), repeating-linear-gradient(45deg, #5b3b22 0 14px, #6e4829 14px 28px); border: 8px solid #e7b866; box-shadow: 0 6px 10px rgba(0,0,0,.5); }
+#play .cardback.none { opacity: .25; }
+#play .deck .cnt { position: absolute; z-index: 2; right: -12px; top: -12px; min-width: 38px; height: 38px; padding: 0 8px; border-radius: 99px; background: #1d1712; border: 3px solid #e7b866; color: #fff; font-weight: 900; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+#play .known { margin-top: 18px; width: calc(250px * var(--ca)); font-size: 12px; font-weight: 700; color: var(--dim); display: flex; flex-wrap: wrap; gap: 3px 5px; }
+#play .known i { font-style: normal; color: var(--text); background: rgba(255,255,255,.1); border-radius: 6px; padding: 1px 6px; }
+#play .rollp { display: flex; flex-direction: column; gap: 8px; align-items: center; min-width: 0; flex: 1; max-width: 230px; }
+#play .dieb { margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; filter: drop-shadow(0 5px 0 rgba(0,0,0,.45)); width: clamp(86px, calc(350px * var(--ca) * .34), 150px); height: clamp(86px, calc(350px * var(--ca) * .34), 150px); }
+#play .dugz { flex: none; }
+#play .slot { width: calc(250px * var(--ca)); height: calc(350px * var(--ca)); border-radius: calc(22px * var(--ca)); border: 3px dashed rgba(255,255,255,.16); background: rgba(0,0,0,.16); display: flex; align-items: center; justify-content: center; position: relative; }
+#play .slot .mcard { position: absolute; inset: -3px; display: block; }
+#play .mcard.live { animation: none; outline: 4px solid var(--accent); outline-offset: 4px; }
+#play .dicez { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; justify-content: center; }
+#play .hint { display: flex; flex-direction: column; gap: 6px; align-items: center; font-size: 13px; color: var(--dim); font-weight: 700; }
+#play .piles { flex: none; width: 150px; margin-left: auto; height: 100%; display: flex; flex-direction: column; gap: 8px; }
+#play .pile { border-radius: 14px; border: 3px dashed rgba(255,255,255,.16); background: rgba(0,0,0,.16); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 6px; color: var(--dim); font-weight: 800; font-size: 13px; text-align: center; min-width: 0; }
+#play .pile.discard { flex: none; border-style: dashed; padding: 8px 6px; }
+#play .pile.discard .cw { min-height: 24px; }
+#play .pile.bankp { flex: 1; border: 3px solid #2b6f9c; background: rgba(43,111,156,.12); }
+#play .pile.live { border-color: var(--accent); animation: pulse 1.4s ease-in-out infinite; color: #fff; }
+#play .tableau { flex: 1; min-height: 0; display: flex; align-items: flex-start; justify-content: center; gap: 10px; padding: 6px 4px 0; }
+#play .tcard { position: relative; display: block; flex: none; border-radius: 12px; transition: transform .12s; }
+#play .tableau > * + .tcard { margin-left: var(--ov); }
+#play .tcard.off { opacity: .4; filter: grayscale(.6); }
+#play .tcard.done { opacity: .55; }
+#play .tcard.elig { outline: 4px solid var(--accent); outline-offset: 3px; animation: pulse 1.2s ease-in-out infinite; transform: translateY(-8px); }
+#play .tcard.pick { outline: 4px solid var(--accent); outline-offset: 3px; animation: pulse 1.2s ease-in-out infinite; }
+#play .tcard .tg { position: absolute; left: 6px; bottom: 6px; z-index: 3; font-size: 12px; font-weight: 800; background: #1d1712; color: #fff; border-radius: 6px; padding: 2px 7px; }
+#play .tsep { flex: none; width: 22px; }
+/* the Leaderboard lives in the title bar: quiet, compact */
+#play .pbar { gap: 12px; padding-top: max(10px, calc(env(safe-area-inset-top) * 0 + 8px)); }
+#play .pbar h1 { flex: none; margin: 0; font-size: 24px; }
+#play .pbar .lb { flex: 1; min-width: 0; padding: 3px 8px 4px; border-radius: 10px; }
+#play .pbar .lbhead { font-size: 10.5px; padding: 0 1px 2px; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; gap: 8px; }
+#play .pbar .lbhead span:first-child { overflow: hidden; text-overflow: ellipsis; }
+#play .pbar .lbcells { gap: 2px; }
+#play .pbar .lbc { min-height: 30px; border-radius: 6px; padding: 1px 0; }
+#play .pbar .lbc .ln { font-size: 11px; line-height: 1; }
+#play .pbar .lbc .lm { min-height: 14px; }
+#play .pbar .mk { width: 12px; height: 12px; font-size: 8px; }
+#play .pbar .crownmk { font-size: 14px; }
+/* the Monster ladders: the damage the next one deals is lit; what is still to come is an outline; what you have met is struck out */
+#play .mset .lad i { background: transparent; color: #ff9a8a; border: 2px solid #8a3a34; }
+#play .mset .lad i.next { background: #cf2f2f; color: #fff; border-color: #fff; box-shadow: 0 0 0 2px #cf2f2f, 0 0 10px rgba(255,80,60,.7); }
+#play .mset .lad i.met { background: #3a302c; color: #8f8077; border-color: #4a3d38; text-decoration: line-through; opacity: .8; box-shadow: none; }
+/* the die: a hexagon with D10 written on it */
+#play .d10 .dbody { fill: #fffaf0; stroke: #1d1712; stroke-width: 5; }
+#play .d10 .dfacet { fill: none; stroke: #cdbf9f; stroke-width: 2.5; }
+#play .d10 .dword { fill: #7a6a52; font-weight: 900; font-size: 26px; font-family: inherit; letter-spacing: .02em; }
+#play .d10 .dnum { font-size: 46px; }
+#play .d10 .dnum.ten { font-size: 38px; }
+
+/* ---------- Prep: the pack tears open, the kit says how many ---------- */
+#play .kitbar .count { font-size: 22px; font-weight: 900; color: var(--accent); }
+#play .kitnote { margin: 0 0 6px; text-align: center; color: var(--dim); font-size: 15px; font-weight: 600; }
+#play .kitnote .ic { width: 1.1em; height: 1.1em; vertical-align: -.2em; }
+#play .panel.prep { position: relative; }
+#play .panel.prep .scroll { display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+#play .tear { position: absolute; inset: 0; z-index: 6; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+#play .tpack { position: relative; width: 190px; height: 260px; animation: tpack 1.5s ease-in both; }
+#play .tpack .pk { position: absolute; left: 0; width: 190px; background: linear-gradient(135deg, color-mix(in srgb, var(--pc) 55%, #fff) 0%, var(--pc) 45%, color-mix(in srgb, var(--pc) 70%, #000) 100%); background-size: 190px 260px; border: 3px solid rgba(255,255,255,.55); color: #2b1b10; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 10px 14px rgba(0,0,0,.5)); }
+#play .tpack .ttop { top: 0; height: 52px; border-radius: 14px 14px 0 0; border-bottom: 0; clip-path: polygon(0 0, 100% 0, 100% 78%, 92% 100%, 84% 76%, 76% 100%, 68% 76%, 60% 100%, 52% 76%, 44% 100%, 36% 76%, 28% 100%, 20% 76%, 12% 100%, 4% 76%, 0 100%); transform-origin: 100% 100%; animation: ttop 1.5s ease-in both; }
+#play .tpack .tbody { top: 44px; height: 216px; background-position: 0 -44px; border-radius: 0 0 14px 14px; border-top: 0; padding-top: 28px; align-items: flex-start; animation: tbody 1.5s ease-in both; }
+#play .tpack .star { font-size: 28px; line-height: 1; margin-top: -8px; }
+#play .tpack b { font-size: 30px; font-weight: 900; margin-top: 70px; text-shadow: 0 2px 0 rgba(255,255,255,.4); }
+#play .tflash { position: absolute; left: -30px; right: -30px; top: 10px; height: 60px; border-radius: 50%; background: radial-gradient(closest-side, #fff, rgba(255,230,150,0)); opacity: 0; animation: tflash 1.5s ease-out both; }
+@keyframes tpack { 0% { transform: scale(.9) rotate(0); opacity: 0; } 8% { opacity: 1; transform: scale(1); } 14% { transform: rotate(-3deg); } 20% { transform: rotate(3deg); } 26% { transform: rotate(-2deg); } 32%, 40% { transform: rotate(0); } 100% { transform: translateY(40px) scale(.96); opacity: 0; } }
+@keyframes ttop { 0%, 34% { transform: none; opacity: 1; } 56% { transform: translate(40px, -70px) rotate(24deg); opacity: 1; } 80%, 100% { transform: translate(110px, -190px) rotate(60deg); opacity: 0; } }
+@keyframes tbody { 0%, 38% { transform: none; opacity: 1; } 70% { transform: translateY(24px); opacity: .8; } 100% { transform: translateY(90px); opacity: 0; } }
+@keyframes tflash { 0%, 34% { opacity: 0; transform: scale(.4); } 42% { opacity: .95; transform: scale(1.1); } 70%, 100% { opacity: 0; transform: scale(1.5); } }
+@keyframes dealin { 0% { transform: translate(var(--dx), 20px) scale(.2) rotate(-8deg); opacity: 0; } 70% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+#play .cards.dealt .pcard { animation: dealin .6s cubic-bezier(.2,.8,.3,1) backwards; animation-delay: calc(.5s + var(--i) * .14s); }
+
+/* ---------- the top of the screen stays clear of the iPad status bar ---------- */
+:root { --top: calc(max(env(safe-area-inset-top, 0px), 24px) + 8px); }
+#play { padding-top: 0; }
+#play .pbar { padding-top: var(--top); }
+#play .home { padding-top: var(--top); }
+#play .libback { top: var(--top); }
+#play .gmenu { top: calc(var(--top) + 48px); }
+#play .panel { padding-top: var(--top); }
+#play .panel.setup { padding-top: var(--top); }
+#play .tableau, #play .mat { }
+/* ---------- the main menu ---------- */
+#play .logo { line-height: 1.02; }
+#play .logo .l1 { padding-bottom: .05em; }
+#play .logo .l2 { margin-top: -.06em; line-height: 1.02; }
+#play .mode { align-items: center; justify-content: center; text-align: center; }
+#play .mode b { font-size: 26px; }
+#play .homenote.warn { margin-top: 10px; }
+#play .hero2 .htrack { position: absolute; left: 23px; top: 10px; display: flex; gap: 3px; }
+#play .hero2 .hc { font-style: normal; width: 44px; height: 42px; border-radius: 8px; background: #fffaf0; color: #1d1712; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; border: 3px solid #e8344e; opacity: .5; transition: background .25s, opacity .25s; }
+#play .hero2 .hc.lit { opacity: 1; background: #f9d6dc; }
+#play .hero2 .hc.now { opacity: 1; background: #e8344e; color: #fff; font-size: 22px; box-shadow: 0 0 14px rgba(232,52,78,.8); }
+#play .hero2 .hdeck { position: absolute; left: 40px; top: 120px; width: 200px; height: 280px; }
+#play .hero2 .hdeck::before, #play .hero2 .hdeck::after { content: ""; position: absolute; inset: 0; border-radius: 12px; background: #6e4829; border: 2px solid #a6753f; }
+#play .hero2 .hdeck::before { transform: translate(5px, 6px); } #play .hero2 .hdeck::after { transform: translate(10px, 12px); background: #4b3019; z-index: -1; }
+#play .hero2 .hdeck .cardback { position: absolute; left: 0; top: 0; transform: scale(.8); transform-origin: 0 0; z-index: 1; }
+#play .hero2 .hcnt { position: absolute; z-index: 2; right: -14px; top: -14px; min-width: 38px; height: 38px; padding: 0 8px; border-radius: 99px; background: #1d1712; border: 3px solid #e7b866; color: #fff; font-weight: 900; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+#play .hero2 .hslot { position: absolute; left: 310px; top: 120px; width: 200px; height: 280px; border-radius: 18px; border: 3px dashed rgba(255,255,255,.22); background: rgba(0,0,0,.16); }
+#play .hero2 .hslot .cw { position: absolute; left: -3px; top: -3px; }
+#play .hero2 .hslot > span { display: block; }
+#play .hero2 .hbank { position: absolute; left: 40px; top: 450px; width: 470px; height: 74px; border-radius: 16px; border: 3px solid #2b6f9c; background: rgba(43,111,156,.16); display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 900; font-size: 40px; color: #fff; }
+#play .hero2 .hbank .ic { width: 42px; height: 42px; }
+#play .hero2 .hbank small { font-size: 18px; color: var(--dim); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; margin-left: 8px; }
+#play .hero2 .hgems.bump { animation: bump .35s ease-out; display: inline-block; }
+#play .hero2 .hbanner { position: absolute; left: 0; right: 0; top: 215px; text-align: center; font-size: 96px; font-weight: 900; letter-spacing: -2px; opacity: 0; pointer-events: none; text-shadow: 0 6px 0 rgba(0,0,0,.5); z-index: 5; }
+#play .hero2 .hbanner .ic { width: .8em; height: .8em; vertical-align: -.1em; }
+#play .hero2 .hbanner.show { animation: hbin .5s cubic-bezier(.2,.8,.3,1) both; }
+@keyframes hbin { 0% { transform: scale(.5); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+#play .hero2 .hbanner.boom { color: #ff5b4a; }
+#play .hero2 .hbanner.bank { color: #ffd54a; font-size: 80px; }
+/* ---------- Settings and How to play: a header with a back button, then a list ---------- */
+#play .shead { display: flex; align-items: center; gap: 14px; padding: 4px 0 8px; flex: none; }
+#play .shead h2 { margin: 0; font-size: 28px; }
+#play .shead .back { min-height: 44px; padding: 8px 16px; font-size: 16px; font-weight: 800; }
+#play .slist { display: flex; flex-direction: column; gap: 10px; max-width: 720px; margin: 8px auto 0; }
+#play .srow { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; border-radius: 16px; background: var(--panel); border: 2px solid var(--line); }
+#play .srow .stext { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+#play .srow .stext b { font-size: 20px; }
+#play .srow .stext span { font-size: 14px; color: var(--dim); }
+#play .srow .btn { flex: none; min-width: 150px; }
+#play .seg { display: inline-flex; gap: 6px; flex: none; }
+#play .seg button { min-width: 46px; min-height: 46px; border-radius: 12px; background: rgba(255,255,255,.08); border: 2px solid var(--line); font-weight: 900; font-size: 20px; }
+#play .seg button.on { background: var(--accent); color: #1c1410; border-color: #fff; }
+#play .vers { text-align: center; color: var(--dim); font-size: 12px; margin: 14px 0 0; }
+#play .how { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; max-width: 1000px; margin: 8px auto; }
+@media (max-aspect-ratio: 1/1) { #play .how { grid-template-columns: 1fr; } }
+#play .hcard { background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 12px 14px 16px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+#play .hcard b { font-size: 21px; }
+#play .hcard p { margin: 0; font-size: 16px; line-height: 1.35; color: var(--text); }
+#play .hpic { height: 160px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+#play .hmini.glow { filter: drop-shadow(0 0 8px var(--accent)); outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+#play .hmini .cardback { border-width: 8px; }
+#play .harrow { font-size: 34px; color: var(--dim); font-weight: 900; }
+#play .hdie { width: 70px; height: 70px; }
+#play .hbankpic, #play .hsafe { display: inline-flex; align-items: center; gap: 6px; font-weight: 900; font-size: 30px; padding: 10px 16px; border-radius: 14px; border: 3px solid #2b6f9c; background: rgba(43,111,156,.16); }
+#play .hbankpic .ic { width: 32px; height: 32px; }
+#play .hsafe { border-color: var(--good); color: var(--good); }
+#play .helppanel { position: fixed; inset: 0; z-index: 15; background: var(--bg); display: flex; flex-direction: column; padding: var(--top) 20px 10px; }
+#play .hline { max-width: 1000px; margin: 14px auto 6px; font-size: 18px; text-align: center; }
+#play .hline .ic { width: 1.1em; height: 1.1em; vertical-align: -.2em; }
+#play .fine { max-width: 1000px; margin: 10px auto; color: var(--dim); font-size: 14px; }
+#play .fine summary { min-height: 44px; display: flex; align-items: center; font-weight: 800; }
+#play .fine li { margin: 4px 0; }
 </style>
 </head>
 <body>
@@ -398,7 +492,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
     <symbol id="m-skull" viewBox="0 0 24 24"><path d="M12 2.6c-4.7 0-8.3 3.3-8.3 7.8 0 2.6 1.3 4.6 3.1 5.7V21h2.3v-2.2h1.3V21h2.3v-2.2h1.3V21h2.3v-4.9c1.8-1.1 3.1-3.1 3.1-5.7 0-4.5-3.6-7.8-8.4-7.8z" fill="currentColor"/><circle cx="8.4" cy="10.6" r="2.4" fill="#fffaf0"/><circle cx="15.6" cy="10.6" r="2.4" fill="#fffaf0"/><path d="M12 12.6l-1.3 2.4h2.6z" fill="#fffaf0"/></symbol>
     <symbol id="t-treasure" viewBox="0 0 24 24"><path d="M3 11V8a6 6 0 0 1 6-6h6a6 6 0 0 1 6 6v3z" fill="currentColor"/><rect x="3" y="11" width="18" height="10" rx="1.5" fill="currentColor" opacity=".78"/><rect x="10" y="9" width="4" height="6" rx="1" fill="#fffaf0" stroke="#1d1712" stroke-width="1.2"/></symbol>
     <symbol id="t-immediate" viewBox="0 0 24 24"><path d="M13.5 1.5L4 13.5h6l-1.6 9L20 9.8h-6.4z" fill="currentColor" stroke="#1d1712" stroke-width="1" stroke-linejoin="round"/></symbol>
-    <symbol id="t-power" viewBox="0 0 24 24"><g fill="currentColor"><ellipse cx="6" cy="10" rx="2.5" ry="3.3" transform="rotate(-18 6 10)"/><ellipse cx="10.2" cy="5.6" rx="2.5" ry="3.4"/><ellipse cx="14.2" cy="5.6" rx="2.5" ry="3.4"/><ellipse cx="18.2" cy="10" rx="2.5" ry="3.3" transform="rotate(18 18.2 10)"/><path d="M12.2 11c3.6 0 6.2 3.3 6.2 6 0 2.4-1.7 3.4-3.4 3.4-1.2 0-1.9-.5-2.8-.5s-1.6.5-2.8.5c-1.7 0-3.4-1-3.4-3.4 0-2.7 2.6-6 6.2-6z"/></g></symbol>
+    <symbol id="t-power" viewBox="0 0 24 24"><g fill="currentColor" stroke="#1d1712" stroke-width="1.1" stroke-linejoin="round"><rect x="3.2" y="9" width="17.6" height="9.2" rx="3.2"/><rect x="3.8" y="4.6" width="4" height="7" rx="2"/><rect x="8.2" y="3.6" width="4" height="8" rx="2"/><rect x="12.6" y="3.6" width="4" height="8" rx="2"/><rect x="17" y="4.6" width="3.6" height="7" rx="1.8"/><rect x="6" y="12" width="8.6" height="3.8" rx="1.9"/><rect x="6.2" y="18.2" width="11.6" height="3.6" rx="1"/></g></symbol>
     <symbol id="t-ongoing" viewBox="0 0 24 24"><path d="M12 12c-1.6-2.8-3.2-4.6-5.4-4.6-2.4 0-4.2 1.9-4.2 4.6s1.8 4.6 4.2 4.6c2.2 0 3.8-1.8 5.4-4.6s3.2-4.6 5.4-4.6c2.4 0 4.2 1.9 4.2 4.6s-1.8 4.6-4.2 4.6c-2.2 0-3.8-1.8-5.4-4.6z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/></symbol>
     <symbol id="t-monster" viewBox="0 0 24 24"><path d="M3 4l4 3.2h10L21 4l-1.2 6.4c.5 1.2.7 2.4.7 3.6 0 4.4-3.8 8-8.5 8S3.5 18.4 3.5 14c0-1.2.2-2.4.7-3.6z" fill="currentColor"/><circle cx="8.6" cy="12" r="1.8" fill="#fffaf0"/><circle cx="15.4" cy="12" r="1.8" fill="#fffaf0"/><path d="M8 17.5l1.4 2.4 1.3-2.4 1.3 2.4 1.3-2.4 1.4 2.4L16 17.5" fill="#fffaf0" stroke="#1d1712" stroke-width=".8" stroke-linejoin="round"/></symbol>
     <!-- header patterns: a second, non-colour cue for every type -->
@@ -499,7 +593,7 @@ const DDB = {
   table: { playerColors: ['#ffb13b', '#e8344e', '#2b86d1', '#2eaf68', '#7a3fb8', '#1d1712'] },   // each player's Drill trim = their Leaderboard marker
   // ---- A run: rounds of Dig + Prep, the Leaderboard and the Crown Jewel (v2.7 Rules tab), for one player ----
   run: {
-    rounds: 4, roundChoices: [4, 5],                     // "Testing 4 rounds against 5"
+    rounds: 4, roundChoices: [2, 3, 4, 5, 6, 7],            // chosen in Settings
     crownStart: 3,                                       // the Crown tracker starts at 3
     boosterDeck: 'Booster',                              // the Deck column value of the Booster Deck
     // Reward ladder (owner): gems -> draw : keep. The pack names are placeholders (QUESTIONS #21).
@@ -1958,8 +2052,7 @@ const Match = (() => {
     const offline = st.source === 'sample';
     const count = n => list.filter(c => c.type === n).length;
     const stepper = (act, v, extra = '') => `<span class="stepper"><button data-p="${act}" data-d="-1" aria-label="less">−</button><span>${v}</span><button data-p="${act}" data-d="1" aria-label="more">+</button></span>${extra}`;
-    return `<div class="panel setup"><div class="scroll" id="setupScroll">
-      <h2>Choose your Starter Kit</h2>
+    return `<div class="panel setup"><div class="shead"><button class="chip back" data-p="more">‹ Settings</button><h2>Playtest: choose your Starter Kit</h2></div><div class="scroll" id="setupScroll">
       <p class="note">Your Mine is the ${all.filter(c => c.deck === R.startingDeck && c.type !== 'Power' && c.type !== 'Ongoing').reduce((a, c) => a + c.count, 0)} Starting cards. Pick Booster cards to start this Dig with: Power and Ongoing cards are in play from the start; Immediate cards are shuffled into your Mine.${offline ? ' <b style="color:#ff9a8a">Your sheet could not be reached, so only the design sample is available — reload when you are online.</b>' : ''}</p>
       <div class="tabs">
         ${['Power', 'Ongoing', 'Immediate'].map(t => `<button class="chip ${S.tab === t ? 'on' : ''}" data-p="tab" data-v="${t}">${t} (${count(t)})${S.kit.filter(id => (list.find(c => c.id === id) || {}).type === t).length ? ' · ' + S.kit.filter(id => (list.find(c => c.id === id) || {}).type === t).length + ' in kit' : ''}</button>`).join('')}
@@ -1976,7 +2069,6 @@ const Match = (() => {
       </details>
     </div>
     <div class="foot"><button class="btn" data-p="go">Start the Dig${S.kit.length ? ' with ' + S.kit.length + ' kit card' + (S.kit.length === 1 ? '' : 's') : ''}</button>
-      <button class="chip" data-p="cards">Card designs</button><button class="chip" data-p="help">How it works</button>
       <span class="note">${S.kit.length} of ${S.kitSize} chosen</span></div></div>`;
   }
 
@@ -1984,63 +2076,101 @@ const Match = (() => {
   // ----- the menu, the Leaderboard, Prep and the end of a run -----
   // ----- the main menu: the front of the box -----
   const BOMB = `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M20 8c2-3 5-3 7-6" fill="none" stroke="#c79a5a" stroke-width="2.4" stroke-linecap="round"/><circle cx="14" cy="19" r="10" fill="#2a2530" stroke="#0c0a10" stroke-width="2"/><ellipse cx="10.5" cy="15" rx="3" ry="2" fill="#fff" opacity=".35" transform="rotate(-35 10.5 15)"/><path d="M27 1l1.3 2.6 2.7.4-2 1.9.5 2.7L27 7.1l-2.5 1.3.5-2.7-2-1.9 2.7-.4z" fill="#ffd54a" stroke="#e8731a" stroke-width=".8"/></svg>`;
-  // The picture: the real cards. Six Geodes in their six gems flip over one at a time with a burst of shards (never more than two face up at once), a Monster looms behind them.
+  // The picture: the game in motion, reduced to its bones. A deck flips one card at a time into the same spot: gems go in the Bank, a Monster knocks Health down (it never fights back). One loop ends in a bank, the next in BOOM.
+  const HERO_LOOPS = [
+    { cards: ['g', 'g', 'g', ['A', 1], 'g', ['B', 1]], end: 'bank' },
+    { cards: ['g', ['A', 2], 'g', ['B', 2], ['A', 3]], end: 'boom' },
+  ];
   function heroHTML() {
-    const all = cards(), mons = all.filter(c => c.type === 'Monster' && c.deck === D.rules.startingDeck), geo = all.find(c => c.type === 'Treasure');
-    if (!mons.length || !geo) return '<div class="hero-art"></div>';
-    const order = { 1: 0, 4: 1, 0: 2, 3: 3, 5: 4, 2: 5 };                      // which fan position flips when: left, right, far left, ...
-    const fan = Array.from({ length: 6 }, (_, i) => {
-      const d = (2 * order[i] - 8.48).toFixed(2) + 's', x = 80 + i * 80, y = 372 + Math.round(2.2 * (i - 2.5) * (i - 2.5) * 2.6), r = ((i - 2.5) * 9).toFixed(1);
-      const shards = Array.from({ length: 6 }, (_, k) => { const a = k / 6 * 6.283 + .4, dist = 80 + (k * 29) % 40; return `<i style="--d:${d};--dx:${Math.round(Math.cos(a) * dist)}px;--dy:${Math.round(Math.sin(a) * dist - 30)}px">${A.gemSvg(D.gems[(i + k) % 6], '24px')}</i>`; }).join('');
-      return `<div class="hfan" style="--x:${x}px;--y:${y}px;--r:${r}deg;--d:${d};z-index:${i + 1}"><div class="hflip" style="--d:${d}"><div class="hb">${BOMB}</div><div class="hf">${A.playCard(geo, 0.64, { gem: i })}</div></div><span class="hburst">${shards}</span></div>`;
-    }).join('');
-    const rise = Array.from({ length: 9 }, (_, i) => `<span class="hrise" style="--x:${30 + (i * 57) % 500}px;--s:${22 + (i * 7) % 14}px;--t:${9 + (i * 3) % 6}s;--d:-${(i * 2.3).toFixed(1)}s">${A.gemSvg(D.gems[i % 6], '100%')}</span>`).join('');
-    return `<div class="hero-art"><div class="hero-stage">${mons.slice(0, 2).reverse().map((m, i, arr) => `<div class="hmon m${arr.length - 1 - i}">${A.playCard(m, 1.0, { step: 1 })}</div>`).join('')}${fan}${rise}</div></div>`;
+    const all = cards(), geo = all.find(c => c.type === 'Treasure');
+    if (!geo) return '<div class="hero-art"></div>';
+    const cells = Array.from({ length: R.caps.heart + 1 }, (_, i) => `<i class="hc" data-n="${i}">${i}</i>`).join('');
+    return `<div class="hero-art"><div class="hero-stage hero2" data-hero="1">
+      <div class="htrack">${cells}</div>
+      <div class="hdeck"><span class="cardback"></span><span class="hcnt"></span></div>
+      <div class="hslot"></div>
+      <div class="hbank"><span class="hgems">0</span>${ic('gem')}<small>Bank</small></div>
+      <div class="hbanner"></div>
+    </div></div>`;
+  }
+  const HP = () => window.DDB_HERO_PACE || 1;                       // tests speed the picture up
+  function heroPlay() {
+    const root = $.querySelector('.hero2'); if (!root || root.dataset.run) return;
+    root.dataset.run = '1';
+    const all = cards(), geo = all.find(c => c.type === 'Treasure');
+    const mon = l => all.find(c => c.type === 'Monster' && c.deck === D.rules.startingDeck && new RegExp('\\s' + l + '$').test(c.name));
+    const $$ = sel => root.querySelector(sel), cellsEl = [...root.querySelectorAll('.hc')];
+    const card = (c, o) => `<span class="cw hcard" style="--s:.8"><span class="cs">${A.playCard(c, 1, o)}</span></span>`;
+    let li = 0, ci = 0, hp = R.start.heart, gems = 0, met = 0, timer = null;
+    const setHealth = () => cellsEl.forEach(c => { const n = Number(c.dataset.n); c.className = 'hc' + (n === hp ? ' now' : n < hp ? ' lit' : ''); });
+    const reset = () => { hp = R.start.heart; gems = 0; met = 0; ci = 0; $$('.hslot').innerHTML = ''; $$('.hbanner').className = 'hbanner'; $$('.hbanner').textContent = ''; $$('.hgems').textContent = '0'; $$('.hcnt').textContent = HERO_LOOPS[li].cards.length; $$('.hdeck').classList.remove('empty'); setHealth(); };
+    const step = () => {
+      if (!root.isConnected) return;
+      const L = HERO_LOOPS[li];
+      if (ci < L.cards.length) {
+        const c = L.cards[ci++]; $$('.hcnt').textContent = L.cards.length - ci;
+        if (c === 'g') { gems++; $$('.hslot').innerHTML = `<span class="fx-flip">${card(geo, { gem: ci })}</span>`; $$('.hgems').textContent = gems; const g = $$('.hgems'); g.classList.remove('bump'); void g.offsetWidth; g.classList.add('bump'); }
+        else { const m = mon(c[0]); const dmg = (Engine.damageSteps(m.text) || [])[c[1] - 1] || c[1]; $$('.hslot').innerHTML = `<span class="fx-slam">${card(m, { step: c[1] })}</span>`; hp = Math.max(0, hp - (L.end === 'boom' ? [3, 4, 5][met] || dmg : dmg)); met++; setHealth(); if (hp > 0) gems += 0; }
+        if (hp === 0) { const b = $$('.hbanner'); b.textContent = 'BOOM!'; b.className = 'hbanner show boom'; timer = setTimeout(next, 2600 * HP()); return; }
+        timer = setTimeout(step, 1100 * HP());
+      } else {
+        const b = $$('.hbanner'); b.innerHTML = `Banked! ${gems + met}${ic('gem')}`; b.className = 'hbanner show bank'; $$('.hgems').textContent = gems + met; timer = setTimeout(next, 2600 * HP());
+      }
+    };
+    const next = () => { if (!root.isConnected) return; li = (li + 1) % HERO_LOOPS.length; reset(); timer = setTimeout(step, 700 * HP()); };
+    reset(); timer = setTimeout(step, 900 * HP());
   }
   function fitHero() {
     const a = $.querySelector('.hero-art'), st = $.querySelector('.hero-stage'); if (!a || !st) return;
     const r = a.getBoundingClientRect(); st.style.setProperty('--k', Math.max(.3, Math.min(r.width / 560, r.height / 620)).toFixed(3));
   }
+  // Size the cards to the screen: the dig row and the Power / Ongoing row share what is left under the Drill.
+  function fitTable() {
+    const t = $.querySelector('.ptable'); if (!t) return;
+    const kids = [...t.children], mat = t.querySelector('.mat'), tab = t.querySelector('.tableau');
+    const gap = 10, W = t.clientWidth, H = t.clientHeight, fixed = kids.filter(k => k !== mat && k !== tab).reduce((a, k) => a + k.offsetHeight + gap, 0);
+    const rest = Math.max(200, H - fixed - gap * 2 - 18);
+    const side = 150, dice = 130;                                    // the Discard and Bank column; the die
+    const ca = Math.max(.4, Math.min(1, rest * .52 / 350, (W - side - dice - gap * 4) / 500));
+    const n = Math.max(1, Number(tab && tab.dataset.n) || 1), sepW = tab && tab.querySelector('.tsep') ? 22 : 0, items = n + (sepW ? 1 : 0), Wa = W - 8;
+    let cb = Math.min(1, (rest - 350 * ca) / 350, (Wa - gap * (items - 1) - sepW) / (n * 250));
+    let ov = 0;
+    if (cb < .4) { cb = .4; ov = Math.ceil((n * 250 * cb + gap * (items - 1) + sepW - Wa) / Math.max(1, n - 1)); }       // too many cards even at the smallest size: they overlap, left edge (name, number) stays visible
+    t.style.setProperty('--ca', ca.toFixed(3)); t.style.setProperty('--cb', cb.toFixed(3)); t.style.setProperty('--ov', ov > 0 ? `-${ov}px` : '0px');
+  }
   function homeHTML() {
     const st = UI.state, offline = st.source === 'sample' && st.status !== 'loading', ready = cards().length > 0;
-    const inProgress = resumable(), run = S.run;
-    const pipsFor = (n, done) => `<span class="pips" role="img" aria-label="${done} of ${n} rounds done">${Array.from({ length: n }, (_, i) => `<i class="${i < done ? 'on' : ''}"></i>`).join('')}</span>`;
+    const inProgress = resumable();
     const libLink = /^https?:$/.test(location.protocol) ? `<a class="libback" href="${A.esc(D.library.href)}"><span>‹</span> ${A.esc(D.library.name)}</a>` : '';
-    const sub = run ? `Round ${Math.min(run.round, run.rounds)} of ${run.rounds} · ${S.back === 'prep' ? 'Prep' : 'Dig'}${S.match ? ' · vs the AI' : ''}` : 'Your Practice Dig';
-    const newRun = `<button class="mode ${inProgress ? '' : 'primary'} ${S.confirmNew === 'startrun' ? 'confirm' : ''} row" data-p="startrun" ${ready ? '' : 'disabled'}><div class="stack"><b>${S.confirmNew === 'startrun' ? 'Tap again to replace your game' : inProgress ? 'New run' : 'Play a run'}</b><span>${S.rounds} rounds · against the AI · Booster Packs · the Crown Jewel</span></div>${inProgress ? '' : pipsFor(S.rounds, 0)}</button>`;
+    const newRun = `<button class="mode ${inProgress ? '' : 'primary'} ${S.confirmNew === 'startrun' ? 'confirm' : ''}" data-p="startrun" ${ready ? '' : 'disabled'}><b>${S.confirmNew === 'startrun' ? 'Tap again to replace your game' : inProgress ? 'New run' : 'Play'}</b></button>`;
     const note = !ready ? (st.status === 'loading' ? 'Reading your sheet…' : 'No cards yet.')
-      : offline ? '<span class="warn">Your sheet could not be reached, so only the design sample is here. Reload when you are online.</span>'
-      : st.source === 'cache' ? '<span class="warn">Offline: using the copy of your sheet this browser saved last time.</span>' : 'Cards and rules read live from your sheet';
+      : offline ? 'Your sheet could not be reached, so only the design sample is here. Reload when you are online.'
+      : st.source === 'cache' ? 'Offline: using the copy of your sheet this browser saved last time.' : '';
     return `<div class="home">${libLink}<div class="homegrid">${heroHTML()}
       <div class="homemenu">
         <h1 class="logo"><span class="l1">Dig Dig</span><span class="l2">BOOM!<i>✦</i></span></h1>
         <p class="tagline">Dig deep. Push your luck. Don't go BOOM.</p>
-        ${inProgress ? `<button class="mode primary row" data-p="resume"><div class="stack"><b>Continue</b><span>${sub}</span></div>${run ? pipsFor(run.rounds, Math.min(run.round - 1, run.rounds)) : ''}</button>` : ''}
+        ${inProgress ? `<button class="mode primary" data-p="resume"><b>Continue</b></button>` : ''}
         ${newRun}
-        <div class="ghostrow"><button class="ghost" data-p="help">How to play</button><button class="ghost" data-p="more">Menu</button></div>
-        <p class="homenote">${note} · Version ${A.esc(UI.build)}</p>
+        <div class="ghostrow"><button class="ghost" data-p="help">How to play</button><button class="ghost" data-p="more">Settings</button></div>
+        ${note ? `<p class="homenote warn">${note}</p>` : ''}
       </div></div></div>`;
   }
-  // Everything that is not "play": Practice Dig, the options of a run, the cards.
+  // Settings: the options of a run, the cards, and a controlled playtest. A back button, a title, a list: nothing else.
   function moreHTML() {
     const b = readBest(), inProgress = resumable();
-    const prac = `<button class="btn ${S.confirmNew === 'practice' ? 'confirm' : 'alt'}" data-p="practice" ${cards().length ? '' : 'disabled'}>${S.confirmNew === 'practice' ? 'Tap again: this replaces your game' : 'Practice Dig'}</button>`;
-    return `<div class="panel setup"><div class="scroll">
-      <h2>Menu</h2>
-      <div class="menu">
-        <div class="bigopt"><h3>Practice Dig</h3><p class="note">One Dig with any Starter Kit you like, to try cards out. No Prep, no Leaderboard.${inProgress ? ' Starting one replaces your game in progress.' : ''}</p>${prac}
-          ${b.survived || b.gems ? `<p class="note">Your best Practice Dig: ${b.survived} Monsters survived · ${b.gems} gems banked.</p>` : ''}</div>
-        <div class="bigopt"><h3>Run options</h3>
-          <p class="note">Rounds: ${D.run.roundChoices.map(n => `<button class="chip ${S.rounds === n ? 'on' : ''}" data-p="rounds" data-v="${n}">${n}</button>`).join(' ')}</p></div>
-        <div class="bigopt"><h3>The cards</h3><p class="note">Every card of your sheet, as designed.</p><button class="btn alt" data-p="cards">See the cards</button></div>
-      </div>
-    </div><div class="foot"><button class="chip" data-p="menu">‹ Main menu</button></div></div>`;
+    const row = (title, note, control) => `<div class="srow"><div class="stext"><b>${title}</b>${note ? `<span>${note}</span>` : ''}</div>${control}</div>`;
+    return `<div class="panel setup settings"><div class="shead"><button class="chip back" data-p="menu">‹ Main menu</button><h2>Settings</h2></div><div class="scroll"><div class="slist">
+      ${row('Rounds', 'How long a run lasts', `<span class="seg">${D.run.roundChoices.map(n => `<button class="${S.rounds === n ? 'on' : ''}" data-p="rounds" data-v="${n}">${n}</button>`).join('')}</span>`)}
+      ${row('The cards', 'Every card of your sheet, as designed', `<button class="btn alt" data-p="cards">See the cards</button>`)}
+      ${row('Playtest', `Pick any cards and try one Dig${inProgress ? '. Starting one replaces your game in progress' : ''}${b.survived || b.gems ? `. Best: ${b.survived} Monsters survived · ${b.gems} gems banked` : ''}`, `<button class="btn ${S.confirmNew === 'practice' ? 'confirm' : 'alt'}" data-p="practice" ${cards().length ? '' : 'disabled'}>${S.confirmNew === 'practice' ? 'Tap again to replace your game' : 'Playtest'}</button>`)}
+    </div><p class="vers">Version ${A.esc(UI.build)}</p></div></div>`;
   }
   const resumable = () => !!S.back && ((S.run && S.run.phase !== 'done') || (!S.run && S.st && !S.st.over));
   // The Leaderboard: positions are Monsters survived. The Crown tracker starts at 3; your best locked-in score stays between rounds.
   const nameOf = (run, id) => (run.board.players.find(p => p.id === id) || {}).name || id;
   // A ten-sided die, drawn as one: the kite you see looking down at a d10. n = the number it shows ('' for a blank one waiting to be tapped).
-  const d10 = (n, cls = '', final) => `<svg class="d10 ${cls}" viewBox="0 0 100 100" aria-hidden="true"><path class="dbody" d="M50 3 L93 36 L77 96 L23 96 L7 36 Z"/><path class="dfacet" d="M50 3 L50 44 M7 36 L50 44 L93 36 M50 44 L23 96 M50 44 L77 96"/><text class="dnum ${String(final !== undefined ? final : n) === '10' ? 'ten' : ''}" x="50" y="78" text-anchor="middle"${final !== undefined ? ` data-final="${final}"` : ''}>${n}</text></svg>`;
+  const d10 = (n, cls = '', final) => `<svg class="d10 ${cls}" viewBox="0 0 100 100" aria-hidden="true"><path class="dbody" d="M50 4 L91 27 L91 73 L50 96 L9 73 L9 27 Z"/><path class="dfacet" d="M50 13 L83 32 L83 68 L50 87 L17 68 L17 32 Z"/>${cls.includes('idle') ? '<text class="dword" x="50" y="60" text-anchor="middle">D10</text>' : ''}<text class="dnum ${String(final !== undefined ? final : n) === '10' ? 'ten' : ''}" x="50" y="66" text-anchor="middle"${final !== undefined ? ` data-final="${final}"` : ''}>${n}</text></svg>`;
   // The roll, played out: numbers flick past on the die and settle on the real result (already decided; this is only for the eye).
   function playDice() {
     $.querySelectorAll('.d10.fx-tumble .dnum[data-final]').forEach(el => {
@@ -2065,8 +2195,13 @@ const Match = (() => {
   }
   // ----- Prep: a table, not a form. Dice, a pack, cards; hardly a word. -----
   const cardScale = (n, hi, lo) => { const w = Math.min(innerWidth, 1180) - 48; return Math.max(lo, Math.min(hi, (w - (n - 1) * 14) / (n * 250))); };
-  const pcard = (c, scale, o = {}) => `<button class="pcard ${o.sel ? 'sel' : ''}" data-p="${o.act}" data-uid="${c.uid}" style="width:${250 * scale}px;height:${350 * scale}px" aria-label="${A.esc(c.name)}">${o.badge ? `<span class="badge">${o.badge}</span>` : ''}${A.playCard(c, scale)}</button>`;
+  const pcard = (c, scale, o = {}) => `<button class="pcard ${o.sel ? 'sel' : ''}" data-p="${o.act}" data-uid="${c.uid}" style="width:${250 * scale}px;height:${350 * scale}px;--i:${o.i || 0};--dx:${Math.round(o.dx || 0)}px" aria-label="${A.esc(c.name)}">${o.badge ? `<span class="badge">${o.badge}</span>` : ''}${A.playCard(c, scale)}</button>`;
   const dots = (n, on) => `<span class="pips2" role="img" aria-label="${on} of ${n}">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</span>`;
+  // The pack, torn open: the top strip rips off and the cards come out of it (decoration only: the cards can be tapped at once).
+  function tearHTML(pack) {
+    const col = (D.run.ladder.find(l => l.name === pack.name) || {}).color || '#b8743a', plus = /\+$/.test(pack.name);
+    return `<div class="tear" style="--pc:${col}" aria-hidden="true"><div class="tpack"><div class="pk ttop"><span class="star">${plus ? '★★' : '★'}</span></div><div class="pk tbody"><b>${A.esc(pack.name.replace('+', ''))}</b></div><span class="tflash"></span></div></div>`;
+  }
   function prepHTML() {
     const run = S.run, pr = run.prep, step = pr.step, rolled = pr.escape !== null;
     const key = `${run.round}:${pr.escape}`, tumble = rolled && S.fxEsc !== key; S.fxEsc = key;
@@ -2080,27 +2215,27 @@ const Match = (() => {
       body = `${eq}<button class="pack" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>`;
     } else if (step === 'keep') {
       const need = Run.keepCount(run), sc = cardScale(Math.min(pr.offer.length, 4), .92, .62);
-      body = `<div class="cards">${pr.offer.map(c => pcard(c, sc, { act: 'pick', sel: pr.picked.includes(c.uid), badge: pr.picked.includes(c.uid) ? '✓' : '' })).join('')}</div><div class="kitbar">${dots(need, pr.picked.length)}</div>`;
-      foot = `<button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'}>Keep</button>`;
+      const fxKey = `${run.round}:${pr.offer.map(c => c.uid).join()}`, first = S.fxPack !== fxKey; S.fxPack = fxKey;       // the pack tears open once, the first time these cards are drawn
+      body = `${first ? tearHTML(pr.pack) : ''}<div class="kitbar"><b>Keep ${need}</b><span class="note">${need > 1 ? `${pr.picked.length} of ${need} chosen · ` : ''}tap a card, then tap it again to keep it</span></div><div class="cards ${first ? 'dealt' : ''}">${pr.offer.map((c, i) => pcard(c, sc, { act: 'pick', sel: pr.picked.includes(c.uid), i, dx: ((pr.offer.length - 1) / 2 - i) * (250 * sc + 14) })).join('')}</div>`;
+      foot = '';
     } else {            // the Starter Kit
       const sc = cardScale(Math.min(run.owned.length, 5), .8, .6), picked = id => pr.kitPick.indexOf(id) + 1;
       const list = run.owned.map(c => pcard(c, sc, { act: 'kitpick', sel: pr.kitPick.includes(c.uid), badge: picked(c.uid) || '' })).join('');
-      body = `<div class="kitbar"><b>Starter Kit</b>${dots(pr.kitMax, pr.kitPick.length)}${pr.kitMax > 1 ? '<span class="note">tap in the order you want them dug</span>' : ''}</div><div class="cards">${list}</div>`;
+      body = `<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${pr.kitPick.length} of ${pr.kitMax} chosen">${pr.kitPick.length} of ${pr.kitMax}</span></div><p class="kitnote">Pick cards to start with${pr.kitMax > 1 ? ', in the order you want them on top' : ''}. Any empty spot is filled with a ${ic('gem')}.</p><div class="cards">${list}</div>`;
       foot = `<button class="btn" data-p="startround">Start round ${run.round}${run.round === run.rounds ? ' · final' : ''}</button>`;
     }
     const stage = step === 'kit' || step === 'keep' ? body : `<div class="prepstage">${body}</div>`;
-    return `<div class="panel setup prep"><div class="scroll" id="setupScroll">${lbHTML(run, null)}${stage}</div><div class="foot">${foot}<button class="chip" data-p="gmenu" style="margin-left:auto">Menu</button></div></div>`;
+    return `<div class="panel setup prep"><div class="scroll" id="setupScroll">${stage}</div>${foot ? `<div class="foot">${foot}</div>` : ''}</div>`;
   }
   function doneHTML() {
     const run = S.run, r = run.result, m = S.match, mr = m && m.result;
     const title = m ? (mr.winner === 'me' ? '♛ You win!' : mr.winner ? 'The AI wins' : 'Nobody took the Crown Jewel') : (r.crown ? '♛ You hold the Crown Jewel!' : 'The Crown Jewel stays on the table');
-    const cell = h => h ? `${h.kind === 'bank' ? 'Banked' : 'BOOM'} · ${h.survived}${h.stoleCrown ? ' ♛' : ''}` : '';
+    const cell = h => h ? `${h.kind === 'bank' ? `Banked · ${h.survived}${h.stoleCrown ? ' ♛' : ''}` : 'BOOM'}` : '';
     return `<div class="panel setup"><div class="scroll">
-      ${lbHTML(run, null)}
       <h2>${title}</h2>
       ${m ? `<table class="cmp"><tr><th>Round</th><th>You</th><th>AI</th></tr>${mr.rounds.map(x => `<tr><td>${x.round}</td><td>${cell(x.me)}</td><td>${cell(x.ai)}</td></tr>`).join('')}</table>`
         : `<table class="cmp"><tr><th>Round</th><th>You</th></tr>${run.history.map(h => `<tr><td>${h.round}</td><td>${cell(h)}</td></tr>`).join('')}</table>`}
-    </div><div class="foot"><button class="btn" data-p="startrun">New run</button><button class="chip" data-p="gmenu">Menu</button></div></div>`;
+    </div><div class="foot"><button class="btn" data-p="startrun">New run</button></div></div>`;
   }
 
   // ----- the table -----
@@ -2112,40 +2247,56 @@ const Match = (() => {
   // The Monster pile: every Monster you are done with, by set, against each set's ladder, so you can see how many you have met and what is coming.
   function monsterPileHTML(st) {
     const sets = cards().filter(c => c.type === 'Monster' && c.deck === R.startingDeck);
-    return `<div class="mpile"><h4>Monsters</h4>${sets.map(c => {
+    return `<div class="mpile"><h4>Monster damage</h4>${sets.map(c => {
       const k = A.monsterLook(c), steps = Engine.damageSteps(c.text) || [], met = st.monsterPile.filter(x => x.id === c.id).length + (st.fight && st.fight.monster.id === c.id ? 1 : 0), letter = (c.name.match(/\s([A-Z])$/) || [])[1] || '';
-      return `<div class="mset" title="${A.esc(c.name)}"><span class="mb" style="--bd:${k.border};--hot:${k.hot};--c1:${k.c1};--ink:${k.ink}">${letter}</span><span class="lad">${steps.map((v, i) => `<i class="${i < met ? 'met' : ''}">${v}</i>`).join('')}</span></div>`;
+      return `<div class="mset" title="${A.esc(c.name)}"><span class="mb" style="--bd:${k.border};--hot:${k.hot};--c1:${k.c1};--ink:${k.ink}">${letter}</span><span class="lad">${steps.map((v, i) => `<i class="${i < met ? 'met' : i === met ? 'next' : ''}">${v}</i>`).join('')}</span></div>`;
     }).join('')}</div>`;
   }
   function drillHTML(st, can) {
-    const ong = st.ongoing.map(o => piece(o, { act: 'zoom', num: false, text: false })).join('');
     return `<section class="drill"><div class="tracks">
       <div class="trow"><span class="tlab">${ic('heart')}</span><div class="tbody">${track('heart', R.caps.heart, st.heart, false, '#e8344e')}</div></div>
       <div class="trow"><span class="tlab">${ic('reroll')}</span><div class="tbody">${track('reroll', R.caps.reroll, st.reroll, can.reroll, '#2eaf68')}</div></div>
-    </div><div class="ongoing"><h4>Ongoing</h4><div class="list">${ong}</div></div>${monsterPileHTML(st)}</section>`;
+    </div>${monsterPileHTML(st)}</section>`;
   }
-  function lineHTML(st) {
-    const f = st.fight, res = f && f.phase === 'after' ? Dig.result(st) : null, total = res ? res.total : null;
-    const elig = f && f.phase === 'after' ? Dig.eligible(st) : [];
-    const cols = [];
-    for (let n = R.line.min; n <= R.line.max; n++) {
-      const here = st.line.filter(e => e.at === n);
-      const cls = total === null ? '' : n <= total ? 'on' : 'off';
-      cols.push(`<div class="lcol ${cls}" style="--h:${Math.round(205 - (n - R.line.min) * 21.7)}">${here.map(e => { const done = f ? f.trig.filter(x => x === e).length : 0; return piece(e.card, {
-        act: 'card', cls: (st.pending && st.pending.kind === 'clone' ? 'pick ' : '') + (elig.includes(e) ? 'elig ' : '') + (done && !elig.includes(e) ? 'done' : ''),
-        tag: (done ? '✓ ' : '') + (e.pet ? 'PET' : e.cloned ? '×2' : e.at < e.base ? '↓' + e.base : ''), num: false }); }).join('')}<span class="lnum">${n}</span></div>`);
+  // Cards are laid out at full size, like on a real table. A card is drawn at 250 x 350 and scaled by --ca (the dig row) or --cb (the Power / Ongoing row); fitTable() sets both after layout.
+  const cw = (html, v) => `<span class="cw" style="--s:var(--${v})"><span class="cs">${html}</span></span>`;
+  // Power cards from the smallest number to the biggest, then your Ongoing cards: you check "do I have anything for this?" left to right.
+  function tableauHTML(st) {
+    const f = st.fight, after = f && f.phase === 'after', total = after ? Dig.result(st).total : null;
+    const elig = after ? Dig.eligible(st) : [];
+    const power = st.line.map((e, i) => ({ e, i })).sort((a, b) => a.e.at - b.e.at || a.i - b.i).map(x => x.e);
+    const cards = power.map(e => {
+      const done = f ? f.trig.filter(x => x === e).length : 0, can = elig.includes(e);
+      const cls = ['tcard', st.pending && st.pending.kind === 'clone' ? 'pick' : '', can ? 'elig' : '', done && !can ? 'done' : '', total !== null && e.at > total && !done ? 'off' : ''].join(' ');
+      const tag = (done ? '✓ ' : '') + (e.pet ? 'PET' : e.cloned ? '×2' : e.at < e.base ? '↓' + e.base : '');
+      return `<button class="${cls}" data-p="card" data-uid="${e.card.uid}" data-id="${A.esc(e.card.id)}" aria-label="${A.esc(e.card.name)}, Power ${e.at}">${cw(A.playCard({ ...e.card, number: e.at }, 1), 'cb')}${tag ? `<span class="tg">${A.esc(tag)}</span>` : ''}</button>`;
+    });
+    const ong = st.ongoing.map(o => `<button class="tcard inplay" data-p="zoom" data-uid="${o.uid}" data-id="${A.esc(o.id)}" aria-label="${A.esc(o.name)}, Ongoing">${cw(A.playCard(o, 1), 'cb')}</button>`);
+    return `<section class="tableau" data-n="${cards.length + ong.length}">${cards.join('')}${ong.length ? '<span class="tsep"></span>' : ''}${ong.join('')}</section>`;
+  }
+  // The card you just dug always lands in the same spot, right beside the Mine.
+  function dugHTML(st) {
+    const f = st.fight, fx = S.fx;
+    if (f) return `<button class="mcard ${f.phase === 'after' ? 'live' : ''}" data-p="face" ${f.phase === 'after' ? '' : 'disabled'} aria-label="${A.esc(f.monster.name)}"><span class="flipwrap ${f.monster.uid !== fx.mon ? 'fx-slam' : ''}">${cw(A.playCard(f.monster, 1, { step: f.step }), 'ca')}</span></button>`;
+    if (!st.last) return '';
+    const fresh = st.last.uid !== fx.last;
+    return `<button class="mcard" data-p="zoom" data-uid="${st.last.uid}" aria-label="${A.esc(st.last.name)}"><span class="flipwrap ${fresh ? 'fx-flip' : ''}">${cw(A.playCard(st.last, 1), 'ca')}${fresh && st.last.type === 'Treasure' ? burstHTML(10) : ''}</span></button>`;
+  }
+  // Beside it: the die and what it says, or what to tap next.
+  function diceHTML(st, can) {
+    const f = st.fight;
+    if (f) {
+      const res = Dig.result(st), after = f.phase === 'after', elig = after ? Dig.eligible(st) : [];
+      const rollKey = `${st.digs}:${f.rolls}:${f.die}`, shown = f.fixed !== null ? f.fixed : f.die, fresh = rollKey !== S.fx.roll;
+      const die = after ? `<div class="dieb">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}</div>` : `<button class="dieb live" data-p="roll" aria-label="Roll the die">${d10('', 'idle')}<span class="tapword">Tap</span></button>`;
+      const extra = after && res.parts.length > 1 ? `<span class="calcparts">${res.parts.map(p => p.set ? `becomes ${p.v}` : `${p.label} ${p.v >= 0 && p.label !== 'Die' && p.label !== 'Fixed' ? '+' : ''}${p.v}`).join(' · ')}</span>` : '';
+      const calc = after && extra ? `<div class="calc"><b>${res.total}</b>${extra}</div>` : '';          // the die already shows the number; only say more when something changed it
+      return `<div class="rollp">${die}${calc}${after ? `<div class="hint">${elig.length > 1 ? `<button class="chip" data-p="triggerall">Use all ${elig.length}</button>` : ''}<span>Tap a glowing card to use it. Tap the Mine to take the damage and dig on.</span></div>` : ''}</div>`;
     }
-    return `<section class="line"><div class="linehead"><span>Power line${elig.length ? ' — <b style="color:var(--accent)">tap the glowing cards you want</b>' : ''}</span><span>${elig.length > 1 ? `<button class="chip" data-p="triggerall">Trigger all ${elig.length}</button> ` : ''}${total !== null ? 'Result ' + total : ''}</span></div><div class="lcols">${cols.join('')}</div></section>`;
+    if (st.pending) return `<div class="rollp"><div class="hint"><b style="color:var(--accent)">${A.esc(st.pending.card.name)}: tap a Power card</b></div></div>`;
+    return '';
   }
-  function fightHTML(st, can) {
-    const f = st.fight, res = Dig.result(st), after = f.phase === 'after';
-    const rollKey = `${st.digs}:${f.rolls}:${f.die}`, shown = f.fixed !== null ? f.fixed : f.die, fresh = rollKey !== S.fx.roll;
-    const die = after ? `<div class="dieb">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}</div>` : `<button class="dieb live" data-p="roll" aria-label="Roll the die">${d10('', 'idle')}<span class="tapword">Tap</span></button>`;
-    const extra = after && res.parts.length > 1 ? `<span class="calcparts">${res.parts.map(p => p.set ? `becomes ${p.v}` : `${p.label} ${p.v >= 0 && p.label !== 'Die' && p.label !== 'Fixed' ? '+' : ''}${p.v}`).join(' · ')}</span>` : '';
-    const calc = after && extra ? `<div class="calc"><b>${res.total}</b>${extra}</div>` : '';          // the die already shows the number; only say more when something changed it
-    return `<button class="mcard ${after ? 'live' : ''}" data-p="face" ${after ? '' : 'disabled'}><span class="flipwrap ${f.monster.uid !== S.fx.mon ? 'fx-slam' : ''}">${A.playCard(f.monster, S.ms || 0.71, { step: f.step })}</span></button>
-      <div class="rollp">${die}${calc}</div>`;
-  }
+
   // ----- little things that pop. What is new since the last drawing is remembered, so each flourish plays once, on the thing that just happened. -----
   const fxOf = st => st ? { last: st.last ? st.last.uid : null, mon: st.fight ? st.fight.monster.uid : null, roll: st.fight && st.fight.phase === 'after' ? `${st.digs}:${st.fight.rolls}:${st.fight.die}` : null, gems: st.geodeGems + st.monsterGems, over: st.over } : { last: null, mon: null, roll: null, gems: 0, over: null };
   S.fx = fxOf(null);
@@ -2153,18 +2304,14 @@ const Match = (() => {
   const confettiHTML = n => `<span class="confetti">${Array.from({ length: n }, (_, i) => `<i style="left:${4 + (i * 53) % 92}%;animation-delay:${(i * 97) % 900}ms">${A.gemSvg(D.gems[(i * 5) % D.gems.length], '22px')}</i>`).join('')}</span>`;
   function tableHTML() {
     const st = S.st, can = Dig.can(st), f = st.fight, fx = S.fx;
-    S.matH = Math.max(214, Math.min(286, Math.round(innerHeight * 0.33))); S.ms = (S.matH - 22) / 350;     // the table's height follows the screen; the Monster card fits it
-    const gems = st.geodeGems + st.monsterGems;
-    const kn = st.mine.slice(0, st.known), known = kn.slice(0, 4).map(c => piece(c, { text: false, num: false, cls: '' })).join('') + (kn.length > 4 ? `<span class="knownmore">+${kn.length - 4} more</span>` : '');       // the cards on top of your Mine, face up: you see them coming
-    const mine = `<div class="stack" style="gap:6px"><button class="pile ${can.dig ? 'live' : ''}" data-p="dig" ${can.dig ? '' : 'disabled'} style="flex:1"><div class="cardback">${st.mine.length}</div><span>Mine${st.mine.length ? '' : '<br><span class="cap2">empty</span>'}</span></button>${known ? `<div class="known">${known}</div>` : ''}</div>`;
+    const gems = st.geodeGems + st.monsterGems, live = can.dig || (f && f.phase === 'after');
+    const kn = st.mine.slice(0, st.known), up = kn[0];
+    // the Mine: a deck of cards, the same size as the cards you dig. Cards you can see coming are on top, face up.
+    const deck = `<div class="stack"><button class="deck ${live ? 'live' : ''}" data-p="dig" ${live ? '' : 'disabled'} aria-label="Mine, ${st.mine.length} cards">${st.mine.length ? `<span class="cw" style="--s:var(--ca)"><span class="cs">${up ? A.playCard(up, 1) : '<span class="cardback"></span>'}</span></span>` : '<span class="cw" style="--s:var(--ca)"><span class="cs"><span class="cardback none"></span></span></span>'}<span class="cnt">${st.mine.length}</span></button>${kn.length > 1 ? `<div class="known"><span>then</span> ${kn.slice(1, 4).map(c => `<i>${A.esc(c.name)}</i>`).join('')}${kn.length > 4 ? `<i>+${kn.length - 4}</i>` : ''}</div>` : ''}</div>`;
     const top = [...st.discard].reverse()[0];
-    const rb = st.board;
-    const right = `<div class="stack"><button class="pile" data-p="zoom" data-uid="${top ? top.uid : ''}" ${top ? '' : 'disabled'} style="${top ? 'color:#fff' : ''}">${top ? piece(top, { text: false, num: false }) : ''}<span>Discard · ${st.discard.length}</span></button>
+    const piles = `<div class="piles"><div class="pile discard" aria-label="Discard pile, ${st.discard.length} cards">${top ? `<span class="cw" style="--s:calc(var(--ca) * .5)"><span class="cs">${A.playCard(top, 1)}</span></span>` : '<span class="cw" style="--s:calc(var(--ca) * .5)"></span>'}<span class="cap">Discard · ${st.discard.length}</span></div>
        <button class="pile bankp ${can.bank ? 'live' : ''}" data-p="bank" ${can.bank ? '' : 'disabled'}><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span><span>Bank</span></button></div>`;
-    let mid;
-    if (f) mid = `<div class="dig">${fightHTML(st, can)}</div>`;
-    else if (st.pending) mid = `<div class="dig idle"><div><b style="color:var(--accent)">${A.esc(st.pending.card.name)}: tap a Power card</b></div></div>`;
-    else { const fresh = !!st.last && st.last.uid !== fx.last; mid = `<div class="dig idle">${st.last ? `<button class="mcard" data-p="zoom" data-uid="${st.last.uid}"><span class="flipwrap ${fresh ? 'fx-flip' : ''}">${A.playCard(st.last, S.ms || 0.71)}${fresh && st.last.type === 'Treasure' ? burstHTML(10) : ''}</span></button>` : ''}</div>`; }
+    const mid = `<div class="dugz"><div class="slot">${dugHTML(st)}</div></div><div class="dicez">${diceHTML(st, can)}</div>`;
     const s = st.over ? Dig.score(st) : null;
     let over = '';
     const ovFx = st.over && st.over !== fx.over ? 'fx' : '';
@@ -2173,45 +2320,49 @@ const Match = (() => {
       const next = waiting ? `<div class="row2"><button class="btn" data-p="ff">Fast forward</button></div>`
         : `<div class="row2"><button class="btn" data-p="prep">${fin ? 'See the result' : 'To Prep'}</button></div>`;
       over = st.over.kind === 'boom'
-        ? `<div class="over boom ${ovFx}"><h2>BOOM!</h2><div class="big"><b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived</div>${next}</div>`
+        ? `<div class="over boom ${ovFx}"><h2>BOOM!</h2>${next}</div>`
         : `<div class="over ${ovFx}">${ovFx ? confettiHTML(16) : ''}<h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="big">${fin ? '' : `<b>${s.total}</b> ${ic('gem', ' style="width:34px;height:34px;vertical-align:-7px"')}<br>`}<b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${(S.run.endInfo || {}).stoleCrown ? ' · ♛' : ''}${fin ? '<br>Everyone else is out' : ''}</div>${next}</div>`;
     } else if (st.over) {
       over = (st.over.kind === 'boom'
-      ? `<div class="over boom ${ovFx}"><h2>BOOM!</h2><div class="big"><b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived</div>`
-      : `<div class="over ${ovFx}">${ovFx ? confettiHTML(16) : ''}<h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + (st.best ? `<div class="note">Best so far: ${st.best.now.survived} Monsters survived${st.best.newSurvived ? ' (new!)' : ''} · ${st.best.now.gems} gems banked${st.best.newGems ? ' (new!)' : ''}</div>` : '') + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>`;
+      ? `<div class="over boom ${ovFx}"><h2>BOOM!</h2>`
+      : `<div class="over ${ovFx}">${ovFx ? confettiHTML(16) : ''}<h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + (st.best && st.over.kind === 'bank' ? `<div class="note">Best so far: ${st.best.now.survived} Monsters survived${st.best.newSurvived ? ' (new!)' : ''} · ${st.best.now.gems} gems banked${st.best.newGems ? ' (new!)' : ''}</div>` : '') + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>`;
     }
     S.fx = fxOf(st);
-    return `${S.run ? lbHTML(S.run, st) : ''}${drillHTML(st, can)}${lineHTML(st)}<div class="mat" style="position:relative;--mat-h:${S.matH}px">${mine}${mid}${right}${over}</div>`;
+    return `${drillHTML(st, can)}<div class="mat">${deck}${mid}${piles}${over}</div>${tableauHTML(st)}`;
   }
   // The in-game menu: quiet, small. Your game is saved after every tap, so "Main menu" leaves nothing to lose; there you can Continue it or start a new one.
   function gmenuHTML() {
     return `<div class="gmenu-back" data-p="gmenuclose"></div><div class="gmenu" role="menu"><button data-p="gmenuclose">Back to the game</button><button data-p="help">How to play</button><button data-p="mainmenu">Main menu</button></div>`;
   }
+  // How to play: three little pictures and a line each. The game walks you through the rest; the judgment calls are folded away underneath.
   function helpHTML() {
-    return `<div class="panel"><div class="scroll"><h2>How this works</h2><div class="helptxt">
-      <p>This is a solo Dig: dig through your Mine one card at a time. Bank to keep your gems, or push on and risk BOOM. Everything is a tap on the table:</p>
-      <ul><li><b>Mine</b>: tap to dig the top card. Geodes score ${R.geodeGems} gem. Immediate cards happen at once. Power cards go on the line at their number; Ongoing cards stay in your Ongoing area.</li>
-      <li><b>Monster</b>: tap the die to roll (a d${R.die}). After the roll you may tap Rerolls to roll again. Then trigger your cards and take the damage.</li>
-      <li><b>Facing it</b>: every Power card at the result or lower is <i>eligible</i>. Tap the ones you want to trigger, in the order you like (the Pet is at ${R.pet.at}; the moment you tap it the Monster is defeated and goes to the Monster pile), or tap Trigger all. Then tap the Monster: damage is the last thing that happens, and Block is part of it. Tap the Monster for the damage and any card you have not tapped is simply not used. Health at 0 is BOOM.</li>
-      <li><b>Bank</b>: tap the Bank pile between cards to end the Dig and keep your gems. Not while a Monster is in front of you.</li>
-      <li><b>Any card</b>: tap it to see it full size, tap again to close.</li>
-      <li><b>Beyond the Mine</b>: when the Mine runs out, Bonus Monsters keep coming: ${R.beyond.firstDamage}, ${R.beyond.firstDamage + 1}, … damage, worth ${R.beyond.gems} gems.</li></ul>
-      <p><b>A run</b> (Play a run): ${D.run.roundChoices.join(' or ')} rounds, each a Dig then a Prep. <b>Before round 1</b> you open a ${D.run.firstPack} Pack (draw 3, keep 1) and choose your Starter Kit from the cards you own; any place you leave empty is filled with a gem. <b>After a Dig</b>: if you banked, tap the die for your Escape Bonus; your gems (Geodes + Monsters survived + the die) pick a Booster Pack from the reward ladder (BOOM: a ${D.run.boomPack} Pack): open it, keep some of the cards; then choose a Starter Kit from your cards (1, 2, 2, 3 by round). Your Starter Kit goes on top of your Mine, face up, in the order you tapped them (first tapped is dug first); every other card you own is shuffled into the Mine with the Starting cards. Monsters you are done with go in the Monster pile at the top (each set's ladder shows how many you have met).</p>
-      <p><b>Leaderboard</b>: positions are Monsters survived. The Crown tracker starts at ${D.run.crownStart}. Before the Crown you dig or bank freely. There is no pledging in this version: your marker on the Leaderboard moves by itself the moment you encounter a Monster (before you have faced it), so you always see where you stand. Bank above the tracker and you take the Crown Jewel and move the tracker. A BOOM locks in nothing, but your best stays. The <b>final round</b> is a race: nobody banks. Whoever is in the lead (past the tracker, and ahead of everyone else's best and live number) may wait; everyone else has to keep digging, and rolling tens is how you catch up. If someone passes the leader, the old leader has to dig again. The round ends when everyone but the leader has gone BOOM, and the leader takes the Crown Jewel. Hold the Crown Jewel at the end and you win. On the Leaderboard: the ring is where you are in this Dig, the dot is your best locked-in Dig, the crown is the Crown tracker.</p>
-      <p><b>Your two starting cards</b> are in play at the start of every Dig and do not count against your Starter Kit: your Pet (a Power card at 10: defeat the Monster) and the starting Ongoing card beside it (when the Monster's damage is equal to or greater than your Health, +1 to your roll).</p>
-      <p><b>The AI</b> digs on its own clock while you dig, and preps at the same time as you (it opens its Booster Pack when you open yours). When you are done and it is not, tap Fast forward. It spends Rerolls to get useful cards going, and keeps digging rather than banking while its Health is high.</p>
-      <p><b>Calls made where the rules are unclear</b> (all in QUESTIONS.md, one line each to change):</p>
-      <ul><li>The die is a d${R.die}; Health starts at ${R.start.heart}, Rerolls ${R.start.reroll}.</li>
-      <li>Cards that trigger resolve highest number first, then damage is halved before Block is taken off.</li>
-      <li>"Whenever you gain" only counts when the track actually moves.</li>
-      <li>Result changes apply in order: bonuses, then double, then "becomes", then "less than".</li>
-      <li>You may bank between any two cards (there is no pledging).</li></ul>
-      <p><a href="#" data-p="cards">Card designs</a></p></div></div><div class="foot"><button class="btn" data-p="closehelp">${S.panel === 'menu' || S.panel === 'more' ? 'Back' : 'Back to the table'}</button></div></div>`;
+    const all = cards(), geo = all.find(c => c.type === 'Treasure'), monA = all.find(c => c.type === 'Monster' && /A$/.test(c.name)), pet = all.find(c => c.type === 'Power' && c.deck === R.startingDeck);
+    const mini = (c, o = {}) => c ? `<span class="cw hmini ${o.cls || ''}" style="--s:.36"><span class="cs">${A.playCard(c, 1, o)}</span></span>` : '';
+    const arrow = '<span class="harrow" aria-hidden="true">→</span>';
+    const card = (title, pic, line) => `<div class="hcard"><div class="hpic">${pic}</div><b>${title}</b><p>${line}</p></div>`;
+    return `<div class="panel helppanel"><div class="shead"><button class="chip back" data-p="closehelp">‹ Back</button><h2>How to play</h2></div><div class="scroll">
+      <div class="how">
+        ${card('1 · Dig', `<span class="cw hmini" style="--s:.36"><span class="cs"><span class="cardback"></span></span></span>${arrow}${mini(geo, { gem: 2 })}`, 'Tap the Mine to flip a card. Gems go in your Bank.')}
+        ${card('2 · Face the Monster', `${mini(monA, { step: 1 })}<span class="hdie">${d10(6, '')}</span>${mini(pet, { cls: 'glow' })}`, 'Tap the die. Tap glowing cards to use them. Tap the Mine to take the damage and dig on.')}
+        ${card('3 · Bank or push on', `<span class="hbankpic">5 ${ic('gem')}</span>${arrow}<span class="hsafe">Safe</span>`, 'Bank to keep your gems. Health at 0 is BOOM: you lose everything.')}
+      </div>
+      <p class="hline">${ic('heart')} <b>Win rounds</b> to open Booster Packs and build a better Mine. Be in the lead when the last round ends.</p>
+      <details class="fine"><summary>The fine print</summary><ul>
+        <li>The die is a d${R.die}; Health starts at ${R.start.heart}, Rerolls ${R.start.reroll}.</li>
+        <li>Cards you use resolve highest number first; damage is halved before Block is taken off.</li>
+        <li>Result changes apply in order: bonuses, then double, then "becomes", then "less than".</li>
+        <li>"Whenever you gain" only counts when the track actually moves.</li>
+        <li>The last round is a race: nobody banks. Whoever is in the lead may wait; the rest must keep digging.</li>
+        <li>Your marker on the Leaderboard moves the moment you meet a Monster. BOOM clears it.</li>
+        <li>Your Starter Kit goes on top of the Mine in the order you tap it; every other card you own is shuffled in.</li>
+        <li>Monsters you are done with go in the Monster pile, never the discard.</li>
+        <li>The AI digs on its own clock; tap Fast forward when you are done and it is not.</li></ul></details>
+    </div></div>`;
   }
   function render() {
     if (document.body.dataset.mode !== 'play') return;
     const keep = $.querySelector('#setupScroll'), ks = keep ? keep.scrollTop : 0;
-    const bar = `<div class="pbar"><h1><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M20 8c2-3 5-3 7-6" fill="none" stroke="#c79a5a" stroke-width="2.4" stroke-linecap="round"/><circle cx="14" cy="19" r="10" fill="#2a2530" stroke="#0c0a10" stroke-width="2"/><ellipse cx="10.5" cy="15" rx="3" ry="2" fill="#fff" opacity=".35" transform="rotate(-35 10.5 15)"/><path d="M27 1l1.3 2.6 2.7.4-2 1.9.5 2.7L27 7.1l-2.5 1.3.5-2.7-2-1.9 2.7-.4z" fill="#ffd54a" stroke="#e8731a" stroke-width=".8"/></svg>Dig Dig BOOM!</h1><button class="chip" data-p="gmenu">Menu</button></div>`;
+    const bar = `<div class="pbar"><h1><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M20 8c2-3 5-3 7-6" fill="none" stroke="#c79a5a" stroke-width="2.4" stroke-linecap="round"/><circle cx="14" cy="19" r="10" fill="#2a2530" stroke="#0c0a10" stroke-width="2"/><ellipse cx="10.5" cy="15" rx="3" ry="2" fill="#fff" opacity=".35" transform="rotate(-35 10.5 15)"/><path d="M27 1l1.3 2.6 2.7.4-2 1.9.5 2.7L27 7.1l-2.5 1.3.5-2.7-2-1.9 2.7-.4z" fill="#ffd54a" stroke="#e8731a" stroke-width=".8"/></svg>Dig Dig BOOM!</h1>${S.run && (S.panel === 'dig' || S.panel === 'prep' || S.panel === 'done') ? lbHTML(S.run, S.panel === 'dig' ? S.st : null) : ''}<button class="chip" data-p="gmenu">Menu</button></div>`;
     let body;
     if (S.panel === 'menu') body = homeHTML();
     else if (S.panel === 'more') body = moreHTML();
@@ -2220,9 +2371,9 @@ const Match = (() => {
     else if (S.panel === 'setup' || !S.st) body = setupHTML();
     else body = `<div class="pmain"><div class="ptable">${tableHTML()}</div></div>`;
     const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, Math.min(1.35, (innerHeight - 70) / 350))}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}<div class="closehint">tap anywhere to close</div></div>` : '';
-    $.innerHTML = (S.panel === 'menu' ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z;
+    $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z;
     const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
-    fitHero(); playDice();
+    fitHero(); heroPlay(); fitTable(); playDice();
     scheduleAI();
   }
 
@@ -2264,7 +2415,13 @@ const Match = (() => {
       case 'startrun': { if (resumable() && S.confirmNew !== 'startrun') { S.confirmNew = 'startrun'; break; } S.confirmNew = null; if (S.opp) { S.match = Match.start(cards(), { rounds: S.rounds }); S.run = Match.human(S.match); } else { S.match = null; S.run = Run.start(cards(), { rounds: S.rounds }); } S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
       case 'escape': if (S.match) Match.rollEscape(S.match); else Run.rollEscape(S.run); break;
       case 'openpack': if (S.match) Match.openPack(S.match); else Run.openPack(S.run); break;
-      case 'pick': Run.toggleKeep(S.run, Number(ds.uid)); break;
+      case 'pick': {                       // tap a card to choose it, tap it again to keep it; tapping another card moves the choice
+        const uid = Number(ds.uid), pr = S.run.prep, need = Run.keepCount(S.run), chosen = pr.picked.includes(uid);
+        if (chosen && pr.picked.length === need) Run.confirmKeep(S.run);
+        else if (chosen) Run.toggleKeep(S.run, uid);
+        else { if (pr.picked.length >= need) Run.toggleKeep(S.run, pr.picked[0]); Run.toggleKeep(S.run, uid); }
+        break;
+      }
       case 'keepgo': Run.confirmKeep(S.run); break;
       case 'kitpick': Run.toggleKit(S.run, Number(ds.uid)); break;
       case 'startround': if (S.match ? Match.beginRound(S.match) : Run.beginDig(S.run)) { S.st = S.run.dig; S.panel = 'dig'; S.ff = false; } break;
@@ -2286,7 +2443,7 @@ const Match = (() => {
       case 'zoom': S.zoom = findCard(ds.uid); break;
       case 'card': { const c = findCard(ds.uid), e = st && st.line.find(x => x.card === c); if (st && st.pending && e) Dig.chooseClone(st, e); else if (e && f && f.phase === 'after' && Dig.eligible(st).includes(e)) Dig.trigger(st, e); else S.zoom = c; break; }
       case 'triggerall': if (st) Dig.triggerAll(st); break;
-      case 'dig': if (st) Dig.dig(st); break;
+      case 'dig': if (st) { if (f && f.phase === 'after') { Dig.face(st); if (!st.over && Dig.can(st).dig) Dig.dig(st); } else Dig.dig(st); } break;
       case 'roll': Dig.roll(st); break;
       case 'reroll': if (f && f.phase === 'after') Dig.reroll(st); break;
       case 'face': Dig.face(st); break;
