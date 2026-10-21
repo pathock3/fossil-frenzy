@@ -216,6 +216,57 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
   #play .ongoing { width: 180px; }
 }
 @media (max-height: 640px) { #play .tc { height: 28px; } #play .lbc { min-height: 42px; } #play .cardback { width: 64px; height: 90px; } }
+/* ---------- print and play sheets ---------- */
+body[data-mode=print] #app, body[data-mode=print] #play, body[data-mode=cards] #printv, body[data-mode=play] #printv { display: none; }
+body[data-mode=print] { padding: 0; }
+#printv .ptool { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 14px; background: var(--bg); border-bottom: 1px solid var(--line); }
+#printv .ptool .chip { min-height: 40px; padding: 6px 12px; font-size: 14px; }
+#printv .ptool .go { background: var(--accent); color: #1c1410; border-color: var(--accent); }
+#printv .sheets { padding: 16px 0 40px; display: flex; flex-direction: column; align-items: center; gap: 18px; overflow-x: auto; }
+#printv .sheet { position: relative; background: #fff; color: #111; flex: none; overflow: hidden; box-shadow: 0 2px 14px rgba(0,0,0,.55); page-break-after: always; break-after: page; font-family: "Avenir Next", "Helvetica Neue", Arial, system-ui, sans-serif; }
+#printv .fit { position: absolute; }
+#printv .turn { position: absolute; left: 0; top: 0; }
+#printv .foot { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 9px; color: #888; }
+#printv .pc { position: absolute; }
+#printv .mk { position: absolute; border: 0 solid #000; border-left-width: 1px; border-top-width: 1px; background: none; }
+#printv .ptitle { position: absolute; left: 48px; top: 26px; font-size: 22px; }
+#printv .ptitle span { font-size: 13px; color: #666; margin-left: 10px; }
+#printv .arrow { position: absolute; left: 48px; right: 48px; top: 70px; height: 40px; background: #1d1712; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 17px; clip-path: polygon(0 50%, 30px 0, 100% 0, 100% 100%, 30px 100%); }
+#printv .lcolp { position: absolute; top: 122px; bottom: 50px; border: 2px solid #1d1712; border-top-width: 0; border-bottom-width: 0; background: repeating-linear-gradient(180deg, #fff 0 66px, #eee 66px 67px); }
+#printv .lnumber { font-size: 84px; font-weight: 900; text-align: center; line-height: 1.1; border-bottom: 3px solid #1d1712; background: #fff; }
+#printv .petslot { position: absolute; left: 10px; right: 10px; top: 112px; border: 3px dashed #7a3fb8; border-radius: 10px; padding: 8px; text-align: center; font-weight: 900; font-size: 20px; color: #7a3fb8; }
+#printv .petslot small { font-weight: 600; font-size: 11px; }
+#printv .pnote { position: absolute; left: 48px; right: 48px; bottom: 24px; font-size: 12px; color: #666; text-align: center; }
+#printv .drill { position: absolute; left: 36px; top: 36px; right: 36px; bottom: 36px; border: 12px solid; border-radius: 18px; display: flex; gap: 16px; padding: 14px 18px 12px; }
+#printv .dh { position: absolute; left: 18px; top: 8px; display: flex; gap: 10px; align-items: center; font-size: 20px; }
+#printv .dh span { font-size: 13px; color: #666; } #printv .dh i { width: 18px; height: 18px; border-radius: 50%; display: inline-block; }
+#printv .dl { flex: 1; margin-top: 30px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+#printv .trk { display: flex; flex-direction: column; gap: 3px; }
+#printv .tl { display: flex; align-items: center; gap: 8px; font-size: 17px; }
+#printv .tl .tn { font-size: 12px; color: #555; font-weight: 400; }
+#printv .cells { display: flex; gap: 5px; }
+#printv .dcell { position: relative; width: 52px; height: 52px; border: 5px solid; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; }
+#printv .star { position: absolute; right: 2px; top: -3px; font-size: 16px; color: #1d1712; }
+#printv .tinker { margin-top: 8px; font-size: 13px; line-height: 1.35; } #printv .tinker ol { margin: 4px 0 0; padding-left: 20px; }
+#printv .dr { width: 270px; flex: none; margin-top: 30px; }
+#printv .ong { height: 100%; border: 3px dashed #888; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #555; background: repeating-linear-gradient(180deg, #fff 0 66px, #f1f1f1 66px 67px); }
+#printv .bgrid { position: absolute; left: 36px; right: 36px; top: 84px; display: grid; gap: 4px; }
+#printv .bh { height: 44px; font-size: 24px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 4px; }
+#printv .bh b { color: #c9a227; font-weight: 400; font-size: 28px; }
+#printv .bc { height: 84px; border: 3px solid #1d1712; border-radius: 10px; position: relative; background: #fff; }
+#printv .bc.start { background: #eee; } #printv .bc.crown { background: #fff6cf; }
+#printv .bc span { position: absolute; left: 6px; top: 3px; font-size: 15px; font-weight: 800; color: #666; }
+#printv .legend { position: absolute; left: 36px; right: 36px; bottom: 24px; display: flex; gap: 22px; font-size: 13px; color: #444; flex-wrap: wrap; }
+#printv .lk { display: inline-block; width: 16px; height: 16px; border-radius: 50%; vertical-align: -3px; } #printv .lk.best { background: #ffb13b; border: 2px solid #5a3a00; } #printv .lk.pledge { border: 3px solid #1d1712; }
+#printv .area { position: absolute; border: 3px dashed #888; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 4px; background: #fafafa; }
+#printv .area b { font-size: 18px; letter-spacing: .08em; color: #333; } #printv .area span { font-size: 12px; color: #777; }
+#printv .ladder2 { position: absolute; font-size: 14px; } #printv .ladder2 table { border-collapse: collapse; margin: 6px 0; } #printv .ladder2 th, #printv .ladder2 td { border: 2px solid #1d1712; padding: 6px 12px; text-align: center; } #printv .ladder2 small { color: #666; display: block; }
+@media print {
+  body[data-mode=print] { background: #fff; padding: 0; margin: 0; }
+  #printv .ptool { display: none; }
+  #printv .sheets { padding: 0; gap: 0; display: block; overflow: visible; }
+  #printv .sheet { box-shadow: none; margin: 0; }
+}
 @media print { body { background: #fff; } .bar, .dir h2, .dir .why, .sub, h1, .status, .back, details, .cap { display: none; } .dir { border: 0; padding: 0; background: none; } }
 </style>
 </head>
@@ -246,6 +297,7 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 </svg>
 <div id="app"></div>
 <div id="play"></div>
+<div id="printv"></div>
 
 <!-- =====================================================================
      DATA — where the cards and rules come from, the card types, the icon codes, the card geometry.
@@ -313,6 +365,8 @@ const DDB = {
       kitImmediates: 'mine',                             // #14 Immediate Starter Kit cards are shuffled into the Mine
     },
   },
+  // ---- Print and play ----
+  print: { playerColors: ['#ffb13b', '#e8344e', '#2b86d1', '#2eaf68', '#7a3fb8', '#1d1712'] },   // each player's Drill trim = their Leaderboard marker
   // ---- A run: rounds of Dig + Prep, the Leaderboard and the Crown Jewel (v2.7 Rules tab), for one player ----
   run: {
     rounds: 4, roundChoices: [4, 5],                     // "Testing 4 rounds against 5"
@@ -1172,7 +1226,7 @@ const Run = (() => {
     }
     render(); document.dispatchEvent(new Event('ddb-cards'));
   }
-  const setMode = m => { document.body.dataset.mode = m; if (m === 'cards') render(); else document.dispatchEvent(new Event('ddb-mode')); };
+  const setMode = m => { if (m === 'print' && window.DigDigBoomPrint) window.DigDigBoomPrint.from(document.body.dataset.mode); document.body.dataset.mode = m; if (m === 'cards') render(); else document.dispatchEvent(new Event('ddb-mode')); };
   window.DigDigBoomUI = { state, load, render: () => render(), setMode, api: {} };
 
   // ---------------- icons ----------------
@@ -1284,7 +1338,12 @@ const Run = (() => {
     twCache = { key, tw }; return tw;
   }
   function playCard(c, scale) { const g = state.guides; state.guides = false; try { return r2Card(c, deckTextSize(), 'compact', statFor(c), scale); } finally { state.guides = g; } }
-  Object.assign(window.DigDigBoomUI.api, { ic, textHTML, esc, playCard });
+  // For print sheets: a card at `scale` px per 0.01 in, square-cornered; with bleed the whole 2.75 x 3.75 in, otherwise as cut (2.5 x 3.5 in).
+  function printCard(c, scale, bleed) {
+    const card = `<div class="card" data-id="${esc(c.id)}" style="--u:${scale}px;width:${u(275)};height:${u(375)}">${buildR2(c, deckTextSize(), 'compact', statFor(c))}</div>`;
+    return bleed ? card : `<div style="position:relative;--u:${scale}px;width:${u(250)};height:${u(350)};overflow:hidden;flex:none"><div style="position:absolute;left:${u(-12.5)};top:${u(-12.5)}">${card}</div></div>`;
+  }
+  Object.assign(window.DigDigBoomUI.api, { ic, textHTML, esc, playCard, printCard });
   function deckHTML(scale) {
     const pool = state.all.filter(c => c.type !== 'Monster' && c.type !== 'Treasure');
     const b = R2.textBox('compact'); let tw = 44;
@@ -1498,6 +1557,7 @@ const Run = (() => {
       <p class="sub">Three directions on the same six real cards, drawn from your v2.7 sheet. Every card is poker size (2.5 × 3.5 in) with 0.125 in bleed. Type is shown by <b>icon, word, pattern and colour</b>. The rules text is set at one size on every card: the largest that still fits the card with the longest text.</p>
       <div class="bar">
         <button class="chip" data-act="mode" data-v="play">▶ Play</button>
+        <button class="chip" data-act="mode" data-v="print">🖨 Print sheets</button>
         <button class="chip ${state.guides ? 'on' : ''}" data-act="guides">Print guides</button>
         <button class="chip ${state.overlap ? 'on' : ''}" data-act="overlap">Overlapped row</button>
         <button class="chip ${state.round ? 'on' : ''}" data-act="round">Rounded corners</button>
@@ -1641,7 +1701,7 @@ const Run = (() => {
           <p class="note">One Dig with any Starter Kit you like, to try cards out. No Prep, no Leaderboard.</p></div>
       </div>
       ${b.survived || b.gems ? `<p class="note">Best Practice Dig in this browser: ${b.survived} Monsters survived · ${b.gems} gems banked.</p>` : ''}
-    </div><div class="foot"><button class="chip" data-p="cards">Card designs</button><button class="chip" data-p="help">How it works</button></div></div>`;
+    </div><div class="foot"><button class="chip" data-p="cards">Card designs</button><button class="chip" data-p="print">Print &amp; play sheets</button><button class="chip" data-p="help">How it works</button></div></div>`;
   }
   // The Leaderboard: positions are Monsters survived. The Crown tracker starts at 3; your best locked-in score stays between rounds.
   function lbHTML(run, st) {
@@ -1853,6 +1913,7 @@ const Run = (() => {
       case 'help': S.help = true; break;
       case 'closehelp': S.help = false; break;
       case 'cards': S.help = false; UI.setMode('cards'); return;
+      case 'print': S.help = false; UI.setMode('print'); return;
       case 'unzoom': S.zoom = null; break;
       case 'zoom': S.zoom = findCard(ds.uid); break;
       case 'card': { const c = findCard(ds.uid), e = st && st.line.find(x => x.card === c); if (st && st.pending && e) Dig.chooseClone(st, e); else S.zoom = c; break; }
@@ -1872,6 +1933,166 @@ const Run = (() => {
   $.addEventListener('click', e => { const el = e.target.closest('[data-p]'); if (!el || el.disabled) return; e.preventDefault(); act(el.dataset.p, el); });
   document.addEventListener('ddb-cards', render); document.addEventListener('ddb-mode', render);
   window.DigDigBoomPlay = { S, render, act: (a, d) => act(a, { dataset: d || {} }) };
+  render();
+})();
+</script>
+<script id="printv">
+/* =====================================================================
+   PRINT — print-and-play sheets, drawn from the live sheet: cards (Letter 3 x 3 with cut marks, or one card per page with bleed for a
+   print shop), the Power line, the Drill (player board), the Leaderboard, the table mat and card backs. Every page is portrait; wide
+   components are drawn landscape and turned on the page, so one paper size works everywhere (iPad Safari included).
+   ===================================================================== */
+(() => {
+  'use strict';
+  const D = DDB, UI = window.DigDigBoomUI, A = UI.api, $ = document.getElementById('printv');
+  const PX = 96;                                                      // CSS pixels per inch
+  const PAPER = { letter: { w: 8.5, h: 11, css: '8.5in 11in', name: 'Letter' }, a4: { w: 210 / 25.4, h: 297 / 25.4, css: 'A4', name: 'A4' } };
+  const P = { paper: 'letter', bleed: false, marks: true, copies: true, players: 1, parts: { cards: true, line: true, drill: true, board: true, mat: true, backs: false }, back: 'play' };
+  const cards = () => UI.state.all;
+  const ic = (c, s) => A.ic(c, ` style="width:${s}px;height:${s}px;vertical-align:-${Math.round(s * .2)}px"`);
+  const esc = A.esc;
+  const colors = D.print.playerColors;
+
+  // A sheet: portrait page. Content is designed on a Letter-size area (816 x 1056 px) and scaled to fit the paper. `land` turns a landscape design.
+  function sheet(inner, { land = false, label = '' } = {}) {
+    const p = PAPER[P.paper], W = p.w * PX, H = p.h * PX, s = Math.min(W / 816, H / 1056);
+    const body = land ? `<div class="turn" style="width:1056px;height:816px;transform:translate(816px,0) rotate(90deg);transform-origin:0 0">${inner}</div>` : `<div style="position:absolute;inset:0">${inner}</div>`;
+    return `<section class="sheet" style="width:${W}px;height:${H}px"><div class="fit" style="width:816px;height:1056px;left:${(W - 816 * s) / 2}px;top:${(H - 1056 * s) / 2}px;transform:scale(${s});transform-origin:0 0">${body}<div class="foot">${esc(D.title)} · ${esc(label)}</div></div></section>`;
+  }
+  // ---- cards ----
+  function cardList() {
+    const order = ['Power', 'Treasure', 'Monster', 'Immediate', 'Ongoing'], out = [];
+    const start = cards().filter(c => c.deck === D.rules.startingDeck), boost = cards().filter(c => c.deck !== D.rules.startingDeck);
+    for (const c of [...start, ...boost.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type) || a.id.localeCompare(b.id))]) for (let i = 0; i < (P.copies ? c.count : 1); i++) out.push(c);
+    return out;
+  }
+  function cardSheets() {
+    const list = cardList(), per = 9, pages = Math.ceil(list.length / per), cw = 2.5 * PX, ch = 3.5 * PX, x0 = (816 - 3 * cw) / 2, y0 = (1056 - 3 * ch) / 2, sc = PX / 100, out = [];
+    for (let pg = 0; pg < pages; pg++) {
+      let h = '';
+      list.slice(pg * per, pg * per + per).forEach((c, i) => { h += `<div class="pc" style="left:${x0 + (i % 3) * cw}px;top:${y0 + Math.floor(i / 3) * ch}px">${A.printCard(c, sc, false)}</div>`; });
+      if (P.marks) for (let k = 0; k <= 3; k++) {
+        const x = x0 + k * cw, y = y0 + k * ch;
+        h += `<i class="mk" style="left:${x}px;top:${y0 - 16}px;width:0;height:12px"></i><i class="mk" style="left:${x}px;top:${y0 + 3 * ch + 4}px;width:0;height:12px"></i><i class="mk" style="top:${y}px;left:${x0 - 16}px;height:0;width:12px"></i><i class="mk" style="top:${y}px;left:${x0 + 3 * cw + 4}px;height:0;width:12px"></i>`;
+      }
+      out.push(sheet(h, { label: `Cards ${pg + 1}/${pages}` }));
+    }
+    return out;
+  }
+  function bleedPages() {
+    return cardList().map(c => `<section class="sheet bleedpage" style="width:${2.75 * PX}px;height:${3.75 * PX}px"><div style="position:absolute;left:0;top:0">${A.printCard(c, PX / 100, true)}</div></section>`);
+  }
+  // ---- backs ----
+  function backSheets() {
+    const kinds = [['Mine back', 'repeating-linear-gradient(45deg,#5b3b22 0 14px,#6e4829 14px 28px)', '#a6753f', 'MINE'], ['Booster back', 'repeating-linear-gradient(45deg,#4a2a78 0 14px,#5b3590 14px 28px)', '#c9a6ff', 'BOOSTER']];
+    const cw = 2.5 * PX, ch = 3.5 * PX, x0 = (816 - 3 * cw) / 2, y0 = (1056 - 3 * ch) / 2;
+    return kinds.map(([name, bg, edge, word]) => {
+      let h = ''; for (let i = 0; i < 9; i++) h += `<div class="pc" style="left:${x0 + (i % 3) * cw}px;top:${y0 + Math.floor(i / 3) * ch}px;width:${cw}px;height:${ch}px;background:${bg};box-shadow:inset 0 0 0 10px ${edge};display:flex;align-items:center;justify-content:center;color:#fff;font:900 30px/1 sans-serif;letter-spacing:.2em">${word}</div>`;
+      return sheet(h, { label: name + ' (print on the back of a card sheet; flip on the long edge)' });
+    });
+  }
+  // ---- the Power line (long: three pages to tape together, left to right) ----
+  function lineSheets() {
+    const groups = [[1, 2, 3, 4], [5, 6, 7], [8, 9, 10]], cw = 2.5 * PX, out = [];
+    groups.forEach((g, gi) => {
+      let h = `<div class="ptitle"><b>Power line</b> <span>page ${gi + 1} of 3 — tape the pages together, 1 on the left</span></div>`;
+      h += `<div class="arrow"><span>◀ Roll a number: every card at that number <b>or lower</b> triggers</span></div>`;
+      const x0 = (1056 - g.length * cw) / 2;
+      g.forEach((n, i) => {
+        h += `<div class="lcolp" style="left:${x0 + i * cw}px;width:${cw}px"><div class="lnumber">${n}</div>${n === 10 ? '<div class="petslot">PET<br><small>starts here every Dig</small></div>' : ''}<div class="lslot"></div></div>`;
+      });
+      h += `<div class="pnote">Each Power card goes on its printed number; several can share one. Cards that move down the line go back to their printed number during Prep.</div>`;
+      out.push(sheet(h, { land: true, label: `Power line ${gi + 1}/3` }));
+    });
+    return out;
+  }
+  // ---- the Drill ----
+  function track(label, iconCode, max, color, note, star) {
+    let cells = ''; for (let i = 0; i <= max; i++) cells += `<div class="dcell" style="border-color:${color}">${i}${i === star ? '<b class="star">★</b>' : ''}</div>`;
+    return `<div class="trk"><div class="tl">${ic(iconCode, 28)}<b>${label}</b><span class="tn">${note}</span></div><div class="cells">${cells}</div></div>`;
+  }
+  function drillSheets() {
+    const R = D.rules, out = [];
+    for (let pl = 0; pl < P.players; pl++) {
+      const col = colors[pl % colors.length];
+      const steps = ['Escape Bonus (if you banked)', 'Count gems (Geodes + Monsters survived + Escape Bonus; BOOM is 0)', 'Booster Pack: use the reward ladder', 'Starter Kit: choose up to the round tracker', 'Reset Drill to the ★ spaces; Power cards back to their numbers; shuffle everything else into your Mine', 'Ready: put your die on your Mine'];
+      const h = `<div class="drill" style="border-color:${col}"><div class="dh"><b>Drill</b><span>Player ${pl + 1}</span><i style="background:${col}"></i></div>
+        <div class="dl">
+          ${track('Health', 'heart', R.caps.heart, '#e8344e', 'At 0 you go BOOM.', R.start.heart)}
+          ${track('Grit', 'grit', R.caps.grit, '#d9951a', `Before a roll, spend Grit: +1 each. After a roll, ${R.gritAfter.cost} Grit for +${R.gritAfter.bonus}.`, R.start.grit)}
+          ${track('Rerolls', 'reroll', R.caps.reroll, '#2eaf68', `Spend ${R.rerollCost} to reroll.`, R.start.reroll)}
+          <div class="tinker"><b>Prep</b><ol>${steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol></div>
+        </div>
+        <div class="dr"><div class="ong"><b>ONGOING</b><span>Ongoing cards go here, overlapped.</span></div></div></div>`;
+      out.push(sheet(h, { land: true, label: `Drill — player ${pl + 1}` }));
+    }
+    return out;
+  }
+  // ---- the Leaderboard ----
+  function boardSheet() {
+    const cols = 13, places = ['1st', '2nd', '3rd', '4th', '5th', '6th'], tr = D.run.crownStart;
+    let head = '', rows = '';
+    for (let n = 0; n < cols; n++) head += `<div class="bh ${n === tr ? 'crown' : ''}">${n === 0 ? 'Start' : n}${n === tr ? '<b>♛</b>' : ''}</div>`;
+    for (let r = 0; r < places.length; r++) for (let n = 0; n < cols; n++) rows += `<div class="bc ${n === 0 ? 'start' : ''} ${n === tr ? 'crown' : ''}">${n === 1 ? `<span>${places[r]}</span>` : ''}</div>`;
+    const h = `<div class="ptitle"><b>Leaderboard</b> <span>Monsters survived · Crown Jewel</span></div>
+      <div class="bgrid" style="grid-template-columns:repeat(${cols},1fr)">${head}${rows}</div>
+      <div class="legend"><span><i class="lk best"></i> your best Dig (stays between rounds)</span><span><i class="lk pledge"></i> your live Pledge</span><span><b>♛</b> the Crown tracker starts at ${tr}; the Crown Jewel goes to whoever locks in a score past it</span></div>`;
+    return sheet(h, { land: true, label: 'Leaderboard' });
+  }
+  // ---- the table mat ----
+  function matSheet() {
+    const r = D.run, kit = D.rules.kitSizes;
+    const ladder = r.ladder.map(p => `<tr><td>${p.at}+</td><td>${esc(p.name)}</td><td>${p.draw}</td><td>${p.keep}</td></tr>`).join('');
+    const area = (cls, name, w, h, x, y, sub = '') => `<div class="area ${cls}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px"><b>${name}</b><span>${sub}</span></div>`;
+    const cw = 2.5 * PX, ch = 3.5 * PX;
+    const h = `<div class="ptitle"><b>Table mat</b></div>
+      ${area('', 'MINE', cw, ch, 40, 70, 'face down')}${area('', 'DISCARD', cw, ch, 330, 70, 'Geodes and Immediate cards')}
+      ${area('wide', 'DIG AREA', 330, 170, 620, 70, 'Monsters stack here so you can count them')}
+      ${area('', 'BOOSTER DECK', 150, 215, 620, 260, 'face down')}${area('', 'TRASH', 150, 215, 800, 260, 'cards you did not keep')}
+      <div class="ladder2" style="left:40px;top:430px"><b>Booster Pack ladder</b><table><tr><th>Gems</th><th>Pack</th><th>Draw</th><th>Keep</th></tr>${ladder}</table><small>Bust: open a ${esc(r.boomPack)} Pack. Placeholder ladder.</small></div>
+      <div class="ladder2" style="left:330px;top:430px"><b>Round tracker</b><table><tr><th>Round</th>${kit.map((_, i) => `<th>${i + 1}</th>`).join('')}</tr><tr><td>Starter Kit</td>${kit.map(k => `<td>${k}</td>`).join('')}</tr></table><small>Put a marker on the round you are playing.</small></div>`;
+    return sheet(h, { land: true, label: 'Table mat' });
+  }
+  function pages() {
+    if (P.bleed) return bleedPages();
+    const out = [];
+    if (P.parts.cards) out.push(...cardSheets());
+    if (P.parts.line) out.push(...lineSheets());
+    if (P.parts.drill) out.push(...drillSheets());
+    if (P.parts.board) out.push(boardSheet());
+    if (P.parts.mat) out.push(matSheet());
+    if (P.parts.backs) out.push(...backSheets());
+    return out;
+  }
+  function render() {
+    if (document.body.dataset.mode !== 'print') return;
+    const all = cards();
+    const chip = (a, on, t) => `<button class="chip ${on ? 'on' : ''}" data-pr="${a}">${t}</button>`;
+    const parts = [['cards', 'Cards'], ['line', 'Power line'], ['drill', 'Drill'], ['board', 'Leaderboard'], ['mat', 'Table mat'], ['backs', 'Card backs']];
+    const bar = `<div class="ptool"><button class="chip" data-pr="back">‹ Back</button><b>Print &amp; play</b>
+      ${chip('paper:letter', P.paper === 'letter', 'Letter')}${chip('paper:a4', P.paper === 'a4', 'A4')}
+      ${chip('bleed', P.bleed, 'Print shop: one card per page, with bleed')}
+      ${P.bleed ? '' : parts.map(([k, t]) => chip('part:' + k, P.parts[k], t)).join('') + chip('marks', P.marks, 'Cut marks') + chip('copies', P.copies, 'All copies') + `<span class="note">Players <button class="chip" data-pr="pl:-1">−</button> ${P.players} <button class="chip" data-pr="pl:1">+</button></span>`}
+      <button class="chip go" data-pr="print">Print / Save PDF</button></div>`;
+    const css = `@page { size: ${P.bleed ? '2.75in 3.75in' : PAPER[P.paper].css}; margin: 0 }`;
+    $.innerHTML = `<style>${css}</style>${bar}<div class="sheets">${all.length ? pages().join('') : '<p class="note">Reading your sheet…</p>'}</div>`;
+  }
+  let prev = 'play';
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-pr]'); if (!el) return;
+    const a = el.dataset.pr;
+    if (a === 'back') { UI.setMode(prev); return; }
+    if (a === 'print') { window.print(); return; }
+    if (a.startsWith('paper:')) P.paper = a.slice(6);
+    else if (a === 'bleed') P.bleed = !P.bleed;
+    else if (a === 'marks') P.marks = !P.marks;
+    else if (a === 'copies') P.copies = !P.copies;
+    else if (a.startsWith('part:')) P.parts[a.slice(5)] = !P.parts[a.slice(5)];
+    else if (a.startsWith('pl:')) P.players = Math.max(1, Math.min(6, P.players + Number(a.slice(3))));
+    render();
+  });
+  document.addEventListener('ddb-mode', render); document.addEventListener('ddb-cards', render);
+  window.DigDigBoomPrint = { P, render, from: m => { prev = m; } };
   render();
 })();
 </script>
