@@ -208,9 +208,11 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .lbhead .ph { color: var(--accent); font-weight: 800; }
 #play .lbc .lm { display: flex; align-items: center; justify-content: center; gap: 3px; min-height: 22px; }
 #play .mk { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; font-style: normal; font-weight: 900; color: #1d1712; }
-#play .mk.best { background: var(--accent); border: 2px solid #5a3a00; }
+#play .mk.best { background: var(--pc, var(--accent)); border: 2px solid rgba(0,0,0,.45); }
 #play .mk.here { width: 0; height: 0; border-radius: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid #fff; }
-#play .mk.pledge { border: 3px solid #fff; background: transparent; }
+#play .mk.pledge { border: 3px solid var(--pc, #fff); background: transparent; color: #fff; }
+#play .ailine { font-size: 13px; color: var(--dim); padding: 3px 2px 0; }
+#play .lbc .lm { flex-wrap: wrap; }
 #play .crownmk { font-size: 22px; line-height: 1; color: #c9a227; font-weight: 400; }
 #play .crownmk.mine { color: #ffd54a; text-shadow: 0 0 8px #ffb13b; }
 #play .pstep { background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 10px 14px; margin: 10px 0; max-width: 900px; }
@@ -226,6 +228,7 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 }
 #play .menu .btn.alt { }
 #play .menu .confirm { background: #a8201f; color: #fff; }
+@media (max-height: 780px) { #play .over { gap: 5px; padding: 6px 12px; overflow-y: auto; } #play .over h2 { font-size: 30px; } #play .over .big { font-size: 16px; line-height: 1.3; } #play .over .btn { min-height: 46px; padding: 8px 18px; font-size: 16px; } }
 @media (max-height: 640px) { #play .tc { height: 28px; } #play .lbc { min-height: 42px; } #play .cardback { width: 64px; height: 90px; } }
 /* ---------- print and play sheets ---------- */
 body[data-mode=print] #app, body[data-mode=print] #play, body[data-mode=cards] #printv, body[data-mode=play] #printv { display: none; }
@@ -373,6 +376,8 @@ const DDB = {
       kitImmediates: 'top',                              // #14 an Immediate Starter Kit card is on top of your Mine: you dig it first and it does its thing then
     },
   },
+  // ---- The basic AI opponent ----
+  ai: { bankAtHealth: 3, pledgeMinHealth: 5, rerollAtOrBelow: 3, maxRolls: 3 },   // it banks when it would lead (or is low on Health), rerolls low results, spends Grit only to reach the Pet
   // ---- Print and play ----
   print: { playerColors: ['#ffb13b', '#e8344e', '#2b86d1', '#2eaf68', '#7a3fb8', '#1d1712'] },   // each player's Drill trim = their Leaderboard marker
   // ---- A run: rounds of Dig + Prep, the Leaderboard and the Crown Jewel (v2.7 Rules tab), for one player ----
@@ -1167,6 +1172,14 @@ const Board = (() => {
   }
   function pledge(b, id, survived, n) { if (!canPledge(b, id, survived, n)) return false; claim(b, id, 'pledge', n); return true; }
   const clearPledge = (b, id) => remove(b, id, 'pledge');
+  // The digital board moves your live marker for you: each Monster survived puts it on the best open spot under your new number
+  // (a pledge puts it ahead of you; it stays there until you catch up).
+  function track(b, id, survived) {
+    if (survived < 1) return false;
+    const m = marker(b, id, 'pledge');
+    if (m && m.n >= survived) return false;
+    claim(b, id, 'pledge', survived); return true;
+  }
   // The spot a player would hold if they locked in n now (their pledge's spot if it is under n, else the best open one).
   function rankIf(b, id, n) {
     const pl = marker(b, id, 'pledge'); if (pl && pl.n === n) return pl.rank;
@@ -1203,7 +1216,7 @@ const Board = (() => {
     remove(b, id, 'pledge');
     return { rank, tookLead: before !== id && holder(b) === id, newBest };
   }
-  return { create, marker, leader, tracker, holder, canPledge, pledge, clearPledge, wouldLead, leadN, lockIn, rankIf };
+  return { create, marker, leader, tracker, holder, canPledge, pledge, clearPledge, track, wouldLead, leadN, lockIn, rankIf };
 })();
 </script>
 
@@ -1229,13 +1242,19 @@ const Run = (() => {
     const m = Board.marker(run.board, run.me, 'best'); run.best = m ? m.n : 0;
   }
   // all: every card of the sheet. opts: { rounds, seed, dice, advancedTrash }
+  // The Booster Deck: every Booster card by its count, shuffled.
+  function makeDeck(all, rng) {
+    const deck = []; for (const c of all) if (c.deck === RN.boosterDeck) for (let i = 0; i < (c.count || 1); i++) deck.push(copy(c));
+    return Dig.shuffle({ rng }, deck);
+  }
+  // opts.shared = { board, deck, trash }: several players (see Match) share one Leaderboard, one Booster Deck and one Trash.
   function start(all, opts = {}) {
     const seed = opts.seed === undefined ? (Math.random() * 4294967296) >>> 0 : opts.seed >>> 0;
+    const me = opts.me || ME, sh = opts.shared;
     const run = { seed, rng: Dig.makeRng(seed), dice: opts.dice ? opts.dice.slice() : null, all, rounds: opts.rounds || RN.rounds, round: 1, phase: 'prep',
       advancedTrash: opts.advancedTrash === undefined ? RN.advancedTrash : opts.advancedTrash,
-      owned: [], kit: [], trash: [], deck: [], me: ME, board: Board.create([{ id: ME, name: 'You', color: DDB.print.playerColors[0] }]), crown: { tracker: RN.crownStart, holder: false }, best: 0, history: [], dig: null, prep: null, log: [], result: null };
-    const deck = []; for (const c of all) if (c.deck === RN.boosterDeck) for (let i = 0; i < (c.count || 1); i++) deck.push(copy(c));
-    run.deck = Dig.shuffle({ rng: run.rng }, deck);
+      owned: [], kit: [], trash: sh ? sh.trash : [], deck: sh ? sh.deck : [], me, shared: !!sh, board: sh ? sh.board : Board.create([{ id: me, name: 'You', color: DDB.print.playerColors[0] }]), crown: { tracker: RN.crownStart, holder: false }, best: 0, history: [], dig: null, prep: null, log: [], result: null };
+    if (!sh) run.deck = makeDeck(all, run.rng);
     sync(run);
     run.prep = newPrep(run, null); setPack(run);
     log(run, `A new run: ${run.rounds} rounds. Crown tracker at ${run.crown.tracker}. Before round 1, open a ${RN.firstPack} Pack.`);
@@ -1257,6 +1276,12 @@ const Run = (() => {
   function rollEscape(run) {
     const pr = run.prep; if (!pr || pr.step !== 'escape') return false;
     pr.escape = rollDie(run); pr.step = 'pack'; setPack(run);
+    log(run, `Escape Bonus: ${pr.escape} gems. ${pr.geodes} + ${pr.monsters} + ${pr.escape} = ${pr.gems} gems.`); return true;
+  }
+  // The Escape Bonus is one roll for the whole table; every player who banked adds it.
+  function setEscape(run, v) {
+    const pr = run.prep; if (!pr || pr.step !== 'escape') return false;
+    pr.escape = v; pr.step = 'pack'; setPack(run);
     log(run, `Escape Bonus: ${pr.escape} gems. ${pr.geodes} + ${pr.monsters} + ${pr.escape} = ${pr.gems} gems.`); return true;
   }
   function packInfo(run) { const pr = run.prep; if (!pr.pack) setPack(run); return { name: pr.pack.name, draw: pr.pack.draw + pr.trashed, keep: pr.pack.keep }; }
@@ -1330,18 +1355,18 @@ const Run = (() => {
   const refOf = c => ({ id: c.id, uid: c.uid });
   function save(run) {
     const pr = run.prep;
-    return { v: 2, board: run.board, me: run.me, seed: run.seed, rng: run.rng.state(), dice: run.dice, rounds: run.rounds, round: run.round, phase: run.phase, advancedTrash: run.advancedTrash,
-      owned: run.owned.map(refOf), kit: run.kit.map(refOf), trash: run.trash.map(refOf), deck: run.deck.map(refOf), history: run.history, log: run.log, result: run.result, endInfo: run.endInfo,
+    return { v: 3, shared: run.shared, ...(run.shared ? {} : { board: run.board, deck: run.deck.map(refOf), trash: run.trash.map(refOf) }), me: run.me, seed: run.seed, rng: run.rng.state(), dice: run.dice, rounds: run.rounds, round: run.round, phase: run.phase, advancedTrash: run.advancedTrash,
+      owned: run.owned.map(refOf), kit: run.kit.map(refOf), history: run.history, log: run.log, result: run.result, endInfo: run.endInfo,
       prep: pr && { ...pr, pack: pr.pack && pr.pack.name, offer: pr.offer.map(refOf), extra: pr.extra.map(refOf) },
       dig: run.dig && Dig.save(run.dig) };
   }
-  function load(all, d) {
-    if (d.v !== 2) throw new Error('an older save');
+  function load(all, d, shared) {
+    if (d.v !== 3) throw new Error('an older save');
     const memo = new Map();
     const deref = r => { if (memo.has(r.uid)) return memo.get(r.uid); const base = all.find(x => x.id === r.id); if (!base) throw new Error('the sheet no longer has card ' + r.id); const c = { ...base, uid: r.uid }; memo.set(r.uid, c); return c; };
     const rng = Dig.makeRng(d.seed); rng.restore(d.rng);
     const run = { seed: d.seed, rng, dice: d.dice, all, rounds: d.rounds, round: d.round, phase: d.phase, advancedTrash: d.advancedTrash,
-      me: d.me, board: d.board, crown: null, best: 0, owned: d.owned.map(deref), kit: d.kit.map(deref), trash: d.trash.map(deref), deck: d.deck.map(deref), history: d.history, log: d.log, result: d.result, endInfo: d.endInfo,
+      me: d.me, shared: !!d.shared, board: d.shared ? shared.board : d.board, crown: null, best: 0, owned: d.owned.map(deref), kit: d.kit.map(deref), trash: d.shared ? shared.trash : d.trash.map(deref), deck: d.shared ? shared.deck : d.deck.map(deref), history: d.history, log: d.log, result: d.result, endInfo: d.endInfo,
       prep: d.prep && { ...d.prep, pack: d.prep.pack ? packFor(d.prep.pack) : null, offer: d.prep.offer.map(deref), extra: d.prep.extra.map(deref) },
       dig: d.dig ? Dig.load(all, d.dig) : null };
     for (const k of memo.keys()) uid = Math.max(uid, k + 1);
@@ -1352,6 +1377,7 @@ const Run = (() => {
   // The Dig keeps a copy of the Leaderboard's numbers (tracker, what it takes to lead). Other players can change them, so refresh before asking the Dig.
   function refresh(run) {
     const st = run.dig; if (!st || !st.board) return;
+    if (!st.over && !st.boardApplied) Board.track(run.board, run.me, st.survived);      // the live marker follows your run
     st.board.crown = Board.tracker(run.board); st.board.leadN = Board.leadN(run.board, run.me);
   }
   // The moment a Dig ends (bank or BOOM) the Board changes: a BOOM removes the Pledge marker, a bank locks the score in and may take the Crown right away.
@@ -1371,7 +1397,128 @@ const Run = (() => {
     st.board.leadN = Board.leadN(run.board, run.me);          // your spot may now be good enough to lead at the Crown's own number
     return true;
   }
-  return { pledge, bank, refresh, checkOver, sync, save, load, start, rollEscape, packInfo, trashOwned, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
+  const reserve = n => { uid = Math.max(uid, n + 1); };
+  return { makeDeck, setEscape, reserve, pledge, bank, refresh, checkOver, sync, save, load, start, rollEscape, packInfo, trashOwned, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
+})();
+
+/* =====================================================================
+   OPPONENT — the most basic AI, and the Match that runs you against it. The AI is another Run on the same Leaderboard, Booster Deck and Trash.
+   It plays only from what a player can see: its own Dig and the Leaderboard. It digs one card each time you dig one (so you watch it
+   climb the Leaderboard as you go), and finishes its Dig the moment yours is over.
+   ===================================================================== */
+const AI = (() => {
+  const R = DDB.rules, A = DDB.ai;
+  // One action of the AI's Dig. Returns false when there is nothing to do.
+  function act(run) {
+    const st = run.dig; if (!st || st.over) return false;
+    Run.refresh(run);
+    const c = Dig.can(st), f = st.fight;
+    if (c.choose) { Dig.chooseClone(st, st.line.find(e => !e.pet) || st.line[0]); return true; }
+    if (f) {
+      if (f.phase === 'before') { Dig.roll(st); return true; }                    // basic: no Grit before the roll
+      const pet = st.line.find(e => e.pet), total = Dig.result(st).total, need = (pet ? pet.at : R.pet.at) - total;
+      if (need > 0 && c.bonus && need <= Math.floor(st.grit / R.gritAfter.cost)) { Dig.buyBonus(st); return true; }      // Grit to reach the Pet
+      if (c.reroll && total <= A.rerollAtOrBelow && f.rolls < A.maxRolls) { Dig.reroll(st); return true; }
+      Dig.face(st); return true;
+    }
+    if (c.bank && (st.survived >= st.board.leadN || (st.survived >= 1 && st.heart <= A.bankAtHealth))) { Run.bank(run); return true; }
+    if (st.heart >= A.pledgeMinHealth && Dig.canPledge(st, st.survived + 1) && Board.canPledge(run.board, run.me, st.survived, st.survived + 1)) { Run.pledge(run, st.survived + 1); return true; }
+    if (c.dig) { Dig.dig(st); return true; }
+    return false;
+  }
+  // Prep: open the pack, keep the first cards offered, choose a kit at random.
+  function prep(run) {
+    const pr = run.prep; if (!pr) return;
+    if (pr.step === 'pack') Run.openPack(run);
+    if (run.prep.step === 'keep') { for (const c of run.prep.offer.slice(0, Run.keepCount(run))) Run.toggleKeep(run, c.uid); Run.confirmKeep(run); }
+    if (run.prep.step === 'kit' && !run.prep.kitPick.length) {
+      const pool = Dig.shuffle({ rng: run.rng }, run.owned.slice());
+      for (const c of pool.slice(0, run.prep.kitMax)) Run.toggleKit(run, c.uid);
+    }
+  }
+  return { act, prep };
+})();
+
+const Match = (() => {
+  const HUMAN = 'me', BOT = 'ai';
+  const rollDie = m => (m.dice && m.dice.length ? m.dice.shift() : 1 + Math.floor(m.rng() * R_.die));
+  const R_ = DDB.rules;
+  const human = m => m.runs[HUMAN], bot = m => m.runs[BOT];
+  function start(all, opts = {}) {
+    const seed = opts.seed === undefined ? (Math.random() * 4294967296) >>> 0 : opts.seed >>> 0, rng = Dig.makeRng(seed), colors = DDB.print.playerColors;
+    const board = Board.create([{ id: HUMAN, name: 'You', color: colors[0] }, { id: BOT, name: 'AI', color: colors[1], ai: true }]);
+    const shared = { board, deck: Run.makeDeck(all, rng), trash: [] };
+    const m = { seed, rng, dice: opts.dice ? opts.dice.slice() : null, all, board, deck: shared.deck, trash: shared.trash, rounds: opts.rounds || DDB.run.rounds, runs: {}, result: null, aiDug: 0 };
+    m.runs[HUMAN] = Run.start(all, { ...opts, seed, me: HUMAN, shared });
+    m.runs[BOT] = Run.start(all, { ...opts, seed: seed + 1, me: BOT, shared });
+    AI.prep(bot(m));
+    return m;
+  }
+  // The AI digs one card (and plays out any Monster it finds), as you dig one.
+  function aiStep(m) {
+    const ai = bot(m); if (!ai.dig || ai.dig.over || ai.phase !== 'dig') return false;
+    const st = ai.dig, before = st.digs;
+    for (let n = 0; n < 80 && !st.over; n++) {
+      if (!AI.act(ai)) break;
+      Run.checkOver(ai);
+      if (st.digs > before && !st.fight && !st.pending) break;
+    }
+    if (!st.over) Run.refresh(ai);
+    m.aiDug++; return true;
+  }
+  // Once you are done, the AI finishes its Dig (everyone digs at their own pace; Prep waits for the last one).
+  function settle(m) {
+    const ai = bot(m), me = human(m); if (!me.dig || !me.dig.over || !ai.dig) return;
+    for (let n = 0; n < 600 && !ai.dig.over; n++) { if (!AI.act(ai)) break; Run.checkOver(ai); }
+    if (!ai.dig.over) throw new Error('the AI could not finish its Dig');
+    Run.checkOver(ai);
+  }
+  // Everyone reads the Escape Bonus from one roll of the die.
+  function rollEscape(m) {
+    const v = rollDie(m);
+    for (const r of Object.values(m.runs)) Run.setEscape(r, v);
+    m.escape = v; AI.prep(bot(m)); return v;
+  }
+  // Both players begin the round: the AI's Prep is already done.
+  function beginRound(m) {
+    const me = human(m), ai = bot(m);
+    if (!me.prep || me.prep.step !== 'kit') return false;
+    AI.prep(ai);
+    if (!Run.beginDig(ai)) return false;
+    return Run.beginDig(me);
+  }
+  // Tap "To Prep": the round is over for both. The Board has already changed; now the Preps (or the end of the run).
+  function finishRound(m) {
+    const me = human(m), ai = bot(m);
+    settle(m);
+    if (!Run.finishDig(me)) return false;
+    Run.finishDig(ai);
+    if (me.phase === 'done') {
+      const w = Board.holder(m.board);
+      m.result = { winner: w, human: w === HUMAN, rounds: me.history.map((h, i) => ({ round: h.round, me: h, ai: ai.history[i] })), bests: { me: me.best, ai: ai.best } };
+      return true;
+    }
+    if (ai.prep && ai.prep.step === 'escape' && me.prep.step !== 'escape') rollEscape(m);     // you went BOOM, but the AI banked: someone still rolls
+    else AI.prep(ai);
+    return true;
+  }
+  function save(m) {
+    const refOf = c => ({ id: c.id, uid: c.uid });
+    return { v: 1, seed: m.seed, rng: m.rng.state(), dice: m.dice, rounds: m.rounds, escape: m.escape, aiDug: m.aiDug, result: m.result, board: m.board, deck: m.deck.map(refOf), trash: m.trash.map(refOf),
+      runs: { [HUMAN]: Run.save(human(m)), [BOT]: Run.save(bot(m)) } };
+  }
+  function load(all, d) {
+    if (d.v !== 1) throw new Error('an older save');
+    const memo = new Map();
+    const deref = r => { if (memo.has(r.uid)) return memo.get(r.uid); const base = all.find(x => x.id === r.id); if (!base) throw new Error('the sheet no longer has card ' + r.id); const c = { ...base, uid: r.uid }; memo.set(r.uid, c); return c; };
+    const rng = Dig.makeRng(d.seed); rng.restore(d.rng);
+    const shared = { board: d.board, deck: d.deck.map(deref), trash: d.trash.map(deref) };
+    const m = { seed: d.seed, rng, dice: d.dice, all, board: shared.board, deck: shared.deck, trash: shared.trash, rounds: d.rounds, escape: d.escape, aiDug: d.aiDug, result: d.result, runs: {} };
+    for (const k of memo.keys()) Run.reserve(k);
+    m.runs[HUMAN] = Run.load(all, d.runs[HUMAN], shared); m.runs[BOT] = Run.load(all, d.runs[BOT], shared);
+    return m;
+  }
+  return { start, aiStep, settle, rollEscape, beginRound, finishRound, save, load, human, bot, HUMAN, BOT };
 })();
 </script>
 
@@ -1602,7 +1749,7 @@ const Run = (() => {
 (() => {
   'use strict';
   const D = DDB, R = D.rules, UI = window.DigDigBoomUI, A = UI.api, $ = document.getElementById('play');
-  const S = { st: null, run: null, rounds: D.run.rounds, adv: D.run.advancedTrash, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', zoom: null, help: false, panel: 'menu', back: null, restored: false, confirmNew: null };
+  const S = { st: null, run: null, rounds: D.run.rounds, adv: D.run.advancedTrash, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', zoom: null, help: false, panel: 'menu', back: null, restored: false, confirmNew: null, match: null, opp: true };
   const cards = () => UI.state.all;
   // Personal bests live in this browser only (best Monsters survived, best gems banked). Never needed for play.
   const BEST_KEY = 'ddb.solo.best';
@@ -1620,7 +1767,7 @@ const Run = (() => {
     try {
       const panel = S.panel === 'menu' ? S.back : S.panel;
       if (!panel || (!S.st && !S.run)) { localStorage.removeItem(SAVE_KEY); return; }
-      localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 1, panel, run: S.run ? Run.save(S.run) : null, st: !S.run && S.st ? Dig.save(S.st) : null, kit: S.kit, kitSize: S.kitSize, start: S.start, rounds: S.rounds, adv: S.adv }));
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 2, panel, match: S.match ? Match.save(S.match) : null, run: S.run && !S.match ? Run.save(S.run) : null, st: !S.run && S.st ? Dig.save(S.st) : null, opp: S.opp, kit: S.kit, kitSize: S.kitSize, start: S.start, rounds: S.rounds, adv: S.adv }));
     } catch (e) { /* private window or full: fine, it just will not resume */ }
   }
   function restore() {
@@ -1628,10 +1775,10 @@ const Run = (() => {
     S.restored = true;
     try {
       const raw = localStorage.getItem(SAVE_KEY); if (!raw) return;
-      const d = JSON.parse(raw); if (d.v !== 1) return;
-      const run = d.run ? Run.load(cards(), d.run) : null, st = run ? run.dig : d.st ? Dig.load(cards(), d.st) : null;
-      S.run = run; S.st = st; S.kit = d.kit || []; S.kitSize = d.kitSize; S.start = d.start; S.rounds = d.rounds; S.adv = d.adv; S.panel = d.panel; S.back = d.panel;
-    } catch (e) { try { localStorage.removeItem(SAVE_KEY); } catch (e2) { /* ignore */ } S.run = null; S.st = null; S.panel = 'menu'; }
+      const d = JSON.parse(raw); if (d.v !== 2) return;
+      const match = d.match ? Match.load(cards(), d.match) : null, run = match ? Match.human(match) : d.run ? Run.load(cards(), d.run) : null, st = run ? run.dig : d.st ? Dig.load(cards(), d.st) : null;
+      S.match = match; S.opp = d.opp !== false; S.run = run; S.st = st; S.kit = d.kit || []; S.kitSize = d.kitSize; S.start = d.start; S.rounds = d.rounds; S.adv = d.adv; S.panel = d.panel; S.back = d.panel;
+    } catch (e) { try { localStorage.removeItem(SAVE_KEY); } catch (e2) { /* ignore */ } S.run = null; S.match = null; S.st = null; S.panel = 'menu'; }
   }
   const typeIcon = t => `<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#${D.types[t].icon}"/></svg>`;
   const ic = (c, st = '') => A.ic(c, st);
@@ -1693,11 +1840,12 @@ const Run = (() => {
     return `<div class="panel setup"><div class="scroll">
       <p class="note">One player. ${offline ? '<b style="color:#ff9a8a">Your sheet could not be reached, so only the design sample is available — reload when you are online.</b>' : st.source === 'cache' ? '<b style="color:#ffb86b">Offline: playing with the copy of your sheet this browser saved last time.</b>' : 'Cards and rules are read from your sheet each time this opens.'}</p>
       <div class="menu">
-        ${inProgress ? `<div class="bigopt"><button class="btn" data-p="resume">Continue</button><p class="note">${S.run ? `Your run — round ${Math.min(S.run.round, S.run.rounds)} of ${S.run.rounds}, ${S.back === 'prep' ? 'Prep' : 'Dig'}.` : 'Your Practice Dig.'}</p></div>` : ''}
+        ${inProgress ? `<div class="bigopt"><button class="btn" data-p="resume">Continue</button><p class="note">${S.run ? `Your run${S.match ? ' against the AI' : ''} — round ${Math.min(S.run.round, S.run.rounds)} of ${S.run.rounds}, ${S.back === 'prep' ? 'Prep' : 'Dig'}.` : 'Your Practice Dig.'}</p></div>` : ''}
         <div class="bigopt">${newBtn('startrun', 'Play a run', true)}
-          <p class="note">${S.rounds} rounds of Dig and Prep. Open Booster Packs, build your engine round by round, and try to take the Crown Jewel in the final round.</p>
+          <p class="note">${S.rounds} rounds of Dig and Prep. Open Booster Packs, build your engine round by round, and try to hold the Crown Jewel when the final round ends.</p>
           <p class="note">Rounds: ${D.run.roundChoices.map(n => `<button class="chip ${S.rounds === n ? 'on' : ''}" data-p="rounds" data-v="${n}">${n}</button>`).join(' ')}
-            &nbsp;<button class="chip ${S.adv ? 'on' : ''}" data-p="adv">Advanced trash ${S.adv ? 'on' : 'off'}</button></p></div>
+            &nbsp;<button class="chip ${S.adv ? 'on' : ''}" data-p="adv">Advanced trash ${S.adv ? 'on' : 'off'}</button></p>
+          <p class="note">Opponent: <button class="chip ${S.opp ? 'on' : ''}" data-p="opp" data-v="1">AI</button> <button class="chip ${S.opp ? '' : 'on'}" data-p="opp" data-v="0">Nobody</button></p></div>
         <div class="bigopt">${newBtn('practice', 'Practice Dig', false)}
           <p class="note">One Dig with any Starter Kit you like, to try cards out. No Prep, no Leaderboard.</p></div>
       </div>
@@ -1706,20 +1854,37 @@ const Run = (() => {
   }
   const resumable = () => !!S.back && ((S.run && S.run.phase !== 'done') || (!S.run && S.st && !S.st.over));
   // The Leaderboard: positions are Monsters survived. The Crown tracker starts at 3; your best locked-in score stays between rounds.
+  // What the AI is doing, in a few words (only what a player can see on the table).
+  function aiLine(m) {
+    const ai = Match.bot(m), st = ai.dig;
+    if (!st) return `AI: ready`;
+    if (st.over) return st.over.kind === 'bank' ? `AI banked with ${st.survived} Monster${st.survived === 1 ? '' : 's'} survived` : `AI went BOOM after ${st.survived}`;
+    return `AI: digging · ${st.survived} survived${st.pledge ? ' · pledged ' + st.pledge : ''}`;
+  }
+  const nameOf = (run, id) => (run.board.players.find(p => p.id === id) || {}).name || id;
   function lbHTML(run, st) {
-    const cr = run.crown, here = st && !st.over ? st.survived : -1, bm = Board.marker(run.board, run.me, 'best'), pm = Board.marker(run.board, run.me, 'pledge'), pl = pm ? pm.n : null;
-    const max = Math.max(8, cr.tracker + 2, run.best + 1, here + 2, (pl || 0) + 1);
+    const bd = run.board, tr = Board.tracker(bd), holder = Board.holder(bd), me = run.me, players = bd.players;
+    const here = st && !st.over ? st.survived : -1, pm = Board.marker(bd, me, 'pledge');
+    const marks = players.flatMap(p => ['best', 'pledge'].map(k => ({ p, k, m: Board.marker(bd, p.id, k) }))).filter(x => x.m);
+    const max = Math.max(8, tr + 2, here + 2, ...marks.map(x => x.m.n + 1));
     let cells = '';
     for (let n = 0; n <= max; n++) {
-      const open = st && Dig.canPledge(st, n) && Board.canPledge(run.board, run.me, st.survived, n);
-      const rk = m => (m.rank > 1 ? m.rank : '');
-      const mk = (n === here ? '<i class="mk here" title="you are here"></i>' : '') + (bm && n === bm.n ? `<i class="mk best" title="your best">${rk(bm)}</i>` : '') + (pm && n === pm.n ? `<i class="mk pledge" title="your pledge">${rk(pm)}</i>` : '');
-      cells += `<button class="lbc ${n === here ? 'here' : ''} ${n <= cr.tracker ? 'free' : ''} ${open ? 'open' : ''}" data-p="pledge" data-n="${n}" ${open ? '' : 'disabled'}><span class="ln">${n === 0 ? 'Start' : n}</span><span class="lm">${open ? '<span class="pl">pledge</span>' : ''}${n === cr.tracker ? `<b class="crownmk ${cr.holder ? 'mine' : ''}">♛</b>` : ''}${mk}</span></button>`;
+      const open = st && Dig.canPledge(st, n) && Board.canPledge(bd, me, st.survived, n);
+      const dots = marks.filter(x => x.m.n === n).map(x => `<i class="mk ${x.k}" style="--pc:${x.p.color}" title="${A.esc(x.p.name)}: ${x.k === 'best' ? 'best Dig' : 'live marker'}">${x.m.rank > 1 ? x.m.rank : ''}</i>`).join('');
+      cells += `<button class="lbc ${n === here ? 'here' : ''} ${n <= tr ? 'free' : ''} ${open ? 'open' : ''}" data-p="pledge" data-n="${n}" ${open ? '' : 'disabled'}><span class="ln">${n === 0 ? 'Start' : n}</span><span class="lm">${open ? '<span class="pl">pledge</span>' : ''}${n === tr ? `<b class="crownmk ${holder ? 'mine' : ''}">♛</b>` : ''}${dots}</span></button>`;
     }
-    const hint = st && Dig.can(st).dig && st.survived >= cr.tracker ? ' · <span class="ph">you may pledge: tap a glowing number</span>' : '';
+    const hint = st && Dig.can(st).dig && st.survived >= tr ? ' · <span class="ph">you may pledge: tap a glowing number</span>' : '';
     const status = st && st.pledge !== null ? ` · pledged ${st.pledge}` : '';
-    return `<section class="lb"><div class="lbhead"><span>Leaderboard · Round ${Math.min(run.round, run.rounds)} of ${run.rounds}${run.round >= run.rounds ? ' · final' : ''}</span><span>♛ Crown at ${cr.tracker} · ${cr.holder ? '<b style="color:var(--accent)">you hold the Crown Jewel</b>' : 'Crown Jewel on the table'}${status}${hint}</span></div>
-      <div class="lbcells" style="grid-template-columns:repeat(${max + 1},minmax(0,1fr))">${cells}</div></section>`;
+    const who = holder === me ? '<b style="color:var(--accent)">you hold the Crown Jewel</b>' : holder ? `<b>${A.esc(nameOf(run, holder))} holds the Crown Jewel</b>` : 'Crown Jewel on the table';
+    const legend = players.length > 1 ? players.map(p => `<span style="color:${p.color}">●</span> ${A.esc(p.name)}`).join(' &nbsp; ') + ' · ' : '';
+    return `<section class="lb"><div class="lbhead"><span>Leaderboard · Round ${Math.min(run.round, run.rounds)} of ${run.rounds}${run.round >= run.rounds ? ' · final' : ''}${players.length > 1 ? ' · ' + legend : ''}</span><span>♛ Crown at ${tr} · ${who}${status}${hint}</span></div>
+      <div class="lbcells" style="grid-template-columns:repeat(${max + 1},minmax(0,1fr))">${cells}</div>${S.match && st ? `<div class="ailine">${A.esc(aiLine(S.match))}</div>` : ''}</section>`;
+  }
+  function aiPrepHTML(m) {
+    const ai = Match.bot(m), h = ai.history[ai.history.length - 1], pr = ai.prep;
+    if (!h) return '';
+    const packName = pr && pr.pack ? ` · ${pr.pack.name} Pack` : '';
+    return `<div class="pstep"><h3>The AI</h3><p>${h.kind === 'bank' ? `Banked with <b>${h.survived}</b> Monsters survived${h.stoleCrown ? ' and took the Crown Jewel' : ''}` : `Went BOOM after <b>${h.survived}</b> Monsters`}${pr && pr.gems !== null ? ` · ${pr.gems} gems${packName}` : ''}${m.escape !== undefined && h.kind === 'bank' ? ` (Escape Bonus ${m.escape})` : ''}.</p></div>`;
   }
   function prepHTML() {
     const run = S.run, pr = run.prep, step = pr.step;
@@ -1753,16 +1918,21 @@ const Run = (() => {
     const best = run.history.length ? `<span class="note">Last Dig: ${run.history[run.history.length - 1].kind === 'bank' ? 'banked' : 'BOOM'} after ${run.history[run.history.length - 1].survived} Monsters.</span>` : '';
     return `<div class="panel setup"><div class="scroll" id="setupScroll">
       ${lbHTML(run, null)}
+      ${S.match && !pr.first ? aiPrepHTML(S.match) : ''}
       <h2>${pr.first ? 'Before round 1' : `Prep · before round ${run.round} of ${run.rounds}`}</h2>
       <p class="note">Round tracker: round ${run.round} of ${run.rounds} · Starter Kit up to ${pr.kitMax} · Booster Deck: ${run.deck.length} cards left · you own ${run.owned.length}</p>
       ${rows.join('')}</div><div class="foot">${foot}${best}<button class="chip" data-p="menu" style="margin-left:auto">Menu</button></div></div>`;
   }
   function doneHTML() {
-    const run = S.run, r = run.result, sm = c => ic(c, ' style="width:22px;height:22px;vertical-align:-4px"');
+    const run = S.run, r = run.result, sm = c => ic(c, ' style="width:22px;height:22px;vertical-align:-4px"'), m = S.match, mr = m && m.result;
+    const title = m ? (mr.winner === 'me' ? '♛ You win — you hold the Crown Jewel!' : mr.winner ? 'The AI wins — it holds the Crown Jewel' : 'Nobody took the Crown Jewel') : (r.crown ? '♛ You hold the Crown Jewel!' : 'The Crown Jewel stays on the table');
+    const body = m ? `Your best Dig: <b>${mr.bests.me}</b> Monsters survived. The AI's best: <b>${mr.bests.ai}</b>.` : (r.crown ? `You finished with a best of <b>${r.best}</b> Monsters survived, and nobody to take the Crown from you.` : `Your best Dig was <b>${r.best}</b> Monsters survived; the final round had to beat ${r.tracker}.`);
+    const aiRow = h => h ? `${h.kind === 'bank' ? 'Banked' : 'BOOM'} · ${h.survived}${h.stoleCrown ? ' ♛' : ''}` : '';
     return `<div class="panel setup"><div class="scroll">
       ${lbHTML(run, null)}
-      <h2>${r.crown ? '♛ You hold the Crown Jewel!' : 'The Crown Jewel stays on the table'}</h2>
-      <p class="helptxt">${r.crown ? `You finished with a best of <b>${r.best}</b> Monsters survived, and nobody to take the Crown from you.` : `Your best Dig was <b>${r.best}</b> Monsters survived; the final round had to beat ${r.tracker}.`}</p>
+      <h2>${title}</h2>
+      <p class="helptxt">${body}</p>
+      ${m ? `<table class="cmp"><tr><th>Round</th><th>You</th><th>AI</th></tr>${mr.rounds.map(x => `<tr><td>${x.round}</td><td>${aiRow(x.me)}</td><td>${aiRow(x.ai)}</td></tr>`).join('')}</table>` : ''}
       <table class="cmp"><tr><th>Round</th><th>How it ended</th><th>Monsters survived</th><th>Gems</th><th></th></tr>
       ${run.history.map(h => `<tr><td>${h.round}</td><td>${h.kind === 'bank' ? 'Banked' : 'BOOM'}</td><td>${h.survived}</td><td>${h.kind === 'bank' ? h.geodes + h.monsters : 0} ${sm('gem')}</td><td>${h.stoleCrown ? '♛ took the Crown' : h.newBest ? 'new best' : ''}</td></tr>`).join('')}</table>
       <p class="note">You own ${run.owned.length} Booster cards: ${run.owned.map(c => A.esc(c.name)).join(', ')}.</p>
@@ -1835,8 +2005,8 @@ const Run = (() => {
     if (st.over && S.run) {
       const fin = S.run.round === S.run.rounds, next = `<div class="row2"><button class="btn" data-p="prep">${fin ? 'See the result' : 'To Prep'}</button></div>`;
       over = st.over.kind === 'boom'
-        ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${T(st.over.why)}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this round — your best on the Leaderboard stays.</div>${next}</div>`
-        : `<div class="over"><h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="big"><b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${(S.run.endInfo || {}).stoleCrown ? ' — <b>you take the Crown Jewel</b>' : (S.run.endInfo || {}).newBest ? ' — a new best' : ''}<br><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} before the Escape Bonus</div>${next}</div>`;
+        ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${T(st.over.why)}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this round — your best on the Leaderboard stays.</div>${S.match ? `<div class="note">${A.esc(aiLine(S.match))}</div>` : ''}${next}</div>`
+        : `<div class="over"><h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="big"><b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${(S.run.endInfo || {}).stoleCrown ? ' — <b>you take the Crown Jewel</b>' : (S.run.endInfo || {}).newBest ? ' — a new best' : ''}<br><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} before the Escape Bonus</div>${S.match ? `<div class="note">${A.esc(aiLine(S.match))}</div>` : ''}${next}</div>`;
     } else if (st.over) {
       over = (st.over.kind === 'boom'
       ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${T(st.over.why)}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this Dig.</div>`
@@ -1891,23 +2061,24 @@ const Run = (() => {
     S.st = Dig.start(cards(), S.kit.map(by).filter(Boolean), { start: S.start, seed: S.seed }); S.panel = 'dig'; S.zoom = null;
   }
   function act(a, el) {
-    const st = S.st, f = st && st.fight, ds = el.dataset;
+    const st = S.st, f = st && st.fight, ds = el.dataset; let digged = false;
     if (a !== 'startrun' && a !== 'practice') S.confirmNew = null;
     switch (a) {
       case 'menu': if (S.panel !== 'menu') S.back = S.panel; S.panel = 'menu'; S.help = false; break;
       case 'resume': S.panel = S.back || 'menu'; break;
-      case 'practice': if (resumable() && S.confirmNew !== 'practice') { S.confirmNew = 'practice'; break; } S.confirmNew = null; S.run = null; S.st = null; S.panel = 'setup'; S.back = null; break;
+      case 'practice': if (resumable() && S.confirmNew !== 'practice') { S.confirmNew = 'practice'; break; } S.confirmNew = null; S.run = null; S.match = null; S.st = null; S.panel = 'setup'; S.back = null; break;
       case 'rounds': S.rounds = Number(ds.v); break;
       case 'adv': S.adv = !S.adv; break;
-      case 'startrun': { if (resumable() && S.confirmNew !== 'startrun') { S.confirmNew = 'startrun'; break; } S.confirmNew = null; S.run = Run.start(cards(), { rounds: S.rounds, advancedTrash: S.adv }); S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
-      case 'escape': Run.rollEscape(S.run); break;
+      case 'opp': S.opp = ds.v === '1'; break;
+      case 'startrun': { if (resumable() && S.confirmNew !== 'startrun') { S.confirmNew = 'startrun'; break; } S.confirmNew = null; if (S.opp) { S.match = Match.start(cards(), { rounds: S.rounds, advancedTrash: S.adv }); S.run = Match.human(S.match); } else { S.match = null; S.run = Run.start(cards(), { rounds: S.rounds, advancedTrash: S.adv }); } S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
+      case 'escape': if (S.match) Match.rollEscape(S.match); else Run.rollEscape(S.run); break;
       case 'openpack': Run.openPack(S.run); break;
       case 'trashown': Run.trashOwned(S.run, Number(ds.uid)); break;
       case 'pick': Run.toggleKeep(S.run, Number(ds.uid)); break;
       case 'keepgo': Run.confirmKeep(S.run); break;
       case 'kitpick': Run.toggleKit(S.run, Number(ds.uid)); break;
-      case 'startround': if (Run.beginDig(S.run)) { S.st = S.run.dig; S.panel = 'dig'; } break;
-      case 'prep': Run.finishDig(S.run); S.panel = S.run.phase === 'done' ? 'done' : 'prep'; break;
+      case 'startround': if (S.match ? Match.beginRound(S.match) : Run.beginDig(S.run)) { S.st = S.run.dig; S.panel = 'dig'; } break;
+      case 'prep': if (S.match) Match.finishRound(S.match); else Run.finishDig(S.run); S.panel = S.run.phase === 'done' ? 'done' : 'prep'; break;
       case 'pledge': if (S.run) Run.pledge(S.run, Number(ds.n)); break;
       case 'tab': S.tab = ds.v; break;
       case 'kit': { const c = cards().find(x => x.id === ds.id); if (!c || !Dig.supported(c)) break; const i = S.kit.indexOf(c.id); if (i >= 0) S.kit.splice(i, 1); else if (S.kit.length < S.kitSize) S.kit.push(c.id); break; }
@@ -1915,9 +2086,9 @@ const Run = (() => {
       case 'stat': { const r = ds.r, v = S.start[r] + Number(ds.d); S.start[r] = Math.max(r === 'heart' ? 1 : 0, Math.min(R.caps[r], v)); break; }
       case 'random': { const pool = boosters().filter(Dig.supported); S.kit = []; const rr = Dig.makeRng((Math.random() * 1e9) | 0); while (S.kit.length < Math.min(S.kitSize, pool.length)) { const c = pool[Math.floor(rr() * pool.length)]; if (!S.kit.includes(c.id)) S.kit.push(c.id); } break; }
       case 'clear': S.kit = []; break;
-      case 'go': S.run = null; newDig(); break;
+      case 'go': S.run = null; S.match = null; newDig(); break;
       case 'again': S.seed = undefined; newDig(); break;
-      case 'setup': S.run = null; S.panel = 'setup'; S.help = false; break;
+      case 'setup': S.run = null; S.match = null; S.panel = 'setup'; S.help = false; break;
       case 'help': S.help = true; break;
       case 'closehelp': S.help = false; break;
       case 'cards': S.help = false; UI.setMode('cards'); return;
@@ -1925,7 +2096,7 @@ const Run = (() => {
       case 'unzoom': S.zoom = null; break;
       case 'zoom': S.zoom = findCard(ds.uid); break;
       case 'card': { const c = findCard(ds.uid), e = st && st.line.find(x => x.card === c); if (st && st.pending && e) Dig.chooseClone(st, e); else S.zoom = c; break; }
-      case 'dig': if (st) Dig.dig(st); break;
+      case 'dig': if (st) { const before = st.digs; Dig.dig(st); if (S.match && st.digs > before) digged = true; } break;
       case 'grit': if (f) { if (f.phase === 'before') Dig.spendGrit(st); else Dig.buyBonus(st); } break;
       case 'refund': Dig.refundGrit(st); break;
       case 'roll': Dig.roll(st); break;
@@ -1936,6 +2107,7 @@ const Run = (() => {
       case 'heart': break;
     }
     if (S.run) { Run.checkOver(S.run); if (S.run.phase === 'dig') Run.refresh(S.run); }
+    if (S.match && S.run && S.run.phase === 'dig') { if (digged && !S.run.dig.over) Match.aiStep(S.match); if (S.run.dig.over) Match.settle(S.match); }
     if (S.st && S.st.over && !S.st.best && !S.run) recordBest(S.st);
     persist(); render();
   }
