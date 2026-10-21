@@ -394,7 +394,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 @keyframes tbody { 0%, 38% { transform: none; opacity: 1; } 70% { transform: translateY(24px); opacity: .8; } 100% { transform: translateY(90px); opacity: 0; } }
 @keyframes tflash { 0%, 34% { opacity: 0; transform: scale(.4); } 42% { opacity: .95; transform: scale(1.1); } 70%, 100% { opacity: 0; transform: scale(1.5); } }
 @keyframes dealin { 0% { transform: translate(var(--dx), 20px) scale(.2) rotate(-8deg); opacity: 0; } 70% { opacity: 1; } 100% { transform: none; opacity: 1; } }
-#play .cards.dealt .pcard { animation: dealin .6s cubic-bezier(.2,.8,.3,1) backwards; animation-delay: calc(.5s + var(--i) * .14s); }
+
 
 /* ---------- the top of the screen stays clear of the iPad status bar ---------- */
 :root { --top: calc(max(env(safe-area-inset-top, 0px), 24px) + 8px); }
@@ -610,6 +610,41 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .pile.bankp .gpile { position: absolute; left: 50%; bottom: 14px; width: 150px; height: 80px; margin-left: -75px; pointer-events: none; }
 #play .pile.bankp .gpile i { position: absolute; width: 24px; height: 24px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.6)); }
 #play .pile.bankp .gemline, #play .pile.bankp span:last-child { position: relative; z-index: 1; }
+
+/* the tally: a thermometer of packs beside the sum */
+#play .tallyrow { display: flex; align-items: center; justify-content: center; gap: 56px; width: 100%; }
+#play .tallymain { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; min-width: 330px; min-height: 360px; }
+#play .pop { animation: popin .45s cubic-bezier(.2,.8,.3,1) backwards; }
+@keyframes popin { 0% { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.12); opacity: 1; } 100% { transform: none; } }
+#play .gchart { position: relative; width: 380px; height: min(58vh, 520px); flex: none; }
+#play .gtube { position: absolute; left: 70px; top: 0; bottom: 0; width: 34px; border-radius: 17px; background: #1b110a; border: 4px solid #6b4a27; box-shadow: inset 0 4px 10px rgba(0,0,0,.7); overflow: hidden; }
+#play .gfill { position: absolute; left: 0; right: 0; bottom: 0; height: var(--lv); background: linear-gradient(180deg, #ffe08a, #ff9a2b 45%, #e5481c); transition: height 1.3s cubic-bezier(.3,.8,.3,1); box-shadow: 0 0 18px rgba(255,160,50,.8); }
+#play .gbubble { position: absolute; left: 112px; bottom: calc(var(--lv) - 22px); height: 44px; padding: 0 14px; border-radius: 99px; background: #fffaf0; color: #1d1712; font-weight: 900; font-size: 24px; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 0 rgba(0,0,0,.4); transition: bottom 1.3s cubic-bezier(.3,.8,.3,1); z-index: 2; }
+#play .gbubble .ic { width: 24px; height: 24px; }
+#play .grow { position: absolute; left: 0; right: 0; height: 0; display: flex; align-items: center; }
+#play .gat { position: absolute; left: 0; width: 56px; text-align: right; transform: translateY(-50%); font-size: 18px; font-weight: 800; color: var(--dim); }
+#play .gtick { position: absolute; left: 62px; width: 50px; height: 4px; transform: translateY(-50%); background: #6b4a27; border-radius: 2px; }
+#play .gname { position: absolute; left: 216px; transform: translateY(-50%); font-size: 18px; font-weight: 800; color: #8a7a64; white-space: nowrap; }
+#play .gname b { display: inline-block; min-width: 40px; }
+#play .grow.reached .gname { color: var(--text); } #play .grow.reached .gtick { background: var(--pc); } #play .grow.reached .gat { color: var(--text); }
+#play .grow.got .gname { color: #1c1410; background: var(--pc); padding: 4px 12px; border-radius: 99px; margin-left: -12px; animation: pulse 1.4s ease-in-out infinite; font-size: 20px; }
+#play .gmore { position: absolute; left: 0; right: 0; bottom: -34px; text-align: center; font-size: 16px; font-weight: 800; color: var(--accent); }
+
+/* opening a pack: it shakes, bursts in light, and the cards are dealt out one at a time, face down, then turned over */
+#play .pcard.deal { animation: dealin .45s cubic-bezier(.2,.8,.3,1) backwards; animation-delay: calc(.62s + var(--i) * .2s); }
+#play .pcard .dback { position: absolute; inset: 0; z-index: 4; display: block; animation: backflip .7s linear both; animation-delay: calc(.98s + var(--i) * .2s); pointer-events: none; }
+#play .pcard .dback .cardback { width: 100%; height: 100%; border-radius: 12px; transform: none; border-width: 6px; }
+#play .pcard .pface { display: block; animation: faceflip .7s linear both; animation-delay: calc(.98s + var(--i) * .2s); }
+#play .pcard.deal::after { content: ""; position: absolute; inset: -6px; border-radius: 16px; border: 4px solid var(--tc); opacity: 0; pointer-events: none; animation: glowring .8s ease-out both; animation-delay: calc(1.3s + var(--i) * .2s); }
+@keyframes backflip { 0%, 45% { transform: scaleX(1); } 50%, 100% { transform: scaleX(0); } }
+@keyframes faceflip { 0%, 49% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+@keyframes glowring { 0% { opacity: .95; transform: scale(.96); box-shadow: 0 0 0 0 var(--tc); } 100% { opacity: 0; transform: scale(1.06); box-shadow: 0 0 40px 10px var(--tc); } }
+#play .tear .rays { position: absolute; left: 50%; top: 50%; width: 900px; height: 900px; margin: -450px 0 0 -450px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, rgba(255,240,190,.55) 0 6deg, rgba(255,240,190,0) 6deg 18deg); -webkit-mask: radial-gradient(closest-side, #000 10%, transparent 78%); mask: radial-gradient(closest-side, #000 10%, transparent 78%); opacity: 0; animation: raysin 1.5s ease-out both; }
+#play .tear .shock { position: absolute; left: 50%; top: 50%; width: 220px; height: 220px; margin: -110px 0 0 -110px; border-radius: 50%; border: 8px solid #fff3c4; opacity: 0; animation: shockin 1.2s ease-out .45s both; }
+#play .tear .sparks i { position: absolute; left: 50%; top: 50%; font-style: normal; font-size: var(--s); color: #ffe9a0; text-shadow: 0 0 12px #ffb62e; opacity: 0; animation: sparkout 1.1s ease-out .5s both; }
+@keyframes raysin { 0%, 25% { opacity: 0; transform: rotate(0) scale(.4); } 40% { opacity: 1; } 100% { opacity: 0; transform: rotate(40deg) scale(1.15); } }
+@keyframes shockin { 0% { opacity: 1; transform: scale(.3); } 100% { opacity: 0; transform: scale(3.2); } }
+@keyframes sparkout { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.3); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.2) rotate(120deg); } }
 </style>
 </head>
 <body>
@@ -2145,7 +2180,7 @@ const Match = (() => {
   'use strict';
   const D = DDB, R = D.rules, UI = window.DigDigBoomUI, A = UI.api, $ = document.getElementById('play');
   // S.opp: always true in the app (owner: one AI opponent, no option to play without); the solo Run path stays in the engine and tests switch it off.
-  const S = { st: null, run: null, rounds: D.run.rounds, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', kitTab: 'Power', fxEsc: null, gmenu: false, zoom: null, help: false, panel: 'menu', back: null, restored: false, confirmNew: null, match: null, opp: true };
+  const S = { tally: null, st: null, run: null, rounds: D.run.rounds, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', kitTab: 'Power', fxEsc: null, gmenu: false, zoom: null, help: false, panel: 'menu', back: null, restored: false, confirmNew: null, match: null, opp: true };
   const cards = () => UI.state.all;
   // Personal bests live in this browser only (best Monsters survived, best gems banked). Never needed for play.
   const BEST_KEY = 'ddb.solo.best';
@@ -2376,29 +2411,55 @@ const Match = (() => {
     for (let rows = 1; rows <= 3 && rows <= n; rows++) { const per = Math.ceil(n / rows); best = Math.max(best, Math.min(hi, (w - (per - 1) * 14) / (per * 250), (h - (rows - 1) * 14) / (rows * 350))); }
     return Math.max(.4, best);
   };
-  const pcard = (c, scale, o = {}) => `<button class="pcard ${o.sel ? 'sel' : ''}" data-p="${o.act}" data-uid="${c.uid}" style="width:${250 * scale}px;height:${350 * scale}px;--i:${o.i || 0};--dx:${Math.round(o.dx || 0)}px" aria-label="${A.esc(c.name)}">${o.badge ? `<span class="badge">${o.badge}</span>` : ''}${A.playCard(c, scale)}</button>`;
+  const pcard = (c, scale, o = {}) => `<button class="pcard ${o.sel ? 'sel' : ''} ${o.deal ? 'deal' : ''}" data-p="${o.act}" data-uid="${c.uid}" style="width:${250 * scale}px;height:${350 * scale}px;--i:${o.i || 0};--dx:${Math.round(o.dx || 0)}px;--tc:${(D.types[c.type] || {}).color || '#fff'}" aria-label="${A.esc(c.name)}">${o.badge ? `<span class="badge">${o.badge}</span>` : ''}${o.deal ? `<span class="dback"><span class="cardback"></span></span><span class="pface">${A.playCard(c, scale)}</span>` : A.playCard(c, scale)}</button>`;
   const dots = (n, on) => `<span class="pips2" role="img" aria-label="${on} of ${n}">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</span>`;
   // The pack, torn open: the top strip rips off and the cards come out of it (decoration only: the cards can be tapped at once).
   function tearHTML(pack) {
     const col = (D.run.ladder.find(l => l.name === pack.name) || {}).color || '#b8743a', plus = /\+$/.test(pack.name);
-    return `<div class="tear" style="--pc:${col}" aria-hidden="true"><div class="tpack"><div class="pk ttop"><span class="star">${plus ? '★★' : '★'}</span></div><div class="pk tbody"><b>${A.esc(pack.name.replace('+', ''))}</b></div><span class="tflash"></span></div></div>`;
+    const sparks = Array.from({ length: 14 }, (_, i) => { const a = i / 14 * 6.283 + .2, d = 170 + (i * 47) % 120; return `<i style="--dx:${Math.round(Math.cos(a) * d)}px;--dy:${Math.round(Math.sin(a) * d * .8 - 30)}px;--s:${16 + (i * 7) % 14}px">✦</i>`; }).join('');
+    return `<div class="tear" style="--pc:${col}" aria-hidden="true"><span class="rays"></span><span class="shock"></span><div class="tpack"><div class="pk ttop"><span class="star">${plus ? '★★' : '★'}</span></div><div class="pk tbody"><b>${A.esc(pack.name.replace('+', ''))}</b></div><span class="tflash"></span></div><span class="sparks">${sparks}</span></div>`;
+  }
+  // The tally after a bank, shown one piece at a time while a thermometer fills up beside it: Treasure, a pause, Monsters, a pause, then you tap the die; and only when the die has landed does the pack appear.
+  const TP = () => window.DDB_TALLY_PACE || 1;                         // tests speed this up
+  function tallyStage(run, pr) {                                       // 0 nothing yet · 1 Treasure · 2 Monsters · 3 the die waits for you · 4 the die has landed · 5 the pack
+    if (!S.tally || S.tally.run !== run || S.tally.key !== run.round) {
+      const t = S.tally = { run, key: run.round, stage: pr.escape !== null ? 5 : 0, shown: 0 };
+      const go = (n, ms) => setTimeout(() => { if (S.tally === t && t.stage < n) { t.stage = n; if (S.panel === 'prep' && S.run === run) render(); } }, ms * TP());
+      if (t.stage < 3) { go(1, 500); go(2, 2200); go(3, 3900); }
+    }
+    return S.tally.stage;
+  }
+  // The reward ladder as a thermometer: the pack you would get at each number of gems, lit as the fill passes it.
+  function gemChart(lvl, final) {
+    const L = D.run.ladder, max = L[L.length - 1].at + 5, pct = v => Math.min(100, Math.max(0, v / max * 100)), from = S.tally ? S.tally.shown : 0, got = [...L].reverse().find(t => t.at <= lvl) || L[0];
+    if (S.tally) S.tally.shown = pct(lvl);
+    const rows = L.map(t => `<div class="grow ${t.at <= lvl ? 'reached' : ''} ${final && t === got ? 'got' : ''}" style="bottom:${pct(t.at)}%;--pc:${t.color}"><span class="gat">${t.at}</span><i class="gtick"></i><span class="gname"><b>${t.draw}:${t.keep}</b> ${A.esc(t.name)}</span></div>`).join('');
+    const next = L.find(t => t.at > lvl);
+    return `<aside class="gchart" style="--lv:${pct(from)}%" data-to="${pct(lvl)}%" aria-label="${lvl} gems"><div class="gtube"><div class="gfill"></div></div><div class="gbubble">${lvl}${ic('gem')}</div>${rows}${final && next ? `<div class="gmore">${next.at - lvl} more for ${A.esc(next.name)}</div>` : ''}</aside>`;
   }
   function prepHTML() {
     const run = S.run, pr = run.prep, step = pr.step, rolled = pr.escape !== null;
     const key = `${run.round}:${pr.escape}`, tumble = rolled && S.fxEsc !== key; S.fxEsc = key;
     const ico = (t, extra = '') => `<svg viewBox="0 0 24 24" aria-hidden="true"${extra}><use href="#${D.types[t].icon}"/></svg>`;
     // what you banked, as tiles: Geodes + Monsters survived + the Escape Bonus die = gems
-    const eq = pr.banked ? `<div class="eq"><span class="t" title="Geodes">${ico('Treasure')}${pr.geodes}</span><span class="op">+</span><span class="t" title="Monsters survived">${ico('Monster')}${pr.monsters}</span><span class="op">+</span><span class="t die" title="Escape Bonus">${rolled ? d10(tumble ? '' : pr.escape, tumble ? 'fx-tumble' : '', pr.escape) : d10('?', 'idle')}</span>${rolled ? `<span class="op">=</span><span class="t sum" title="Gems">${pr.gems}${ic('gem')}</span>` : ''}</div>` : '';
     let body = '', foot = '';
-    if (step === 'escape') body = `${eq}<button class="bigdie" data-p="escape" aria-label="Roll the Escape Bonus">${d10('', 'idle')}<span class="tapword">Tap</span></button>`;
+    if (pr.banked && (step === 'escape' || step === 'pack')) {
+      const stage = tallyStage(run, pr), lvl = stage < 1 ? 0 : stage < 2 ? pr.geodes : stage < 4 ? pr.geodes + pr.monsters : pr.gems;
+      const pop = (n, html) => stage >= n ? html : '';
+      const eq = `<div class="eq">${pop(1, `<span class="t pop" title="Treasure">${ico('Treasure')}${pr.geodes}</span>`)}${pop(2, `<span class="op pop">+</span><span class="t pop" title="Monsters survived">${ico('Monster')}${pr.monsters}</span>`)}${pop(3, `<span class="op pop">+</span><span class="t die pop" title="Escape Bonus">${rolled ? d10(tumble ? '' : pr.escape, tumble ? 'fx-tumble' : '', pr.escape) : d10('?', 'idle')}</span>`)}${pop(4, `<span class="op pop">=</span><span class="t sum pop" title="Gems">${pr.gems}${ic('gem')}</span>`)}</div>`;
+      const dieBtn = stage === 3 && !rolled ? `<button class="bigdie" data-p="escape" aria-label="Roll the Escape Bonus">${d10('', 'idle')}<span class="tapword">Tap to roll</span></button>` : '';
+      const info = rolled ? Run.packInfo(run) : null, col = info ? (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a' : '', plus = info && /\+$/.test(info.name);
+      const packBtn = stage >= 5 ? `<button class="pack pop" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>` : '';
+      body = `<div class="tallyrow"><div class="tallymain">${eq}${dieBtn}${packBtn}</div>${gemChart(lvl, stage >= 5)}</div>`;
+    } else if (step === 'escape') body = `<button class="bigdie" data-p="escape" aria-label="Roll the Escape Bonus">${d10('', 'idle')}<span class="tapword">Tap</span></button>`;
     else if (step === 'pack') {
       const info = Run.packInfo(run), col = (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a', plus = /\+$/.test(info.name);
-      body = `${eq}<button class="pack" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>`;
+      body = `<button class="pack" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>`;
     } else if (step === 'keep') {
       const need = Run.keepCount(run), sc = cardScale(pr.offer.length, .95, .4);
       const fxKey = `${run.round}:${pr.offer.map(c => c.uid).join()}`, first = S.fxPack !== fxKey; S.fxPack = fxKey;       // the pack tears open once, the first time these cards are drawn
       const left = need - pr.picked.length, say = pr.picked.length === 0 ? (need > 1 ? `Tap ${need} cards to keep` : 'Tap a card to keep') : left > 0 ? `Tap ${left} more card${left === 1 ? '' : 's'}` : 'Tap Keep to confirm, or tap another card';
-      body = `${first ? tearHTML(pr.pack) : ''}<div class="kitbar"><b>Keep</b><span class="count" aria-label="${pr.picked.length} of ${need} chosen">${pr.picked.length} of ${need}</span></div><p class="keepsay">${say}</p><div class="cards ${first ? 'dealt' : ''}">${pr.offer.map((c, i) => pcard(c, sc, { act: 'pick', sel: pr.picked.includes(c.uid), i, dx: ((pr.offer.length - 1) / 2 - i) * (250 * sc + 14) })).join('')}</div>`;
+      body = `${first ? tearHTML(pr.pack) : ''}<div class="kitbar"><b>Keep</b><span class="count" aria-label="${pr.picked.length} of ${need} chosen">${pr.picked.length} of ${need}</span></div><p class="keepsay">${say}</p><div class="cards">${pr.offer.map((c, i) => pcard(c, sc, { act: 'pick', sel: pr.picked.includes(c.uid), i, deal: first, dx: ((pr.offer.length - 1) / 2 - i) * (250 * sc + 14) })).join('')}</div>`;
       foot = `<button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'}>Keep</button>`;
     } else if (step === 'reveal') {            // a Mystery Box: the other cards go away, the next card of the deck is dealt and turned over; nothing moves on until you say so
       const kept = pr.offer.filter(c => pr.picked.includes(c.uid)), rest = pr.offer.filter(c => !pr.picked.includes(c.uid)), sc = cardScale(kept.length + pr.extra.length, .95, .4), w = 250 * sc;
@@ -2577,6 +2638,7 @@ const Match = (() => {
     $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z;
     const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
     fitHero(); heroPlay(); fitTable(); playDice();
+    $.querySelectorAll('.gchart[data-to]').forEach(el => requestAnimationFrame(() => requestAnimationFrame(() => el.style.setProperty('--lv', el.dataset.to))));
     scheduleAI();
   }
 
@@ -2617,7 +2679,11 @@ const Match = (() => {
       case 'practice': if (resumable() && S.confirmNew !== 'practice') { S.confirmNew = 'practice'; break; } S.confirmNew = null; S.run = null; S.match = null; S.st = null; S.panel = 'setup'; S.back = null; break;
       case 'rounds': S.rounds = Number(ds.v); break;
       case 'startrun': { if (resumable() && S.confirmNew !== 'startrun') { S.confirmNew = 'startrun'; break; } S.confirmNew = null; if (S.opp) { S.match = Match.start(cards(), { rounds: S.rounds }); S.run = Match.human(S.match); } else { S.match = null; S.run = Run.start(cards(), { rounds: S.rounds }); } S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
-      case 'escape': if (S.match) Match.rollEscape(S.match); else Run.rollEscape(S.run); break;
+      case 'escape': {
+        if (S.match) Match.rollEscape(S.match); else Run.rollEscape(S.run);
+        const t = S.tally; if (t && S.run.prep && S.run.prep.banked) { t.stage = 4; setTimeout(() => { if (S.tally === t && t.stage < 5) { t.stage = 5; if (S.panel === 'prep') render(); } }, 2300 * TP()); }
+        break;
+      }
       case 'openpack': if (S.match) Match.openPack(S.match); else Run.openPack(S.run); break;
       case 'pick': {                       // tap a card to choose it, tap it again to put it back; tapping another card when you have chosen all you may moves the choice
         const uid = Number(ds.uid), pr = S.run.prep, need = Run.keepCount(S.run);

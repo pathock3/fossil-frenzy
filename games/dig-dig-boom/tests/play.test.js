@@ -23,7 +23,7 @@ async function open({ viewport = { width: 1180, height: 820 }, sheet = 'ok', men
   const browser = await chromium.launch(exe ? { executablePath: exe } : {});
   const page = await (await browser.newContext({ viewport, hasTouch: true })).newPage();
   const errors = []; page.on('pageerror', e => errors.push(e.message));
-  await page.addInitScript(() => { window.DDB_AI_PACE = 3600000; });         // the AI's own clock never fires on its own in a test: tests call DigDigBoomPlay.tick()
+  await page.addInitScript(() => { window.DDB_AI_PACE = 3600000; window.DDB_TALLY_PACE = 0.01; window.DDB_HERO_PACE = window.DDB_HERO_PACE || 1; });         // the AI's own clock never fires on its own in a test: tests call DigDigBoomPlay.tick()
   await page.route('**/docs.google.com/**', r => (sheet === 'ok' ? r.fulfill({ status: 200, contentType: 'text/csv', body: csv }) : r.abort()));
   await page.goto(FILE);
   await page.waitForSelector('#play .home');
@@ -429,10 +429,10 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     await page.click('#play [data-p=bank]');
     assert.match(await page.locator('#play .over').innerText(), /Banked![\s\S]*4 Monsters survived · ♛/);
     await page.click('#play [data-p=prep]');
-    assert.ok(await page.locator('#play .bigdie').count() === 1, 'a die to tap'); assert.match(await page.locator('#play .eq').innerText(), /1\s*\+\s*4\s*\+/, 'Geodes + Monsters + the die');
+    await page.waitForSelector('#play .bigdie'); assert.ok(await page.locator('#play .bigdie').count() === 1, 'a die to tap'); assert.match(await page.locator('#play .eq').innerText(), /1\s*\+\s*4\s*\+/, 'Geodes + Monsters + the die');
     await page.evaluate(() => { window.DigDigBoomPlay.S.run.dice = [8]; });
     await page.click('#play [data-p=escape]'); await dieShows(page, '#play .eq .t.die', 8);
-    assert.match(await page.locator('#play .eq .sum').innerText(), /13/); assert.equal(await page.locator('#play .pack b').innerText(), 'Silver');
+    await page.waitForSelector('#play .pack'); assert.match(await page.locator('#play .eq .sum').innerText(), /13/); assert.equal(await page.locator('#play .pack b').innerText(), 'Silver');
     assert.equal(await page.locator('#play .lb, #play .pbar h1').count(), 0, 'no Leaderboard and no title in Prep: just a Menu in the corner');
     assert.equal(await page.locator('#play .pbar [data-p=gmenu]').count(), 1);
     await page.click('#play [data-p=openpack]'); assert.equal(await page.locator('#play [data-p=pick]').count(), 4);
@@ -452,6 +452,34 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     assert.match(await page.locator('#play .over').innerText(), /In the lead![\s\S]*Everyone else is out/);
     await page.click('#play [data-p=prep]');
     assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown Jewel!/);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('run: after a bank the tally is shown one piece at a time — Treasure, then Monsters, then the die waits for you, then the die lands and only then the pack appears — while a thermometer of packs fills up', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await page.addInitScript(() => { window.DDB_TALLY_PACE = 0.5; });
+    await page.reload(); await page.waitForSelector('#play .home');
+    await startRun(page, { opp: false, rounds: 3 });
+    await script(page, { mine: ['TR-01', 'TR-01', 'MO-01', 'TR-01'], dice: [10, 10] });
+    for (let i = 0; i < 4; i++) { await page.click('#play [data-p=dig]'); if (i === 2) { await page.click('#play [data-p=roll]'); await faceIt(page); } }
+    await page.click('#play [data-p=bank]'); await page.click('#play [data-p=prep]');
+    assert.equal(await page.locator('#play .gchart').count(), 1, 'the thermometer is on the side from the start');
+    assert.equal(await page.locator('#play .pack').count(), 0, 'no pack yet');
+    await page.waitForFunction(() => document.querySelectorAll('#play .eq .t').length === 1);                    // Treasure first
+    assert.equal(await page.locator('#play .eq .t').count(), 1);
+    await page.waitForFunction(() => document.querySelectorAll('#play .eq .t').length === 2);                    // then Monsters
+    assert.equal(await page.locator('#play .bigdie').count(), 0, 'the die has not come yet');
+    await page.waitForSelector('#play .bigdie');                                                                 // then the die waits for you
+    assert.equal(await page.locator('#play .pack').count(), 0, 'still no pack');
+    const before = await page.locator('#play .gbubble').innerText();
+    await page.evaluate(() => { window.DigDigBoomPlay.S.run.dice = [6]; });
+    await page.click('#play [data-p=escape]');
+    assert.equal(await page.locator('#play .pack').count(), 0, 'the die is still rolling: the pack is not shown yet');
+    await page.waitForSelector('#play .pack');
+    assert.notEqual(await page.locator('#play .gbubble').innerText(), before, 'the level rose with the die');
+    assert.equal(await page.locator('#play .grow.got').count(), 1, 'the tier you reached is marked');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -505,6 +533,7 @@ test('menu: in a game there is no link out to the library — a Menu with a way 
     await page.click('#play [data-p=gmenuclose]'); assert.equal(await page.locator('#play .gmenu').count(), 0);
     await page.click('#play .pbar [data-p=gmenu]'); await page.click('#play [data-p=mainmenu]');
     assert.match(await page.locator('#play .homemenu').innerText(), /Continue[\s\S]*New run/);
+    assert.equal(await page.locator('#play [data-p=resume] .pips i').count(), 4, 'one circle per round on Continue'); assert.equal(await page.locator('#play [data-p=resume] .pips i.now').count(), 1, 'the current round is ringed'); assert.doesNotMatch(await page.locator('#play [data-p=resume]').innerText(), /Round|Dig|Prep/, 'circles, no words');
     await page.click('#play [data-p=startrun]');                                       // the first tap only asks
     assert.match(await page.locator('#play .homemenu').innerText(), /Tap again to replace your game/); assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.digs), 1, 'nothing was replaced yet');
     await page.click('#play [data-p=resume]'); await page.waitForSelector('#play .ptable');
