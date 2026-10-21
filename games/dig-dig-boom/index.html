@@ -287,6 +287,22 @@ const DDB = {
       kitImmediates: 'mine',                             // #14 Immediate Starter Kit cards are shuffled into the Mine
     },
   },
+  // ---- A run: rounds of Dig + Prep, the Leaderboard and the Crown Jewel (v2.7 Rules tab), for one player ----
+  run: {
+    rounds: 4, roundChoices: [4, 5],                     // "Testing 4 rounds against 5"
+    crownStart: 3,                                       // the Crown tracker starts at 3
+    boosterDeck: 'Booster',                              // the Deck column value of the Booster Deck
+    // Reward ladder. The Rules tab says it "needs a new version", aiming for steps like 20 gems = 2 keeps, 30 = 3. PLACEHOLDER (QUESTIONS #21).
+    ladder: [
+      { at: 0,  name: 'Bronze',  draw: 3, keep: 1 },
+      { at: 10, name: 'Bronze+', draw: 4, keep: 1 },
+      { at: 20, name: 'Silver',  draw: 4, keep: 2 },
+      { at: 30, name: 'Gold',    draw: 5, keep: 3 },
+    ],
+    firstPack: 'Bronze',                                 // opened before round 1 so there is something to choose for the Starter Kit (QUESTIONS #22)
+    boomPack: 'Bronze',                                  // "If you went BOOM, open a Bronze Pack"
+    advancedTrash: false,                                // optional rule: trash Booster cards before opening a pack for +1 draw each
+  },
   // ---- The phrase book: card text -> effect. [op, regular expression]. Unmatched text is shown as "not implemented yet" ----
   phrases: {
     whole: [                                             // matched against the entire card text first
@@ -325,6 +341,9 @@ const DDB = {
       ['shoo',      "^Move the top card of your Mine to the bottom without looking$"],
       ['wishing',   "^Shuffle the top (\\d+) Immediate cards of your discard pile back into your Mine$"],
       ['whenKept',  "^When kept from a Booster Pack, .*$"],
+    ],
+    kept: [                                              // what a card does when you keep it from a Booster Pack
+      ['alsoKeepTop', "^When kept from a Booster Pack, also keep the top card of the Booster Deck$"],
     ],
     per: [                                               // what "for each ..." counts
       ['otherTriggers', "^other card that triggers$"],
@@ -459,7 +478,7 @@ const Dig = (() => {
   const R = DDB.rules, P = DDB.phrases, RL = R.rulings;
   const RES = ['heart', 'grit', 'reroll'];
   const rx = list => list.map(([op, re]) => [op, new RegExp(re)]);
-  const PH = { whole: rx(P.whole), sentence: rx(P.sentence), per: rx(P.per), ongoing: rx(P.ongoing), events: rx(P.events), reactions: rx(P.reactions) };
+  const PH = { kept: rx(P.kept), whole: rx(P.whole), sentence: rx(P.sentence), per: rx(P.per), ongoing: rx(P.ongoing), events: rx(P.events), reactions: rx(P.reactions) };
   const match = (list, s) => { for (const [op, re] of list) { const m = re.exec(s); if (m) return { op, m }; } return null; };
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
@@ -473,7 +492,8 @@ const Dig = (() => {
     const h = match(PH.sentence, s); if (!h) return null; const m = h.m;
     switch (h.op) {
       case 'list': return { op: 'list', items: listItems(s) };
-      case 'gainHalf': case 'gainDmg': case 'block': case 'survive1': case 'halve': case 'defeat': case 'noDamage': case 'echo': case 'slide': case 'fill': case 'rewind': case 'shoo': case 'whenKept':
+      case 'whenKept': { const k = match(PH.kept, s); return k ? { op: 'whenKept', kept: k.op } : null; }
+      case 'gainHalf': case 'gainDmg': case 'block': case 'survive1': case 'halve': case 'defeat': case 'noDamage': case 'echo': case 'slide': case 'fill': case 'rewind': case 'shoo':
         return { op: h.op, n: m[1] ? Number(m[1]) : undefined };
       case 'gainPer': { const per = match(PH.per, m[3]); return per ? { op: 'gainPer', n: Number(m[1]), res: m[2], per: per.op } : null; }
       case 'ifNoOther': { const t = parseSentence(m[1]); return t ? { op: 'if', cond: { noOther: true }, then: t } : null; }
@@ -553,17 +573,19 @@ const Dig = (() => {
   const copy = card => ({ ...card, uid: uid++ });
   const copies = card => Array.from({ length: card.count || 1 }, () => copy(card));
   // allCards: every card of the sheet. kit: Booster cards chosen for the Starter Kit. opts: { seed, start, dice }
+  // opts: { seed, dice, start, extra: cards shuffled into the Mine (your acquired cards), board: { crown, final } for a run }
   function start(allCards, kit = [], opts = {}) {
     const seed = opts.seed === undefined ? (Math.random() * 4294967296) >>> 0 : opts.seed;
     const st = { seed, rng: makeRng(seed), dice: opts.dice ? opts.dice.slice() : null, log: [], over: null, fight: null, pending: null, flags: {}, known: 0,
       mine: [], discard: [], line: [], ongoing: [], petLower: 0, setCount: {}, beyond: 0,
       digs: 0, monstersDug: 0, survived: 0, defeated: 0, geodeGems: 0, monsterGems: 0, panicUsed: false,
-      heart: 0, grit: 0, reroll: 0, rules: { ...R.start, ...(opts.start || {}) }, kit: [] };
+      heart: 0, grit: 0, reroll: 0, rules: { ...R.start, ...(opts.start || {}) }, kit: [], board: opts.board || null, pledge: null };
     st.heart = st.rules.heart; st.grit = st.rules.grit; st.reroll = st.rules.reroll;
     const starting = allCards.filter(c => c.deck === R.startingDeck);
     const pet = starting.find(c => c.type === 'Power');
     const mine = []; for (const c of starting) if (c !== pet) mine.push(...copies(c));
     if (pet) { st.pet = copy(pet); st.line.push({ card: st.pet, at: pet.number, base: pet.number, pet: true }); }
+    for (const c of opts.extra || []) mine.push(copy(c));
     for (const c of kit) {
       const k = copy(c); st.kit.push(k);
       if (c.type === 'Power') st.line.push({ card: k, at: c.number, base: c.number });
@@ -601,7 +623,7 @@ const Dig = (() => {
     st.heart = Math.max(0, st.heart - n); log(st, 'effect', `${src}: lose ${n} {heart}`);
     if (st.heart === 0) boom(st, `${src} cost your last {heart}`);
   }
-  function boom(st, why) { if (st.over) return; st.over = { kind: 'boom', why }; st.fight = null; log(st, 'boom', `BOOM! ${why}.`); }
+  function boom(st, why) { if (st.over) return; st.over = { kind: 'boom', why }; st.fight = null; st.pledge = null; log(st, 'boom', `BOOM! ${why}.`); }
 
   // ---------------- watchers: "Whenever ..." Ongoing cards ----------------
   function fire(st, ev, data, depth) {
@@ -937,6 +959,12 @@ const Dig = (() => {
     return false;
   }
   function score(st) { return { geodes: st.geodeGems, monsters: st.monsterGems, total: st.geodeGems + st.monsterGems, survived: st.survived }; }
+  // The Leaderboard (v2.7): once you have survived as many Monsters as the Crown tracker, you may pledge your current number or 1 more.
+  function canPledge(st, n) {
+    const b = st.board; if (!b || st.over || st.fight || st.pending) return false;
+    return st.survived >= b.crown && (n === st.survived || n === st.survived + 1) && n !== st.pledge;
+  }
+  function pledge(st, n) { if (!canPledge(st, n)) return false; st.pledge = n; log(st, 'sys', `You pledge ${n}.`); return true; }
   function bank(st) {
     if (!can(st).bank) return false;
     const s = score(st); st.over = { kind: 'bank', ...s }; log(st, 'sys', `You bank: ${s.total} {gem}, ${s.survived} Monster${s.survived === 1 ? '' : 's'} survived.`); return true;
@@ -945,7 +973,7 @@ const Dig = (() => {
     const f = st.fight, idle = !st.over && !f && !st.pending;
     return {
       dig: idle,
-      bank: idle && (RL.bankWhen === 'anytime' || st.survived >= 1),
+      bank: idle && (RL.bankWhen === 'anytime' || st.survived >= 1) && (st.pledge === null || st.survived >= st.pledge) && !(st.board && st.board.final && st.survived <= st.board.crown),
       grit: !!f && !st.over && f.phase === 'before' && st.grit >= 1,
       refund: !!f && !st.over && f.phase === 'before' && f.gritSteps.length > 0,
       roll: !!f && !st.over && f.phase === 'before',
@@ -955,7 +983,125 @@ const Dig = (() => {
       choose: !!st.pending && !st.over,
     };
   }
-  return { compile, supported, parseEffects, parseOngoing, start, can, dig, spendGrit, refundGrit, roll, buyBonus, reroll, face, bank, chooseClone, trade, score, result, makeRng, shuffle, flag, previewDamage };
+  return { compile, supported, parseEffects, parseOngoing, start, can, pledge, canPledge, dig, spendGrit, refundGrit, roll, buyBonus, reroll, face, bank, chooseClone, trade, score, result, makeRng, shuffle, flag, previewDamage };
+})();
+</script>
+
+<script id="run">
+/* =====================================================================
+   RUN — rounds of Dig + Prep for one player: Escape Bonus, gem count, Booster Pack, Starter Kit, reset; the Leaderboard and Crown Jewel.
+   No DOM. Numbers come from DDB.run and DDB.rules. A Dig itself is the Dig engine; this keeps what carries between rounds.
+   ===================================================================== */
+const Run = (() => {
+  const RN = DDB.run, R = DDB.rules;
+  let uid = 500000;
+  const copy = card => ({ ...card, uid: uid++ });
+  const kitSize = (run, round) => R.kitSizes[Math.min(round, R.kitSizes.length) - 1];
+  const rollDie = run => (run.dice && run.dice.length ? run.dice.shift() : 1 + Math.floor(run.rng() * R.die));
+  const packFor = (name) => RN.ladder.find(p => p.name === name);
+  const ladderFor = gems => { let best = RN.ladder[0]; for (const p of RN.ladder) if (gems >= p.at) best = p; return best; };
+  const log = (run, text) => run.log.push(text);
+
+  // all: every card of the sheet. opts: { rounds, seed, dice, advancedTrash }
+  function start(all, opts = {}) {
+    const seed = opts.seed === undefined ? (Math.random() * 4294967296) >>> 0 : opts.seed >>> 0;
+    const run = { seed, rng: Dig.makeRng(seed), dice: opts.dice ? opts.dice.slice() : null, all, rounds: opts.rounds || RN.rounds, round: 1, phase: 'prep',
+      advancedTrash: opts.advancedTrash === undefined ? RN.advancedTrash : opts.advancedTrash,
+      owned: [], kit: [], trash: [], deck: [], crown: { tracker: RN.crownStart, holder: false }, best: 0, history: [], dig: null, prep: null, log: [], result: null };
+    const deck = []; for (const c of all) if (c.deck === RN.boosterDeck) for (let i = 0; i < (c.count || 1); i++) deck.push(copy(c));
+    run.deck = Dig.shuffle({ rng: run.rng }, deck);
+    run.prep = newPrep(run, null); setPack(run);
+    log(run, `A new run: ${run.rounds} rounds. Crown tracker at ${run.crown.tracker}. Before round 1, open a ${RN.firstPack} Pack.`);
+    return run;
+  }
+  // A Prep: the Escape Bonus step only exists after a banked Dig.
+  function newPrep(run, over) {
+    const banked = !!over && over.kind === 'bank';
+    const base = over ? { geodes: over.kind === 'bank' ? over.geodes : 0, monsters: over.kind === 'bank' ? over.monsters : 0 } : { geodes: 0, monsters: 0 };
+    return { step: banked ? 'escape' : 'pack', banked, boom: !!over && over.kind === 'boom', first: !over, geodes: base.geodes, monsters: base.monsters, escape: null, gems: null, pack: null,
+      trashed: 0, offer: [], picked: [], extra: [], kitPick: [], kitMax: kitSize(run, run.round) };
+  }
+  function setPack(run) {
+    const pr = run.prep;
+    pr.gems = pr.banked ? pr.geodes + pr.monsters + (pr.escape || 0) : 0;
+    pr.pack = pr.first ? packFor(RN.firstPack) : pr.boom ? packFor(RN.boomPack) : ladderFor(pr.gems);
+  }
+  // 1. Escape Bonus: one roll of the die for the table; everyone who banked adds that many gems.
+  function rollEscape(run) {
+    const pr = run.prep; if (!pr || pr.step !== 'escape') return false;
+    pr.escape = rollDie(run); pr.step = 'pack'; setPack(run);
+    log(run, `Escape Bonus: ${pr.escape} gems. ${pr.geodes} + ${pr.monsters} + ${pr.escape} = ${pr.gems} gems.`); return true;
+  }
+  function packInfo(run) { const pr = run.prep; if (!pr.pack) setPack(run); return { name: pr.pack.name, draw: pr.pack.draw + pr.trashed, keep: pr.pack.keep }; }
+  // optional rule: before opening a pack, trash any of your Booster cards for +1 draw each
+  function trashOwned(run, id) {
+    const pr = run.prep; if (!run.advancedTrash || !pr || pr.step !== 'pack') return false;
+    const i = run.owned.findIndex(c => c.uid === id); if (i < 0) return false;
+    run.trash.push(...run.owned.splice(i, 1)); pr.trashed++; return true;
+  }
+  // 3. Booster Pack: draw, then keep some.
+  function openPack(run) {
+    const pr = run.prep; if (!pr || pr.step !== 'pack') return false;
+    if (!pr.pack) setPack(run);
+    const n = pr.pack.draw + pr.trashed; pr.offer = run.deck.splice(0, n); pr.picked = []; pr.step = 'keep';
+    log(run, `${pr.pack.name} Pack: drew ${pr.offer.length}${pr.offer.length ? ': ' + pr.offer.map(c => c.name).join(', ') : ''}; keep ${Math.min(pr.pack.keep, pr.offer.length)}.`);
+    return true;
+  }
+  const keepCount = run => Math.min(run.prep.pack.keep, run.prep.offer.length);
+  function toggleKeep(run, id) {
+    const pr = run.prep; if (!pr || pr.step !== 'keep') return false;
+    const i = pr.picked.indexOf(id);
+    if (i >= 0) pr.picked.splice(i, 1);
+    else if (pr.picked.length < keepCount(run) && pr.offer.some(c => c.uid === id)) pr.picked.push(id); else return false;
+    return true;
+  }
+  function confirmKeep(run) {
+    const pr = run.prep; if (!pr || pr.step !== 'keep' || pr.picked.length !== keepCount(run)) return false;
+    const kept = pr.offer.filter(c => pr.picked.includes(c.uid)), rest = pr.offer.filter(c => !pr.picked.includes(c.uid));
+    run.trash.push(...rest); run.owned.push(...kept);
+    for (const c of kept) for (const e of Dig.compile(c).effects) if (e.op === 'whenKept' && e.kept === 'alsoKeepTop') {
+      const top = run.deck.shift(); if (top) { run.owned.push(top); pr.extra.push(top); log(run, `${c.name}: also keep the top card of the Booster Deck — ${top.name}.`); }
+    }
+    log(run, `Kept: ${kept.map(c => c.name).join(', ')}.`);
+    pr.step = 'kit'; pr.kitPick = []; return true;
+  }
+  // 4. Starter Kit: choose cards you own to start the next Dig with (up to the Round tracker).
+  function toggleKit(run, id) {
+    const pr = run.prep; if (!pr || pr.step !== 'kit') return false;
+    const i = pr.kitPick.indexOf(id);
+    if (i >= 0) pr.kitPick.splice(i, 1);
+    else if (pr.kitPick.length < pr.kitMax && run.owned.some(c => c.uid === id)) pr.kitPick.push(id); else return false;
+    return true;
+  }
+  // 5-6. Reset and ready: a fresh Drill, a Mine of the 25 starting cards plus every card you own that is not in the kit.
+  function beginDig(run, opts = {}) {
+    const pr = run.prep; if (!pr || pr.step !== 'kit') return false;
+    run.kit = run.owned.filter(c => pr.kitPick.includes(c.uid));
+    const rest = run.owned.filter(c => !pr.kitPick.includes(c.uid));
+    run.dig = Dig.start(run.all, run.kit, { seed: opts.seed === undefined ? (run.rng() * 4294967296) >>> 0 : opts.seed, dice: opts.dice, extra: rest,
+      board: { crown: run.crown.tracker, final: run.round === run.rounds } });
+    run.phase = 'dig'; run.prep = null;
+    log(run, `Round ${run.round}${run.round === run.rounds ? ' (the final round: no banking until you are in the lead)' : ''}. Kit: ${run.kit.map(c => c.name).join(', ') || 'none'}.`);
+    return true;
+  }
+  // The Dig is over (banked or BOOM): update the Leaderboard, then Prep (or the end of the run).
+  function finishDig(run) {
+    const st = run.dig; if (!st || !st.over || run.phase !== 'dig') return false;
+    const o = st.over, final = run.round === run.rounds, rec = { round: run.round, kind: o.kind, survived: st.survived, geodes: st.geodeGems, monsters: st.monsterGems };
+    rec.stoleCrown = false; rec.newBest = false;
+    if (o.kind === 'bank') {                                  // locking in a score: your best marker moves, and the Crown may change hands
+      if (st.survived > run.best) { run.best = st.survived; rec.newBest = true; }
+      if (st.survived > run.crown.tracker) { run.crown.tracker = st.survived; run.crown.holder = true; rec.stoleCrown = true; }
+    }
+    run.history.push(rec);
+    log(run, o.kind === 'bank' ? `Round ${run.round}: banked with ${st.survived} Monsters survived${rec.stoleCrown ? ' — you take the Crown Jewel' : ''}.` : `Round ${run.round}: BOOM after ${st.survived} Monsters survived.`);
+    if (final) { run.phase = 'done'; run.result = { crown: run.crown.holder, best: run.best, tracker: run.crown.tracker }; return true; }
+    const over = o;
+    run.round++; run.phase = 'prep'; run.prep = newPrep(run, over);
+    if (!run.prep.banked) setPack(run);
+    return true;
+  }
+  return { start, rollEscape, packInfo, trashOwned, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
 })();
 </script>
 
