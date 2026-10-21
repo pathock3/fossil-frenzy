@@ -6,6 +6,8 @@ const { Dig, Run, Engine, DDB } = require('./load.js');
 const cards = Engine.cards(Engine.parseCSV(fs.readFileSync(path.join(__dirname, 'cards-full.csv'), 'utf8')), DDB.columns);
 const by = id => cards.find(c => c.id === id);
 const RN = DDB.run;
+// The app has no pledging (DDB.rules.pledges is false); the engine still knows it, so these tests switch it on for their own duration.
+const withPledges = fn => { DDB.rules.pledges = true; try { return fn(); } finally { DDB.rules.pledges = false; } };
 
 // Run through the first Prep, choosing the offered cards in order, and begin round 1.
 function firstRound(opts = {}) {
@@ -107,7 +109,7 @@ test('Leaderboard and Crown Jewel: the tracker starts at 3; banking above it tak
   assert.deepEqual(run.history.map(h => [h.round, h.kind, h.survived, h.stoleCrown]), [[1, 'bank', 3, false], [2, 'bank', 4, true], [3, 'boom', 0, false]]);
 });
 
-test('Pledge: only once you have survived as many Monsters as the Crown tracker, and only your current number or 1 more; you cannot bank below it; BOOM removes it', () => {
+test('Pledge: only once you have survived as many Monsters as the Crown tracker, and only your current number or 1 more; you cannot bank below it; BOOM removes it', () => withPledges(() => {
   const run = firstRound({ keepIds: ['PW-02'] }); Run.beginDig(run, { seed: 12 });
   const st = run.dig; st.mine = ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01'].map((id, i) => ({ ...by(id), uid: 9000 + i })); st.dice = Array(50).fill(10);
   assert.ok(!Dig.canPledge(st, 1) && !Dig.canPledge(st, 0), 'before the Crown you dig or bank freely');
@@ -120,6 +122,12 @@ test('Pledge: only once you have survived as many Monsters as the Crown tracker,
   assert.ok(Dig.can(st).bank, 'reached it'); assert.ok(Dig.canPledge(st, 5) && Dig.canPledge(st, 4) === false);
   const st2 = Dig.start(cards, [], { seed: 5, board: { crown: 3 } }); st2.survived = 3; Dig.pledge(st2, 4); st2.heart = 1; st2.mine = [{ ...by('MO-01'), uid: 1 }]; st2.dice = [1]; Dig.dig(st2); Dig.roll(st2); Dig.autoFace(st2);
   assert.equal(st2.over.kind, 'boom'); assert.equal(st2.pledge, null);
+}));
+
+test('the app has no pledging: even with the Crown reached, nothing can be pledged and banking is never blocked by one', () => {
+  const run = firstRound({ keepIds: ['PW-02'] }); Run.beginDig(run, { seed: 12 });
+  const st = run.dig; st.survived = 3; Run.refresh(run);
+  assert.equal(DDB.rules.pledges, false); assert.ok(!Dig.canPledge(st, 3) && !Dig.canPledge(st, 4)); assert.ok(!Run.pledge(run, 4)); assert.ok(Dig.can(st).bank);
 });
 
 test('the final round: no banking until you are in the lead (past the Crown tracker); then the run ends and the Crown Jewel is yours', () => {
@@ -211,7 +219,7 @@ test('saving and resuming: a Dig and a run survive a reload — same cards, same
   assert.equal(new Set([...r4.deck, ...r4.owned, ...r4.trash].map(c => c.uid)).size, r4.deck.length + r4.owned.length + r4.trash.length);
 });
 
-test('the Board changes the moment a Dig ends: a bank locks in and may take the Crown at once, a BOOM removes the Pledge marker (no waiting for Prep)', () => {
+test('the Board changes the moment a Dig ends: a bank locks in and may take the Crown at once, a BOOM removes the Pledge marker (no waiting for Prep)', () => withPledges(() => {
   const run = firstRound({ keepIds: ['PW-02'] }); Run.beginDig(run, { seed: 20 });
   const st = run.dig; st.mine = Array.from({ length: 6 }, (_, i) => ({ ...by(i % 2 ? 'MO-02' : 'MO-01'), uid: 9400 + i })); st.dice = Array(30).fill(10);
   for (let i = 0; i < 4; i++) { Dig.dig(st); Dig.roll(st); Dig.autoFace(st); }
@@ -229,7 +237,7 @@ test('the Board changes the moment a Dig ends: a bank locks in and may take the 
   assert.equal(s2.over.kind, 'boom'); Run.checkOver(r2);
   assert.equal(Board.marker(r2.board, 'me', 'pledge'), null, 'BOOM removed the Pledge marker right away');
   Run.finishDig(r2); assert.equal(r2.history[0].kind, 'boom');
-});
+}));
 
 test('the Dig\'s copy of the Leaderboard is refreshed from the live Board before it is asked (another player can change what it takes to lead)', () => {
   const run = Run.start(cards, { seed: 30, rounds: 2 }); Run.openPack(run); Run.toggleKeep(run, run.prep.offer[0].uid); Run.confirmKeep(run); Run.beginDig(run, { seed: 1 });

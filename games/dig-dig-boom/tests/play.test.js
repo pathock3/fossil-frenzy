@@ -23,6 +23,7 @@ async function open({ viewport = { width: 1180, height: 820 }, sheet = 'ok', men
   const browser = await chromium.launch(exe ? { executablePath: exe } : {});
   const page = await (await browser.newContext({ viewport, hasTouch: true })).newPage();
   const errors = []; page.on('pageerror', e => errors.push(e.message));
+  await page.addInitScript(() => { window.DDB_AI_PACE = 3600000; });         // the AI's own clock never fires on its own in a test: tests call DigDigBoomPlay.tick()
   await page.route('**/docs.google.com/**', r => (sheet === 'ok' ? r.fulfill({ status: 200, contentType: 'text/csv', body: csv }) : r.abort()));
   await page.goto(FILE);
   await page.waitForSelector('#play .panel');
@@ -253,7 +254,8 @@ test('run: bank, roll the Escape Bonus, open the pack the gems earn, keep, choos
     await page.click('#play [data-p=dig]');
     for (let i = 0; i < 4; i++) { await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await faceIt(page); }
     assert.equal(await page.locator('#play .lbc.here').innerText().then(t => t.split('\n')[0].trim()), '4');
-    assert.ok(await page.locator('#play .lbc.open').count() >= 1, 'you may pledge now');
+    assert.equal(await page.locator('#play .lbc[data-p], #play button.lbc').count(), 0, 'no pledging: the Leaderboard has nothing to tap');
+    assert.equal(await page.locator('#play .lbc .mk.pledge').count(), 1, 'your live marker is already on your number');
     await page.click('#play [data-p=bank]');
     assert.match(await page.locator('#play .over').innerText(), /Banked![\s\S]*4 Monsters survived — you take the Crown Jewel/);
     await page.click('#play [data-p=prep]');
@@ -268,7 +270,7 @@ test('run: bank, roll the Escape Bonus, open the pack the gems earn, keep, choos
     assert.match(await page.locator('#play .panel').innerText(), /Starter Kit — up to 2/);
     await page.click('#play [data-p=startround]');
     assert.match(await page.locator('#play .lbhead').innerText(), /round 2 of 2 · final/i);
-    assert.match(await page.locator('#play [data-p=bank] ').innerText(), /Take the Crown[\s\S]*no banking until you pass 4/);
+    assert.match(await page.locator('#play [data-p=bank] ').innerText(), /Bank[\s\S]*final round: no banking until you lead/);
     // final round: beat the tracker (4) and take the Crown
     await page.evaluate(() => {
       const P = window.DigDigBoomPlay, st = P.S.st, all = window.DigDigBoomUI.state.all;
@@ -285,7 +287,7 @@ test('run: bank, roll the Escape Bonus, open the pack the gems earn, keep, choos
   } finally { await browser.close(); }
 });
 
-test('run: BOOM skips the Escape Bonus and gives a Bronze Pack; pledging moves your pledge marker and blocks banking until you reach it', SKIP, async () => {
+test('run: BOOM skips the Escape Bonus and gives a Bronze Pack; your live marker moved with every Monster and BOOM clears it (no pledging)', SKIP, async () => {
   const { browser, page, errors } = await open({ menu: true });
   try {
     await page.evaluate(() => { window.DigDigBoomPlay.S.opp = false; }); await page.click('#play [data-p=startrun]'); await page.click('#play [data-p=openpack]'); await page.click('#play .grid .piece >> nth=0'); await page.click('#play [data-p=keepgo]'); await page.click('#play [data-p=startround]');
@@ -294,14 +296,13 @@ test('run: BOOM skips the Escape Bonus and gives a Bronze Pack; pledging moves y
       st.mine = ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01'].map((id, i) => ({ ...all.find(c => c.id === id), uid: 8000 + i })); st.dice = Array(30).fill(10); P.render();
     });
     for (let i = 0; i < 3; i++) { await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await faceIt(page); }
-    await page.click('#play .lbc[data-n="4"]');
     assert.equal(await page.locator('#play .lbc .mk.pledge').count(), 1);
-    assert.match(await page.locator('#play .lbhead').innerText(), /pledged 4/i);
-    assert.ok(await page.locator('#play [data-p=bank]').isDisabled(), 'cannot bank before the pledge');
+    assert.equal(await page.locator('#play .lbc.here').innerText().then(t => t.split('\n')[0].trim()), '3');
+    assert.ok(!(await page.locator('#play [data-p=bank]').isDisabled()), 'nothing to pledge, nothing blocks banking');
     await page.evaluate(() => { const st = window.DigDigBoomPlay.S.st; st.heart = 1; st.dice = [1]; });
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await faceIt(page);
     assert.match(await page.locator('#play .over').innerText(), /BOOM!/);
-    assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.st.pledge), null);
+    assert.equal(await page.locator('#play .lbc .mk.pledge').count(), 0, 'BOOM cleared the live marker');
     await page.click('#play [data-p=prep]');
     const t = await page.locator('#play .panel').innerText();
     assert.match(t, /BOOM: no Escape Bonus|You went BOOM/); assert.match(t, /Bronze Pack/);
@@ -355,7 +356,7 @@ test('play: a reload puts you back exactly where you were — mid-fight in a run
 });
 
 test('play: monkey test — random taps through whole runs at iPad sizes: no errors, the page never scrolls, a legal tap always exists until the run is done', { ...SKIP, timeout: 240000 }, async () => {
-  const ALL = `(document.querySelector('#play .zoom') ? [document.querySelector('#play .zoom')] : [...document.querySelectorAll('#play [data-p]:not([disabled])')]).filter(e => e.getBoundingClientRect().width > 0 && (!(e.closest('.pbar') || e.closest('.foot')) || ['startround', 'prep', 'keepgo', 'again', 'openpack'].includes(e.dataset.p)) && (r => e.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)))(e.getBoundingClientRect()))`;
+  const ALL = `(document.querySelector('#play .zoom') ? [document.querySelector('#play .zoom')] : [...document.querySelectorAll('#play [data-p]:not([disabled])')]).filter(e => e.getBoundingClientRect().width > 0 && (!(e.closest('.pbar') || e.closest('.foot')) || ['startround', 'prep', 'keepgo', 'again', 'openpack', 'ff'].includes(e.dataset.p)) && (r => e.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)))(e.getBoundingClientRect()))`;
   const AVOID = ['menu', 'practice', 'cards', 'print', 'help', 'startrun', 'setup', 'rounds', 'adv'];
   for (const [vp, seed, ai] of [[{ width: 1180, height: 820 }, 1, true], [{ width: 820, height: 1180 }, 2, false], [{ width: 1024, height: 700 }, 3, true]]) {
     const { browser, page, errors } = await open({ viewport: vp, menu: true });
@@ -367,10 +368,10 @@ test('play: monkey test — random taps through whole runs at iPad sizes: no err
         const acts = await page.evaluate(`${ALL}.map((e, i) => [i, e.dataset.p])`);
         const pool = acts.filter(([, p]) => !AVOID.includes(p));
         assert.ok(pool.length, `no legal tap at step ${i}: ${(await page.locator('#play').innerText()).slice(0, 160)}`);
-        const prefer = pool.filter(([, p]) => ['dig', 'roll', 'face', 'escape', 'openpack', 'keepgo', 'startround', 'prep', 'unzoom'].includes(p));
+        const prefer = pool.filter(([, p]) => ['dig', 'roll', 'face', 'escape', 'openpack', 'keepgo', 'startround', 'prep', 'unzoom', 'ff'].includes(p));
         const from = prefer.length && rnd() < .85 ? prefer : pool, [idx] = from[Math.floor(rnd() * from.length)];
         const h = await page.evaluateHandle(`${ALL}[${idx}]`);
-        await h.asElement().click({ timeout: 15000 });
+        try { await h.asElement().click({ timeout: 15000 }); } catch (e) { if (/not attached/.test(e.message)) continue; throw e; }       // the AI's fast-forwarded clock may redraw the panel under the monkey
         const m = await page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ih: innerHeight, done: /Crown Jewel/.test((document.querySelector('#play .panel h2') || {}).textContent || '') }));
         assert.ok(m.sh <= m.ih + 1, `the page scrolls at step ${i}`);
         done = m.done;
@@ -382,7 +383,7 @@ test('play: monkey test — random taps through whole runs at iPad sizes: no err
 });
 
 // ---------- against the AI ----------
-test('ai: the menu offers an AI opponent (on by default); a run shares one Leaderboard with it, the AI digs a card each time you dig, and your marker moves by itself', SKIP, async () => {
+test('ai: the menu offers an AI opponent (on by default); a run shares one Leaderboard with it, the AI digs on its own clock (not when you tap), and your marker moves by itself', SKIP, async () => {
   const { browser, page, errors } = await open({ menu: true });
   try {
     assert.match(await page.locator('#play .menu').innerText(), /Opponent:\s*AI\s*Nobody/);
@@ -394,30 +395,57 @@ test('ai: the menu offers an AI opponent (on by default); a run shares one Leade
     await page.evaluate(() => { const P = window.DigDigBoomPlay, st = P.S.st, all = window.DigDigBoomUI.state.all; st.mine = ['MO-01', 'MO-02', 'MO-01', 'MO-02'].map((id, i) => ({ ...all.find(c => c.id === id), uid: 8000 + i })); st.dice = Array(30).fill(10); P.render(); });
     const aiDigs = () => page.evaluate(() => window.DigDigBoomPlay.S.match.runs.ai.dig.digs);
     const before = await aiDigs();
-    await page.click('#play [data-p=dig]'); assert.equal(await aiDigs(), before + 1, 'one card for each of yours');
-    await page.click('#play [data-p=roll]'); assert.equal(await aiDigs(), before + 1, 'rolling is not digging');
-    await faceIt(page);
-    assert.equal(await page.locator('#play .lbc .mk[title*="live marker"]').count() >= 1, true, 'a live marker is on the board');
-    assert.match(await page.locator('#play .lbc:has(.mk) .mk >> nth=0').getAttribute('title'), /live marker|best Dig/);
+    await page.click('#play [data-p=dig]'); assert.equal(await aiDigs(), before, 'your dig does not move the AI');
+    await page.click('#play [data-p=roll]'); await faceIt(page);
+    assert.equal(await aiDigs(), before, 'nor does anything else you tap');
+    await page.evaluate(() => window.DigDigBoomPlay.tick()); assert.equal(await aiDigs(), before + 1, 'its clock moves it one card');
+    assert.match(await page.locator('#play .ailine').innerText(), /AI: digging/);
+    assert.equal(await page.locator('#play .lbc .mk[title*="this Dig"]').count() >= 1, true, 'a live marker is on the board');
+    assert.equal(await page.locator('#play .mcard, #play [data-p=dig]').count() >= 1, true, 'the table was not redrawn away by the tick');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
 
-test('ai: when your Dig ends the AI finishes its own, Prep reports it, the Escape Bonus is one roll for both, and the end names a winner', SKIP, async () => {
+test('ai: its clock really runs on its own, a tick redraws only the Leaderboard (never the table you are tapping)', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await page.addInitScript(() => { window.DDB_AI_PACE = 250; });
+    await page.reload(); await page.waitForSelector('#play .panel');
+    await page.click('#play [data-p=startrun]'); await page.click('#play [data-p=openpack]'); await page.click('#play .grid .piece >> nth=0'); await page.click('#play [data-p=keepgo]'); await page.click('#play [data-p=kitpick]');
+    await page.click('#play [data-p=startround]'); await page.waitForSelector('#play .ptable');
+    const mine = await page.locator('#play [data-p=dig]').elementHandle();
+    await page.waitForFunction(() => window.DigDigBoomPlay.S.match.runs.ai.dig.digs >= 2 || window.DigDigBoomPlay.S.match.runs.ai.dig.over, null, { timeout: 15000 });
+    assert.equal(await page.evaluate(h => h.isConnected, mine), true, 'the Mine button you might be pressing was not replaced');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('ai: when your Dig ends you wait for the AI (or tap Fast forward), Prep reports it, the Escape Bonus is one roll for both, and the end names a winner', SKIP, async () => {
   const { browser, page, errors } = await open({ menu: true });
   try {
     await page.evaluate(() => { window.DigDigBoomPlay.S.rounds = 2; });
-    await page.click('#play [data-p=startrun]'); await page.click('#play [data-p=openpack]'); await page.click('#play .grid .piece >> nth=0'); await page.click('#play [data-p=keepgo]'); await page.click('#play [data-p=kitpick]'); await page.click('#play [data-p=startround]');
+    await page.click('#play [data-p=startrun]'); await page.click('#play [data-p=openpack]'); await page.click('#play .grid .piece >> nth=0'); await page.click('#play [data-p=keepgo]'); await page.click('#play [data-p=kitpick]');
+    assert.match(await page.locator('#play .panel').innerText(), /Kit/i);
+    await page.click('#play [data-p=startround]');
     await page.evaluate(() => { const P = window.DigDigBoomPlay, st = P.S.st, all = window.DigDigBoomUI.state.all; st.mine = ['TR-01', 'TR-01'].map((id, i) => ({ ...all.find(c => c.id === id), uid: 8000 + i })); P.render(); });
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=bank]');
-    assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.match.runs.ai.dig.over !== null), true, 'the AI is done too');
+    assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.match.runs.ai.dig.over), null, 'the AI is not done: it plays at its own pace');
+    assert.match(await page.locator('#play .over').innerText(), /AI is still digging/);
+    assert.equal(await page.locator('#play .over [data-p=prep]').count(), 0, 'Prep waits for the AI');
+    await page.click('#play .over [data-p=ff]');
+    await page.waitForSelector('#play .over [data-p=prep]', { timeout: 20000 });
     assert.match(await page.locator('#play .over').innerText(), /AI (banked|went BOOM)/);
+    assert.equal(await page.locator('#play .over [data-p=ff]').count(), 0);
     await page.click('#play [data-p=prep]');
     assert.match(await page.locator('#play .panel').innerText(), /The AI[\s\S]*(Banked|Went BOOM)/);
+    assert.ok(['escape', 'pack'].includes(await page.evaluate(() => window.DigDigBoomPlay.S.match.runs.ai.prep.step)), 'the AI has not opened a pack: it does that when you open yours');
     await page.evaluate(() => { window.DigDigBoomPlay.S.match.dice = [6]; });
     await page.click('#play [data-p=escape]');
     const esc = await page.evaluate(() => [window.DigDigBoomPlay.S.match.runs.me.prep.escape, window.DigDigBoomPlay.S.match.runs.ai.prep.escape]);
     assert.equal(esc[0], 6); assert.ok(esc[1] === 6 || esc[1] === null, 'the AI got the same roll when it banked');
+    assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.match.runs.ai.prep.step), 'pack', 'its Escape Bonus is read; its pack is still closed');
+    await page.click('#play [data-p=openpack]');
+    assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.match.runs.ai.prep.step), 'kit', 'the AI opened its pack with you');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

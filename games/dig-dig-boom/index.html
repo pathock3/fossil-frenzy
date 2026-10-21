@@ -204,10 +204,7 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .lbc { min-height: 48px; border-radius: 8px; background: rgba(255,255,255,.06); border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 2px 0; color: var(--dim); min-width: 0; }
 #play .lbc.free { background: rgba(255,255,255,.1); }
 #play .lbc.here { border-color: #fff; background: rgba(255,255,255,.2); color: #fff; }
-#play .lbc.open { border-color: var(--accent); animation: pulse 1.4s ease-in-out infinite; color: #fff; }
 #play .lbc .ln { font-weight: 800; font-size: 14px; }
-#play .lbc .pl { font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); }
-#play .lbhead .ph { color: var(--accent); font-weight: 800; }
 #play .lbc .lm { display: flex; align-items: center; justify-content: center; gap: 3px; min-height: 22px; }
 #play .mk { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; font-style: normal; font-weight: 900; color: #1d1712; }
 #play .mk.best { background: var(--pc, var(--accent)); border: 2px solid rgba(0,0,0,.45); }
@@ -365,6 +362,7 @@ const DDB = {
     survivedGems: 1, geodeGems: 1,
     beyond: { firstDamage: 8, gems: 2 },                 // Monsters after the Mine runs out: 8, 9, ... and worth 2 gems
     kitSizes: [1, 2, 2, 3, 3],                           // Round tracker: Starter Kit cards per round; 4 rounds use the first four (owner: five rounds = 1, 2, 2, 3, 3)
+    pledges: false,                                      // owner: the app has no pledging; your live marker simply follows every Monster you survive (the engine still knows pledges)
     soloKit: 3,                                          // Starter Kit size offered in the solo prototype (the round tracker's round 1 is 1)                              // Round tracker: Starter Kit cards per round (testing)
     maxChain: 6,                                         // safety limit on effects that trigger effects
     rulings: {                                           // each one is a question in QUESTIONS.md; change the value to change the rule
@@ -379,7 +377,12 @@ const DDB = {
     },
   },
   // ---- The basic AI opponent ----
-  ai: { bankAtHealth: 3, pledgeMinHealth: 5, rerollAtOrBelow: 3, maxRolls: 3 },   // it banks when it would lead (or is low on Health), rerolls low results, spends Grit only to reach the Pet
+  ai: {
+    bankAtHealth: 3,                                     // it banks as soon as its Health is this low (it has survived at least one Monster)
+    confidentHealth: 6,                                  // ...and also banks to take the lead, unless its Health is at least this much: then it is confident it can go further
+    maxRolls: 3,                                         // rolls per Monster (the first plus rerolls)
+    paceMs: 1100, fastMs: 60,                            // it digs on its own clock, one card per paceMs; Fast forward shortens it once you are done
+  },
   // ---- Print and play ----
   print: { playerColors: ['#ffb13b', '#e8344e', '#2b86d1', '#2eaf68', '#7a3fb8', '#1d1712'] },   // each player's Drill trim = their Leaderboard marker
   // ---- A run: rounds of Dig + Prep, the Leaderboard and the Crown Jewel (v2.7 Rules tab), for one player ----
@@ -1120,7 +1123,7 @@ const Dig = (() => {
   function score(st) { return { geodes: st.geodeGems, monsters: st.monsterGems, total: st.geodeGems + st.monsterGems, survived: st.survived }; }
   // The Leaderboard (v2.7): once you have survived as many Monsters as the Crown tracker, you may pledge your current number or 1 more.
   function canPledge(st, n) {
-    const b = st.board; if (!b || st.over || st.fight || st.pending) return false;
+    const b = st.board; if (!b || !R.pledges || st.over || st.fight || st.pending) return false;
     return st.survived >= b.crown && (n === st.survived || n === st.survived + 1) && (st.pledge === null || n > st.pledge);
   }
   function pledge(st, n) { if (!canPledge(st, n)) return false; st.pledge = n; log(st, 'sys', `You pledge ${n}.`); return true; }
@@ -1422,26 +1425,31 @@ const Run = (() => {
 
 /* =====================================================================
    OPPONENT — the most basic AI, and the Match that runs you against it. The AI is another Run on the same Leaderboard, Booster Deck and Trash.
-   It plays only from what a player can see: its own Dig and the Leaderboard. It digs one card each time you dig one (so you watch it
-   climb the Leaderboard as you go), and finishes its Dig the moment yours is over.
+   It plays only from what a player can see: its own Dig and the Leaderboard. It digs at its own pace (you watch it climb the Leaderboard); once you
+   are done, Fast forward speeds it up.
    ===================================================================== */
 const AI = (() => {
   const R = DDB.rules, A = DDB.ai;
   // One action of the AI's Dig. Returns false when there is nothing to do.
+  // It is open to spending Grit on any useful effect (the Pet first), rerolls when it wants an effect and did not get it, and does not bank
+  // for the lead while it is confident it can go further.
   function act(run) {
     const st = run.dig; if (!st || st.over) return false;
     Run.refresh(run);
     const c = Dig.can(st), f = st.fight;
     if (c.choose) { Dig.chooseClone(st, st.line.find(e => !e.pet) || st.line[0]); return true; }
     if (f) {
-      if (f.phase === 'before') { Dig.roll(st); return true; }                    // basic: no Grit before the roll
-      const pet = st.line.find(e => e.pet), total = Dig.result(st).total, need = (pet ? pet.at : R.pet.at) - total;
-      if (need > 0 && c.bonus && need <= Math.floor(st.grit / R.gritAfter.cost)) { Dig.buyBonus(st); return true; }      // Grit to reach the Pet
-      if (c.reroll && total <= A.rerollAtOrBelow && f.rolls < A.maxRolls) { Dig.reroll(st); return true; }
+      if (f.phase === 'before') { Dig.roll(st); return true; }                    // it learns nothing before the roll, so it saves its Grit
+      const total = Dig.result(st).total, afford = Math.floor(st.grit / R.gritAfter.cost);
+      const pet = st.line.find(e => e.pet), above = st.line.filter(e => e.at > total);
+      const reachable = (pet && pet.at > total && pet.at - total <= afford) ? pet.at : Math.min(...above.filter(e => e.at - total <= afford).map(e => e.at));
+      if (c.bonus && Number.isFinite(reachable)) { Dig.buyBonus(st); return true; }                       // Grit to reach the Pet, else the nearest card above the result
+      const wantsMore = (pet && pet.at > total) || (!Dig.eligible(st).length && st.line.length > 0);          // the Pet is out of reach, or no card on the line has triggered
+      if (c.reroll && wantsMore && f.rolls < A.maxRolls) { Dig.reroll(st); return true; }
       Dig.autoFace(st); return true;
     }
-    if (c.bank && (st.survived >= st.board.leadN || (st.survived >= 1 && st.heart <= A.bankAtHealth))) { Run.bank(run); return true; }
-    if (st.heart >= A.pledgeMinHealth && Dig.canPledge(st, st.survived + 1) && Board.canPledge(run.board, run.me, st.survived, st.survived + 1)) { Run.pledge(run, st.survived + 1); return true; }
+    const confident = st.heart >= A.confidentHealth;
+    if (c.bank && st.survived >= 1 && (st.heart <= A.bankAtHealth || (!confident && st.survived >= st.board.leadN))) { Run.bank(run); return true; }
     if (c.dig) { Dig.dig(st); return true; }
     return false;
   }
@@ -1470,10 +1478,9 @@ const Match = (() => {
     const m = { seed, rng, dice: opts.dice ? opts.dice.slice() : null, all, board, deck: shared.deck, trash: shared.trash, rounds: opts.rounds || DDB.run.rounds, runs: {}, result: null, aiDug: 0 };
     m.runs[HUMAN] = Run.start(all, { ...opts, seed, me: HUMAN, shared });
     m.runs[BOT] = Run.start(all, { ...opts, seed: seed + 1, me: BOT, shared });
-    AI.prep(bot(m));
     return m;
   }
-  // The AI digs one card (and plays out any Monster it finds), as you dig one.
+  // The AI digs one card (and plays out any Monster it finds). It does this on its own clock (see the game screen), not when you tap.
   function aiStep(m) {
     const ai = bot(m); if (!ai.dig || ai.dig.over || ai.phase !== 'dig') return false;
     const st = ai.dig, before = st.digs;
@@ -1485,7 +1492,7 @@ const Match = (() => {
     if (!st.over) Run.refresh(ai);
     m.aiDug++; return true;
   }
-  // Once you are done, the AI finishes its Dig (everyone digs at their own pace; Prep waits for the last one).
+  // Finish the AI's whole Dig at once (the Fast forward button, and tests). Everyone digs at their own pace; Prep waits for the last one.
   function settle(m) {
     const ai = bot(m), me = human(m); if (!me.dig || !me.dig.over || !ai.dig) return;
     for (let n = 0; n < 600 && !ai.dig.over; n++) { if (!AI.act(ai)) break; Run.checkOver(ai); }
@@ -1496,9 +1503,14 @@ const Match = (() => {
   function rollEscape(m) {
     const v = rollDie(m);
     for (const r of Object.values(m.runs)) Run.setEscape(r, v);
-    m.escape = v; AI.prep(bot(m)); return v;
+    m.escape = v; return v;
   }
-  // Both players begin the round: the AI's Prep is already done.
+  // Prep happens at the same time: when you open your Booster Pack, so does the AI (yours is drawn first), and it makes its choices without seeing yours.
+  function openPack(m) {
+    const me = human(m); if (!Run.openPack(me)) return false;
+    AI.prep(bot(m)); return true;
+  }
+  // Both players begin the round (the AI finishes its Prep if it has not).
   function beginRound(m) {
     const me = human(m), ai = bot(m);
     if (!me.prep || me.prep.step !== 'kit') return false;
@@ -1518,7 +1530,6 @@ const Match = (() => {
       return true;
     }
     if (ai.prep && ai.prep.step === 'escape' && me.prep.step !== 'escape') rollEscape(m);     // you went BOOM, but the AI banked: someone still rolls
-    else AI.prep(ai);
     return true;
   }
   function save(m) {
@@ -1537,7 +1548,7 @@ const Match = (() => {
     m.runs[HUMAN] = Run.load(all, d.runs[HUMAN], shared); m.runs[BOT] = Run.load(all, d.runs[BOT], shared);
     return m;
   }
-  return { start, aiStep, settle, rollEscape, beginRound, finishRound, save, load, human, bot, HUMAN, BOT };
+  return { start, aiStep, settle, rollEscape, openPack, beginRound, finishRound, save, load, human, bot, HUMAN, BOT };
 })();
 </script>
 
@@ -1878,25 +1889,22 @@ const Match = (() => {
     const ai = Match.bot(m), st = ai.dig;
     if (!st) return `AI: ready`;
     if (st.over) return st.over.kind === 'bank' ? `AI banked with ${st.survived} Monster${st.survived === 1 ? '' : 's'} survived` : `AI went BOOM after ${st.survived}`;
-    return `AI: digging · ${st.survived} survived${st.pledge ? ' · pledged ' + st.pledge : ''}`;
+    return `AI: digging · ${st.survived} survived`;
   }
   const nameOf = (run, id) => (run.board.players.find(p => p.id === id) || {}).name || id;
   function lbHTML(run, st) {
     const bd = run.board, tr = Board.tracker(bd), holder = Board.holder(bd), me = run.me, players = bd.players;
-    const here = st && !st.over ? st.survived : -1, pm = Board.marker(bd, me, 'pledge');
+    const here = st && !st.over ? st.survived : -1;
     const marks = players.flatMap(p => ['best', 'pledge'].map(k => ({ p, k, m: Board.marker(bd, p.id, k) }))).filter(x => x.m);
     const max = Math.max(8, tr + 2, here + 2, ...marks.map(x => x.m.n + 1));
     let cells = '';
     for (let n = 0; n <= max; n++) {
-      const open = st && Dig.canPledge(st, n) && Board.canPledge(bd, me, st.survived, n);
-      const dots = marks.filter(x => x.m.n === n).map(x => `<i class="mk ${x.k}" style="--pc:${x.p.color}" title="${A.esc(x.p.name)}: ${x.k === 'best' ? 'best Dig' : 'live marker'}">${x.m.rank > 1 ? x.m.rank : ''}</i>`).join('');
-      cells += `<button class="lbc ${n === here ? 'here' : ''} ${n <= tr ? 'free' : ''} ${open ? 'open' : ''}" data-p="pledge" data-n="${n}" ${open ? '' : 'disabled'}><span class="ln">${n === 0 ? 'Start' : n}</span><span class="lm">${open ? '<span class="pl">pledge</span>' : ''}${n === tr ? `<b class="crownmk ${holder ? 'mine' : ''}">♛</b>` : ''}${dots}</span></button>`;
+      const dots = marks.filter(x => x.m.n === n).map(x => `<i class="mk ${x.k}" style="--pc:${x.p.color}" title="${A.esc(x.p.name)}: ${x.k === 'best' ? 'best Dig' : 'this Dig'}">${x.m.rank > 1 ? x.m.rank : ''}</i>`).join('');
+      cells += `<div class="lbc ${n === here ? 'here' : ''} ${n <= tr ? 'free' : ''}"><span class="ln">${n === 0 ? 'Start' : n}</span><span class="lm">${n === tr ? `<b class="crownmk ${holder ? 'mine' : ''}">♛</b>` : ''}${dots}</span></div>`;
     }
-    const hint = st && Dig.can(st).dig && st.survived >= tr ? ' · <span class="ph">you may pledge: tap a glowing number</span>' : '';
-    const status = st && st.pledge !== null ? ` · pledged ${st.pledge}` : '';
     const who = holder === me ? '<b style="color:var(--accent)">you hold the Crown Jewel</b>' : holder ? `<b>${A.esc(nameOf(run, holder))} holds the Crown Jewel</b>` : 'Crown Jewel on the table';
     const legend = players.length > 1 ? players.map(p => `<span style="color:${p.color}">●</span> ${A.esc(p.name)}`).join(' &nbsp; ') + ' · ' : '';
-    return `<section class="lb"><div class="lbhead"><span>Leaderboard · Round ${Math.min(run.round, run.rounds)} of ${run.rounds}${run.round >= run.rounds ? ' · final' : ''}${players.length > 1 ? ' · ' + legend : ''}</span><span>♛ Crown at ${tr} · ${who}${status}${hint}</span></div>
+    return `<section class="lb"><div class="lbhead"><span>Leaderboard · Round ${Math.min(run.round, run.rounds)} of ${run.rounds}${run.round >= run.rounds ? ' · final' : ''}${players.length > 1 ? ' · ' + legend : ''}</span><span>♛ Crown at ${tr} · ${who}</span></div>
       <div class="lbcells" style="grid-template-columns:repeat(${max + 1},minmax(0,1fr))">${cells}</div>${S.match && st ? `<div class="ailine">${A.esc(aiLine(S.match))}</div>` : ''}</section>`;
   }
   function aiPrepHTML(m) {
@@ -2013,10 +2021,9 @@ const Match = (() => {
     const mine = `<div class="stack" style="gap:6px"><button class="pile ${can.dig ? 'live' : ''}" data-p="dig" ${can.dig ? '' : 'disabled'} style="flex:1"><div class="cardback">${st.mine.length}</div><span>Mine<br><span class="cap2">${st.mine.length ? (can.dig ? 'tap to dig' : '') : 'empty: Bonus Monsters next'}</span></span></button>${known ? `<div class="known">${known}</div>` : ''}</div>`;
     const top = [...st.discard].reverse()[0];
     const rb = st.board;
-    const bankWord = rb && rb.final ? 'Take the Crown' : 'Bank';
-    const bankSub = can.bank ? (rb && rb.final ? 'you are in the lead' : 'tap to keep them') : rb && rb.final ? `no banking until you pass ${rb.crown}` : st.pledge !== null && st.survived < st.pledge ? `pledged ${st.pledge}` : '';
+    const bankSub = can.bank ? (rb && rb.final ? 'you are in the lead' : 'tap to keep them') : rb && rb.final ? `final round: no banking until you lead` : '';
     const right = `<div class="stack"><button class="pile" data-p="zoom" data-uid="${top ? top.uid : ''}" ${top ? '' : 'disabled'} style="${top ? 'color:#fff' : ''}">${top ? piece(top, { text: false, num: false }) : ''}<span>Discard · ${st.discard.length}</span></button>
-       <button class="pile bankp ${can.bank ? 'live' : ''}" data-p="bank" ${can.bank ? '' : 'disabled'}><span class="gemline">${gems}${ic('gem')}</span><span>${bankWord}<br><span class="cap2">${bankSub}</span></span></button></div>`;
+       <button class="pile bankp ${can.bank ? 'live' : ''}" data-p="bank" ${can.bank ? '' : 'disabled'}><span class="gemline">${gems}${ic('gem')}</span><span>Bank<br><span class="cap2">${bankSub}</span></span></button></div>`;
     let mid;
     if (f) mid = `<div class="dig">${fightHTML(st, can)}</div>`;
     else if (st.pending) mid = `<div class="dig idle"><div>${A.esc(st.pending.card.name)} goes under one of your Power cards.<br><b style="color:var(--accent)">Tap a Power card on the line.</b></div></div>`;
@@ -2024,10 +2031,12 @@ const Match = (() => {
     const s = st.over ? Dig.score(st) : null;
     let over = '';
     if (st.over && S.run) {
-      const fin = S.run.round === S.run.rounds, next = `<div class="row2"><button class="btn" data-p="prep">${fin ? 'See the result' : 'To Prep'}</button></div>`;
+      const fin = S.run.round === S.run.rounds, waiting = aiDigging();
+      const next = waiting ? `<div class="note">The AI is still digging — watch it on the Leaderboard.</div><div class="row2"><button class="btn" data-p="ff">Fast forward</button></div>`
+        : `${S.match ? `<div class="note">${A.esc(aiLine(S.match))}</div>` : ''}<div class="row2"><button class="btn" data-p="prep">${fin ? 'See the result' : 'To Prep'}</button></div>`;
       over = st.over.kind === 'boom'
-        ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${T(st.over.why)}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this round — your best on the Leaderboard stays.</div>${S.match ? `<div class="note">${A.esc(aiLine(S.match))}</div>` : ''}${next}</div>`
-        : `<div class="over"><h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="big"><b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${(S.run.endInfo || {}).stoleCrown ? ' — <b>you take the Crown Jewel</b>' : (S.run.endInfo || {}).newBest ? ' — a new best' : ''}<br><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} before the Escape Bonus</div>${S.match ? `<div class="note">${A.esc(aiLine(S.match))}</div>` : ''}${next}</div>`;
+        ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${T(st.over.why)}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this round — your best on the Leaderboard stays.</div>${next}</div>`
+        : `<div class="over"><h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="big"><b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${(S.run.endInfo || {}).stoleCrown ? ' — <b>you take the Crown Jewel</b>' : (S.run.endInfo || {}).newBest ? ' — a new best' : ''}<br><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} before the Escape Bonus</div>${next}</div>`;
     } else if (st.over) {
       over = (st.over.kind === 'boom'
       ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${T(st.over.why)}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this Dig.</div>`
@@ -2048,14 +2057,15 @@ const Match = (() => {
       <li><b>Any card</b>: tap it to see it full size, tap again to close.</li>
       <li><b>Beyond the Mine</b>: when the Mine runs out, Bonus Monsters keep coming: ${R.beyond.firstDamage}, ${R.beyond.firstDamage + 1}, … damage, worth ${R.beyond.gems} gems.</li></ul>
       <p><b>A run</b> (Play a run): ${D.run.roundChoices.join(' or ')} rounds, each a Dig then a Prep. Before round 1 you open a ${D.run.firstPack} Pack. <b>Prep</b>: 1 Escape Bonus (if you banked: roll the die, add that many gems) · 2 count gems (Geodes + Monsters survived + Escape Bonus; BOOM is 0) · 3 Booster Pack from the reward ladder (BOOM: a ${D.run.boomPack} Pack) — draw some, keep some · 4 choose a Starter Kit from your cards (1, 2, 2, 3 by round) · 5 reset: a fresh Drill, and everything else you own is shuffled into your Mine. Only the cards you own and your best Dig carry over.</p>
-      <p><b>Leaderboard</b>: positions are Monsters survived. The Crown tracker starts at ${D.run.crownStart}. Before the Crown you dig or bank freely. Once you have survived that many, you may <b>pledge</b> your current number or 1 more (tap the number): you cannot bank until you reach it, and BOOM removes it. Bank above the tracker and you take the Crown Jewel and move the tracker. A BOOM locks in nothing, but your best stays. In the <b>final round</b> there is no banking until you are in the lead (past the tracker); then you take the Crown. Hold the Crown Jewel at the end and you win. On the Leaderboard: the triangle is where you are now, the dot is your best locked-in Dig, the ring is your pledge, the crown is the Crown tracker.</p>
+      <p><b>Leaderboard</b>: positions are Monsters survived. The Crown tracker starts at ${D.run.crownStart}. Before the Crown you dig or bank freely. There is no pledging in this version: your marker on the Leaderboard moves by itself the moment you survive a Monster, so you always see where you stand. Bank above the tracker and you take the Crown Jewel and move the tracker. A BOOM locks in nothing, but your best stays. In the <b>final round</b> there is no banking until you are in the lead (past the tracker); banking then takes the Crown the usual way, and the round goes on until every player has banked or gone BOOM. Hold the Crown Jewel at the end and you win. On the Leaderboard: the ring is where you are in this Dig, the dot is your best locked-in Dig, the crown is the Crown tracker.</p>
+      <p><b>The AI</b> digs on its own clock while you dig, and preps at the same time as you (it opens its Booster Pack when you open yours). When you are done and it is not, tap Fast forward. It spends Grit and Rerolls to get useful cards going, and keeps digging rather than banking while its Health is high.</p>
       <p><b>Calls made where the rules are unclear</b> (all in QUESTIONS.md, one line each to change):</p>
       <ul><li>The die is a d${R.die}; Health starts at ${R.start.heart}, Grit ${R.start.grit}, Rerolls ${R.start.reroll}.</li>
       <li>Cards that trigger resolve highest number first, then damage is halved before Block is taken off.</li>
       <li>Grit you have already spent stays on the roll when you reroll.</li>
       <li>"Whenever you gain" only counts when the track actually moves.</li>
       <li>Result changes apply in order: bonuses, then double, then "becomes", then "less than".</li>
-      <li>You may bank between any two cards (there is no Pledge in a solo Dig).</li></ul>
+      <li>You may bank between any two cards (there is no pledging).</li></ul>
       <p><a href="#" data-p="cards">Card designs</a></p></div></div><div class="foot"><button class="btn" data-p="closehelp">Back to the table</button></div></div>`;
   }
   function render() {
@@ -2073,6 +2083,24 @@ const Match = (() => {
     $.innerHTML = bar + body + (S.help ? helpHTML() : '') + z;
     const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
     const lg = $.querySelector('#logEntries'); if (lg) lg.scrollTop = lg.scrollHeight;
+    scheduleAI();
+  }
+
+  // ----- the AI's clock -----
+  // The AI digs on its own, one card per D.ai.paceMs, whether or not you tap. Once you are done, Fast forward makes it D.ai.fastMs.
+  // While you are still playing only the Leaderboard is redrawn, so a tick never swallows a tap on the table.
+  let aiTimer = null;
+  const aiDigging = () => { const ai = S.match && S.run && S.run.phase === 'dig' ? Match.bot(S.match) : null; return !!(ai && ai.dig && !ai.dig.over); };
+  const pace = () => S.ff ? D.ai.fastMs : (window.DDB_AI_PACE || D.ai.paceMs);
+  function scheduleAI() { if (!aiDigging()) { S.ff = false; return; } if (!aiTimer) aiTimer = setTimeout(aiTick, pace()); }
+  function aiTick() {
+    clearTimeout(aiTimer); aiTimer = null;
+    if (!aiDigging()) return;
+    Match.aiStep(S.match); persist();
+    const lb = $.querySelector('section.lb');
+    if (S.panel === 'dig' && !S.help && !S.zoom && lb && aiDigging()) { lb.outerHTML = lbHTML(S.run, S.st); scheduleAI(); }
+    else if (S.panel === 'dig' && !S.help && !S.zoom) render();
+    else scheduleAI();
   }
 
   // ----- taps -----
@@ -2082,7 +2110,7 @@ const Match = (() => {
     S.st = Dig.start(cards(), S.kit.map(by).filter(Boolean), { start: S.start, seed: S.seed }); S.panel = 'dig'; S.zoom = null;
   }
   function act(a, el) {
-    const st = S.st, f = st && st.fight, ds = el.dataset; let digged = false;
+    const st = S.st, f = st && st.fight, ds = el.dataset; 
     if (a !== 'startrun' && a !== 'practice') S.confirmNew = null;
     switch (a) {
       case 'menu': if (S.panel !== 'menu') S.back = S.panel; S.panel = 'menu'; S.help = false; break;
@@ -2093,15 +2121,15 @@ const Match = (() => {
       case 'opp': S.opp = ds.v === '1'; break;
       case 'startrun': { if (resumable() && S.confirmNew !== 'startrun') { S.confirmNew = 'startrun'; break; } S.confirmNew = null; if (S.opp) { S.match = Match.start(cards(), { rounds: S.rounds, advancedTrash: S.adv }); S.run = Match.human(S.match); } else { S.match = null; S.run = Run.start(cards(), { rounds: S.rounds, advancedTrash: S.adv }); } S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
       case 'escape': if (S.match) Match.rollEscape(S.match); else Run.rollEscape(S.run); break;
-      case 'openpack': Run.openPack(S.run); break;
+      case 'openpack': if (S.match) Match.openPack(S.match); else Run.openPack(S.run); break;
       case 'trashown': Run.trashOwned(S.run, Number(ds.uid)); break;
       case 'pick': Run.toggleKeep(S.run, Number(ds.uid)); break;
       case 'keepgo': Run.confirmKeep(S.run); break;
       case 'kitpick': Run.toggleKit(S.run, Number(ds.uid)); break;
-      case 'startround': if (S.match ? Match.beginRound(S.match) : Run.beginDig(S.run)) { S.st = S.run.dig; S.panel = 'dig'; } break;
+      case 'startround': if (S.match ? Match.beginRound(S.match) : Run.beginDig(S.run)) { S.st = S.run.dig; S.panel = 'dig'; S.ff = false; } break;
+      case 'ff': S.ff = true; if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; } break;
       case 'prep': if (S.match) Match.finishRound(S.match); else Run.finishDig(S.run); S.panel = S.run.phase === 'done' ? 'done' : 'prep'; break;
-      case 'pledge': if (S.run) Run.pledge(S.run, Number(ds.n)); break;
-      case 'tab': S.tab = ds.v; break;
+            case 'tab': S.tab = ds.v; break;
       case 'kit': { const c = cards().find(x => x.id === ds.id); if (!c || !Dig.supported(c)) break; const i = S.kit.indexOf(c.id); if (i >= 0) S.kit.splice(i, 1); else if (S.kit.length < S.kitSize) S.kit.push(c.id); break; }
       case 'size': S.kitSize = Math.max(0, Math.min(8, S.kitSize + Number(ds.d))); S.kit = S.kit.slice(0, S.kitSize); break;
       case 'stat': { const r = ds.r, v = S.start[r] + Number(ds.d); S.start[r] = Math.max(r === 'heart' ? 1 : 0, Math.min(R.caps[r], v)); break; }
@@ -2118,7 +2146,7 @@ const Match = (() => {
       case 'zoom': S.zoom = findCard(ds.uid); break;
       case 'card': { const c = findCard(ds.uid), e = st && st.line.find(x => x.card === c); if (st && st.pending && e) Dig.chooseClone(st, e); else if (e && f && f.phase === 'after' && Dig.eligible(st).includes(e)) Dig.trigger(st, e); else S.zoom = c; break; }
       case 'triggerall': if (st) Dig.triggerAll(st); break;
-      case 'dig': if (st) { const before = st.digs; Dig.dig(st); if (S.match && st.digs > before) digged = true; } break;
+      case 'dig': if (st) Dig.dig(st); break;
       case 'grit': if (f) { if (f.phase === 'before') Dig.spendGrit(st); else Dig.buyBonus(st); } break;
       case 'refund': Dig.refundGrit(st); break;
       case 'roll': Dig.roll(st); break;
@@ -2129,13 +2157,12 @@ const Match = (() => {
       case 'heart': break;
     }
     if (S.run) { Run.checkOver(S.run); if (S.run.phase === 'dig') Run.refresh(S.run); }
-    if (S.match && S.run && S.run.phase === 'dig') { if (digged && !S.run.dig.over) Match.aiStep(S.match); if (S.run.dig.over) Match.settle(S.match); }
     if (S.st && S.st.over && !S.st.best && !S.run) recordBest(S.st);
     persist(); render();
   }
   $.addEventListener('click', e => { const el = e.target.closest('[data-p]'); if (!el || el.disabled) return; e.preventDefault(); act(el.dataset.p, el); });
   document.addEventListener('ddb-cards', () => { restore(); render(); }); document.addEventListener('ddb-mode', render);
-  window.DigDigBoomPlay = { S, render, act: (a, d) => act(a, { dataset: d || {} }) };
+  window.DigDigBoomPlay = { S, render, act: (a, d) => act(a, { dataset: d || {} }), tick: aiTick };
   render();
 })();
 </script>

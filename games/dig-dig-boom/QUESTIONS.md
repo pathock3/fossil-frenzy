@@ -3,12 +3,12 @@
 Only questions still waiting for the owner are listed (**open**), plus calls I made that you can overrule (**assumed** / **my call**). Anything you have ruled on is removed.
 
 ## Written in the sheet itself (Notes column, "Question:")
-Read live from the sheet by the lab page ("Questions already written in your sheet"). At the time of writing:
-- Prickly Porcupine (PW-04): Masochist traded for arrows (now Rerolls). Is Grit the right reward here? — open
-- Falcon Finisher (PW-21): should Grit and bonuses add to this second roll? — open
-- Floor Jack (ON-14): should the floor be 4, 5 or 6? — open
-- Shoo Spray (IM-27): is a blind move fun, or does it feel like nothing happened? — open (a design question, not a rules one)
-- Wormhole (IM-33): is chaining into another Immediate card the fun part of Portal, or was it the free choice? — open (design)
+Each is a note you wrote on a card. Card text is quoted exactly.
+- **Prickly Porcupine** (Power, number 1): "Lose 1 {heart}, then +2 {grit}". Your note: Masochist traded for arrows (now Rerolls) — is Grit the right reward here? — open
+- **Falcon Finisher** (Power, number 8): "Roll again. If it's 10 or more, defeat this Monster". Your note: should Grit and bonuses add to this second roll? Right now the second roll counts only the cards' roll bonuses (like Tune-Up), not Grit you spent. — open
+- **Floor Jack** (Ongoing): "If your result is less than 4, it becomes 4". Your note: should the floor be 4, 5 or 6? — open
+- **Shoo Spray** (Immediate): "+2 {grit}. Move the top card of your Mine to the bottom without looking". Your note: is a blind move fun, or does it feel like nothing happened? — open (a design question, not a rules one)
+- **Wormhole** (Immediate): "Reveal cards from your Mine until you find an Immediate card. Do it, then shuffle the rest back". Your note: is chaining into another Immediate card the fun part of Portal, or was it the free choice? — open (design)
 
 ## About a Dig (each is one line in `DDB.rules`, so easy to change)
 9. **Order of result changes:** Tune-Up and friends add; Wrecking Ball doubles; Backfire turns 1 into 10; Floor Jack lifts below 4 to 4. Default: add, then double, then "becomes", then "less than" (`rulings.transformOrder`). Second Spark (3 or less rerolls free) looks at the result *before* the double/becomes/floor changes, once per Monster. — open
@@ -23,20 +23,8 @@ Read live from the sheet by the lab page ("Questions already written in your she
 
 ## Added while building the run (Booster Pack, Prep, Leaderboard) for one player
 22. **Before round 1:** you have no cards to make a Starter Kit from, so a run opens with a Bronze Pack (`run.firstPack`) and a kit of 1. Is that how it starts? — open
-23. **Solo Crown Jewel:** the Crown tracker starts at 3 and the Crown is unclaimed. Banking with more Monsters survived than the tracker takes the Crown and sets the tracker to your score (so later rounds must beat your own best). Matching the tracker does not take it. — open
-24. **Final round, solo:** "no banking… keep going until you're in the lead or go BOOM." Implemented as: no banking until you have survived more than the tracker; then the Bank pile becomes "Take the Crown" and ends the run in a win. BOOM leaves the Crown on the table. — open
-26. **BOOM and the Leaderboard:** a BOOM locks in nothing — Monsters survived in a Dig only count on the Leaderboard when you bank. — assumed (from "BOOM: remove your Pledge marker. Your best-Dig marker stays.")
-27. **Escape Bonus die:** the same d10, rolled once per round after you bank. — assumed
-28. **Which cards go to the Mine:** every Booster card you own that is not in your Starter Kit is shuffled into the next Mine, so the Mine grows by one card per card kept. Cards are never lost unless you use the optional Advanced trash. — assumed (from "shuffle everything else into your Mine")
-30. **Where do cards go at Reset** that were in play (Power/Ongoing cards that were on the table)? They are shuffled back into the Mine like everything else, so a Starter Kit card also returns to the Mine and may be dug later unless you choose it for the kit again. — assumed
 
-## Added while building the AI opponent (you against the most basic AI)
-32. **AI pacing:** the AI digs one card each time you tap your Mine (and plays out any Monster it finds), so you watch it climb the Leaderboard as you go; when your Dig is over it finishes its own at once. — my call
-33. **AI play (deliberately basic):** it never spends Grit before a roll; after a roll it buys +1s with Grit only to reach the Pet, and rerolls a result of 3 or less; it triggers every eligible Power card, highest number first, then takes the damage; it banks as soon as that would put it in the lead (or when its Health is 3 or less); in the final round it takes the Crown as soon as it can; it pledges 1 more once it has reached the Crown and has 5+ Health; it keeps the first cards a pack offers and picks its Starter Kit at random. It only uses what a player can see (its own Dig and the Leaderboard). Numbers are in `DDB.ai`. — my call
-34. **Shared table:** one Booster Deck and one Trash for both players; one Escape Bonus roll per round that everyone who banked adds (rolled for the AI automatically if you went BOOM); the AI does its Prep before you. — assumed (from "one player rolls the die for the whole table")
-35. **Winning against the AI:** whoever holds the Crown Jewel when the final round ends. In the final round the first one to get in the lead can take it. — assumed
-
-## Added with your latest rulings (player-chosen triggers, Starter Kit on top of the Mine)
+## Added with your rulings (player-chosen triggers, Starter Kit on top of the Mine, AI, no pledging)
 36. **Ongoing cards stay automatic.** You choose which eligible *Power* cards to trigger and in what order, but an Ongoing card's "Whenever…" effect still fires by itself when its event happens. Do you also want to choose whether (and when) each Ongoing card triggers? — open
 37. **Conga Crab and Unlucky Duck** ("for each other card that triggers", "if no other card triggers") count the other cards you chose once you have chosen them: they resolve when you take the damage. — my call
 38. **No Grit or Rerolls once you start triggering.** The sequence is roll, adjust with Grit/Rerolls, trigger, then damage. — my call
@@ -44,3 +32,7 @@ Read live from the sheet by the lab page ("Questions already written in your she
 40. **"Trigger all"** is a small chip on the Power line that triggers everything eligible, highest number first. Tapping the Monster takes the damage at once, and any glowing card you did not tap is not used (your ruling). Keep the chip, or remove it? — my call
 41. **Panic Button** sends you back to choose your triggers again after its free reroll (gains from cards you already triggered stay). Still open under #10 whether the reroll should let you trigger again at all. — my call
 42. **Starter Kit order.** Your kit goes on top of the Mine face up in the order you tap them (1st is dug first); any other card you own is shuffled into the Mine. — ruled by the owner, order mine
+43. **Final round, who is "last standing".** Banking in the final round is the usual Bank pile, allowed only once you are in the lead (past the Crown tracker, or level with it on a better spot). The round goes on until every player has banked or gone BOOM; I did not end it the moment only one player is left, so a lone survivor still has to get into the lead to bank (a player already holding the Crown has to reach their own number again). Is that right, or should the last player not to have gone BOOM win at once? — assumed
+44. **How the AI decides** (numbers in `DDB.ai`): it never spends Grit before a roll (it knows nothing yet). After the roll it spends Grit (3 for +1) to reach the Pet if it can, else the nearest card above its result; it rerolls when the Pet is out of reach or no card on its line has triggered; then it triggers everything and takes the damage. It banks when its Health is 3 or less, or when banking would put it in the lead and its Health is under 6 ("not confident"); with Health 6 or more it keeps digging. It keeps the first cards a pack offers and picks its Starter Kit at random. — my call
+45. **AI clock:** it digs one card every 1.1 seconds on its own while you play (a Monster, with its rolls, counts as one card). When your Dig is over and it is not, a Fast forward button on the BOOM/Banked panel makes it 0.06 seconds a card. Prep waits for it. — my call
+46. **Prep at the same time:** the AI opens its Booster Pack the moment you open yours (yours is drawn first), then keeps cards and chooses its kit without seeing yours. Its Escape Bonus is the same single roll as yours. — my call
