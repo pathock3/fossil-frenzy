@@ -47,10 +47,17 @@ async function script(page, { mine = [], dice = [], start = {}, line = [], ongoi
     P.render();
   }, { mine, dice, start, line, ongoing });
 }
-// A run from the main menu: the AI switched off unless asked (tests turn it on explicitly), round-1 Starter Kit = the nth Power card, then the table.
-async function startRun(page, { opp = false, pick = 2, rounds } = {}) {
+// Keep the first n offered cards that are not a Mystery Box (which would keep one more and make card counts depend on luck).
+async function keepNonMystery(page, n) {
+  const idx = await page.evaluate(() => { const o = window.DigDigBoomPlay.S.run.prep.offer; return o.map((c, i) => [i, /When kept/.test(c.text)]).filter(([, m]) => !m).map(([i]) => i); });
+  for (const i of idx.slice(0, n)) await page.click(`#play [data-p=pick] >> nth=${i}`);
+  await page.click('#play [data-p=keepgo]');
+}
+// A run from the main menu: the AI switched off unless asked (tests turn it on explicitly); round 1: open the Bronze Pack, keep a card, choose it as the Starter Kit, then the table.
+async function startRun(page, { opp = false, rounds } = {}) {
   await page.evaluate(({ opp, rounds }) => { const S = window.DigDigBoomPlay.S; S.opp = opp; if (rounds) S.rounds = rounds; }, { opp, rounds });
-  await page.click('#play [data-p=startrun]'); await page.click(`#play [data-p=kitpick] >> nth=${pick}`); await page.click('#play [data-p=startround]');
+  await page.click('#play [data-p=startrun]'); await page.click('#play [data-p=openpack]'); await keepNonMystery(page, 1);
+  await page.click('#play [data-p=kitpick] >> nth=0'); await page.click('#play [data-p=startround]');
   await page.waitForSelector('#play .ptable');
 }
 const stOf = (page, fn) => page.evaluate(fn);
@@ -296,28 +303,23 @@ test('practice: a seed replays the same Dig; your best (Monsters survived, gems 
 });
 
 // ---------------------------------------------------------------- a run: Prep like a table, the Leaderboard
-test('run: round 1 has no pack — you choose your Starter Kit from every Booster card (or a gem) — then the table with the Leaderboard and the Monster pile', SKIP, async () => {
+test('run: round 1 opens a Bronze Pack (draw 3, keep 1), then you choose your Starter Kit from the cards you own — no gem option on screen, empty places become gems — then the table', SKIP, async () => {
   const { browser, page, errors } = await open({ menu: true });
   try {
     await page.evaluate(() => { window.DigDigBoomPlay.S.opp = false; }); await page.click('#play [data-p=startrun]');
-    const panel = await page.evaluate(() => { const c = document.querySelector('#play .panel').cloneNode(true); c.querySelectorAll('.pcard').forEach(e => e.remove()); return c.innerText; });
-    assert.doesNotMatch(panel, /Bronze|Pack|Escape|draw|keep/i); assert.ok(panel.length < 250, 'hardly a word of text besides the cards: ' + panel.length + ' characters: ' + panel);
-    const tabs = (await page.locator('#play .tabs .chip').allInnerTexts()).map(t => Number(t.match(/\((\d+)\)/)[1]));
-    const deck = await stOf(page, () => window.DigDigBoomPlay.S.run.deck.length);
-    assert.equal(tabs.reduce((a, b) => a + b, 0) + 0 >= 1, true);
-    assert.ok(await page.locator('#play [data-p=kitgem]').count() === 1, 'the gem is offered beside the cards');
-    assert.ok(await page.locator('#play [data-p=startround]').isDisabled(), 'pick a card or the gem first');
-    await page.click('#play [data-p=kittab][data-v=Immediate]'); assert.ok(await page.locator('#play [data-p=kitpick]').count() > 20, 'every Immediate card');
-    const w = await page.locator('#play [data-p=kitpick]').first().evaluate(e => e.getBoundingClientRect().width); assert.ok(w >= 150, 'cards are drawn whole');
-    await page.click('#play [data-p=kitgem]');
-    assert.equal(await page.locator('#play [data-p=startround]').isDisabled(), false);
-    await page.click('#play [data-p=kitpick] >> nth=0'); assert.ok(await page.locator('#play [data-p=startround]').isEnabled(), 'the one place is the gem now: the card does not fit');
-    await page.click('#play [data-p=kitgem]'); await page.click('#play [data-p=kitpick] >> nth=0');
+    assert.equal(await page.locator('#play .pack b').innerText(), 'Bronze'); assert.match(await page.locator('#play .pack').innerText(), /Draw 3 · Keep 1/);
+    assert.equal(await page.locator('#play .tabs').count(), 0, 'no catalogue of cards');
+    await page.click('#play [data-p=openpack]'); assert.equal(await page.locator('#play [data-p=pick]').count(), 3);
+    assert.ok(await page.locator('#play [data-p=keepgo]').isDisabled());
+    await keepNonMystery(page, 1);
+    assert.equal(await page.locator('#play [data-p=kitpick]').count(), 1, 'one card to choose from: the one you kept');
+    assert.equal(await page.locator('#play [data-p=kitgem]').count(), 0, 'no gem to pick: an empty place is a gem');
+    assert.equal(await page.locator('#play [data-p=startround]').isEnabled(), true, 'you may start with the place empty');
     await page.click('#play [data-p=startround]'); await page.waitForSelector('#play .ptable');
-    assert.equal(await page.locator('#play .lb').count(), 1);
-    assert.match(await page.locator('#play .lbhead').innerText(), /round 1 of 4/i);
-    assert.equal(await page.locator('#play .known .piece').count(), 1, 'your card is on top of the Mine, face up');
-    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.run.deck.length), deck - 1, 'and has left the Booster Deck');
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.geodeGems), 1, 'you started with a gem in the Bank');
+    assert.match(await page.locator('#play [data-p=bank]').innerText(), /^1/);
+    assert.equal(await page.locator('#play .known .piece').count(), 1, 'the card you kept is on top of the Mine, face up');
+    assert.equal(await page.locator('#play .lb').count(), 1); assert.match(await page.locator('#play .lbhead').innerText(), /round 1 of 4/i);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -342,7 +344,7 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     await page.click('#play [data-p=openpack]'); assert.equal(await page.locator('#play [data-p=pick]').count(), 4);
     const w = await page.locator('#play [data-p=pick]').first().evaluate(e => e.getBoundingClientRect().width); assert.ok(w >= 200, 'whole cards, not a reduction: ' + w);
     assert.doesNotMatch(await page.locator('#play .panel').innerText(), /[Ll]ast [Dd]ig|banked after/);
-    await page.click('#play [data-p=pick] >> nth=0'); await page.click('#play [data-p=pick] >> nth=1'); await page.click('#play [data-p=keepgo]');
+    await keepNonMystery(page, 2);
     assert.equal(await page.locator('#play [data-p=kitpick]').count(), 3, 'the card from round 1 and the two you kept');
     await page.click('#play [data-p=kitpick] >> nth=1'); await page.click('#play [data-p=kitpick] >> nth=2');
     await page.click('#play [data-p=startround]');
@@ -384,8 +386,10 @@ test('run: the main menu, Prep and the Leaderboard fit the screen on an iPad (la
     try {
       await page.evaluate(() => { window.DigDigBoomPlay.S.opp = false; }); await page.click('#play [data-p=startrun]');
       const fits = () => page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ih: innerHeight, sw: document.documentElement.scrollWidth, iw: innerWidth }));
-      let m = await fits(); assert.ok(m.sh <= m.ih + 1 && m.sw <= m.iw + 1, `kit step at ${viewport.width}x${viewport.height}`);
+      let m = await fits(); assert.ok(m.sh <= m.ih + 1 && m.sw <= m.iw + 1, `first Prep at ${viewport.width}x${viewport.height}`);
       assert.ok(await page.locator('#play .lbc').first().isVisible());
+      await page.click('#play [data-p=openpack]'); m = await fits(); assert.ok(m.sh <= m.ih + 1 && m.sw <= m.iw + 1, `pack at ${viewport.width}x${viewport.height}`);
+      await keepNonMystery(page, 1); m = await fits(); assert.ok(m.sh <= m.ih + 1 && m.sw <= m.iw + 1, `kit at ${viewport.width}x${viewport.height}`);
       await page.click('#play [data-p=kitpick] >> nth=0'); await page.click('#play [data-p=startround]'); await page.waitForSelector('#play .ptable');
       m = await fits(); assert.ok(m.sh <= m.ih + 1 && m.sw <= m.iw + 1, `table at ${viewport.width}x${viewport.height}`);
       assert.deepEqual(errors, []);
@@ -411,7 +415,7 @@ test('menu: in a game there is no link out to the library — a Menu with a way 
     await page.click('#play [data-p=resume]'); await page.waitForSelector('#play .ptable');
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.digs), 1, 'the same game, where you left it');
     await page.click('#play .pbar [data-p=gmenu]'); await page.click('#play [data-p=mainmenu]'); await page.click('#play [data-p=startrun]'); await page.click('#play [data-p=startrun]');
-    assert.ok(await page.locator('#play [data-p=kitpick]').count() > 0, 'a brand new run: the round-1 Starter Kit');
+    assert.equal(await page.locator('#play .pack b').innerText(), 'Bronze', 'a brand new run: the round-1 Bronze Pack');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -419,7 +423,7 @@ test('menu: in a game there is no link out to the library — a Menu with a way 
 test('play: a reload puts you back exactly where you were — mid-fight in a run, in Prep, and in a Practice Dig', SKIP, async () => {
   const { browser, page, errors } = await open({ menu: true });
   try {
-    await page.evaluate(() => { window.DigDigBoomPlay.S.opp = false; }); await page.click('#play [data-p=startrun]'); await page.click('#play [data-p=kitpick] >> nth=3');
+    await page.evaluate(() => { window.DigDigBoomPlay.S.opp = false; }); await page.click('#play [data-p=startrun]'); await page.click('#play [data-p=openpack]'); await keepNonMystery(page, 1); await page.click('#play [data-p=kitpick] >> nth=0');
     await page.reload(); await page.waitForSelector('#play .panel');
     assert.equal(await page.locator('#play [data-p=kitpick]').count() > 0, true, 'back in Prep');
     assert.equal(await page.locator('#play .pcard.sel').count(), 1, 'with your pick still picked');

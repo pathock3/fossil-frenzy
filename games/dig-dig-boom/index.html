@@ -294,8 +294,6 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .pcard:active { transform: scale(.97); }
 #play .pcard.sel { box-shadow: 0 0 0 4px var(--accent), 0 0 22px 6px rgba(255,177,59,.55); transform: translateY(-6px); }
 #play .pcard .badge { position: absolute; left: -6px; top: -8px; z-index: 3; min-width: 32px; height: 32px; border-radius: 99px; background: var(--accent); color: #1c1410; font-weight: 900; font-size: 18px; display: flex; align-items: center; justify-content: center; border: 3px solid #fffaf0; box-shadow: 0 2px 0 rgba(0,0,0,.4); }
-#play .gemchoice { border-radius: 12px; background: radial-gradient(circle at 70% 36%, #fff 0, #bfeaff 40%, #2fb7e6 100%); border: 4px solid #8a5a2b; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-weight: 900; color: #1d1712; }
-#play .gemchoice svg { width: 56%; height: auto; }
 #play .kitbar { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 #play .pips2 { display: inline-flex; gap: 6px; }
 #play .pips2 i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--accent); }
@@ -514,7 +512,8 @@ const DDB = {
       { at: 30, name: 'Diamond',  draw: 6, keep: 4, color: '#6fe0ff' },
       { at: 35, name: 'Diamond+', draw: 7, keep: 4, color: '#6fe0ff' },
     ],
-    startGems: 1,                                        // round 1 has no pack: you choose your Starter Kit from every Booster card, or take the gem instead and start with this many gems
+    firstPack: 'Bronze',                                 // round 1 opens with a pack too (draw 3, keep 1), then you choose your Starter Kit from the cards you own
+    startGems: 1,                                        // every Starter Kit place you leave empty is filled with this many gems at the start of the Dig
     boomPack: 'Bronze',                                  // "If you went BOOM, open a Bronze Pack"
   },
   // ---- The phrase book: card text -> effect. [op, regular expression]. Unmatched text is shown as "not implemented yet" ----
@@ -1387,20 +1386,20 @@ const Run = (() => {
     if (!sh) run.deck = makeDeck(all, run.rng);
     sync(run);
     run.prep = newPrep(run, null); setPack(run);
-    log(run, `A new run: ${run.rounds} rounds. Crown tracker at ${run.crown.tracker}. Before round 1, choose your Starter Kit.`);
+    log(run, `A new run: ${run.rounds} rounds. Crown tracker at ${run.crown.tracker}. Before round 1, open a ${RN.firstPack} Pack.`);
     return run;
   }
   // A Prep: the Escape Bonus step only exists after a banked Dig.
   function newPrep(run, over) {
     const banked = !!over && over.kind === 'bank';
     const base = over ? { geodes: over.kind === 'bank' ? over.geodes : 0, monsters: over.kind === 'bank' ? over.monsters : 0 } : { geodes: 0, monsters: 0 };
-    return { step: banked ? 'escape' : over ? 'pack' : 'kit', banked, boom: !!over && over.kind === 'boom', first: !over, gem: false, geodes: base.geodes, monsters: base.monsters, escape: null, gems: null, pack: null,
+    return { step: banked ? 'escape' : 'pack', banked, boom: !!over && over.kind === 'boom', first: !over, geodes: base.geodes, monsters: base.monsters, escape: null, gems: null, pack: null,
       offer: [], picked: [], extra: [], kitPick: [], kitMax: kitSize(run, run.round) };
   }
   function setPack(run) {
     const pr = run.prep;
     pr.gems = pr.banked ? pr.geodes + pr.monsters + (pr.escape || 0) : 0;
-    pr.pack = pr.first ? null : pr.boom ? packFor(RN.boomPack) : ladderFor(pr.gems);
+    pr.pack = pr.first ? packFor(RN.firstPack) : pr.boom ? packFor(RN.boomPack) : ladderFor(pr.gems);
   }
   // 1. Escape Bonus: one roll of the die for the table; everyone who banked adds that many gems.
   function rollEscape(run) {
@@ -1445,29 +1444,19 @@ const Run = (() => {
   function toggleKit(run, id) {
     const pr = run.prep; if (!pr || pr.step !== 'kit') return false;
     const i = pr.kitPick.indexOf(id);
-    if (i >= 0) { pr.kitPick.splice(i, 1); return true; }
-    const pool = pr.first ? run.deck : run.owned;                      // before round 1 you own nothing: the Starter Kit is chosen from every Booster card
-    if (pr.kitPick.length + (pr.gem ? 1 : 0) < pr.kitMax && pool.some(c => c.uid === id)) { pr.kitPick.push(id); return true; }
-    return false;
+    if (i >= 0) pr.kitPick.splice(i, 1);
+    else if (pr.kitPick.length < pr.kitMax && run.owned.some(c => c.uid === id)) pr.kitPick.push(id); else return false;
+    return true;
   }
-  // Before round 1 only: a gem instead of a card ("if you do not want any of those, you can start with gems").
-  function toggleGem(run) {
-    const pr = run.prep; if (!pr || pr.step !== 'kit' || !pr.first) return false;
-    if (pr.gem) { pr.gem = false; return true; }
-    if (pr.kitPick.length + 1 > pr.kitMax) return false;
-    pr.gem = true; return true;
-  }
-  // Every Booster card, once (the cards of the deck by name), for the round-1 Starter Kit chooser.
-  function starterPool(run) { const seen = new Set(); return run.deck.filter(c => !seen.has(c.id) && seen.add(c.id)); }
   // 5-6. Reset and ready: a fresh Drill, a Mine of the 25 starting cards plus every card you own that is not in the kit.
   function beginDig(run, opts = {}) {
     const pr = run.prep; if (!pr || pr.step !== 'kit') return false;
-    if (pr.first) for (const id of pr.kitPick) { const i = run.deck.findIndex(c => c.uid === id); if (i >= 0) run.owned.push(...run.deck.splice(i, 1)); }     // the cards you chose leave the Booster Deck
     run.kit = pr.kitPick.map(id => run.owned.find(c => c.uid === id)).filter(Boolean);       // in the order you chose
     const rest = run.owned.filter(c => !pr.kitPick.includes(c.uid));
     run.dig = Dig.start(run.all, run.kit, { seed: opts.seed !== undefined ? opts.seed : run.seed === null ? undefined : (run.rng() * 4294967296) >>> 0, dice: opts.dice, extra: rest,
       board: { crown: Board.tracker(run.board), final: run.round === run.rounds, leadN: Board.leadN(run.board, run.me) } });
-    if (pr.gem) { run.dig.geodeGems += RN.startGems; run.dig.log.push({ kind: 'sys', text: `You start with ${RN.startGems} {gem}.` }); }
+    const empty = pr.kitMax - run.kit.length;                          // places you did not fill with a card are filled with gems
+    if (empty > 0) { run.dig.geodeGems += empty * RN.startGems; run.dig.log.push({ kind: 'sys', text: `You start with ${empty * RN.startGems} {gem}.` }); }
     run.phase = 'dig'; run.prep = null;
     log(run, `Round ${run.round}${run.round === run.rounds ? ' (the final round: a race, nobody banks; whoever is in the lead may wait)' : ''}. Kit: ${run.kit.map(c => c.name).join(', ') || 'none'}.`);
     return true;
@@ -1543,7 +1532,7 @@ const Run = (() => {
     checkOver(r); return true;
   }
   const reserve = n => { uid = Math.max(uid, n + 1); };
-  return { makeDeck, starterPool, toggleGem, setEscape, reserve, pledge, bank, finalCheck, refresh, checkOver, sync, save, load, start, rollEscape, packInfo, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
+  return { makeDeck, setEscape, reserve, pledge, bank, finalCheck, refresh, checkOver, sync, save, load, start, rollEscape, packInfo, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
 })();
 
 /* =====================================================================
@@ -1580,7 +1569,7 @@ const AI = (() => {
     if (pr.step === 'pack') Run.openPack(run);
     if (run.prep.step === 'keep') { for (const c of run.prep.offer.slice(0, Run.keepCount(run))) Run.toggleKeep(run, c.uid); Run.confirmKeep(run); }
     if (run.prep.step === 'kit' && !run.prep.kitPick.length) {
-      const pool = Dig.shuffle({ rng: run.rng }, (run.prep.first ? Run.starterPool(run) : run.owned).slice());
+      const pool = Dig.shuffle({ rng: run.rng }, run.owned.slice());
       for (const c of pool.slice(0, run.prep.kitMax)) Run.toggleKit(run, c.uid);
     }
   }
@@ -2094,17 +2083,10 @@ const Match = (() => {
       body = `<div class="cards">${pr.offer.map(c => pcard(c, sc, { act: 'pick', sel: pr.picked.includes(c.uid), badge: pr.picked.includes(c.uid) ? '✓' : '' })).join('')}</div><div class="kitbar">${dots(need, pr.picked.length)}</div>`;
       foot = `<button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'}>Keep</button>`;
     } else {            // the Starter Kit
-      const sc = .7, first = pr.first, picked = id => pr.kitPick.indexOf(id) + 1;
-      let list, tabs = '';
-      if (first) {
-        const pool = Run.starterPool(run), types = ['Power', 'Ongoing', 'Immediate'];
-        tabs = `<div class="tabs">${types.map(t => `<button class="chip ${S.kitTab === t ? 'on' : ''}" data-p="kittab" data-v="${t}">${t} (${pool.filter(c => c.type === t).length})</button>`).join('')}</div>`;
-        const gem = `<button class="pcard ${pr.gem ? 'sel' : ''}" data-p="kitgem" style="width:${250 * sc}px;height:${350 * sc}px" aria-label="Start with a gem">${pr.gem ? '<span class="badge">✓</span>' : ''}<span class="gemchoice" style="width:100%;height:100%;font-size:${70 * sc}px">${ic('gem')}<span>+${D.run.startGems}</span></span></button>`;
-        list = gem + pool.filter(c => c.type === S.kitTab).map(c => pcard(c, sc, { act: 'kitpick', sel: pr.kitPick.includes(c.uid), badge: picked(c.uid) || '' })).join('');
-      } else list = run.owned.map(c => pcard(c, sc, { act: 'kitpick', sel: pr.kitPick.includes(c.uid), badge: picked(c.uid) || '' })).join('');
-      body = `<div class="kitbar"><b>Starter Kit</b>${dots(pr.kitMax, pr.kitPick.length + (pr.gem ? 1 : 0))}</div>${tabs}<div class="cards">${list}</div>`;
-      const ready = !first || pr.kitPick.length + (pr.gem ? 1 : 0) > 0;
-      foot = `<button class="btn" data-p="startround" ${ready ? '' : 'disabled'}>Start round ${run.round}${run.round === run.rounds ? ' · final' : ''}</button>`;
+      const sc = cardScale(Math.min(run.owned.length, 5), .8, .6), picked = id => pr.kitPick.indexOf(id) + 1;
+      const list = run.owned.map(c => pcard(c, sc, { act: 'kitpick', sel: pr.kitPick.includes(c.uid), badge: picked(c.uid) || '' })).join('');
+      body = `<div class="kitbar"><b>Starter Kit</b>${dots(pr.kitMax, pr.kitPick.length)}</div><div class="cards">${list}</div>`;
+      foot = `<button class="btn" data-p="startround">Start round ${run.round}${run.round === run.rounds ? ' · final' : ''}</button>`;
     }
     const stage = step === 'kit' || step === 'keep' ? body : `<div class="prepstage">${body}</div>`;
     return `<div class="panel setup prep"><div class="scroll" id="setupScroll">${lbHTML(run, null)}${stage}</div><div class="foot">${foot}<button class="chip" data-p="gmenu" style="margin-left:auto">Menu</button></div></div>`;
@@ -2214,7 +2196,7 @@ const Match = (() => {
       <li><b>Bank</b>: tap the Bank pile between cards to end the Dig and keep your gems. Not while a Monster is in front of you.</li>
       <li><b>Any card</b>: tap it to see it full size, tap again to close.</li>
       <li><b>Beyond the Mine</b>: when the Mine runs out, Bonus Monsters keep coming: ${R.beyond.firstDamage}, ${R.beyond.firstDamage + 1}, … damage, worth ${R.beyond.gems} gems.</li></ul>
-      <p><b>A run</b> (Play a run): ${D.run.roundChoices.join(' or ')} rounds, each a Dig then a Prep. <b>Before round 1</b> you choose your Starter Kit from every Booster card (or take a gem instead). <b>After a Dig</b>: if you banked, tap the die for your Escape Bonus; your gems (Geodes + Monsters survived + the die) pick a Booster Pack from the reward ladder (BOOM: a ${D.run.boomPack} Pack): open it, keep some of the cards; then choose a Starter Kit from your cards (1, 2, 2, 3 by round). Your cards go on top of your Mine, face up, so you see them coming: the Starter Kit first, in the order you chose, then the rest; the Starting cards are shuffled below, unknown. Monsters you are done with go in the Monster pile at the top (each set's ladder shows how many you have met).</p>
+      <p><b>A run</b> (Play a run): ${D.run.roundChoices.join(' or ')} rounds, each a Dig then a Prep. <b>Before round 1</b> you open a ${D.run.firstPack} Pack (draw 3, keep 1) and choose your Starter Kit from the cards you own; any place you leave empty is filled with a gem. <b>After a Dig</b>: if you banked, tap the die for your Escape Bonus; your gems (Geodes + Monsters survived + the die) pick a Booster Pack from the reward ladder (BOOM: a ${D.run.boomPack} Pack): open it, keep some of the cards; then choose a Starter Kit from your cards (1, 2, 2, 3 by round). Your cards go on top of your Mine, face up, so you see them coming: the Starter Kit first, in the order you chose, then the rest; the Starting cards are shuffled below, unknown. Monsters you are done with go in the Monster pile at the top (each set's ladder shows how many you have met).</p>
       <p><b>Leaderboard</b>: positions are Monsters survived. The Crown tracker starts at ${D.run.crownStart}. Before the Crown you dig or bank freely. There is no pledging in this version: your marker on the Leaderboard moves by itself the moment you encounter a Monster (before you have faced it), so you always see where you stand. Bank above the tracker and you take the Crown Jewel and move the tracker. A BOOM locks in nothing, but your best stays. The <b>final round</b> is a race: nobody banks. Whoever is in the lead (past the tracker, and ahead of everyone else's best and live number) may wait; everyone else has to keep digging, and rolling tens is how you catch up. If someone passes the leader, the old leader has to dig again. The round ends when everyone but the leader has gone BOOM, and the leader takes the Crown Jewel. Hold the Crown Jewel at the end and you win. On the Leaderboard: the ring is where you are in this Dig, the dot is your best locked-in Dig, the crown is the Crown tracker.</p>
       <p><b>Your two starting cards</b> are in play at the start of every Dig and do not count against your Starter Kit: your Pet (a Power card at 10: defeat the Monster) and the starting Ongoing card beside it (when the Monster's damage is equal to or greater than your Health, +1 to your roll).</p>
       <p><b>The AI</b> digs on its own clock while you dig, and preps at the same time as you (it opens its Booster Pack when you open yours). When you are done and it is not, tap Fast forward. It spends Rerolls to get useful cards going, and keeps digging rather than banking while its Health is high.</p>
@@ -2285,8 +2267,6 @@ const Match = (() => {
       case 'pick': Run.toggleKeep(S.run, Number(ds.uid)); break;
       case 'keepgo': Run.confirmKeep(S.run); break;
       case 'kitpick': Run.toggleKit(S.run, Number(ds.uid)); break;
-      case 'kitgem': Run.toggleGem(S.run); break;
-      case 'kittab': S.kitTab = ds.v; break;
       case 'startround': if (S.match ? Match.beginRound(S.match) : Run.beginDig(S.run)) { S.st = S.run.dig; S.panel = 'dig'; S.ff = false; } break;
       case 'ff': S.ff = true; if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; } break;
       case 'prep': if (S.match) Match.finishRound(S.match); else Run.finishDig(S.run); S.panel = S.run.phase === 'done' ? 'done' : 'prep'; break;

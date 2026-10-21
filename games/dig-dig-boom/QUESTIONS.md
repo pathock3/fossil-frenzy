@@ -22,7 +22,6 @@ Each is a note you wrote on a card. Card text is quoted exactly.
 20. **Magpie/Echo** copy the top Immediate card of the discard pile, not the cards that copied it (two Echoes in a row copy nothing). — assumed
 
 ## Added while building the run (Booster Pack, Prep, Leaderboard) for one player
-22. **Before round 1:** you have no cards to make a Starter Kit from, so a run opens with a Bronze Pack (`run.firstPack`) and a kit of 1. Is that how it starts? — open
 
 ## Added with your rulings (player-chosen triggers, Starter Kit on top of the Mine, AI, no pledging)
 36. **Ongoing cards stay automatic.** You choose which eligible *Power* cards to trigger and in what order, but an Ongoing card's "Whenever…" effect still fires by itself when its event happens. Do you also want to choose whether (and when) each Ongoing card triggers? — open

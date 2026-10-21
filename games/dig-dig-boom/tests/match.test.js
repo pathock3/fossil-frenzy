@@ -23,7 +23,7 @@ function playRound(m, { humanPolicy = AI.act } = {}) {
 function prepHuman(m) {
   const me = Match.human(m);
   if (me.prep.step === 'escape') Match.rollEscape(m);
-  if (me.prep.first) AI.prep(me); else { assert.ok(Match.openPack(m)); AI.prep(me); }          // round 1: a card from every Booster card; later: the AI opens its pack as you open yours
+  assert.ok(Match.openPack(m)); AI.prep(me);          // the AI opens its pack as you open yours
   assert.equal(me.prep.step, 'kit'); assert.ok(Match.beginRound(m));
 }
 function playMatch(seed, rounds = 3) {
@@ -36,7 +36,7 @@ function playMatch(seed, rounds = 3) {
 }
 
 test('the Board updates by itself: your live marker follows every Monster you encounter, a BOOM clears it, a bank locks the score in', () => {
-  const run = Run.start(cards, { seed: 5, rounds: 2 }); Run.toggleKit(run, run.deck[0].uid); Run.beginDig(run, { seed: 1 });
+  const run = Run.start(cards, { seed: 5, rounds: 2 }); Run.openPack(run); Run.toggleKeep(run, run.prep.offer[0].uid); Run.confirmKeep(run); Run.toggleKit(run, run.owned[0].uid); Run.beginDig(run, { seed: 1 });
   const st = run.dig; st.mine = ['MO-01', 'MO-02', 'MO-01', 'MO-02'].map((id, i) => ({ ...by(id), uid: 9900 + i })); st.dice = Array(30).fill(10);
   Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge'), null, 'nothing survived yet');
   for (let i = 1; i <= 3; i++) { Dig.dig(st); Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge').n, i, 'the marker moves the moment you ENCOUNTER the Monster, before you face it'); Dig.roll(st); Dig.autoFace(st); Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge').n, i, 'and stays there once you survive it'); }
@@ -54,15 +54,16 @@ test('the live marker takes the best open spot under each number, so the first t
   assert.deepEqual([Board.marker(b, 'a', 'best').rank, Board.marker(b, 'b', 'best').rank], [1, 2], 'the spots you reached first are the spots you lock in');
 });
 
-test('a match: you and the AI share a Leaderboard, one Booster Deck and one Trash; before round 1 each picks a Starter Kit from every Booster card, and the AI cannot take yours', () => {
+test('a match: you and the AI share a Leaderboard, one Booster Deck and one Trash; before round 1 each opens a Bronze Pack (the AI when you open yours) and chooses a Starter Kit from what they kept', () => {
   const m = Match.start(cards, { seed: 3, rounds: 3 });
   const me = Match.human(m), ai = Match.bot(m);
   assert.equal(me.board, ai.board); assert.equal(me.deck, ai.deck);
   assert.deepEqual(m.board.players.map(p => p.id), ['me', 'ai']);
-  assert.equal(ai.prep.step, 'kit'); assert.equal(me.prep.step, 'kit');
-  const mine = Run.starterPool(me)[0]; assert.ok(Run.toggleKit(me, mine.uid));
+  assert.equal(ai.prep.step, 'pack', 'the AI has not opened anything before you'); assert.equal(me.prep.step, 'pack');
+  assert.ok(Match.openPack(m)); assert.equal(me.prep.step, 'keep'); assert.equal(me.prep.offer.length, 3); assert.equal(ai.prep.step, 'kit'); assert.equal(ai.owned.length, 1);
+  Run.toggleKeep(me, me.prep.offer[0].uid); Run.confirmKeep(me); Run.toggleKit(me, me.owned[0].uid);
   assert.ok(Match.beginRound(m));
-  assert.equal(me.owned.length, 1); assert.equal(ai.owned.length, 1); assert.equal(ai.kit.length, 1); assert.notEqual(ai.owned[0].uid, mine.uid, 'two different cards');
+  assert.equal(me.owned.length, 1); assert.equal(ai.kit.length, 1); assert.notEqual(ai.owned[0].uid, me.owned[0].uid, 'two different cards');
   assert.equal(m.deck.length + m.trash.length + me.owned.length + ai.owned.length, boosterTotal);
 });
 
@@ -130,14 +131,14 @@ test('the AI rerolls when it wants an effect it did not get (the Pet first), onl
   ({ ai, st } = fight([['PW-01', 10, true]], [10], 3)); AI.act(ai); assert.equal(st.reroll, 3, 'a result it is happy with is never rerolled');
 });
 
-test('before round 1 the AI picks its Starter Kit at random from every Booster card: only cards the game can play, never the one you took, and not always the same', () => {
+test('before round 1 the AI keeps the first card of its Bronze Pack and puts it in its Starter Kit: only cards the game can play, and not always the same', () => {
   const picked = new Set();
   for (let seed = 1; seed <= 40; seed++) {
     const m = Match.start(cards, { seed, rounds: 3 }), me = Match.human(m), ai = Match.bot(m);
-    const mine = Run.starterPool(me)[seed % 10]; assert.ok(Run.toggleKit(me, mine.uid)); assert.ok(Match.beginRound(m), 'you begin first, then the AI');
+    Match.openPack(m); Run.toggleKeep(me, me.prep.offer[0].uid); Run.confirmKeep(me); Run.toggleKit(me, me.owned[0].uid); assert.ok(Match.beginRound(m));
     assert.equal(ai.owned.length, 1); assert.equal(ai.kit.length, 1); assert.ok(Dig.supported(ai.kit[0]));
-    assert.notEqual(ai.kit[0].id, mine.id, `seed ${seed}: the card you took has left the Booster Deck`);
-    assert.equal(ai.dig.mine[0].id, ai.kit[0].id, 'it is on top of the AI\'s Mine'); assert.equal(me.dig.mine[0].id, mine.id);
+    assert.notEqual(ai.kit[0].uid, me.kit[0].uid, `seed ${seed}: its own pack, its own card`);
+    assert.equal(ai.dig.mine[0].id, ai.kit[0].id, 'it is on top of the AI\'s Mine'); assert.equal(me.dig.mine[0].id, me.kit[0].id);
     picked.add(ai.kit[0].id);
   }
   assert.ok(picked.size > 10, 'random: ' + picked.size + ' different cards in 40 matches');

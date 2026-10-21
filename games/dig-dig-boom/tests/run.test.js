@@ -14,10 +14,11 @@ const burn = { id: 'XX-B', name: 'Test Burnout', type: 'Power', number: 2, deck:
 // The app has no pledging (DDB.rules.pledges is false); the engine still knows it, so these tests switch it on for their own duration.
 const withPledges = fn => { DDB.rules.pledges = true; try { return fn(); } finally { DDB.rules.pledges = false; } };
 
-// Run through the first Prep, choosing the offered cards in order, and begin round 1.
+// Open the first Bronze Pack, keep the offered cards in order (or the ones named), ready to choose a Starter Kit.
+// A quick way to a one-card round 1: open the pack, keep the first card, choose it as the Starter Kit.
+const kitOne = r => { Run.openPack(r); Run.toggleKeep(r, r.prep.offer[0].uid); Run.confirmKeep(r); Run.toggleKit(r, r.owned[0].uid); };
 function firstRound(opts = {}) {
   const run = Run.start(cards, { seed: 11, ...opts });
-  run.prep.step = 'pack'; run.prep.first = false; run.prep.pack = Run.ladderFor(0);       // stand in for an earlier pack: a Bronze Pack to open (the real round 1 has no pack: see the next tests)
   Run.openPack(run);
   const want = opts.keepIds;
   if (want) { run.prep.offer = want.map((id, i) => ({ ...by(id), uid: 7000 + i })); }
@@ -36,14 +37,12 @@ function play(run, mine, plan, die = 1) {
   return st;
 }
 
-test('a run starts with the Booster Deck (every Booster card the game can play, by its count) and no pack: round 1 is a Starter Kit chosen from every Booster card', () => {
+test('a run starts with the Booster Deck (every Booster card the game can play, by its count) and a Bronze Pack to open before round 1', () => {
   const run = Run.start(cards, { seed: 1 });
   assert.equal(run.deck.length, deckSize); assert.equal(run.round, 1); assert.equal(run.rounds, RN.rounds); assert.deepEqual(run.crown, { tracker: 3, holder: false });
-  assert.equal(run.prep.step, 'kit'); assert.ok(run.prep.first); assert.equal(run.prep.kitMax, 1);
+  assert.equal(run.prep.step, 'pack'); assert.deepEqual(Run.packInfo(run), { name: 'Bronze', draw: 3, keep: 1 });
   assert.ok(run.deck.every(c => c.deck === 'Booster' && Dig.supported(c)), 'cards the game cannot play (every Grit card) are not in the deck');
   assert.ok(!run.deck.some(c => /\{grit\}/.test(c.text)));
-  assert.equal(Run.starterPool(run).length, new Set(deckCards.map(c => c.id)).size, 'every Booster card, once');
-  assert.ok(Run.starterPool(run).every(c => Dig.supported(c)));
 });
 test('the Booster Deck is shuffled: with a seed it replays, with no seed (real play, the secure random source) no two decks are alike', () => {
   const ids = run => run.deck.map(c => c.id).join();
@@ -53,20 +52,24 @@ test('the Booster Deck is shuffled: with a seed it replays, with no seed (real p
   assert.equal(Run.start(cards, {}).seed, null);
   assert.equal(Run.makeDeck(cards, Dig.makeRng(3)).length, deckSize);
 });
-test('round 1: pick your Starter Kit from every Booster card, or the gem instead; the card leaves the Booster Deck and is yours', () => {
+test('round 1: open the Bronze Pack, keep one card, choose your Starter Kit from the cards you own; every place you leave empty is filled with a gem', () => {
   const run = Run.start(cards, { seed: 1 });
-  const pick = Run.starterPool(run)[5];
-  assert.ok(!Run.toggleKit(run, 12345), 'only cards that exist'); assert.ok(Run.toggleKit(run, pick.uid)); assert.ok(!Run.toggleGem(run), 'the kit has one place and it is taken');
-  assert.ok(Run.toggleKit(run, pick.uid), 'tap again to put it back'); assert.ok(Run.toggleGem(run)); assert.ok(!Run.toggleKit(run, pick.uid), 'the gem has the place now'); assert.ok(Run.toggleGem(run), 'and tapping it again gives it up');
-  Run.toggleKit(run, pick.uid); assert.ok(Run.beginDig(run, { seed: 4 }));
-  assert.equal(run.deck.length, deckSize - 1); assert.deepEqual(run.owned.map(c => c.uid), [pick.uid]); assert.equal(run.dig.mine[0].uid > 0, true); assert.equal(run.dig.mine[0].id, pick.id); assert.equal(run.dig.geodeGems, 0);
-  const g = Run.start(cards, { seed: 2 }); Run.toggleGem(g); Run.beginDig(g, { seed: 4 });
-  assert.equal(g.dig.kit.length, 0); assert.equal(g.dig.geodeGems, RN.startGems, 'you start with a gem'); assert.equal(g.owned.length, 0); assert.equal(g.deck.length, deckSize);
+  Run.openPack(run); const card = run.prep.offer.find(c => !/When kept/.test(c.text)); Run.toggleKeep(run, card.uid); Run.confirmKeep(run);      // (not a Mystery Box, which would keep one more)
+  assert.equal(run.prep.step, 'kit'); assert.equal(run.prep.kitMax, 1); assert.deepEqual(run.owned.map(c => c.uid), [card.uid]);
+  assert.ok(!Run.toggleKit(run, 12345), 'only cards that exist'); assert.ok(!Run.toggleKit(run, run.deck[0].uid), 'only cards you own: not the rest of the Booster Deck');
+  assert.ok(Run.toggleKit(run, card.uid)); assert.ok(Run.toggleKit(run, card.uid), 'tap again to put it back'); assert.ok(Run.toggleKit(run, card.uid));
+  assert.ok(Run.beginDig(run, { seed: 4 }));
+  assert.deepEqual(run.dig.kit.map(c => c.id), [card.id]); assert.equal(run.dig.mine[0].id, card.id); assert.equal(run.dig.geodeGems, 0, 'the place is filled with your card, so no gem');
+  const g = Run.start(cards, { seed: 2 }); Run.openPack(g); Run.toggleKeep(g, g.prep.offer.find(c => !/When kept/.test(c.text)).uid); Run.confirmKeep(g);
+  assert.ok(Run.beginDig(g, { seed: 4 }));                                          // nothing chosen: you do not want the card in play (say, an Immediate that heals you at full Health)
+  assert.equal(g.dig.kit.length, 0); assert.equal(g.dig.geodeGems, RN.startGems, 'the empty place is a gem'); assert.equal(g.dig.known, 1, 'the card is still on top of the Mine, face up, for you to see coming');
+  const two = firstRound({ keepIds: ['PW-02'] }); two.prep.kitMax = 2; Run.toggleKit(two, two.owned[0].uid); Run.beginDig(two, { seed: 4 });
+  assert.equal(two.dig.geodeGems, RN.startGems, 'two places, one card: one gem');
 });
 test('Booster Pack (after a Dig): draw the pack\'s number of cards, keep exactly the keep number, the rest are trashed; then choose a Starter Kit', () => {
   const run = firstRound({ keepIds: ['PW-02', 'PW-03', 'ON-33'] });
   assert.deepEqual(run.owned.map(c => c.id), ['PW-02']); assert.equal(run.trash.length, 2); assert.equal(run.prep.step, 'kit'); assert.equal(run.prep.kitMax, 1);
-  const r2 = Run.start(cards, { seed: 1 }); r2.prep.step = 'pack'; r2.prep.first = false; r2.prep.pack = Run.ladderFor(0);
+  const r2 = Run.start(cards, { seed: 1 });
   assert.ok(Run.openPack(r2)); assert.equal(r2.prep.offer.length, 3); assert.equal(r2.deck.length, deckSize - 3);
   assert.ok(!Run.confirmKeep(r2), 'you must keep your cards first');
   const c = r2.prep.offer.find(x => !/When kept/.test(x.text)), [a, b] = r2.prep.offer.filter(x => x !== c);      // (the card kept is not a Mystery Box, which would add one more)
@@ -107,7 +110,7 @@ test('a Burnout card climbs the Power line during a Dig and starts the next roun
 });
 
 test('Escape Bonus: after banking, one roll of the die adds gems; gems = Geodes + Monsters survived + Escape Bonus', () => {
-  const run = firstRound({ keepIds: ['PW-02'] }); Run.beginDig(run, { seed: 6 });
+  const run = firstRound({ keepIds: ['PW-02'] }); Run.toggleKit(run, run.owned[0].uid); Run.beginDig(run, { seed: 6 });
   play(run, ['TR-01', 'TR-01', 'TR-01', 'MO-01', 'TR-01'], ['dig', 'dig', 'dig', 'dig', 'dig', 'bank'], 6);
   Run.finishDig(run);
   assert.equal(run.prep.step, 'escape'); assert.equal(run.prep.banked, true);
@@ -172,7 +175,7 @@ test('the app has no pledging: even with the Crown reached, nothing can be pledg
 
 test('the final round is a race: nobody banks; alone at the table you are in the lead once you pass the Crown tracker, and then the run ends with the Crown Jewel yours', () => {
   const run = Run.start(cards, { seed: 14, rounds: 2 });
-  Run.toggleKit(run, run.deck[0].uid); Run.beginDig(run, { seed: 1 });
+  kitOne(run); Run.beginDig(run, { seed: 1 });
   play(run, ['TR-01'], ['dig', 'bank'], 1); Run.finishDig(run);                              // round 1: survived 0, banked
   assert.equal(run.round, 2); assert.equal(run.phase, 'prep');
   run.dice = [4]; Run.rollEscape(run); Run.openPack(run); for (const c of run.prep.offer.slice(0, Run.keepCount(run))) Run.toggleKeep(run, c.uid); Run.confirmKeep(run); Run.beginDig(run, { seed: 2 });
@@ -192,7 +195,7 @@ test('the final round against another player: the leader may wait, everyone else
   const board = Board.create([{ id: 'me' }, { id: 'ai' }]);
   const mk = id => Run.start(cards, { seed: 3, rounds: 1, me: id, shared: { board, deck: Run.makeDeck(cards, Dig.makeRng(3)), trash: [] } });
   const a = mk('me'), b = mk('ai');
-  for (const r of [a, b]) { Run.toggleKit(r, r.deck[0].uid); Run.beginDig(r, { seed: 9 }); r.dig.mine = ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01', 'MO-02'].map((id, i) => ({ ...by(id), uid: 9200 + i })); r.dig.dice = Array(40).fill(10); }
+  for (const r of [a, b]) { kitOne(r); Run.beginDig(r, { seed: 9 }); r.dig.mine = ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01', 'MO-02'].map((id, i) => ({ ...by(id), uid: 9200 + i })); r.dig.dice = Array(40).fill(10); }
   const surv = (r, n) => { for (let i = 0; i < n; i++) { Dig.dig(r.dig); Dig.roll(r.dig); Dig.autoFace(r.dig); Run.refresh(r); } };
   surv(a, 4); Run.refresh(b);
   assert.ok(a.dig.board.lead && !b.dig.board.lead, 'a is in the lead at 4 (past the tracker, ahead of b)'); assert.ok(!Dig.can(a.dig).bank && !Dig.can(b.dig).bank, 'nobody banks');
@@ -210,7 +213,7 @@ test('the final round against another player: the leader may wait, everyone else
 
 test('the final round BOOM leaves the Crown on the table', () => {
   const run = Run.start(cards, { seed: 15, rounds: 1 });
-  Run.toggleKit(run, run.deck[0].uid); Run.beginDig(run, { seed: 1 });
+  kitOne(run); Run.beginDig(run, { seed: 1 });
   run.dig.heart = 1; play(run, ['MO-01'], ['dig'], 1); Run.finishDig(run);
   assert.equal(run.phase, 'done'); assert.equal(run.result.crown, false);
 });
@@ -293,7 +296,7 @@ test('the Board changes the moment a Dig ends: a bank locks in and may take the 
 }));
 
 test('the Dig\'s copy of the Leaderboard is refreshed from the live Board before it is asked (another player can change what it takes to lead)', () => {
-  const run = Run.start(cards, { seed: 30, rounds: 3 }); Run.toggleKit(run, run.deck[0].uid); Run.beginDig(run, { seed: 1 });
+  const run = Run.start(cards, { seed: 30, rounds: 3 }); kitOne(run); Run.beginDig(run, { seed: 1 });
   run.board.players.push({ id: 'ai', name: 'AI', color: '#000' });
   const first = run.dig; Dig.bank(first); Run.checkOver(run); Run.finishDig(run);
   run.dice = [3]; Run.rollEscape(run); Run.openPack(run); for (const c of run.prep.offer.slice(0, Run.keepCount(run))) Run.toggleKeep(run, c.uid); Run.confirmKeep(run); Run.beginDig(run, { seed: 2 });
