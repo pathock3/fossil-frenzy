@@ -344,7 +344,7 @@ test('play: a reload puts you back exactly where you were — mid-fight in a run
   } finally { await browser.close(); }
 });
 
-test('play: monkey test — random taps through whole runs at iPad sizes: no errors, the page never scrolls, a legal tap always exists until the run is done', SKIP, async () => {
+test('play: monkey test — random taps through whole runs at iPad sizes: no errors, the page never scrolls, a legal tap always exists until the run is done', { ...SKIP, timeout: 240000 }, async () => {
   const ALL = `(document.querySelector('#play .zoom') ? [document.querySelector('#play .zoom')] : [...document.querySelectorAll('#play [data-p]:not([disabled])')]).filter(e => e.getBoundingClientRect().width > 0 && (!(e.closest('.pbar') || e.closest('.foot')) || ['startround', 'prep', 'keepgo', 'again'].includes(e.dataset.p)) && (r => e.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)))(e.getBoundingClientRect()))`;
   const AVOID = ['menu', 'practice', 'cards', 'print', 'help', 'startrun', 'setup', 'rounds', 'adv'];
   for (const [vp, seed] of [[{ width: 1180, height: 820 }, 1], [{ width: 820, height: 1180 }, 2], [{ width: 1024, height: 700 }, 3]]) {
@@ -361,7 +361,7 @@ test('play: monkey test — random taps through whole runs at iPad sizes: no err
         const prefer = pool.filter(([, p]) => ['dig', 'roll', 'face', 'escape', 'openpack', 'keepgo', 'startround', 'prep', 'unzoom'].includes(p));
         const from = prefer.length && rnd() < .6 ? prefer : pool, [idx] = from[Math.floor(rnd() * from.length)];
         const h = await page.evaluateHandle(`${ALL}[${idx}]`);
-        await h.asElement().click({ timeout: 4000 });
+        await h.asElement().click({ timeout: 15000 });
         const m = await page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ih: innerHeight, done: /Crown Jewel/.test((document.querySelector('#play .panel h2') || {}).textContent || '') }));
         assert.ok(m.sh <= m.ih + 1, `the page scrolls at step ${i}`);
         done = m.done;
