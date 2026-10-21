@@ -469,6 +469,12 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .fine { max-width: 1000px; margin: 10px auto; color: var(--dim); font-size: 14px; }
 #play .fine summary { min-height: 44px; display: flex; align-items: center; font-weight: 800; }
 #play .fine li { margin: 4px 0; }
+
+#play .slot.stacked::before, #play .slot.stacked::after { content: ""; position: absolute; inset: 0; border-radius: calc(22px * var(--ca)); background: #e9dfc9; border: 2px solid rgba(0,0,0,.35); z-index: -1; }
+#play .slot.stacked::before { transform: translate(5px, 6px); } #play .slot.stacked::after { transform: translate(10px, 12px); background: #cbbf9f; z-index: -2; }
+#play .slot.stacked { isolation: isolate; border-style: solid; border-color: transparent; background: transparent; }
+#play .piles { width: 150px; }
+#play .tableau { align-items: center; }
 </style>
 </head>
 <body>
@@ -2308,10 +2314,9 @@ const Match = (() => {
     const kn = st.mine.slice(0, st.known), up = kn[0];
     // the Mine: a deck of cards, the same size as the cards you dig. Cards you can see coming are on top, face up.
     const deck = `<div class="stack"><button class="deck ${live ? 'live' : ''}" data-p="dig" ${live ? '' : 'disabled'} aria-label="Mine, ${st.mine.length} cards">${st.mine.length ? `<span class="cw" style="--s:var(--ca)"><span class="cs">${up ? A.playCard(up, 1) : '<span class="cardback"></span>'}</span></span>` : '<span class="cw" style="--s:var(--ca)"><span class="cs"><span class="cardback none"></span></span></span>'}<span class="cnt">${st.mine.length}</span></button>${kn.length > 1 ? `<div class="known"><span>then</span> ${kn.slice(1, 4).map(c => `<i>${A.esc(c.name)}</i>`).join('')}${kn.length > 4 ? `<i>+${kn.length - 4}</i>` : ''}</div>` : ''}</div>`;
-    const top = [...st.discard].reverse()[0];
-    const piles = `<div class="piles"><div class="pile discard" aria-label="Discard pile, ${st.discard.length} cards">${top ? `<span class="cw" style="--s:calc(var(--ca) * .5)"><span class="cs">${A.playCard(top, 1)}</span></span>` : '<span class="cw" style="--s:calc(var(--ca) * .5)"></span>'}<span class="cap">Discard · ${st.discard.length}</span></div>
-       <button class="pile bankp ${can.bank ? 'live' : ''}" data-p="bank" ${can.bank ? '' : 'disabled'}><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span><span>Bank</span></button></div>`;
-    const mid = `<div class="dugz"><div class="slot">${dugHTML(st)}</div></div><div class="dicez">${diceHTML(st, can)}</div>`;
+    // There is no separate discard pile: the cards you flip land in one spot beside the Mine, and the ones before it are stacked underneath. (Monsters move on to the Monster pile above.)
+    const piles = `<div class="piles"><button class="pile bankp ${can.bank ? 'live' : ''}" data-p="bank" ${can.bank ? '' : 'disabled'}><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span><span>Bank</span></button></div>`;
+    const mid = `<div class="dugz"><div class="slot ${st.discard.length ? 'stacked' : ''}">${dugHTML(st)}</div></div><div class="dicez">${diceHTML(st, can)}</div>`;
     const s = st.over ? Dig.score(st) : null;
     let over = '';
     const ovFx = st.over && st.over !== fx.over ? 'fx' : '';
@@ -2328,7 +2333,7 @@ const Match = (() => {
       : `<div class="over ${ovFx}">${ovFx ? confettiHTML(16) : ''}<h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + (st.best && st.over.kind === 'bank' ? `<div class="note">Best so far: ${st.best.now.survived} Monsters survived${st.best.newSurvived ? ' (new!)' : ''} · ${st.best.now.gems} gems banked${st.best.newGems ? ' (new!)' : ''}</div>` : '') + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>`;
     }
     S.fx = fxOf(st);
-    return `${drillHTML(st, can)}<div class="mat">${deck}${mid}${piles}${over}</div>${tableauHTML(st)}`;
+    return `${drillHTML(st, can)}${tableauHTML(st)}<div class="mat">${deck}${mid}${piles}${over}</div>`;
   }
   // The in-game menu: quiet, small. Your game is saved after every tap, so "Main menu" leaves nothing to lose; there you can Continue it or start a new one.
   function gmenuHTML() {

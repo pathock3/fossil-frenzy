@@ -160,6 +160,9 @@ test('table: dig a Geode, then a Monster — tap the die, reroll, face it; the D
     assert.match(await logText(page), /You dig Geode[\s\S]*Geode: \+1/);
     assert.match(await page.locator('#play [data-p=bank]').innerText(), /^1/);
     await page.click('#play [data-p=dig]');
+    assert.doesNotMatch(await page.locator('#play .ptable').innerText(), /Discard/, 'no separate discard pile and no count of it: the flip spot is the discard');
+    assert.equal(await page.locator('#play .slot.stacked').count(), 1, 'the cards flipped before are stacked under the flip spot');
+    assert.ok(await page.evaluate(() => { const m = document.querySelector('#play .mat').getBoundingClientRect(), t = document.querySelector('#play .tableau').getBoundingClientRect(); return t.bottom <= m.top + 1; }), 'the cards you are drawing are in front of you (below); Power and Ongoing cards are above them');
     assert.ok(await page.locator('#play .mcard[data-p=face]').isDisabled(), 'cannot face it before rolling');
     assert.match(await page.locator('#play [data-p=roll]').innerText(), /Tap/i, 'the die says Tap, nothing more');
     assert.equal(await page.locator('#play .mset:has(.mb:text-is("A")) .lad i.met').count(), 1, 'Monster A is in front of you and counts');
