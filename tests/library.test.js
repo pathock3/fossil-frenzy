@@ -124,6 +124,7 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     await page.waitForURL(base + '/index.html');
     for (const g of listed.filter(g => g.path && g.id !== 'fossil-frenzy')) {      // every other game links back too, from the top-left
       await page.goto(base + '/' + g.path);
+      await page.waitForSelector('a.libback', { timeout: 15000 });
       const link = await page.locator('a.libback').boundingBox();
       assert.ok(link && link.x < 40 && link.y < 40 && link.height >= 44, g.id + ' has the way back in the top-left: ' + JSON.stringify(link));
     }
