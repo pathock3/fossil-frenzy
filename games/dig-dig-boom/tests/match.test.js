@@ -135,7 +135,7 @@ test('before round 1 the AI keeps the first card of its Bronze Pack and puts it 
   const picked = new Set();
   for (let seed = 1; seed <= 40; seed++) {
     const m = Match.start(cards, { seed, rounds: 3 }), me = Match.human(m), ai = Match.bot(m);
-    Match.openPack(m); Run.toggleKeep(me, me.prep.offer[0].uid); Run.confirmKeep(me); Run.toggleKit(me, me.owned[0].uid); assert.ok(Match.beginRound(m));
+    Match.openPack(m); Run.toggleKeep(me, me.prep.offer[0].uid); Run.confirmKeep(me); Run.continueReveal(me); Run.toggleKit(me, me.owned[0].uid); assert.ok(Match.beginRound(m));
     assert.equal(ai.owned.length, 1); assert.equal(ai.kit.length, 1); assert.ok(Dig.supported(ai.kit[0]));
     assert.notEqual(ai.kit[0].uid, me.kit[0].uid, `seed ${seed}: its own pack, its own card`);
     assert.equal(ai.dig.mine[0].id, ai.kit[0].id, 'it is on top of the AI\'s Mine'); assert.equal(me.dig.mine[0].id, me.kit[0].id);

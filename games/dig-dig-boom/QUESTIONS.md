@@ -77,7 +77,6 @@ Immediate cards:
 - IM-31 Tool Shed: "+1 {grit} for each Ongoing card you have" → "+1 {reroll} for each Ongoing card you have" (the Lucky Coin counts; Rerolls cap at 3).
 - IM-18 Pet Treat: "Your Pet triggers 1 lower until Prep" (a player-chosen move, and it was almost always right) → "+2 {heart} and +1 {reroll}" — or a fresh idea.
 - IM-34 Wrench Rat: "Move your highest Power card (not your Pet) down 2" → "+1 {reroll} for each Power card on your line (not your Pet)".
-Question on a card that stays: Pet Whistle (Ongoing) "Your Pet triggers on 9 instead of 10" lowers the Pet's number permanently by a card effect, not a player move. Does that stay?
 
 ## Decided for the prototype
 - Advanced trash is not in the prototype (it stays in the rule book as an optional rule). Lucky Coin stays +1. The 35 Grit/move cards stay out of the game in the proposed form above; variety of Booster cards is a late-stage pivot.

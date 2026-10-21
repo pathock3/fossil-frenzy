@@ -13,7 +13,7 @@
 <link rel="icon" type="image/png" href="../../assets/favicon.png">
 <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
 <style>
-:root { --bg: #1c1410; --panel: #2a1f18; --line: #4b3a2c; --text: #f4ead8; --dim: #ac9a82; --accent: #ffb13b; --good: #52d28a; }
+:root { --bg: #1c1410; --panel: #2a1f18; --line: #4b3a2c; --text: #f4ead8; --dim: #c4b49c; --accent: #ffb13b; --good: #52d28a; }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif; overscroll-behavior: none; }
 body { padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 40px max(14px, env(safe-area-inset-left)); }
@@ -55,7 +55,7 @@ summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .card .band { color: var(--on, #fff); }
 .card .name { font-weight: 800; line-height: 1; white-space: nowrap; letter-spacing: -.01em; }
 .card .name, .card .typeword { text-align: left; }
-.card .typeword { font-weight: 800; letter-spacing: .12em; text-transform: uppercase; line-height: 1; white-space: nowrap; }
+.card .typeword { opacity: .9; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; line-height: 1; white-space: nowrap; }
 .card .text { font-weight: 600; line-height: 1.13; color: #1d1712; overflow: hidden; }
 .card .text .ic, .meas .ic { display: inline-block; width: 1.12em; height: 1.12em; vertical-align: -.2em; margin: 0 .04em; }
 .card .stat { font-weight: 900; line-height: 1.05; }
@@ -80,7 +80,6 @@ body[data-mode=play] #app, body[data-mode=cards] #play { display: none; }
 body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidden; position: fixed; inset: 0; width: 100%; }
 #play { height: 100%; display: flex; flex-direction: column; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
 #play .pbar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; flex: none; }
-#play .pbar h1 { margin: 0 auto 0 4px; font-size: 20px; }
 #play .pbar .chip { padding: 6px 12px; font-size: 14px; }
 #play .pbar .back { min-height: 44px; padding: 6px 12px 6px 8px; font-size: 14px; }
 #play .pmain { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 0 10px 10px; }
@@ -101,13 +100,13 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .piece .h { background: var(--c); color: var(--on); font-weight: 800; font-size: 13px; line-height: 1.1; padding: 3px 6px; display: flex; align-items: center; gap: 5px; }
 #play .piece .h svg { width: 15px; height: 15px; flex: none; }
 #play .piece .h .n { margin-left: auto; background: #fffaf0; color: #1d1712; border-radius: 99px; min-width: 22px; text-align: center; padding: 0 4px; font-size: 13px; }
-#play .piece .t { display: block; font-size: 11.5px; font-weight: 600; line-height: 1.2; padding: 3px 6px 4px; }
+#play .piece .t { display: block; font-size: 13px; font-weight: 600; line-height: 1.2; padding: 3px 6px 4px; }
 #play .piece .ic { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -.2em; }
 #play .piece.pick { outline: 4px solid var(--accent); animation: pulse 1.2s ease-in-out infinite; }
 #play .piece.trig { box-shadow: 0 0 0 3px #fff, 0 0 12px 4px var(--accent); }
 #play .piece.elig { box-shadow: 0 0 0 3px #fff, 0 0 12px 4px var(--accent); animation: pulse 1.2s ease-in-out infinite; }
 #play .piece.done { opacity: .6; }
-#play .piece .h .tg { margin-left: auto; font-size: 10px; font-weight: 800; background: #1d1712; color: #fff; border-radius: 6px; padding: 1px 5px; white-space: nowrap; }
+#play .piece .h .tg { margin-left: auto; font-size: 12px; font-weight: 800; background: #1d1712; color: #fff; border-radius: 6px; padding: 1px 5px; white-space: nowrap; }
 #play .stack { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 #play .gemline { display: flex; align-items: center; gap: 4px; font-size: 24px; color: #fff; }
 #play .gemline svg { width: 26px; height: 26px; }
@@ -183,8 +182,6 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 
 /* ---------- the look: a lively cave, bright pieces, things that pop (nothing here ever waits for or delays a tap) ---------- */
 body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e 0%, #3a2211 36%, #1b120c 80%) fixed; }
-#play .pbar h1 { display: flex; align-items: center; gap: 8px; font-size: 27px; font-weight: 900; letter-spacing: .01em; background: linear-gradient(180deg, #fff4bf 0%, #ffc23a 52%, #ec7a1c 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 0 #6b2f05); }
-#play .pbar h1 svg { width: 30px; height: 30px; flex: none; }
 #play .drill, #play .line, #play .lb, #play .dig { position: relative; background: radial-gradient(90% 110% at 50% 0%, rgba(255,177,59,.13), rgba(255,255,255,.02) 70%); border-color: #5d4631; }
 #play .pile.bankp.live { background: linear-gradient(180deg, rgba(255,177,59,.32), rgba(47,134,192,.12)); }
 #play .piece:not(.elig):not(.trig) { box-shadow: 0 2px 0 rgba(0,0,0,.4), 0 5px 8px rgba(0,0,0,.25); }
@@ -299,6 +296,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .mode .pips { display: flex; gap: 7px; flex: none; }
 #play .mode .pips i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(43,27,16,.55); }
 #play .mode .pips i.on { background: #2b1b10; border-color: #2b1b10; }
+#play .mode .pips i.now { box-shadow: inset 0 0 0 3px #ffc349, inset 0 0 0 6px #2b1b10; }
 #play .mode .stack { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
 #play .ghostrow { display: flex; gap: 10px; margin-top: clamp(8px, 1.4vh, 12px); }
 #play .ghost { flex: 1; min-height: 48px; border-radius: 14px; background: rgba(255,255,255,.06); border: 2px solid rgba(255,255,255,.1); font-weight: 800; font-size: 16px; }
@@ -335,7 +333,6 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .dugz { flex: none; }
 #play .slot { width: calc(250px * var(--ca)); height: calc(350px * var(--ca)); border-radius: calc(22px * var(--ca)); border: 3px dashed rgba(255,255,255,.16); background: rgba(0,0,0,.16); display: flex; align-items: center; justify-content: center; position: relative; }
 #play .slot .mcard { position: absolute; inset: -3px; display: block; }
-#play .mcard.live { animation: none; outline: 4px solid var(--accent); outline-offset: 4px; }
 #play .dicez { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; justify-content: center; }
 #play .hint { display: flex; flex-direction: column; gap: 6px; align-items: center; font-size: 13px; color: var(--dim); font-weight: 700; }
 #play .piles { flex: none; width: 150px; margin-left: auto; height: 100%; display: flex; flex-direction: column; gap: 8px; }
@@ -355,15 +352,14 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .tsep { flex: none; width: 22px; }
 /* the Leaderboard lives in the title bar: quiet, compact */
 #play .pbar { gap: 12px; padding-top: max(10px, calc(env(safe-area-inset-top) * 0 + 8px)); }
-#play .pbar h1 { flex: none; margin: 0; font-size: 24px; }
 #play .pbar .lb { flex: 1; min-width: 0; padding: 3px 8px 4px; border-radius: 10px; }
-#play .pbar .lbhead { font-size: 10.5px; padding: 0 1px 2px; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; gap: 8px; }
+#play .pbar .lbhead { font-size: 12px; padding: 0 1px 2px; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; gap: 8px; }
 #play .pbar .lbhead span:first-child { overflow: hidden; text-overflow: ellipsis; }
 #play .pbar .lbcells { gap: 2px; }
-#play .pbar .lbc { min-height: 30px; border-radius: 6px; padding: 1px 0; }
-#play .pbar .lbc .ln { font-size: 11px; line-height: 1; }
+#play .pbar .lbc { min-height: 34px; border-radius: 6px; padding: 1px 0; }
+#play .pbar .lbc .ln { font-size: 13px; line-height: 1; font-weight: 800; }
 #play .pbar .lbc .lm { min-height: 14px; }
-#play .pbar .mk { width: 12px; height: 12px; font-size: 8px; }
+#play .pbar .mk { width: 14px; height: 14px; font-size: 9px; }
 #play .pbar .crownmk { font-size: 14px; }
 /* the Monster ladders: the damage the next one deals is lit; what is still to come is an outline; what you have met is struck out */
 #play .mset .lad i { background: transparent; color: #ff9a8a; border: 2px solid #8a3a34; }
@@ -377,10 +373,13 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .d10 .dnum.ten { font-size: 38px; }
 
 /* ---------- Prep: the pack tears open, the kit says how many ---------- */
-#play .kitbar .count { font-size: 22px; font-weight: 900; color: var(--accent); }
+#play .kitbar b, #play .kitbar .count { font-size: 26px; font-weight: 900; }
+#play .kitbar .count { color: var(--accent); }
 #play .kitnote { margin: 0 0 6px; text-align: center; color: var(--dim); font-size: 15px; font-weight: 600; }
 #play .kitnote .ic { width: 1.1em; height: 1.1em; vertical-align: -.2em; }
 #play .panel.prep { position: relative; }
+#play .panel.prep .foot { justify-content: flex-end; }
+#play .panel.prep .foot .btn { min-width: 220px; min-height: 60px; font-size: 22px; }
 #play .panel.prep .scroll { display: flex; flex-direction: column; justify-content: center; gap: 12px; }
 #play .tear { position: absolute; inset: 0; z-index: 6; pointer-events: none; display: flex; align-items: center; justify-content: center; }
 #play .tpack { position: relative; width: 190px; height: 260px; animation: tpack 1.5s ease-in both; }
@@ -430,12 +429,19 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .hero2 .hbank .ic { width: 42px; height: 42px; }
 #play .hero2 .hbank small { font-size: 18px; color: var(--dim); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; margin-left: 8px; }
 #play .hero2 .hgems.bump { animation: bump .35s ease-out; display: inline-block; }
-#play .hero2 .hbanner { position: absolute; left: 0; right: 0; top: 215px; text-align: center; font-size: 96px; font-weight: 900; letter-spacing: -2px; opacity: 0; pointer-events: none; text-shadow: 0 6px 0 rgba(0,0,0,.5); z-index: 5; }
+#play .hero2 .hbanner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; z-index: 5; background: radial-gradient(ellipse 48% 34% at 50% 48%, rgba(14,8,5,.82), rgba(14,8,5,.5) 65%, rgba(14,8,5,0) 100%); }
+#play .hero2 .hbanner span { display: block; padding: 10px 40px 14px; border-radius: 26px; background: #1a0f09; border: 5px solid currentColor; font-size: 92px; font-weight: 900; letter-spacing: -2px; line-height: 1; box-shadow: 0 10px 0 rgba(0,0,0,.5), 0 0 40px currentColor; }
 #play .hero2 .hbanner .ic { width: .8em; height: .8em; vertical-align: -.1em; }
 #play .hero2 .hbanner.show { animation: hbin .5s cubic-bezier(.2,.8,.3,1) both; }
-@keyframes hbin { 0% { transform: scale(.5); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-#play .hero2 .hbanner.boom { color: #ff5b4a; }
-#play .hero2 .hbanner.bank { color: #ffd54a; font-size: 80px; }
+#play .hero2 .hbanner.boom { color: #ff6a56; }
+#play .hero2 .hbanner.bank { color: #ffd54a; }
+#play .hero2 .hbanner.bank span { font-size: 78px; }
+@keyframes hbin { 0% { opacity: 0; } 100% { opacity: 1; } }
+#play .hero2 .hbanner.show span { animation: boomin .5s cubic-bezier(.2,.8,.3,1) both; }
+#play .hero2 .hdmg { position: absolute; left: 0; top: 0; z-index: 6; display: inline-flex; align-items: center; gap: 6px; padding: 6px 18px 6px 10px; border-radius: 99px; background: #cf2f2f; color: #fff; border: 4px solid #fff; font-weight: 900; font-size: 46px; line-height: 1; box-shadow: 0 6px 0 rgba(0,0,0,.45), 0 0 26px rgba(255,70,50,.9); pointer-events: none; opacity: 0; }
+#play .hero2 .hdmg .ic { width: 44px; height: 44px; }
+#play .hero2 .htrack.hurt { animation: hurt .5s ease-out; }
+@keyframes hurt { 0% { transform: translateX(0); } 15% { transform: translateX(-10px); } 35% { transform: translateX(9px); } 55% { transform: translateX(-6px); } 75% { transform: translateX(3px); } 100% { transform: none; } }
 /* ---------- Settings and How to play: a header with a back button, then a list ---------- */
 #play .shead { display: flex; align-items: center; gap: 14px; padding: 4px 0 8px; flex: none; }
 #play .shead h2 { margin: 0; font-size: 28px; }
@@ -475,6 +481,135 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .slot.stacked { isolation: isolate; border-style: solid; border-color: transparent; background: transparent; }
 #play .piles { width: 150px; }
 #play .tableau { align-items: center; }
+
+#play .pbar.slim { position: absolute; z-index: 12; top: var(--top); right: max(14px, env(safe-area-inset-right)); padding: 0; }
+#play .pbar .pgrow { flex: 1; }
+#play .keepsay { margin: 0; font-size: 22px; font-weight: 800; color: var(--text); text-align: center; }
+#play .tcard.arrive { animation: arrive .5s cubic-bezier(.2,.8,.3,1) backwards; }
+@keyframes arrive { 0% { transform: translateY(170px) scale(.5); opacity: 0; } 100% { transform: none; opacity: 1; } }
+
+#play .dieb { width: min(100%, calc(350px * var(--ca) * .56)); height: auto; aspect-ratio: 1; }
+#play .dieb .d10 { width: 100%; height: 100%; }
+#play .rollp { max-width: none; width: 100%; }
+#play .tapword { font-size: 22px; }
+#play .calc { font-size: 26px; font-weight: 800; color: var(--dim); text-align: center; }
+#play .calc b { display: inline; font-size: 44px; color: #fff; }
+#play .hint { flex-direction: row; flex-wrap: wrap; justify-content: center; font-size: 15px; font-weight: 800; color: var(--accent); }
+#play .deck .dcap-unused { position: absolute; z-index: 3; left: 8%; right: 8%; bottom: 12px; padding: 8px 6px; border-radius: 12px; background: rgba(20,12,8,.88); border: 2px solid var(--accent); color: #fff; font-size: 16px; font-weight: 800; line-height: 1.2; text-align: center; }
+
+/* a Monster is in front of you: only the Monster and the die stay lit */
+#play .ptable .drill, #play .ptable .tableau, #play .ptable .deck, #play .ptable .piles { transition: opacity .25s, filter .25s; }
+#play .ptable.await-roll .drill, #play .ptable.await-roll .tableau, #play .ptable.await-roll .deck, #play .ptable.await-roll .piles { opacity: .3; filter: saturate(.5) brightness(.8); }
+#play .ptable.await-roll .deck.live { animation: none; outline: none; }
+#play .dieb.live { position: relative; animation: glowpulse 1.3s ease-in-out infinite; }
+#play .dieb.live .d10 { animation: dbounce 1.3s ease-in-out infinite; }
+#play .dieb.live .tapword { font-size: 20px; white-space: nowrap; background: var(--accent); color: #1c1410; padding: 6px 16px; border-radius: 99px; letter-spacing: .04em; }
+@keyframes glowpulse { 0%, 100% { filter: drop-shadow(0 0 14px rgba(255,177,59,.7)) drop-shadow(0 6px 0 rgba(0,0,0,.45)); } 50% { filter: drop-shadow(0 0 34px rgba(255,200,90,1)) drop-shadow(0 6px 0 rgba(0,0,0,.45)); } }
+@keyframes dbounce { 0%, 100% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-8px) rotate(-4deg); } 55% { transform: translateY(0) rotate(3deg); } }
+
+/* the bottom row: Mine, flip spot, Bank (all card-sized) and, to their right, the action zone */
+#play .piles { flex: none; width: calc(250px * var(--ca)); height: calc(350px * var(--ca)); margin-left: 0; }
+#play .pile.bankp { height: 100%; }
+#play .pile.bankp .gemline { font-size: 38px; }
+#play .pile.bankp .gemline svg { width: 40px; height: 40px; }
+#play .dicez { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; justify-content: center; }
+#play .action { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; width: 100%; }
+#play .aprompt { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 12px; font-size: 21px; font-weight: 800; color: var(--text); text-align: center; line-height: 1.25; }
+#play .arow { display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; }
+#play .astack { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+#play .takedmg { min-height: 64px; padding: 10px 26px; border-radius: 18px; background: linear-gradient(180deg, #ff8a4a, #e0481c); border: 3px solid #ffd2b0; color: #fff; font-size: 24px; font-weight: 900; box-shadow: 0 6px 0 #7a2a0c, 0 12px 20px rgba(0,0,0,.4); animation: pulse 1.4s ease-in-out infinite; }
+#play .takedmg.lethal { background: linear-gradient(180deg, #ff5b4a, #b81d12); border-color: #fff; }
+#play .takedmg:active { transform: translateY(3px); box-shadow: 0 2px 0 #7a2a0c; }
+#play .rollp, #play .hint { }
+#play .dieb { width: clamp(96px, calc(350px * var(--ca) * .5), 170px); }
+
+/* where you are: only what you can do now is bright; a step line says which step you are on; a stamp says how the Monster ended */
+#play .deck:disabled, #play .pile:disabled { opacity: .38; filter: saturate(.5); }
+#play .steps { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; color: var(--dim); }
+#play .stp { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 8px; border-radius: 99px; border: 2px solid var(--line); background: rgba(0,0,0,.2); }
+#play .stp i { font-style: normal; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,.12); color: var(--text); font-size: 15px; }
+#play .stp.cur { color: #1c1410; background: var(--accent); border-color: #fff; }
+#play .stp.cur i { background: #1c1410; color: var(--accent); }
+#play .stp.done { color: var(--good); border-color: var(--good); }
+#play .stp.done i { background: var(--good); color: #0b3a22; }
+#play .sarr { font-size: 24px; color: var(--dim); }
+#play .stamp { position: absolute; left: 50%; top: 40%; z-index: 5; transform: translate(-50%, -50%) rotate(-14deg); padding: 4px 16px; border: 5px solid currentColor; border-radius: 10px; font-size: 32px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; background: rgba(255,255,255,.9); box-shadow: 0 6px 0 rgba(0,0,0,.35); animation: stampin .35s cubic-bezier(.2,.8,.3,1) both; pointer-events: none; }
+#play .stamp.survived { color: #168a4a; }
+#play .stamp.defeated { color: #7a3fb8; }
+@keyframes stampin { 0% { transform: translate(-50%, -50%) rotate(-14deg) scale(2.2); opacity: 0; } 70% { transform: translate(-50%, -50%) rotate(-14deg) scale(.94); opacity: 1; } 100% { transform: translate(-50%, -50%) rotate(-14deg) scale(1); opacity: 1; } }
+#play .action .d10.fx-tumble { animation-duration: .3s; }
+
+/* "Use all" is a real button: bright, raised, impossible to miss */
+#play .aprompt .chip[data-p=triggerall] { min-height: 52px; padding: 8px 22px; border-radius: 16px; border: 3px solid #e9d4ff; background: linear-gradient(180deg, #a15be0, #6d2fb0); color: #fff; font-size: 20px; font-weight: 900; box-shadow: 0 5px 0 #3b1766, 0 10px 18px rgba(0,0,0,.4); }
+#play .aprompt .chip[data-p=triggerall]:active { transform: translateY(3px); box-shadow: 0 2px 0 #3b1766; }
+
+/* the roll is open until you use a card, then it is locked in */
+#play .dieb { position: relative; }
+#play .dlock { position: absolute; right: -10px; top: -10px; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,.4); }
+#play .dlock svg { width: 26px; height: 26px; }
+#play .dlock.open { background: var(--good); color: #0b3a22; animation: pulse 1.6s ease-in-out infinite; }
+#play .dlock.shut { background: #6b5f55; color: #e9dccb; border-color: #a99a8a; }
+#play .rerollbtn { display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 18px; border-radius: 16px; border: 3px solid #bff0d3; background: linear-gradient(180deg, #3cc97a, #1c8a4d); color: #fff; font-size: 20px; font-weight: 900; box-shadow: 0 5px 0 #0b4727, 0 10px 18px rgba(0,0,0,.4); }
+#play .rerollbtn .ic { width: 28px; height: 28px; }
+#play .rerollbtn small { font-size: 13px; font-weight: 800; opacity: .85; }
+#play .rerollbtn:active { transform: translateY(3px); box-shadow: 0 2px 0 #0b4727; }
+#play .lockednote { font-size: 16px; font-weight: 800; color: var(--dim); }
+
+/* a Mystery Box: the others fall away, the extra card is turned over */
+#play .revealrow { position: relative; display: flex; justify-content: center; align-items: center; gap: 14px; min-height: 120px; }
+#play .keptcard, #play .flipcard { display: block; position: relative; flex: none; }
+#play .keptcard { animation: keptmove .6s ease-out 1.1s backwards; }
+#play .ghostcard { position: absolute; left: 50%; top: 0; margin-left: calc(var(--gx) - 50%); display: block; pointer-events: none; animation: ghostaway .7s ease-in calc(.35s + var(--i) * .1s) forwards; }
+#play .flipcard { perspective: 900px; }
+#play .flipcard .fback, #play .flipcard .ffront { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; transition: none; }
+#play .flipcard .fback { display: flex; align-items: stretch; transform: rotateY(0deg); animation: revealback 1.8s ease-in-out both; }
+#play .flipcard .fback .cardback { width: 100%; height: 100%; border-radius: 12px; transform: none; }
+#play .flipcard .ffront { animation: revealfront 1.8s ease-in-out both; }
+#play .flipcard { animation: dealin .5s cubic-bezier(.2,.8,.3,1) calc(.9s + var(--i) * .15s) backwards; }
+@keyframes ghostaway { 0% { transform: none; opacity: 1; } 100% { transform: translateY(160px) rotate(10deg) scale(.6); opacity: 0; } }
+@keyframes keptmove { 0% { transform: translateX(calc(var(--gx, 0px) * 0)); } 100% { transform: none; } }
+@keyframes revealback { 0%, 55% { transform: rotateY(0deg); } 80%, 100% { transform: rotateY(180deg); } }
+@keyframes revealfront { 0%, 55% { transform: rotateY(-180deg); } 80%, 100% { transform: rotateY(0deg); } }
+
+/* ---------- a table, not a screen: felt, a wooden rail, a cardboard player board, printed spaces with tokens on them ---------- */
+#play .pmain { position: relative; margin: 0 8px 8px; padding: 12px; border-radius: 22px; border: 12px solid #7a4d28; border-image: none;
+  background-color: #46301f; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 .86  0 0 0 0 .66  0 0 0 .16 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"), radial-gradient(120% 95% at 50% 30%, rgba(255,214,160,.12) 0%, rgba(0,0,0,0) 55%, rgba(0,0,0,.5) 100%);
+  box-shadow: 0 0 0 3px #2b180a, inset 0 0 0 3px #2b180a, inset 0 0 60px rgba(0,0,0,.7), 0 16px 30px rgba(0,0,0,.6); }
+#play .pmain::before { content: ""; position: absolute; inset: 6px; border: 2px dashed rgba(255,226,170,.22); border-radius: 14px; pointer-events: none; }
+#play .drill { position: relative; gap: 18px; padding: 12px 16px 14px; border: 4px solid #6b4a27; border-radius: 16px; color: #3a2a18;
+  background-color: #cdb58a; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .25  0 0 0 0 .15  0 0 0 0 .05  0 0 0 .22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"), linear-gradient(135deg, rgba(255,255,255,.28), rgba(0,0,0,.1));
+  box-shadow: 0 8px 0 #3f2a14, 0 16px 24px rgba(0,0,0,.55), inset 0 0 0 3px rgba(255,255,255,.28); }
+#play .drill::after { content: ""; position: absolute; inset: 5px; border: 2px solid rgba(90,60,28,.45); border-radius: 11px; pointer-events: none; }
+#play .tlab svg { filter: drop-shadow(0 1px 0 rgba(255,255,255,.4)); }
+#play .track { border: 0; padding: 0; gap: 4px; width: calc(var(--col) * var(--n) + 4px * (var(--n) - 1)); }
+#play .track.live { animation: none; outline: 3px solid #1c8a4d; outline-offset: 4px; border-radius: 12px; }
+#play .tc { height: 44px; border-radius: 10px; border: 2px solid #8a6c3c; background: #ead9b7; color: #4a3520; opacity: 1; font-family: "Iowan Old Style", "Palatino", Georgia, serif; font-weight: 800; font-size: 20px;
+  box-shadow: inset 0 3px 6px rgba(70,42,12,.45), 0 1px 0 rgba(255,255,255,.55); position: relative; }
+#play .tc b { font-weight: inherit; }
+#play .tc.lit { background: #ead9b7; opacity: 1; }
+#play .tc:not(.lit):not(.now) { opacity: .5; background: #c9b387; }
+#play .tc.now { background: #ead9b7; border-color: #8a6c3c; font-size: inherit; text-shadow: none; opacity: 1; }
+#play .tc.now b { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -26px 0 0 -23px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.6);
+  background: radial-gradient(circle at 34% 28%, color-mix(in srgb, var(--tc) 55%, #fff), var(--tc) 58%, color-mix(in srgb, var(--tc) 55%, #000)); border: 3px solid color-mix(in srgb, var(--tc) 60%, #000); box-shadow: 0 6px 0 color-mix(in srgb, var(--tc) 45%, #000), 0 10px 12px rgba(0,0,0,.5); }
+#play .mpile h4 { color: #5a4426; }
+#play .mset .lad i { background: #ead9b7; color: #7a1d1d; border: 2px solid #8a6c3c; box-shadow: inset 0 2px 4px rgba(70,42,12,.4); font-family: "Iowan Old Style", "Palatino", Georgia, serif; }
+#play .mset .lad i.next { position: relative; background: radial-gradient(circle at 34% 28%, #ff8a7a, #cf2f2f 60%, #8c1414); color: #fff; border-color: #6b0f0f; box-shadow: 0 4px 0 #5e0b0b, 0 8px 10px rgba(0,0,0,.45); transform: translateY(-3px); }
+#play .mset .lad i.met { background: #bda57a; color: #6a5636; border-color: #8a6c3c; box-shadow: inset 0 2px 4px rgba(70,42,12,.4); text-decoration: line-through; opacity: .85; }
+/* the Leaderboard is a little cardboard strip with discs on it */
+#play .pbar .lb { color: #3a2a18; border: 3px solid #6b4a27; border-radius: 10px; background-color: #cdb58a; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .25  0 0 0 0 .15  0 0 0 0 .05  0 0 0 .22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"), linear-gradient(135deg, rgba(255,255,255,.28), rgba(0,0,0,.1)); box-shadow: 0 5px 0 #3f2a14, 0 10px 14px rgba(0,0,0,.5); }
+#play .pbar .lbhead { color: #4a3520; font-weight: 800; }
+#play .pbar .lbc { background: #ead9b7; border: 2px solid #8a6c3c; color: #4a3520; box-shadow: inset 0 2px 4px rgba(70,42,12,.4); }
+#play .pbar .lbc.free { background: #f0d68e; }
+#play .pbar .lbc.here { border-color: #1d1712; box-shadow: 0 0 0 2px #fff, inset 0 2px 4px rgba(70,42,12,.4); background: #fff3d4; color: #1d1712; }
+#play .pbar .mk { box-shadow: 0 2px 0 rgba(0,0,0,.45), 0 4px 5px rgba(0,0,0,.35); background-image: radial-gradient(circle at 34% 28%, rgba(255,255,255,.55), rgba(255,255,255,0) 60%); }
+#play .pbar .mk.pledge { background-color: transparent; }
+#play .pbar .crownmk { color: #8a6a10; text-shadow: 0 1px 0 rgba(255,255,255,.5); }
+#play .pbar .crownmk.mine { color: #c98a00; text-shadow: 0 0 8px rgba(255,190,60,.8); }
+/* the Bank: a tray with your gems in it */
+#play .pile.bankp { position: relative; overflow: hidden; background: linear-gradient(180deg, #5a3a1d, #3a2310); border: 4px solid #8a5a2c; box-shadow: inset 0 6px 14px rgba(0,0,0,.6), 0 4px 0 #24140a; }
+#play .pile.bankp .gpile { position: absolute; left: 50%; bottom: 14px; width: 150px; height: 80px; margin-left: -75px; pointer-events: none; }
+#play .pile.bankp .gpile i { position: absolute; width: 24px; height: 24px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.6)); }
+#play .pile.bankp .gemline, #play .pile.bankp span:last-child { position: relative; z-index: 1; }
 </style>
 </head>
 <body>
@@ -590,6 +725,7 @@ const DDB = {
   },
   // ---- The basic AI opponent ----
   ai: {
+    giveUpDigs: 40,                                      // if it has dug this many cards without the Dig ending (a loop of cards that never reaches a Monster), it banks
     bankAtHealth: 3,                                     // it banks as soon as its Health is this low (it has survived at least one Monster)
     confidentHealth: 6,                                  // ...and also banks to take the lead, unless its Health is at least this much: then it is confident it can go further
     maxRolls: 3,                                         // rolls per Monster (the first plus rerolls)
@@ -636,7 +772,7 @@ const DDB = {
       ['gainHalf',  "^Gain \\{heart\\} equal to half your result, rounded down$"],
       ['gainDmg',   "^Gain \\{heart\\} equal to this Monster's \\{damage\\}$"],
       ['gainPer',   "^\\+(\\d+) \\{(heart|reroll)\\} (?:for each|per) (.+)$"],
-      ['ifNoOther', "^If no other card triggers, (.+)$"],
+      ['ifNoOther', "^If (?:no other card triggers|this is the only card you trigger), (.+)$"],
       ['ifHeart',   "^If you have (\\d+) \\{heart\\} or less, (.+)$"],
       ['block',     "^Block (\\d+) \\{damage\\}$"],
       ['survive1',  "^If this Monster would make you BOOM, survive with (\\d+) \\{heart\\}$"],
@@ -682,7 +818,6 @@ const DDB = {
       ['bumper',     "^Block (\\d+) \\{damage\\} from every Monster$"],
       ['cowcatcher', "^Your first Monster each Dig deals no \\{damage\\}$"],
       ['panic',      "^The first time each Dig a roll would make you BOOM, reroll it for free$"],
-      ['whistle',    "^Your Pet triggers on (\\d+) instead of (\\d+)$"],
       ['thorned',    "^You may lose (\\d+) \\{heart\\} instead of spending a \\{reroll\\}$"],
     ],
     events: [                                            // what comes after "Whenever"
@@ -871,7 +1006,6 @@ const Dig = (() => {
       case 'bumper': o.flags.bumper = n(1); break;
       case 'cowcatcher': o.flags.cowcatcher = true; break;
       case 'panic': o.flags.panic = true; break;
-      case 'whistle': o.flags.whistle = n(1); break;
       case 'thorned': o.flags.thorned = n(1); break;
     }
     return o;
@@ -921,8 +1055,7 @@ const Dig = (() => {
   const anyFlag = (st, name) => st.ongoing.some(o => compile(o).ongoing.flags[name] !== undefined);
   function refreshPet(st) {
     const e = st.line.find(x => x.pet); if (!e) return;
-    const w = flag(st, 'whistle');
-    e.at = clamp(Math.min(e.base, w === undefined ? e.base : w), R.line.min, R.line.max);
+    e.at = clamp(e.base, R.line.min, R.line.max);
   }
   const over = st => !!st.over;
 
@@ -1114,7 +1247,7 @@ const Dig = (() => {
   function dig(st) {
     if (!can(st).dig) return false;
     st.digs++;
-    let c = st.mine.shift(); st.known = Math.max(0, st.known - 1);
+    delete st.flags.lastOutcome; let c = st.mine.shift(); st.known = Math.max(0, st.known - 1);
     if (!c) { c = bonusMonster(st); log(st, 'dig', `Your Mine is empty — a ${c.name} appears`); }
     else log(st, 'dig', `You dig ${c.name}`);
     st.last = c;
@@ -1210,12 +1343,14 @@ const Dig = (() => {
     log(st, 'roll', `You trigger ${entry.card.name}${needsFinal(effs) ? ' (it counts the other cards once you have chosen)' : ''}`);
     if (needsFinal(effs)) f.deferred.push(entry); else run(st, effs, { src: entry.card, result: resultTotal(st), trig: f.trig, depth: 0 });
     if (!over(st)) fire(st, 'triggers', { n: new Set(f.trig.map(e => e.card)).size }, 1);
+    if (!hold && st.fight === f && !over(st) && f.deferred.length && !eligible(st).length) runDeferred(st);          // no other card can trigger any more: "if no other card triggers" is settled, so it happens now
     if (!hold && st.fight === f && f.defeat && !over(st)) face(st);          // the Monster is defeated: nothing is left to do with it, so it goes to the pile by itself
     return true;
   }
   function triggerAll(st) {                                // the order a hurried player would use: highest number first
     const f = st.fight;
     for (let n = 0; n < 60 && st.fight && !over(st); n++) { const el = eligible(st); if (!el.length) break; trigger(st, el[0], true); }
+    if (st.fight === f && f && f.deferred.length && !over(st)) runDeferred(st);
     if (st.fight === f && f && f.defeat && !over(st)) face(st);          // everything chosen: a defeated Monster goes to the pile
   }
   function runDeferred(st) {
@@ -1254,6 +1389,7 @@ const Dig = (() => {
   }
   function finishFight(st, auto, dmg = 0) {
     const f = st.fight, m = f.monster;
+    st.flags.lastOutcome = f.defeat ? 'defeated' : 'survived';        // for the table: the Monster card says how it ended
     st.monsterPile.push(m);                                  // a Monster you are done with, defeated or not, goes in the Monster pile: you can count how many of each you have met
     if (f.defeat) {
       st.defeated++; st.survived++;
@@ -1538,8 +1674,9 @@ const Run = (() => {
       const top = run.deck.shift(); if (top) { run.owned.push(top); pr.extra.push(top); log(run, `${c.name}: also keep the top card of the Booster Deck — ${top.name}.`); }
     }
     log(run, `Kept: ${kept.map(c => c.name).join(', ')}.`);
-    pr.step = 'kit'; pr.kitPick = []; return true;
+    pr.step = pr.extra.length ? 'reveal' : 'kit'; pr.kitPick = []; return true;          // a Mystery Box shows you the extra card before you go on
   }
+  function continueReveal(run) { const pr = run.prep; if (!pr || pr.step !== 'reveal') return false; pr.step = 'kit'; return true; }
   // 4. Starter Kit: choose cards you own to start the next Dig with (up to the Round tracker).
   function toggleKit(run, id) {
     const pr = run.prep; if (!pr || pr.step !== 'kit') return false;
@@ -1632,7 +1769,7 @@ const Run = (() => {
     checkOver(r); return true;
   }
   const reserve = n => { uid = Math.max(uid, n + 1); };
-  return { makeDeck, setEscape, reserve, pledge, bank, finalCheck, refresh, checkOver, sync, save, load, start, rollEscape, packInfo, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
+  return { makeDeck, setEscape, reserve, pledge, bank, finalCheck, refresh, checkOver, sync, save, load, start, rollEscape, packInfo, openPack, keepCount, toggleKeep, confirmKeep, continueReveal, toggleKit, beginDig, finishDig, ladderFor, kitSize };
 })();
 
 /* =====================================================================
@@ -1659,6 +1796,7 @@ const AI = (() => {
     }
     if (st.board.final && st.board.lead) return false;                       // in the final round the leader waits; everyone else has to keep digging
     const confident = st.heart >= A.confidentHealth;
+    if (c.bank && st.digs >= A.giveUpDigs) { Run.bank(run); return true; }          // a loop of cards (Echo and Rewind Tape) that never reaches a Monster: it stops digging
     if (c.bank && st.survived >= 1 && (st.heart <= A.bankAtHealth || st.mine.length === 0 || (!confident && st.survived >= st.board.leadN))) { Run.bank(run); return true; }          // (an empty Mine means only Bonus Monsters are left: it stops there)
     if (c.dig) { Dig.dig(st); return true; }
     return false;
@@ -1668,6 +1806,7 @@ const AI = (() => {
     const pr = run.prep; if (!pr) return;
     if (pr.step === 'pack') Run.openPack(run);
     if (run.prep.step === 'keep') { for (const c of run.prep.offer.slice(0, Run.keepCount(run))) Run.toggleKeep(run, c.uid); Run.confirmKeep(run); }
+    if (run.prep.step === 'reveal') Run.continueReveal(run);
     if (run.prep.step === 'kit' && !run.prep.kitPick.length) {
       const pool = Dig.shuffle({ rng: run.rng }, run.owned.slice());
       for (const c of pool.slice(0, run.prep.kitMax)) Run.toggleKit(run, c.uid);
@@ -1921,7 +2060,16 @@ const Match = (() => {
     for (const c of state.all) if (c.type !== 'Monster' && c.type !== 'Treasure' && Dig.supported(c)) tw = Math.min(tw, fitFont(textHTML(c.text), b.w, b.h));
     twCache = { key, tw }; return tw;
   }
-  function playCard(c, scale, opts = {}) { return r2Card(c, deckTextSize(), 'compact', statFor(c), scale, opts.step, opts.gem); }
+  // In the game there is room: a card's effect text is as large as fits its box, never smaller than the deck's uniform size and never more than 1.4 times it (short effects read from across the table; long ones stay in step with the rest).
+  const twOwn = new Map();
+  function textSizeFor(c) {
+    const base = deckTextSize();
+    if (c.type === 'Monster' || c.type === 'Treasure') return base;
+    const key = c.id + '|' + c.text + '|' + base; if (twOwn.has(key)) return twOwn.get(key);
+    const b = R2.textBox(), v = Math.max(base, Math.min(fitFont(textHTML(c.text), b.w, b.h, 10, 64), Math.round(base * 1.4)));
+    twOwn.set(key, v); return v;
+  }
+  function playCard(c, scale, opts = {}) { return r2Card(c, textSizeFor(c), 'compact', statFor(c), scale, opts.step, opts.gem); }
   Object.assign(window.DigDigBoomUI.api, { ic, textHTML, esc, playCard, gemAt, gemOf, gemSvg, monsterLook });
   function deckHTML(scale) {
     const pool = state.all.filter(c => c.type !== 'Monster' && c.type !== 'Treasure' && Dig.supported(c));
@@ -2109,18 +2257,38 @@ const Match = (() => {
     const card = (c, o) => `<span class="cw hcard" style="--s:.8"><span class="cs">${A.playCard(c, 1, o)}</span></span>`;
     let li = 0, ci = 0, hp = R.start.heart, gems = 0, met = 0, timer = null;
     const setHealth = () => cellsEl.forEach(c => { const n = Number(c.dataset.n); c.className = 'hc' + (n === hp ? ' now' : n < hp ? ' lit' : ''); });
-    const reset = () => { hp = R.start.heart; gems = 0; met = 0; ci = 0; $$('.hslot').innerHTML = ''; $$('.hbanner').className = 'hbanner'; $$('.hbanner').textContent = ''; $$('.hgems').textContent = '0'; $$('.hcnt').textContent = HERO_LOOPS[li].cards.length; $$('.hdeck').classList.remove('empty'); setHealth(); };
+    const reset = () => { hp = R.start.heart; gems = 0; met = 0; ci = 0; $$('.hslot').innerHTML = ''; $$('.hbanner').className = 'hbanner'; $$('.hbanner').textContent = ''; root.querySelectorAll('.hdmg').forEach(e => e.remove()); $$('.hgems').textContent = '0'; $$('.hcnt').textContent = HERO_LOOPS[li].cards.length; $$('.hdeck').classList.remove('empty'); setHealth(); };
+    const banner = (cls, html) => { const b = $$('.hbanner'); b.innerHTML = `<span>${html}</span>`; b.className = 'hbanner show ' + cls; };
+    const cellPos = n => ({ x: 23 + n * 47 + 22, y: 31 });            // where a Health cell is, in stage pixels
+    // A Monster takes its time: it lands, we look at it, then its damage flies from the card to the Health track and the marker steps down.
+    const hit = (dmg, last) => {
+      if (!root.isConnected) return;
+      const from = { x: 410, y: 240 }, nh = Math.max(0, hp - dmg), to = cellPos(nh);
+      const chip = document.createElement('span'); chip.className = 'hdmg'; chip.innerHTML = `${ic('damage')}−${dmg}`; root.appendChild(chip);
+      const t = (p, sc, o) => ({ transform: `translate(${p.x}px, ${p.y}px) translate(-50%, -50%) scale(${sc})`, opacity: o });
+      chip.animate([t(from, .5, 0), { ...t(from, 1.25, 1), offset: .2 }, { ...t(from, 1.1, 1), offset: .35 }, { ...t(to, 1, 1), offset: .88 }, t(to, .6, 0)], { duration: 1000 * HP(), easing: 'ease-in-out', fill: 'forwards' });
+      timer = setTimeout(() => {
+        chip.remove(); hp = nh; met++; setHealth(); const tr = $$('.htrack'); tr.classList.remove('hurt'); void tr.offsetWidth; tr.classList.add('hurt');
+        if (hp === 0) { banner('boom', 'BOOM!'); timer = setTimeout(next, 2800 * HP()); return; }
+        timer = setTimeout(step, 1500 * HP());
+      }, 900 * HP());
+    };
     const step = () => {
       if (!root.isConnected) return;
       const L = HERO_LOOPS[li];
       if (ci < L.cards.length) {
         const c = L.cards[ci++]; $$('.hcnt').textContent = L.cards.length - ci;
-        if (c === 'g') { gems++; $$('.hslot').innerHTML = `<span class="fx-flip">${card(geo, { gem: ci })}</span>`; $$('.hgems').textContent = gems; const g = $$('.hgems'); g.classList.remove('bump'); void g.offsetWidth; g.classList.add('bump'); }
-        else { const m = mon(c[0]); const dmg = (Engine.damageSteps(m.text) || [])[c[1] - 1] || c[1]; $$('.hslot').innerHTML = `<span class="fx-slam">${card(m, { step: c[1] })}</span>`; hp = Math.max(0, hp - (L.end === 'boom' ? [3, 4, 5][met] || dmg : dmg)); met++; setHealth(); if (hp > 0) gems += 0; }
-        if (hp === 0) { const b = $$('.hbanner'); b.textContent = 'BOOM!'; b.className = 'hbanner show boom'; timer = setTimeout(next, 2600 * HP()); return; }
-        timer = setTimeout(step, 1100 * HP());
+        if (c === 'g') {
+          gems++; $$('.hslot').innerHTML = `<span class="fx-flip">${card(geo, { gem: ci })}</span>`; $$('.hgems').textContent = gems;
+          const g = $$('.hgems'); g.classList.remove('bump'); void g.offsetWidth; g.classList.add('bump');
+          timer = setTimeout(step, 1100 * HP());
+        } else {
+          const m = mon(c[0]), dmg = L.end === 'boom' ? [3, 4, 5][met] : ((Engine.damageSteps(m.text) || [])[c[1] - 1] || c[1]);
+          $$('.hslot').innerHTML = `<span class="fx-slam">${card(m, { step: c[1] })}</span>`;
+          timer = setTimeout(() => hit(dmg), 1000 * HP());                      // about three gems' worth of time in all
+        }
       } else {
-        const b = $$('.hbanner'); b.innerHTML = `Banked! ${gems + met}${ic('gem')}`; b.className = 'hbanner show bank'; $$('.hgems').textContent = gems + met; timer = setTimeout(next, 2600 * HP());
+        banner('bank', `Banked! ${gems + met}${ic('gem')}`); $$('.hgems').textContent = gems + met; timer = setTimeout(next, 2800 * HP());
       }
     };
     const next = () => { if (!root.isConnected) return; li = (li + 1) % HERO_LOOPS.length; reset(); timer = setTimeout(step, 700 * HP()); };
@@ -2136,8 +2304,8 @@ const Match = (() => {
     const kids = [...t.children], mat = t.querySelector('.mat'), tab = t.querySelector('.tableau');
     const gap = 10, W = t.clientWidth, H = t.clientHeight, fixed = kids.filter(k => k !== mat && k !== tab).reduce((a, k) => a + k.offsetHeight + gap, 0);
     const rest = Math.max(200, H - fixed - gap * 2 - 18);
-    const side = 150, dice = 130;                                    // the Discard and Bank column; the die
-    const ca = Math.max(.4, Math.min(1, rest * .52 / 350, (W - side - dice - gap * 4) / 500));
+    const dice = 170;                                                // room for the action zone beside the Mine, the flip spot and the Bank
+    const ca = Math.max(.4, Math.min(1, rest * .52 / 350, (W - dice - gap * 4) / 750));
     const n = Math.max(1, Number(tab && tab.dataset.n) || 1), sepW = tab && tab.querySelector('.tsep') ? 22 : 0, items = n + (sepW ? 1 : 0), Wa = W - 8;
     let cb = Math.min(1, (rest - 350 * ca) / 350, (Wa - gap * (items - 1) - sepW) / (n * 250));
     let ov = 0;
@@ -2146,7 +2314,9 @@ const Match = (() => {
   }
   function homeHTML() {
     const st = UI.state, offline = st.source === 'sample' && st.status !== 'loading', ready = cards().length > 0;
-    const inProgress = resumable();
+    const inProgress = resumable(), run = S.run;
+    // one circle per round: filled for the rounds you have finished, ringed for the one you are in
+    const pips = run ? `<span class="pips" role="img" aria-label="Round ${Math.min(run.round, run.rounds)} of ${run.rounds}">${Array.from({ length: run.rounds }, (_, i) => `<i class="${i < run.round - 1 ? 'on' : i === run.round - 1 ? 'now' : ''}"></i>`).join('')}</span>` : '';
     const libLink = /^https?:$/.test(location.protocol) ? `<a class="libback" href="${A.esc(D.library.href)}"><span>‹</span> ${A.esc(D.library.name)}</a>` : '';
     const newRun = `<button class="mode ${inProgress ? '' : 'primary'} ${S.confirmNew === 'startrun' ? 'confirm' : ''}" data-p="startrun" ${ready ? '' : 'disabled'}><b>${S.confirmNew === 'startrun' ? 'Tap again to replace your game' : inProgress ? 'New run' : 'Play'}</b></button>`;
     const note = !ready ? (st.status === 'loading' ? 'Reading your sheet…' : 'No cards yet.')
@@ -2156,7 +2326,7 @@ const Match = (() => {
       <div class="homemenu">
         <h1 class="logo"><span class="l1">Dig Dig</span><span class="l2">BOOM!<i>✦</i></span></h1>
         <p class="tagline">Dig deep. Push your luck. Don't go BOOM.</p>
-        ${inProgress ? `<button class="mode primary" data-p="resume"><b>Continue</b></button>` : ''}
+        ${inProgress ? `<button class="mode primary row" data-p="resume"><b>Continue</b>${run ? pips : ''}</button>` : ''}
         ${newRun}
         <div class="ghostrow"><button class="ghost" data-p="help">How to play</button><button class="ghost" data-p="more">Settings</button></div>
         ${note ? `<p class="homenote warn">${note}</p>` : ''}
@@ -2180,7 +2350,8 @@ const Match = (() => {
   // The roll, played out: numbers flick past on the die and settle on the real result (already decided; this is only for the eye).
   function playDice() {
     $.querySelectorAll('.d10.fx-tumble .dnum[data-final]').forEach(el => {
-      let n = 0; const fin = el.dataset.final, iv = setInterval(() => { n++; if (n >= 11 || !el.isConnected) { clearInterval(iv); el.textContent = fin; return; } el.textContent = 1 + Math.floor(Math.random() * 10); }, 70);
+      const fast = !!el.closest('.action'), steps = fast ? 5 : 11, ms = fast ? 45 : 70;        // the roll in a fight happens a lot: quick; the Escape Bonus is a moment: slower
+      let n = 0; const fin = el.dataset.final, iv = setInterval(() => { n++; if (n >= steps || !el.isConnected) { clearInterval(iv); el.textContent = fin; return; } el.textContent = 1 + Math.floor(Math.random() * 10); }, ms);
     });
   }
   function lbHTML(run, st) {
@@ -2200,7 +2371,11 @@ const Match = (() => {
       <div class="lbcells" style="grid-template-columns:repeat(${max + 1},minmax(0,1fr))">${cells}</div></section>`;
   }
   // ----- Prep: a table, not a form. Dice, a pack, cards; hardly a word. -----
-  const cardScale = (n, hi, lo) => { const w = Math.min(innerWidth, 1180) - 48; return Math.max(lo, Math.min(hi, (w - (n - 1) * 14) / (n * 250))); };
+  const cardScale = (n, hi, lo) => {                        // as big as will fit on the screen without scrolling: one row, or two when that gives bigger cards
+    const w = Math.min(innerWidth, 1180) - 48, h = innerHeight - 250; let best = lo;
+    for (let rows = 1; rows <= 3 && rows <= n; rows++) { const per = Math.ceil(n / rows); best = Math.max(best, Math.min(hi, (w - (per - 1) * 14) / (per * 250), (h - (rows - 1) * 14) / (rows * 350))); }
+    return Math.max(.4, best);
+  };
   const pcard = (c, scale, o = {}) => `<button class="pcard ${o.sel ? 'sel' : ''}" data-p="${o.act}" data-uid="${c.uid}" style="width:${250 * scale}px;height:${350 * scale}px;--i:${o.i || 0};--dx:${Math.round(o.dx || 0)}px" aria-label="${A.esc(c.name)}">${o.badge ? `<span class="badge">${o.badge}</span>` : ''}${A.playCard(c, scale)}</button>`;
   const dots = (n, on) => `<span class="pips2" role="img" aria-label="${on} of ${n}">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</span>`;
   // The pack, torn open: the top strip rips off and the cards come out of it (decoration only: the cards can be tapped at once).
@@ -2220,17 +2395,25 @@ const Match = (() => {
       const info = Run.packInfo(run), col = (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a', plus = /\+$/.test(info.name);
       body = `${eq}<button class="pack" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>`;
     } else if (step === 'keep') {
-      const need = Run.keepCount(run), sc = cardScale(Math.min(pr.offer.length, 4), .92, .62);
+      const need = Run.keepCount(run), sc = cardScale(pr.offer.length, .95, .4);
       const fxKey = `${run.round}:${pr.offer.map(c => c.uid).join()}`, first = S.fxPack !== fxKey; S.fxPack = fxKey;       // the pack tears open once, the first time these cards are drawn
-      body = `${first ? tearHTML(pr.pack) : ''}<div class="kitbar"><b>Keep ${need}</b><span class="note">${need > 1 ? `${pr.picked.length} of ${need} chosen · ` : ''}tap a card, then tap it again to keep it</span></div><div class="cards ${first ? 'dealt' : ''}">${pr.offer.map((c, i) => pcard(c, sc, { act: 'pick', sel: pr.picked.includes(c.uid), i, dx: ((pr.offer.length - 1) / 2 - i) * (250 * sc + 14) })).join('')}</div>`;
-      foot = '';
+      const left = need - pr.picked.length, say = pr.picked.length === 0 ? (need > 1 ? `Tap ${need} cards to keep` : 'Tap a card to keep') : left > 0 ? `Tap ${left} more card${left === 1 ? '' : 's'}` : 'Tap Keep to confirm, or tap another card';
+      body = `${first ? tearHTML(pr.pack) : ''}<div class="kitbar"><b>Keep</b><span class="count" aria-label="${pr.picked.length} of ${need} chosen">${pr.picked.length} of ${need}</span></div><p class="keepsay">${say}</p><div class="cards ${first ? 'dealt' : ''}">${pr.offer.map((c, i) => pcard(c, sc, { act: 'pick', sel: pr.picked.includes(c.uid), i, dx: ((pr.offer.length - 1) / 2 - i) * (250 * sc + 14) })).join('')}</div>`;
+      foot = `<button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'}>Keep</button>`;
+    } else if (step === 'reveal') {            // a Mystery Box: the other cards go away, the next card of the deck is dealt and turned over; nothing moves on until you say so
+      const kept = pr.offer.filter(c => pr.picked.includes(c.uid)), rest = pr.offer.filter(c => !pr.picked.includes(c.uid)), sc = cardScale(kept.length + pr.extra.length, .95, .4), w = 250 * sc;
+      const ghosts = rest.map((c, i) => `<span class="ghostcard" style="--i:${i};--gx:${Math.round((i - (rest.length - 1) / 2) * (w + 14))}px;width:${w}px;height:${350 * sc}px">${A.playCard(c, sc)}</span>`).join('');
+      const flip = (c, i) => `<span class="flipcard" style="--i:${i};width:${w}px;height:${350 * sc}px"><span class="fback"><span class="cardback"></span></span><span class="ffront">${A.playCard(c, sc)}</span></span>`;
+      body = `<div class="kitbar"><b>${A.esc(kept.map(c => c.name).join(', '))}</b></div><p class="keepsay">You also keep the next card of the deck</p><div class="revealrow">${ghosts}${kept.map((c, i) => `<span class="keptcard" style="width:${w}px;height:${350 * sc}px">${A.playCard(c, sc)}</span>`).join('')}${pr.extra.map((c, i) => flip(c, i)).join('')}</div>`;
+      foot = `<button class="btn" data-p="continuereveal">Choose your Starter Kit</button>`;
     } else {            // the Starter Kit
-      const sc = cardScale(Math.min(run.owned.length, 5), .8, .6), picked = id => pr.kitPick.indexOf(id) + 1;
+      const sc = cardScale(run.owned.length, .95, .4), picked = id => pr.kitPick.indexOf(id) + 1;
       const list = run.owned.map(c => pcard(c, sc, { act: 'kitpick', sel: pr.kitPick.includes(c.uid), badge: picked(c.uid) || '' })).join('');
-      body = `<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${pr.kitPick.length} of ${pr.kitMax} chosen">${pr.kitPick.length} of ${pr.kitMax}</span></div><p class="kitnote">Pick cards to start with${pr.kitMax > 1 ? ', in the order you want them on top' : ''}. Any empty spot is filled with a ${ic('gem')}.</p><div class="cards">${list}</div>`;
+      const n = pr.kitPick.length, say = n === 0 ? (pr.kitMax > 1 ? `Tap up to ${pr.kitMax} cards, in the order you want them on top` : 'Tap a card to start with') : n < pr.kitMax ? 'Tap another card, or start the round' : 'Tap Start to begin the round';
+      body = `<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${n} of ${pr.kitMax} chosen">${n} of ${pr.kitMax}</span></div><p class="keepsay">${say}</p><p class="kitnote">Any empty spot is filled with a ${ic('gem')}.</p><div class="cards">${list}</div>`;
       foot = `<button class="btn" data-p="startround">Start round ${run.round}${run.round === run.rounds ? ' · final' : ''}</button>`;
     }
-    const stage = step === 'kit' || step === 'keep' ? body : `<div class="prepstage">${body}</div>`;
+    const stage = step === 'kit' || step === 'keep' || step === 'reveal' ? body : `<div class="prepstage">${body}</div>`;
     return `<div class="panel setup prep"><div class="scroll" id="setupScroll">${stage}</div>${foot ? `<div class="foot">${foot}</div>` : ''}</div>`;
   }
   function doneHTML() {
@@ -2247,7 +2430,7 @@ const Match = (() => {
   // ----- the table -----
   function track(res, max, cur, live, color) {
     let cells = '';
-    for (let i = 0; i <= max; i++) cells += `<div class="tc ${i === cur ? 'now' : i < cur ? 'lit' : ''}">${i}</div>`;
+    for (let i = 0; i <= max; i++) cells += `<div class="tc ${i === cur ? 'now' : i < cur ? 'lit' : ''}"><b>${i}</b></div>`;
     return `<button class="track ${live ? 'live' : ''}" data-p="${res}" style="--n:${max + 1};--tc:${color}" aria-label="${res} ${cur}">${cells}</button>`;
   }
   // The Monster pile: every Monster you are done with, by set, against each set's ladder, so you can see how many you have met and what is coming.
@@ -2267,42 +2450,52 @@ const Match = (() => {
   // Cards are laid out at full size, like on a real table. A card is drawn at 250 x 350 and scaled by --ca (the dig row) or --cb (the Power / Ongoing row); fitTable() sets both after layout.
   const cw = (html, v) => `<span class="cw" style="--s:var(--${v})"><span class="cs">${html}</span></span>`;
   // Power cards from the smallest number to the biggest, then your Ongoing cards: you check "do I have anything for this?" left to right.
-  function tableauHTML(st) {
+  function tableauHTML(st, freshUid) {
     const f = st.fight, after = f && f.phase === 'after', total = after ? Dig.result(st).total : null;
     const elig = after ? Dig.eligible(st) : [];
     const power = st.line.map((e, i) => ({ e, i })).sort((a, b) => a.e.at - b.e.at || a.i - b.i).map(x => x.e);
     const cards = power.map(e => {
       const done = f ? f.trig.filter(x => x === e).length : 0, can = elig.includes(e);
-      const cls = ['tcard', st.pending && st.pending.kind === 'clone' ? 'pick' : '', can ? 'elig' : '', done && !can ? 'done' : '', total !== null && e.at > total && !done ? 'off' : ''].join(' ');
-      const tag = (done ? '✓ ' : '') + (e.pet ? 'PET' : e.cloned ? '×2' : e.at < e.base ? '↓' + e.base : '');
+      const cls = ['tcard', e.card.uid === freshUid ? 'arrive' : '', st.pending && st.pending.kind === 'clone' ? 'pick' : '', can ? 'elig' : '', done && !can ? 'done' : '', total !== null && e.at > total && !done ? 'off' : ''].join(' ');
+      const tag = (done ? '✓ ' : '') + (e.pet ? 'PET' : e.cloned ? '×2' : e.at < e.base ? '↓' + e.base : '') + (f && f.deferred.includes(e) ? ' waits' : '');
       return `<button class="${cls}" data-p="card" data-uid="${e.card.uid}" data-id="${A.esc(e.card.id)}" aria-label="${A.esc(e.card.name)}, Power ${e.at}">${cw(A.playCard({ ...e.card, number: e.at }, 1), 'cb')}${tag ? `<span class="tg">${A.esc(tag)}</span>` : ''}</button>`;
     });
-    const ong = st.ongoing.map(o => `<button class="tcard inplay" data-p="zoom" data-uid="${o.uid}" data-id="${A.esc(o.id)}" aria-label="${A.esc(o.name)}, Ongoing">${cw(A.playCard(o, 1), 'cb')}</button>`);
+    const ong = st.ongoing.map(o => `<button class="tcard inplay ${o.uid === freshUid ? 'arrive' : ''}" data-p="zoom" data-uid="${o.uid}" data-id="${A.esc(o.id)}" aria-label="${A.esc(o.name)}, Ongoing">${cw(A.playCard(o, 1), 'cb')}</button>`);
     return `<section class="tableau" data-n="${cards.length + ong.length}">${cards.join('')}${ong.length ? '<span class="tsep"></span>' : ''}${ong.join('')}</section>`;
   }
   // The card you just dug always lands in the same spot, right beside the Mine.
   function dugHTML(st) {
     const f = st.fight, fx = S.fx;
-    if (f) return `<button class="mcard ${f.phase === 'after' ? 'live' : ''}" data-p="face" ${f.phase === 'after' ? '' : 'disabled'} aria-label="${A.esc(f.monster.name)}"><span class="flipwrap ${f.monster.uid !== fx.mon ? 'fx-slam' : ''}">${cw(A.playCard(f.monster, 1, { step: f.step }), 'ca')}</span></button>`;
-    if (!st.last) return '';
-    const fresh = st.last.uid !== fx.last;
-    return `<button class="mcard" data-p="zoom" data-uid="${st.last.uid}" aria-label="${A.esc(st.last.name)}"><span class="flipwrap ${fresh ? 'fx-flip' : ''}">${cw(A.playCard(st.last, 1), 'ca')}${fresh && st.last.type === 'Treasure' ? burstHTML(10) : ''}</span></button>`;
+    if (f) return `<div class="mcard" aria-label="${A.esc(f.monster.name)}"><span class="flipwrap ${f.monster.uid !== fx.mon ? 'fx-slam' : ''}">${cw(A.playCard(f.monster, 1, { step: f.step }), 'ca')}</span></div>`;       // the Monster is not a button: you leave the fight by tapping the Mine (dig on) or the Bank (stop)
+    // A Power or Ongoing card goes straight up to the others: it is not shown here as well. The spot keeps showing the last card that stays here (the discard pile's top).
+    const goesUp = st.last && (st.last.type === 'Power' || st.last.type === 'Ongoing'), show = goesUp ? st.discard[st.discard.length - 1] : st.last;
+    if (!show) return '';
+    const fresh = !goesUp && st.last.uid !== fx.last, oc = show === st.last && show.type === 'Monster' && !st.over ? st.flags.lastOutcome : null;
+    return `<button class="mcard" data-p="zoom" data-uid="${show.uid}" aria-label="${A.esc(show.name)}${oc ? ', ' + oc : ''}"><span class="flipwrap ${fresh ? 'fx-flip' : ''}">${cw(A.playCard(show, 1), 'ca')}${fresh && show.type === 'Treasure' ? burstHTML(10) : ''}${oc ? `<span class="stamp ${oc}">${oc === 'defeated' ? 'Defeated' : 'Survived'}</span>` : ''}</span></button>`;
   }
-  // Beside it: the die and what it says, or what to tap next.
+  // The action zone, bottom right: the die, the button that takes the damage, and one line saying what the game is waiting for.
   function diceHTML(st, can) {
     const f = st.fight;
     if (f) {
       const res = Dig.result(st), after = f.phase === 'after', elig = after ? Dig.eligible(st) : [];
       const rollKey = `${st.digs}:${f.rolls}:${f.die}`, shown = f.fixed !== null ? f.fixed : f.die, fresh = rollKey !== S.fx.roll;
-      const die = after ? `<div class="dieb">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}</div>` : `<button class="dieb live" data-p="roll" aria-label="Roll the die">${d10('', 'idle')}<span class="tapword">Tap</span></button>`;
-      const extra = after && res.parts.length > 1 ? `<span class="calcparts">${res.parts.map(p => p.set ? `becomes ${p.v}` : `${p.label} ${p.v >= 0 && p.label !== 'Die' && p.label !== 'Fixed' ? '+' : ''}${p.v}`).join(' · ')}</span>` : '';
-      const calc = after && extra ? `<div class="calc"><b>${res.total}</b>${extra}</div>` : '';          // the die already shows the number; only say more when something changed it
-      return `<div class="rollp">${die}${calc}${after ? `<div class="hint">${elig.length > 1 ? `<button class="chip" data-p="triggerall">Use all ${elig.length}</button>` : ''}<span>Tap a glowing card to use it. Tap the Mine to take the damage and dig on.</span></div>` : ''}</div>`;
+      const steps = cur => `<div class="steps" role="list"><span class="stp ${cur > 1 ? 'done' : 'cur'}" role="listitem"><i>${cur > 1 ? '✓' : '1'}</i>Roll</span><span class="sarr" aria-hidden="true">›</span><span class="stp ${cur === 2 ? 'cur' : ''}" role="listitem"><i>2</i>Take the damage</span></div>`;
+      if (!after) return `<div class="action">${steps(1)}<button class="dieb live" data-p="roll" aria-label="Roll the die">${d10('', 'idle')}<span class="tapword">Tap to roll</span></button></div>`;
+      // the die says the roll; only when cards changed it does one line add up: 7 +1 = 8
+      const calc = res.parts.length > 1 ? `<div class="calc">${res.parts.map((p, i) => i === 0 ? p.v : p.set ? `→ ${p.v}` : `${p.v >= 0 ? '+' : '−'}${Math.abs(p.v)}`).join(' ')} = <b>${res.total}</b></div>` : '';
+      const dmg = Dig.previewDamage(st);
+      // Rerolls: until you use a card the roll is open (an open padlock and a Reroll button); the first card you use locks it in (a closed padlock, the button gone)
+      const hasRR = st.reroll >= R.rerollCost || can.reroll, open = can.reroll, locked = !open && hasRR && f.fixed === null && f.trig.length > 0;
+      const lock = open || locked ? `<span class="dlock ${open ? 'open' : 'shut'}" title="${open ? 'You can still reroll' : 'Locked in'}"><svg viewBox="0 0 24 24" aria-hidden="true">${open ? '<path d="M8 11V7.5a4 4 0 0 1 7.6-1.7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>' : '<path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>'}<rect x="4.5" y="11" width="15" height="10.5" rx="2.6" fill="currentColor"/></svg></span>` : '';
+      const rr = open ? `<button class="rerollbtn" data-p="reroll" aria-label="Reroll">${ic('reroll')}<span>Reroll</span><small>${st.reroll} left</small></button>` : locked ? '<div class="lockednote">Locked in</div>' : '';
+      return `<div class="action">${steps(2)}${elig.length ? `<div class="aprompt">Tap glowing cards to use them${elig.length > 1 ? `<button class="chip" data-p="triggerall">Use all ${elig.length}</button>` : ''}</div>` : ''}
+        <div class="arow"><div class="dieb">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}${lock}</div>
+          <div class="astack">${calc}${rr}<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''}" data-p="face">${dmg ? `Take ${dmg} damage` : 'Take no damage'}</button></div></div></div>`;
     }
-    if (st.pending) return `<div class="rollp"><div class="hint"><b style="color:var(--accent)">${A.esc(st.pending.card.name)}: tap a Power card</b></div></div>`;
-    return '';
+    if (st.pending) return `<div class="action"><div class="aprompt">${A.esc(st.pending.card.name)}: tap a Power card</div></div>`;
+    if (st.over) return '';
+    return `<div class="action"><div class="aprompt">${can.bank ? 'Tap the Mine to dig, or the Bank to keep your gems' : 'Tap the Mine to dig'}</div></div>`;
   }
-
   // ----- little things that pop. What is new since the last drawing is remembered, so each flourish plays once, on the thing that just happened. -----
   const fxOf = st => st ? { last: st.last ? st.last.uid : null, mon: st.fight ? st.fight.monster.uid : null, roll: st.fight && st.fight.phase === 'after' ? `${st.digs}:${st.fight.rolls}:${st.fight.die}` : null, gems: st.geodeGems + st.monsterGems, over: st.over } : { last: null, mon: null, roll: null, gems: 0, over: null };
   S.fx = fxOf(null);
@@ -2310,13 +2503,15 @@ const Match = (() => {
   const confettiHTML = n => `<span class="confetti">${Array.from({ length: n }, (_, i) => `<i style="left:${4 + (i * 53) % 92}%;animation-delay:${(i * 97) % 900}ms">${A.gemSvg(D.gems[(i * 5) % D.gems.length], '22px')}</i>`).join('')}</span>`;
   function tableHTML() {
     const st = S.st, can = Dig.can(st), f = st.fight, fx = S.fx;
-    const gems = st.geodeGems + st.monsterGems, live = can.dig || (f && f.phase === 'after');
+    const freshUid = st.last && st.last.uid !== fx.last ? st.last.uid : null;
+    const gems = st.geodeGems + st.monsterGems, live = can.dig, bankLive = can.bank;
     const kn = st.mine.slice(0, st.known), up = kn[0];
     // the Mine: a deck of cards, the same size as the cards you dig. Cards you can see coming are on top, face up.
     const deck = `<div class="stack"><button class="deck ${live ? 'live' : ''}" data-p="dig" ${live ? '' : 'disabled'} aria-label="Mine, ${st.mine.length} cards">${st.mine.length ? `<span class="cw" style="--s:var(--ca)"><span class="cs">${up ? A.playCard(up, 1) : '<span class="cardback"></span>'}</span></span>` : '<span class="cw" style="--s:var(--ca)"><span class="cs"><span class="cardback none"></span></span></span>'}<span class="cnt">${st.mine.length}</span></button>${kn.length > 1 ? `<div class="known"><span>then</span> ${kn.slice(1, 4).map(c => `<i>${A.esc(c.name)}</i>`).join('')}${kn.length > 4 ? `<i>+${kn.length - 4}</i>` : ''}</div>` : ''}</div>`;
     // There is no separate discard pile: the cards you flip land in one spot beside the Mine, and the ones before it are stacked underneath. (Monsters move on to the Monster pile above.)
-    const piles = `<div class="piles"><button class="pile bankp ${can.bank ? 'live' : ''}" data-p="bank" ${can.bank ? '' : 'disabled'}><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span><span>Bank</span></button></div>`;
-    const mid = `<div class="dugz"><div class="slot ${st.discard.length ? 'stacked' : ''}">${dugHTML(st)}</div></div><div class="dicez">${diceHTML(st, can)}</div>`;
+    const piles = `<div class="piles"><button class="pile bankp ${bankLive ? 'live' : ''}" data-p="bank" ${bankLive ? '' : 'disabled'}><span class="gpile" aria-hidden="true">${Array.from({ length: Math.min(gems, 24) }, (_, i) => `<i style="left:${8 + (i % 7) * 19 + (Math.floor(i / 7) % 2) * 9}px;bottom:${Math.floor(i / 7) * 13 + (i * 5) % 4}px">${A.gemSvg(D.gems[i % D.gems.length], '24px')}</i>`).join('')}</span><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span><span>Bank</span></button></div>`;
+    const dug = `<div class="dugz"><div class="slot ${st.discard.length ? 'stacked' : ''}">${dugHTML(st)}</div></div>`;
+    const action = `<div class="dicez">${diceHTML(st, can)}</div>`;
     const s = st.over ? Dig.score(st) : null;
     let over = '';
     const ovFx = st.over && st.over !== fx.over ? 'fx' : '';
@@ -2333,7 +2528,7 @@ const Match = (() => {
       : `<div class="over ${ovFx}">${ovFx ? confettiHTML(16) : ''}<h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + (st.best && st.over.kind === 'bank' ? `<div class="note">Best so far: ${st.best.now.survived} Monsters survived${st.best.newSurvived ? ' (new!)' : ''} · ${st.best.now.gems} gems banked${st.best.newGems ? ' (new!)' : ''}</div>` : '') + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>`;
     }
     S.fx = fxOf(st);
-    return `${drillHTML(st, can)}${tableauHTML(st)}<div class="mat">${deck}${mid}${piles}${over}</div>`;
+    return `${drillHTML(st, can)}${tableauHTML(st, freshUid)}<div class="mat">${deck}${dug}${piles}${action}${over}</div>`;
   }
   // The in-game menu: quiet, small. Your game is saved after every tap, so "Main menu" leaves nothing to lose; there you can Continue it or start a new one.
   function gmenuHTML() {
@@ -2348,7 +2543,7 @@ const Match = (() => {
     return `<div class="panel helppanel"><div class="shead"><button class="chip back" data-p="closehelp">‹ Back</button><h2>How to play</h2></div><div class="scroll">
       <div class="how">
         ${card('1 · Dig', `<span class="cw hmini" style="--s:.36"><span class="cs"><span class="cardback"></span></span></span>${arrow}${mini(geo, { gem: 2 })}`, 'Tap the Mine to flip a card. Gems go in your Bank.')}
-        ${card('2 · Face the Monster', `${mini(monA, { step: 1 })}<span class="hdie">${d10(6, '')}</span>${mini(pet, { cls: 'glow' })}`, 'Tap the die. Tap glowing cards to use them. Tap the Mine to take the damage and dig on.')}
+        ${card('2 · Face the Monster', `${mini(monA, { step: 1 })}<span class="hdie">${d10(6, '')}</span>${mini(pet, { cls: 'glow' })}`, 'Tap the die. Use glowing cards. Take the damage. Then dig on, or bank.')}
         ${card('3 · Bank or push on', `<span class="hbankpic">5 ${ic('gem')}</span>${arrow}<span class="hsafe">Safe</span>`, 'Bank to keep your gems. Health at 0 is BOOM: you lose everything.')}
       </div>
       <p class="hline">${ic('heart')} <b>Win rounds</b> to open Booster Packs and build a better Mine. Be in the lead when the last round ends.</p>
@@ -2367,14 +2562,17 @@ const Match = (() => {
   function render() {
     if (document.body.dataset.mode !== 'play') return;
     const keep = $.querySelector('#setupScroll'), ks = keep ? keep.scrollTop : 0;
-    const bar = `<div class="pbar"><h1><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M20 8c2-3 5-3 7-6" fill="none" stroke="#c79a5a" stroke-width="2.4" stroke-linecap="round"/><circle cx="14" cy="19" r="10" fill="#2a2530" stroke="#0c0a10" stroke-width="2"/><ellipse cx="10.5" cy="15" rx="3" ry="2" fill="#fff" opacity=".35" transform="rotate(-35 10.5 15)"/><path d="M27 1l1.3 2.6 2.7.4-2 1.9.5 2.7L27 7.1l-2.5 1.3.5-2.7-2-1.9 2.7-.4z" fill="#ffd54a" stroke="#e8731a" stroke-width=".8"/></svg>Dig Dig BOOM!</h1>${S.run && (S.panel === 'dig' || S.panel === 'prep' || S.panel === 'done') ? lbHTML(S.run, S.panel === 'dig' ? S.st : null) : ''}<button class="chip" data-p="gmenu">Menu</button></div>`;
+    // The header is only for the table: the Leaderboard and Menu. Everywhere else (Prep, the end of a run) there is just a small Menu in the corner.
+    const bar = S.panel === 'dig'
+      ? `<div class="pbar">${S.run ? lbHTML(S.run, S.st) : '<span class="pgrow"></span>'}<button class="chip" data-p="gmenu">Menu</button></div>`
+      : `<div class="pbar slim"><button class="chip" data-p="gmenu">Menu</button></div>`;
     let body;
     if (S.panel === 'menu') body = homeHTML();
     else if (S.panel === 'more') body = moreHTML();
     else if (S.panel === 'prep' && S.run) body = prepHTML();
     else if (S.panel === 'done' && S.run) body = doneHTML();
     else if (S.panel === 'setup' || !S.st) body = setupHTML();
-    else body = `<div class="pmain"><div class="ptable">${tableHTML()}</div></div>`;
+    else body = `<div class="pmain"><div class="ptable ${S.st.fight && S.st.fight.phase === 'before' && !S.st.over ? 'await-roll' : ''}" data-step="${S.st.over ? 'over' : S.st.fight ? (S.st.fight.phase === 'before' ? 'roll' : 'damage') : 'dig'}">${tableHTML()}</div></div>`;       // a Monster is in front of you and nothing else matters until you roll: the rest of the table dims
     const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, Math.min(1.35, (innerHeight - 70) / 350))}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}<div class="closehint">tap anywhere to close</div></div>` : '';
     $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z;
     const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
@@ -2405,6 +2603,7 @@ const Match = (() => {
     const inp = $.querySelector('#seedIn'); if (inp) S.seed = inp.value.trim() === '' ? undefined : Number(inp.value) >>> 0;
     S.st = Dig.start(cards(), S.kit.map(by).filter(Boolean), { start: S.start, seed: S.seed }); S.panel = 'dig'; S.zoom = null;
   }
+  function startRound() { if (S.match ? Match.beginRound(S.match) : Run.beginDig(S.run)) { S.st = S.run.dig; S.panel = 'dig'; S.ff = false; } }
   function act(a, el) {
     const st = S.st, f = st && st.fight, ds = el.dataset; 
     if (a !== 'startrun' && a !== 'practice') S.confirmNew = null;
@@ -2420,16 +2619,19 @@ const Match = (() => {
       case 'startrun': { if (resumable() && S.confirmNew !== 'startrun') { S.confirmNew = 'startrun'; break; } S.confirmNew = null; if (S.opp) { S.match = Match.start(cards(), { rounds: S.rounds }); S.run = Match.human(S.match); } else { S.match = null; S.run = Run.start(cards(), { rounds: S.rounds }); } S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
       case 'escape': if (S.match) Match.rollEscape(S.match); else Run.rollEscape(S.run); break;
       case 'openpack': if (S.match) Match.openPack(S.match); else Run.openPack(S.run); break;
-      case 'pick': {                       // tap a card to choose it, tap it again to keep it; tapping another card moves the choice
-        const uid = Number(ds.uid), pr = S.run.prep, need = Run.keepCount(S.run), chosen = pr.picked.includes(uid);
-        if (chosen && pr.picked.length === need) Run.confirmKeep(S.run);
-        else if (chosen) Run.toggleKeep(S.run, uid);
-        else { if (pr.picked.length >= need) Run.toggleKeep(S.run, pr.picked[0]); Run.toggleKeep(S.run, uid); }
-        break;
+      case 'pick': {                       // tap a card to choose it, tap it again to put it back; tapping another card when you have chosen all you may moves the choice
+        const uid = Number(ds.uid), pr = S.run.prep, need = Run.keepCount(S.run);
+        if (!pr.picked.includes(uid) && pr.picked.length >= need) Run.toggleKeep(S.run, pr.picked[0]);
+        Run.toggleKeep(S.run, uid); break;
       }
       case 'keepgo': Run.confirmKeep(S.run); break;
-      case 'kitpick': Run.toggleKit(S.run, Number(ds.uid)); break;
-      case 'startround': if (S.match ? Match.beginRound(S.match) : Run.beginDig(S.run)) { S.st = S.run.dig; S.panel = 'dig'; S.ff = false; } break;
+      case 'continuereveal': Run.continueReveal(S.run); break;
+      case 'kitpick': {                    // tap to choose, in the order you want them on top; tap a chosen one to take it back
+        const uid = Number(ds.uid), pr = S.run.prep;
+        if (!pr.kitPick.includes(uid) && pr.kitPick.length >= pr.kitMax) Run.toggleKit(S.run, pr.kitPick[pr.kitPick.length - 1]);
+        Run.toggleKit(S.run, uid); break;
+      }
+      case 'startround': startRound(); break;
       case 'ff': S.ff = true; if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; } break;
       case 'prep': if (S.match) Match.finishRound(S.match); else Run.finishDig(S.run); S.panel = S.run.phase === 'done' ? 'done' : 'prep'; break;
             case 'tab': S.tab = ds.v; break;
@@ -2448,7 +2650,7 @@ const Match = (() => {
       case 'zoom': S.zoom = findCard(ds.uid); break;
       case 'card': { const c = findCard(ds.uid), e = st && st.line.find(x => x.card === c); if (st && st.pending && e) Dig.chooseClone(st, e); else if (e && f && f.phase === 'after' && Dig.eligible(st).includes(e)) Dig.trigger(st, e); else S.zoom = c; break; }
       case 'triggerall': if (st) Dig.triggerAll(st); break;
-      case 'dig': if (st) { if (f && f.phase === 'after') { Dig.face(st); if (!st.over && Dig.can(st).dig) Dig.dig(st); } else Dig.dig(st); } break;
+      case 'dig': if (st) Dig.dig(st); break;
       case 'roll': Dig.roll(st); break;
       case 'reroll': if (f && f.phase === 'after') Dig.reroll(st); break;
       case 'face': Dig.face(st); break;

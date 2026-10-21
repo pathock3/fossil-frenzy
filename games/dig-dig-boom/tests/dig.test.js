@@ -26,13 +26,13 @@ const text = st => st.log.map(l => l.text).join('\n');
 // dig a Monster and play the roll through: roll, trigger everything eligible (highest first), then face it (a defeat has already ended the fight)
 function fight(st) { assert.ok(Dig.dig(st)); assert.ok(Dig.roll(st)); if (st.fight) assert.ok(Dig.autoFace(st)); return st; }
 
-const UNSUPPORTED = ["PW-04", "PW-06", "PW-08", "PW-10", "PW-11", "PW-13", "PW-18", "PW-23", "PW-25", "PW-26", "PW-29", "PW-30", "ON-01", "ON-07", "ON-10", "ON-13", "ON-16", "ON-18", "ON-24", "ON-26", "ON-28", "ON-30", "ON-32", "ON-36", "IM-02", "IM-09", "IM-10", "IM-12", "IM-15", "IM-18", "IM-19", "IM-27", "IM-29", "IM-31", "IM-34"];
+const UNSUPPORTED = ["PW-04", "PW-06", "PW-08", "PW-10", "PW-11", "PW-13", "PW-18", "PW-23", "PW-25", "PW-26", "PW-29", "PW-30", "ON-01", "ON-07", "ON-10", "ON-13", "ON-16", "ON-18", "ON-24", "ON-25", "ON-26", "ON-28", "ON-30", "ON-32", "ON-36", "IM-02", "IM-09", "IM-10", "IM-12", "IM-15", "IM-18", "IM-19", "IM-27", "IM-29", "IM-31", "IM-34"];
 test('the rules are data: nothing the engine needs is missing from DDB.rules; every card text is understood except the Grit cards and the two player-chosen moves, which are cut', () => {
   for (const k of ['die', 'caps', 'start', 'pet', 'beyond', 'rulings']) assert.ok(DDB.rules[k] !== undefined, k);
   assert.equal(cards.length, 107);
   const bad = cards.filter(c => !Dig.supported(c)).map(c => c.id);
   assert.deepEqual(bad.slice().sort(), UNSUPPORTED.slice().sort(), 'exactly these cards are unsupported — everything else is understood');
-  assert.equal(bad.length, 35);
+  assert.equal(bad.length, 36);
   for (const c of cards) if (/\{grit\}/.test(c.text)) assert.ok(!Dig.supported(c), c.id + ' mentions Grit, which is cut');
   assert.ok(cards.filter(c => c.deck === 'Booster' && Dig.supported(c)).length > 60, 'the Booster Deck is the supported cards only');
 });
@@ -189,6 +189,16 @@ test('Power cards: resource gains, caps, Lose then gain', () => {
   assert.equal(st.reroll, 3, 'capped at 3');
   const low = game({ mine: ['MO-01'], power: ['PW-17', 'PW-27'], start: { reroll: 0 }, dice: [9] }); fight(low);
   assert.equal(low.reroll, 3, 'Dodo +1 and Owl +2');
+});
+
+test('Unlucky Duck: when no other card can trigger, "if no other card triggers" is settled at once — the +1 Reroll is there before you take the damage', () => {
+  const only = game({ mine: ['MO-01'], power: ['PW-05'], start: { reroll: 0 }, dice: [3] }); Dig.dig(only); Dig.roll(only);
+  Dig.trigger(only, only.line.find(e => e.card.id === 'PW-05'));
+  assert.equal(only.reroll, 1, 'the only card that could trigger: the Reroll comes now, not later');
+  const more = game({ mine: ['MO-01'], power: ['PW-05', 'PW-02'], start: { reroll: 0, heart: 6 }, dice: [3] }); Dig.dig(more); Dig.roll(more);
+  Dig.trigger(more, more.line.find(e => e.card.id === 'PW-05'));
+  assert.equal(more.reroll, 0, 'another card could still trigger: it waits until you have chosen');
+  Dig.face(more); assert.equal(more.reroll, 1, 'and happens when you take the damage');
 });
 
 test('"for each other card that triggers" counts the others; Unlucky Duck only fires when nothing else does', () => {
@@ -372,12 +382,8 @@ test('Lucky Coin (the second starting card, in play from the start and not part 
   const back = Dig.load(cards, JSON.parse(JSON.stringify(Dig.save(d)))); assert.deepEqual(back.ongoing.map(c => c.name), ['Lucky Coin']);
 });
 
-test('Pet Whistle: the Pet triggers on 9', () => {
-  const st = game({ mine: ['MO-01', 'MO-01'], ongoing: ['ON-25'], start: { heart: 6 }, dice: [9, 8] }); Dig.dig(st);
-  assert.equal(st.line.find(e => e.pet).at, 9);
-  Dig.roll(st); assert.deepEqual(Dig.eligible(st).map(e => e.pet), [true], 'a 9 reaches the Pet'); Dig.autoFace(st); assert.equal(st.defeated, 1);
-  Dig.dig(st); Dig.roll(st); assert.deepEqual(Dig.eligible(st), [], 'an 8 does not'); Dig.autoFace(st); assert.equal(st.defeated, 1);
-  assert.equal(Dig.compile(by('ON-25')).unsupported.length, 0);
+test('Pet Whistle is gone: there is no way to move the Pet, so its text is not playable and it stays out of the game', () => {
+  assert.ok(!Dig.supported(by('ON-25')));
 });
 
 test('Cowcatcher: your first Monster each Dig deals no damage; Bumper blocks 1 from every Monster', () => {
@@ -585,8 +591,8 @@ test('"For each other card that triggers" and Unlucky Duck count the other cards
   const crabCard = card('+1 {reroll} for each other card that triggers', { number: 5, name: 'Test Crab' });
   const crab = game({ mine: ['MO-01', 'MO-01'], power: [crabCard, 'PW-02', 'PW-09'], start: { heart: 6, reroll: 0 }, dice: [6, 6] });
   Dig.dig(crab); Dig.roll(crab);
-  Dig.trigger(crab, entryOf(crab, crabCard.id)); Dig.trigger(crab, entryOf(crab, 'PW-02')); Dig.trigger(crab, entryOf(crab, 'PW-09'));
-  assert.equal(crab.reroll, 0, 'the Crab waits'); Dig.face(crab); assert.equal(crab.reroll, 2, 'then the Crab counted the 2 others');
+  Dig.trigger(crab, entryOf(crab, crabCard.id)); Dig.trigger(crab, entryOf(crab, 'PW-02'));
+  assert.equal(crab.reroll, 0, 'the Crab waits while another card could still trigger'); Dig.trigger(crab, entryOf(crab, 'PW-09')); assert.equal(crab.reroll, 2, 'once every card has been chosen the Crab counted the 2 others, at once');
   const alone = game({ mine: ['MO-01'], power: [crabCard, 'PW-02'], start: { heart: 6, reroll: 0 }, dice: [6] });
   Dig.dig(alone); Dig.roll(alone); Dig.trigger(alone, entryOf(alone, crabCard.id)); Dig.face(alone); assert.equal(alone.reroll, 0, 'chosen alone: no others');
   const duck = game({ mine: ['MO-01', 'MO-01'], power: ['PW-05', 'PW-02'], start: { heart: 6, reroll: 0 }, dice: [6, 6] });
