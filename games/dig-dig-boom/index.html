@@ -563,7 +563,12 @@ const Dig = (() => {
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
   // ---------------- random numbers (seedable, so tests and bug reports can replay a Dig) ----------------
-  function makeRng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function makeRng(seed) {
+    let a = seed >>> 0;
+    const f = () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    f.state = () => a; f.restore = v => { a = v >>> 0; };      // so a saved Dig carries on with the same dice and shuffles
+    return f;
+  }
   function shuffle(state, arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(state.rng() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
 
   // ---------------- card text -> behaviour ----------------
@@ -1042,6 +1047,38 @@ const Dig = (() => {
     if (dir === 'reroll' && st.reroll >= w.rerollCost && st.grit < R.caps.grit) { st.reroll -= w.rerollCost; st.grit = Math.min(R.caps.grit, st.grit + w.gritGain); log(st, 'effect', `Workbench: ${w.rerollCost} {reroll} → ${w.gritGain} {grit}`); return true; }
     return false;
   }
+
+  // ---------------- saving and resuming (iPad Safari may reload the page; a Dig must survive that) ----------------
+  const refOf = c => (c ? (c.id === 'BONUS' ? { ...c } : { id: c.id, uid: c.uid }) : c);
+  function save(st) {
+    return { v: 1, seed: st.seed, rng: st.rng.state(), dice: st.dice, log: st.log, over: st.over, flags: st.flags, known: st.known,
+      mine: st.mine.map(refOf), discard: st.discard.map(refOf), ongoing: st.ongoing.map(refOf), kit: st.kit.map(refOf), pet: refOf(st.pet), last: refOf(st.last),
+      line: st.line.map(e => ({ card: refOf(e.card), at: e.at, base: e.base, pet: !!e.pet, cloned: !!e.cloned })),
+      pending: st.pending && { kind: st.pending.kind, card: refOf(st.pending.card) },
+      fight: st.fight && { ...st.fight, monster: refOf(st.fight.monster), trig: [] },
+      petLower: st.petLower, setCount: st.setCount, beyond: st.beyond, digs: st.digs, monstersDug: st.monstersDug, survived: st.survived, defeated: st.defeated,
+      geodeGems: st.geodeGems, monsterGems: st.monsterGems, panicUsed: st.panicUsed, heart: st.heart, grit: st.grit, reroll: st.reroll, rules: st.rules, board: st.board, pledge: st.pledge, best: st.best };
+  }
+  // Rebuild a Dig from save(). Cards are looked up in `all` by id, so one card is one object everywhere it appears.
+  function load(all, d) {
+    const memo = new Map();
+    const deref = r => {
+      if (!r) return r;
+      if (memo.has(r.uid)) return memo.get(r.uid);
+      let c; if (r.id === 'BONUS') c = { ...r }; else { const base = all.find(x => x.id === r.id); if (!base) throw new Error('the sheet no longer has card ' + r.id); c = { ...base, uid: r.uid }; }
+      memo.set(r.uid, c); return c;
+    };
+    const rng = makeRng(d.seed); rng.restore(d.rng);
+    const st = { seed: d.seed, rng, dice: d.dice, log: d.log, over: d.over, flags: d.flags, known: d.known,
+      mine: d.mine.map(deref), discard: d.discard.map(deref), ongoing: d.ongoing.map(deref), kit: d.kit.map(deref), pet: deref(d.pet), last: deref(d.last),
+      line: d.line.map(e => ({ card: deref(e.card), at: e.at, base: e.base, ...(e.pet ? { pet: true } : {}), ...(e.cloned ? { cloned: true } : {}) })),
+      pending: d.pending && { kind: d.pending.kind, card: deref(d.pending.card) },
+      fight: d.fight && { ...d.fight, monster: deref(d.fight.monster), trig: [] },
+      petLower: d.petLower, setCount: d.setCount, beyond: d.beyond, digs: d.digs, monstersDug: d.monstersDug, survived: d.survived, defeated: d.defeated,
+      geodeGems: d.geodeGems, monsterGems: d.monsterGems, panicUsed: d.panicUsed, heart: d.heart, grit: d.grit, reroll: d.reroll, rules: d.rules, board: d.board, pledge: d.pledge, best: d.best };
+    for (const k of memo.keys()) uid = Math.max(uid, k + 1);
+    return st;
+  }
   function score(st) { return { geodes: st.geodeGems, monsters: st.monsterGems, total: st.geodeGems + st.monsterGems, survived: st.survived }; }
   // The Leaderboard (v2.7): once you have survived as many Monsters as the Crown tracker, you may pledge your current number or 1 more.
   function canPledge(st, n) {
@@ -1067,7 +1104,7 @@ const Dig = (() => {
       choose: !!st.pending && !st.over,
     };
   }
-  return { compile, supported, parseEffects, parseOngoing, start, can, pledge, canPledge, dig, spendGrit, refundGrit, roll, buyBonus, reroll, face, bank, chooseClone, trade, score, result, makeRng, shuffle, flag, previewDamage };
+  return { save, load, compile, supported, parseEffects, parseOngoing, start, can, pledge, canPledge, dig, spendGrit, refundGrit, roll, buyBonus, reroll, face, bank, chooseClone, trade, score, result, makeRng, shuffle, flag, previewDamage };
 })();
 </script>
 
@@ -1185,7 +1222,28 @@ const Run = (() => {
     if (!run.prep.banked) setPack(run);
     return true;
   }
-  return { start, rollEscape, packInfo, trashOwned, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
+
+  // ---------------- saving and resuming ----------------
+  const refOf = c => ({ id: c.id, uid: c.uid });
+  function save(run) {
+    const pr = run.prep;
+    return { v: 1, seed: run.seed, rng: run.rng.state(), dice: run.dice, rounds: run.rounds, round: run.round, phase: run.phase, advancedTrash: run.advancedTrash,
+      owned: run.owned.map(refOf), kit: run.kit.map(refOf), trash: run.trash.map(refOf), deck: run.deck.map(refOf), crown: run.crown, best: run.best, history: run.history, log: run.log, result: run.result,
+      prep: pr && { ...pr, pack: pr.pack && pr.pack.name, offer: pr.offer.map(refOf), extra: pr.extra.map(refOf) },
+      dig: run.dig && Dig.save(run.dig) };
+  }
+  function load(all, d) {
+    const memo = new Map();
+    const deref = r => { if (memo.has(r.uid)) return memo.get(r.uid); const base = all.find(x => x.id === r.id); if (!base) throw new Error('the sheet no longer has card ' + r.id); const c = { ...base, uid: r.uid }; memo.set(r.uid, c); return c; };
+    const rng = Dig.makeRng(d.seed); rng.restore(d.rng);
+    const run = { seed: d.seed, rng, dice: d.dice, all, rounds: d.rounds, round: d.round, phase: d.phase, advancedTrash: d.advancedTrash,
+      owned: d.owned.map(deref), kit: d.kit.map(deref), trash: d.trash.map(deref), deck: d.deck.map(deref), crown: d.crown, best: d.best, history: d.history, log: d.log, result: d.result,
+      prep: d.prep && { ...d.prep, pack: d.prep.pack ? packFor(d.prep.pack) : null, offer: d.prep.offer.map(deref), extra: d.prep.extra.map(deref) },
+      dig: d.dig ? Dig.load(all, d.dig) : null };
+    for (const k of memo.keys()) uid = Math.max(uid, k + 1);
+    return run;
+  }
+  return { save, load, start, rollEscape, packInfo, trashOwned, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
 })();
 </script>
 
@@ -1623,7 +1681,7 @@ const Run = (() => {
 (() => {
   'use strict';
   const D = DDB, R = D.rules, UI = window.DigDigBoomUI, A = UI.api, $ = document.getElementById('play');
-  const S = { st: null, run: null, rounds: D.run.rounds, adv: D.run.advancedTrash, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', zoom: null, help: false, panel: 'menu' };
+  const S = { st: null, run: null, rounds: D.run.rounds, adv: D.run.advancedTrash, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', zoom: null, help: false, panel: 'menu', back: null, restored: false };
   const cards = () => UI.state.all;
   // Personal bests live in this browser only (best Monsters survived, best gems banked). Never needed for play.
   const BEST_KEY = 'ddb.solo.best';
@@ -1634,6 +1692,25 @@ const Run = (() => {
     if (st.over.kind === 'bank' && sc.total > b.gems) b.gems = sc.total;
     try { localStorage.setItem(BEST_KEY, JSON.stringify(b)); } catch (e) { /* private window: fine */ }
     st.best = { now: b, prev, newSurvived: b.survived > prev.survived, newGems: b.gems > prev.gems };
+  }
+  // The game is saved in this browser after every tap, so a reload (iPad Safari does that) puts you back where you were.
+  const SAVE_KEY = 'ddb.solo.save.v1';
+  function persist() {
+    try {
+      const panel = S.panel === 'menu' ? S.back : S.panel;
+      if (!panel || (!S.st && !S.run)) { localStorage.removeItem(SAVE_KEY); return; }
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 1, panel, run: S.run ? Run.save(S.run) : null, st: !S.run && S.st ? Dig.save(S.st) : null, kit: S.kit, kitSize: S.kitSize, start: S.start, rounds: S.rounds, adv: S.adv }));
+    } catch (e) { /* private window or full: fine, it just will not resume */ }
+  }
+  function restore() {
+    if (S.restored || !cards().length || UI.state.source !== 'sheet') return;
+    S.restored = true;
+    try {
+      const raw = localStorage.getItem(SAVE_KEY); if (!raw) return;
+      const d = JSON.parse(raw); if (d.v !== 1) return;
+      const run = d.run ? Run.load(cards(), d.run) : null, st = run ? run.dig : d.st ? Dig.load(cards(), d.st) : null;
+      S.run = run; S.st = st; S.kit = d.kit || []; S.kitSize = d.kitSize; S.start = d.start; S.rounds = d.rounds; S.adv = d.adv; S.panel = d.panel; S.back = d.panel;
+    } catch (e) { try { localStorage.removeItem(SAVE_KEY); } catch (e2) { /* ignore */ } S.run = null; S.st = null; S.panel = 'menu'; }
   }
   const typeIcon = t => `<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#${D.types[t].icon}"/></svg>`;
   const ic = (c, st = '') => A.ic(c, st);
@@ -1693,6 +1770,7 @@ const Run = (() => {
     return `<div class="panel setup"><div class="scroll"><h2>Dig Dig BOOM!</h2>
       <p class="note">One player. ${offline ? '<b style="color:#ff9a8a">Your sheet could not be reached, so only the design sample is available — reload when you are online.</b>' : 'Cards and rules are read from your sheet each time this opens.'}</p>
       <div class="menu">
+        ${S.back && ((S.run && S.run.phase !== 'done') || (!S.run && S.st && !S.st.over)) ? `<div class="bigopt"><button class="btn" data-p="resume">Continue</button><p class="note">${S.run ? `Your run — round ${Math.min(S.run.round, S.run.rounds)} of ${S.run.rounds}, ${S.back === 'prep' ? 'Prep' : 'Dig'}.` : 'Your Practice Dig.'}</p></div>` : ''}
         <div class="bigopt"><button class="btn" data-p="startrun" ${cards().length ? '' : 'disabled'}>Play a run</button>
           <p class="note">${S.rounds} rounds of Dig and Prep. Open Booster Packs, build your engine round by round, and try to take the Crown Jewel in the final round.</p>
           <p class="note">Rounds: ${D.run.roundChoices.map(n => `<button class="chip ${S.rounds === n ? 'on' : ''}" data-p="rounds" data-v="${n}">${n}</button>`).join(' ')}
@@ -1887,11 +1965,12 @@ const Run = (() => {
   function act(a, el) {
     const st = S.st, f = st && st.fight, ds = el.dataset;
     switch (a) {
-      case 'menu': S.panel = 'menu'; S.help = false; break;
-      case 'practice': S.run = null; S.panel = 'setup'; break;
+      case 'menu': if (S.panel !== 'menu') S.back = S.panel; S.panel = 'menu'; S.help = false; break;
+      case 'resume': S.panel = S.back || 'menu'; break;
+      case 'practice': S.run = null; S.st = null; S.panel = 'setup'; S.back = null; break;
       case 'rounds': S.rounds = Number(ds.v); break;
       case 'adv': S.adv = !S.adv; break;
-      case 'startrun': { S.run = Run.start(cards(), { rounds: S.rounds, advancedTrash: S.adv }); S.st = null; S.panel = 'prep'; S.zoom = null; break; }
+      case 'startrun': { S.run = Run.start(cards(), { rounds: S.rounds, advancedTrash: S.adv }); S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
       case 'escape': Run.rollEscape(S.run); break;
       case 'openpack': Run.openPack(S.run); break;
       case 'trashown': Run.trashOwned(S.run, Number(ds.uid)); break;
@@ -1928,10 +2007,10 @@ const Run = (() => {
       case 'heart': break;
     }
     if (S.st && S.st.over && !S.st.best && !S.run) recordBest(S.st);
-    render();
+    persist(); render();
   }
   $.addEventListener('click', e => { const el = e.target.closest('[data-p]'); if (!el || el.disabled) return; e.preventDefault(); act(el.dataset.p, el); });
-  document.addEventListener('ddb-cards', render); document.addEventListener('ddb-mode', render);
+  document.addEventListener('ddb-cards', () => { restore(); render(); }); document.addEventListener('ddb-mode', render);
   window.DigDigBoomPlay = { S, render, act: (a, d) => act(a, { dataset: d || {} }) };
   render();
 })();

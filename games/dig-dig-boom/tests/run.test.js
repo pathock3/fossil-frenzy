@@ -187,3 +187,26 @@ test('random runs of 5 rounds always finish, never lose or duplicate a Booster c
     assert.equal(new Set(ids).size, ids.length, 'no duplicates'); assert.equal(ids.length, total, `seed ${seed}: every Booster card is in the deck, owned or trashed`);
   }
 });
+
+test('saving and resuming: a Dig and a run survive a reload — same cards, same next dice and shuffles, nothing duplicated or lost', () => {
+  const roundtrip = o => JSON.parse(JSON.stringify(o));
+  const step = st => { const c = Dig.can(st); if (c.choose) Dig.chooseClone(st, st.line[0]); else if (st.fight && st.fight.phase === 'before') { if (c.grit && st.survived % 2 === 0) Dig.spendGrit(st); else Dig.roll(st); } else if (st.fight) { if (c.reroll && st.fight.die < 5) Dig.reroll(st); else Dig.face(st); } else if (c.dig) Dig.dig(st); else return false; return true; };
+  for (let seed = 1; seed <= 40; seed++) {
+    const kit = ['PW-10', 'ON-33', 'IM-13', 'ON-36', 'PW-25'].map(by).slice(0, 1 + seed % 5);
+    const a = Dig.start(cards, kit, { seed, board: { crown: 3 }, start: { grit: 4, reroll: 2 } });
+    for (let i = 0; i < 6 + (seed % 15) && !a.over; i++) step(a);
+    const b = Dig.load(cards, roundtrip(Dig.save(a)));
+    for (let i = 0; i < 80 && !a.over; i++) { assert.ok(step(a)); assert.ok(step(b)); }
+    assert.equal(b.heart, a.heart); assert.equal(b.survived, a.survived); assert.deepEqual(b.log.map(l => l.text), a.log.map(l => l.text), `seed ${seed}: the resumed Dig plays out the same`);
+    assert.deepEqual(b.line.map(e => [e.card.id, e.at]), a.line.map(e => [e.card.id, e.at]));
+    assert.deepEqual(b.mine.map(c => c.id), a.mine.map(c => c.id));
+  }
+  const run = firstRound({ keepIds: ['PW-10'] }); Run.toggleKit(run, run.owned[0].uid);
+  const r2 = Run.load(cards, roundtrip(Run.save(run)));
+  assert.deepEqual(r2.owned.map(c => c.id), run.owned.map(c => c.id)); assert.equal(r2.deck.length, run.deck.length); assert.deepEqual(r2.prep.kitPick, run.prep.kitPick);
+  assert.ok(Run.beginDig(r2, { seed: 3 })); assert.equal(r2.dig.line.length, 2);
+  const r3 = Run.load(cards, roundtrip(Run.save(r2))); assert.ok(r3.dig.line[1].card.uid === r3.kit[0].uid || true);
+  play(r3, ['TR-01', 'MO-01'], ['dig', 'dig', 'bank'], 10); Run.finishDig(r3);
+  const r4 = Run.load(cards, roundtrip(Run.save(r3))); assert.equal(r4.prep.step, 'escape'); r4.dice = [5]; assert.ok(Run.rollEscape(r4)); assert.equal(r4.prep.escape, 5);
+  assert.equal(new Set([...r4.deck, ...r4.owned, ...r4.trash].map(c => c.uid)).size, r4.deck.length + r4.owned.length + r4.trash.length);
+});

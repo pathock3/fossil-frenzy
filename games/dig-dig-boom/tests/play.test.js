@@ -317,3 +317,57 @@ test('run: the Leaderboard and Prep fit the screen on an iPad (landscape and upr
     } finally { await browser.close(); }
   }
 });
+
+test('play: a reload puts you back exactly where you were — mid-fight in a run, in Prep, and in a Practice Dig', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await page.click('#play [data-p=startrun]'); await page.click('#play [data-p=openpack]'); await page.click('#play .grid .piece >> nth=0'); await page.click('#play [data-p=keepgo]');
+    await page.reload(); await page.waitForSelector('#play .panel');
+    assert.match(await page.locator('#play .panel').innerText(), /Starter Kit — up to 1/, 'back in Prep, with the pack already kept');
+    await page.click('#play [data-p=kitpick]'); await page.click('#play [data-p=startround]');
+    await page.evaluate(() => { const P = window.DigDigBoomPlay, st = P.S.st, all = window.DigDigBoomUI.state.all; st.mine = ['TR-01', 'MO-01', 'TR-01'].map((id, i) => ({ ...all.find(c => c.id === id), uid: 8000 + i })); st.dice = [7, 3]; P.render(); });
+    await page.click('#play [data-p=dig]'); await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]');
+    const before = await page.evaluate(() => { const st = window.DigDigBoomPlay.S.st; return { mine: st.mine.length, die: st.fight.die, log: st.log.length, line: st.line.length, heart: st.heart }; });
+    await page.reload(); await page.waitForSelector('#play .ptable');
+    const after = await page.evaluate(() => { const st = window.DigDigBoomPlay.S.st; return { mine: st.mine.length, die: st.fight && st.fight.die, log: st.log.length, line: st.line.length, heart: st.heart }; });
+    assert.deepEqual(after, before, 'the same Mine, die, log and line');
+    await page.click('#play .mcard[data-p=face]');
+    assert.match(await page.locator('#logEntries').innerText(), /survive Monster A/);
+    await page.click('#play .pbar [data-p=menu]'); assert.match(await page.locator('#play .menu').innerText(), /Continue[\s\S]*round 1 of 4, Dig/);
+    await page.click('#play [data-p=resume]'); await page.waitForSelector('#play .ptable');
+    // a Practice Dig resumes too
+    await page.click('#play .pbar [data-p=menu]'); await page.click('#play [data-p=practice]'); await page.click('#play [data-p=random]'); await page.click('#play [data-p=go]'); await page.waitForSelector('#play .ptable');
+    await page.click('#play [data-p=dig]'); const n = await page.evaluate(() => window.DigDigBoomPlay.S.st.mine.length);
+    await page.reload(); await page.waitForSelector('#play .ptable');
+    assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.st.mine.length), n); assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.run), null);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('play: monkey test — random taps through whole runs at iPad sizes: no errors, the page never scrolls, a legal tap always exists until the run is done', SKIP, async () => {
+  const ALL = `(document.querySelector('#play .zoom') ? [document.querySelector('#play .zoom')] : [...document.querySelectorAll('#play [data-p]:not([disabled])')]).filter(e => e.getBoundingClientRect().width > 0 && (!(e.closest('.pbar') || e.closest('.foot')) || ['startround', 'prep', 'keepgo', 'again'].includes(e.dataset.p)))`;
+  const AVOID = ['menu', 'practice', 'cards', 'print', 'help', 'startrun', 'setup', 'rounds', 'adv'];
+  for (const [vp, seed] of [[{ width: 1180, height: 820 }, 1], [{ width: 820, height: 1180 }, 2], [{ width: 1024, height: 700 }, 3]]) {
+    const { browser, page, errors } = await open({ viewport: vp, menu: true });
+    try {
+      await page.evaluate(() => { window.DigDigBoomPlay.S.rounds = 2; });
+      await page.click('#play [data-p=startrun]');
+      let r = seed * 7919; const rnd = () => { r = (r * 1103515245 + 12345) & 0x7fffffff; return r / 0x7fffffff; };
+      let done = false, i = 0;
+      for (; i < 900 && !done; i++) {
+        const acts = await page.evaluate(`${ALL}.map((e, i) => [i, e.dataset.p])`);
+        const pool = acts.filter(([, p]) => !AVOID.includes(p));
+        assert.ok(pool.length, `no legal tap at step ${i}: ${(await page.locator('#play').innerText()).slice(0, 160)}`);
+        const prefer = pool.filter(([, p]) => ['dig', 'roll', 'face', 'escape', 'openpack', 'keepgo', 'startround', 'prep', 'unzoom'].includes(p));
+        const from = prefer.length && rnd() < .6 ? prefer : pool, [idx] = from[Math.floor(rnd() * from.length)];
+        const h = await page.evaluateHandle(`${ALL}[${idx}]`);
+        await h.asElement().click({ timeout: 4000 });
+        const m = await page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ih: innerHeight, done: /Crown Jewel/.test((document.querySelector('#play .panel h2') || {}).textContent || '') }));
+        assert.ok(m.sh <= m.ih + 1, `the page scrolls at step ${i}`);
+        done = m.done;
+      }
+      assert.ok(done, `the run did not finish in ${i} taps at ${vp.width}x${vp.height}`);
+      assert.deepEqual(errors, []);
+    } finally { await browser.close(); }
+  }
+});
