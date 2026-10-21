@@ -60,6 +60,9 @@ summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .card .stat { font-weight: 900; line-height: 1.05; }
 .card .art { border-radius: calc(var(--u) * 7); background: repeating-linear-gradient(135deg, #e9dfc9 0 calc(var(--u)*6), #f6efdf calc(var(--u)*6) calc(var(--u)*12)); border: calc(var(--u) * 1.5) solid rgba(0,0,0,.28); display: flex; align-items: center; justify-content: center; color: rgba(0,0,0,.35); font-weight: 800; letter-spacing: .2em; }
 .card .art svg { width: 62%; height: 62%; opacity: .55; }
+.card .art.vivid { position: absolute; overflow: hidden; }
+.card .art.vivid svg { opacity: 1; }
+.card .art .sp { position: absolute; color: #fff; font-size: calc(var(--u) * 16); line-height: 1; letter-spacing: 0; text-shadow: 0 0 calc(var(--u) * 4) rgba(255,255,255,.9); opacity: .9; }
 .card .num { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #fffaf0; color: #1d1712; font-weight: 900; border-style: solid; }
 .card .disc { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #fffaf0; }
 .card .disc svg { width: 72%; height: 72%; }
@@ -100,7 +103,8 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .trow { display: flex; align-items: center; gap: 8px; }
 #play .tlab { width: 34px; height: 34px; flex: none; display: flex; align-items: center; justify-content: center; }
 #play .tlab svg { width: 30px; height: 30px; }
-#play .track { flex: 1; display: grid; gap: 3px; border-radius: 10px; padding: 2px; border: 3px solid transparent; min-width: 0; }
+#play .tbody { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; --col: calc((100% - 40px) / 11); }       /* Health has 11 spaces; Grit and Rerolls use the same column width, so 0, 3, 6 line up in all three rows */
+#play .track { flex: none; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); width: calc(var(--col) * var(--n) + 3px * (var(--n) - 1) + 10px); gap: 3px; border-radius: 10px; padding: 2px; border: 3px solid transparent; min-width: 0; }
 #play .track.live { border-color: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 3px rgba(255,177,59,.35); } }
 #play .tc { height: 34px; border-radius: 7px; background: #fffaf0; color: #1d1712; font-weight: 800; font-size: 17px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--tc, #888); opacity: .55; }
@@ -229,6 +233,61 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .menu .confirm { background: #a8201f; color: #fff; }
 @media (max-height: 780px) { #play .over { gap: 5px; padding: 6px 12px; overflow-y: auto; } #play .over h2 { font-size: 30px; } #play .over .big { font-size: 16px; line-height: 1.3; } #play .over .btn { min-height: 46px; padding: 8px 18px; font-size: 16px; } }
 @media (max-height: 640px) { #play .tc { height: 28px; } #play .lbc { min-height: 42px; } #play .cardback { width: 64px; height: 90px; } }
+
+/* ---------- the look: a lively cave, bright pieces, things that pop (nothing here ever waits for or delays a tap) ---------- */
+body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e 0%, #3a2211 36%, #1b120c 80%) fixed; }
+#play .pbar h1 { display: flex; align-items: center; gap: 8px; font-size: 27px; font-weight: 900; letter-spacing: .01em; background: linear-gradient(180deg, #fff4bf 0%, #ffc23a 52%, #ec7a1c 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 0 #6b2f05); }
+#play .pbar h1 svg { width: 30px; height: 30px; flex: none; }
+#play .drill, #play .line, #play .lb, #play .plog { background: linear-gradient(180deg, #3d2c1f, #2a1e15); border-color: #5d4631; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 6px 14px rgba(0,0,0,.32); }
+#play .dig { position: relative; background: radial-gradient(90% 110% at 50% 0%, rgba(255,177,59,.13), rgba(255,255,255,.02) 70%); border-color: #5d4631; }
+#play .pile { background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02)); }
+#play .pile.live { background: linear-gradient(180deg, rgba(255,177,59,.28), rgba(255,177,59,.08)); box-shadow: 0 0 18px rgba(255,177,59,.35); }
+#play .pile.bankp { border-color: #2f86c0; background: linear-gradient(180deg, rgba(47,134,192,.22), rgba(47,134,192,.06)); gap: 2px; padding: 6px 4px; }
+#play .pile.bankp.live { background: linear-gradient(180deg, rgba(255,177,59,.32), rgba(47,134,192,.12)); }
+#play .piece:not(.elig):not(.trig) { box-shadow: 0 2px 0 rgba(0,0,0,.4), 0 5px 8px rgba(0,0,0,.25); }
+#play .piece .h { background: linear-gradient(180deg, color-mix(in srgb, var(--c) 72%, #fff), var(--c) 70%); text-shadow: 0 1px 0 rgba(0,0,0,.18); }
+#play .piece .h svg[style*="--g"] { filter: drop-shadow(0 1px 1px rgba(0,0,0,.4)); }
+#play .tc.now { box-shadow: 0 0 12px var(--tc), inset 0 1px 0 rgba(255,255,255,.35); }
+#play .tc.lit { background: linear-gradient(180deg, color-mix(in srgb, var(--tc) 22%, #fffaf0), color-mix(in srgb, var(--tc) 38%, #fffaf0)); }
+#play .lbc { background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03)); }
+#play .lbc.free { background: linear-gradient(180deg, rgba(255,205,110,.22), rgba(255,177,59,.08)); }
+#play .lbc.here { box-shadow: 0 0 12px rgba(255,255,255,.35); }
+#play .btn { background: linear-gradient(180deg, #ffd06b, #ffa526); box-shadow: 0 4px 0 #b5690d, 0 8px 14px rgba(0,0,0,.4); }
+#play .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #b5690d; }
+#play .btn.alt { background: linear-gradient(180deg, #3d2c1f, #2a1e15); box-shadow: 0 4px 0 #120c08; }
+#play .chip { background: linear-gradient(180deg, #3d2c1f, #2a1e15); }
+#play .cardback { background: radial-gradient(circle at 50% 36%, rgba(255,214,140,.45) 0, rgba(255,214,140,0) 56%), repeating-linear-gradient(45deg, #5b3b22 0 8px, #6e4829 8px 16px); border-color: #e7b866; box-shadow: 3px 3px 0 #2a1a0d, 6px 6px 0 #1c1410, 0 0 14px rgba(255,177,59,.25); position: relative; }
+#play .cardback::after { content: "✦"; position: absolute; top: 4px; left: 7px; font-size: 14px; color: #ffe29a; text-shadow: none; }
+#play .heap { display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; max-height: 46px; overflow: hidden; padding: 0 2px; }
+#play .heap svg { width: 21px; height: 21px; margin: -2px -2px; flex: none; filter: drop-shadow(0 1px 0 rgba(0,0,0,.45)); }
+#play .gemline.fx-bump svg, #play .gemline.fx-bump { animation: bump .45s ease-out; }
+#play .over { overflow: hidden; background: radial-gradient(90% 90% at 50% 40%, #3a2417, #1c1410); }
+#play .over.boom { background: radial-gradient(90% 90% at 50% 40%, #4a1713, #1c1410); }
+#play .flipwrap { display: block; position: relative; }
+#play .mcard { overflow: visible; }
+#play .fx-flip { animation: flipin .5s cubic-bezier(.2,.8,.3,1) both; }
+#play .fx-slam { animation: slam .55s cubic-bezier(.2,.8,.3,1) both; }
+#play .fx-tumble { animation: tumble .5s cubic-bezier(.2,.8,.3,1) both; }
+#play .burst { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+#play .burst i { position: absolute; left: 50%; top: 46%; width: 22px; height: 22px; margin: -11px 0 0 -11px; animation: burst .8s cubic-bezier(.15,.7,.3,1) both; }
+#play .burst svg { width: 22px; height: 22px; }
+#play .over.fx h2 { animation: boomin .55s cubic-bezier(.2,.8,.3,1) both; }
+#play .over.fx.boom::before { content: ""; position: absolute; inset: 0; background: radial-gradient(70% 70% at 50% 50%, rgba(255,60,40,.55), rgba(255,60,40,0) 70%); animation: flash .7s ease-out both; pointer-events: none; }
+#play .confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+#play .confetti i { position: absolute; top: -26px; width: 22px; height: 22px; animation: fall 2.2s ease-in both; }
+#play .confetti svg { width: 22px; height: 22px; }
+#play .lcol { border-top: 4px solid hsl(var(--h, 30) 78% 55%); background: linear-gradient(180deg, hsl(var(--h, 30) 60% 50% / .14), rgba(255,255,255,.03) 60%); }
+#play .lnum { color: hsl(var(--h, 30) 85% 72%); font-size: 17px; }
+#play .lcol.on .lnum { color: #fff; }
+@keyframes flipin { 0% { transform: perspective(700px) rotateY(88deg) scale(.8); opacity: 0; } 60% { transform: perspective(700px) rotateY(-8deg) scale(1.05); opacity: 1; } 100% { transform: none; } }
+@keyframes slam { 0% { transform: translateY(-46px) scale(1.25) rotate(-3deg); opacity: 0; } 50% { transform: translateY(5px) scale(.97) rotate(1deg); opacity: 1; } 68% { transform: translateX(-5px); } 82% { transform: translateX(4px); } 100% { transform: none; } }
+@keyframes tumble { 0% { transform: rotate(-220deg) scale(.4); opacity: 0; } 70% { transform: rotate(10deg) scale(1.12); opacity: 1; } 100% { transform: none; } }
+@keyframes burst { 0% { transform: translate(0, 0) scale(.2) rotate(0); opacity: 1; } 70% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(200deg); opacity: 0; } }
+@keyframes bump { 40% { transform: scale(1.3); } }
+@keyframes boomin { 0% { transform: scale(.5); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes flash { 0% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes fall { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(330px) rotate(400deg); opacity: .9; } }
+@media (prefers-reduced-motion: reduce) { #play *, #play *::before { animation: none !important; } }
 /* ---------- print and play sheets ---------- */
 body[data-mode=print] #app, body[data-mode=print] #play, body[data-mode=cards] #printv, body[data-mode=play] #printv { display: none; }
 body[data-mode=print] { padding: 0; }
@@ -295,6 +354,12 @@ body[data-mode=print] { padding: 0; }
     <symbol id="i-damage" viewBox="0 0 24 24"><path d="M12 1.5l2.6 5.6 5.7-2.6-1.9 6 5.7 2.4-5.9 1.9 1.8 6-5.4-3.2L12 22.5l-1.5-5.4-5.4 3.2 1.8-6-5.9-1.9 5.7-2.4-1.9-6 5.7 2.6z" fill="#d6141f" stroke="#4a0509" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" fill="#ffd0a8"/></symbol>
     <symbol id="i-gem" viewBox="0 0 24 24"><path d="M6 3.5h12l4 5.5-10 12L2 9z" fill="#2fb7e6" stroke="#0a3f66" stroke-width="1.6" stroke-linejoin="round"/><path d="M2 9h20M9 3.5L7.5 9 12 21M15 3.5L16.5 9 12 21" fill="none" stroke="#e8fbff" stroke-width="1.2" stroke-linejoin="round" opacity=".85"/></symbol>
     <!-- card type icons -->
+    <symbol id="gem-kite" viewBox="0 0 24 24"><path d="M6 3.5h12l4 5.5-10 12L2 9z" fill="var(--g)" stroke="var(--gd)" stroke-width="1.6" stroke-linejoin="round"/><path d="M6 3.5L9 9h6l3-5.5M2 9h20M9 9l3 12 3-12" fill="var(--gl)" fill-opacity=".35" stroke="var(--gl)" stroke-width="1" stroke-linejoin="round"/><path d="M7.4 5.2l1.4 2.6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="gem-octagon" viewBox="0 0 24 24"><path d="M8 2.8h8L21.2 8v8L16 21.2H8L2.8 16V8z" fill="var(--g)" stroke="var(--gd)" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.6 7h6.8l1.6 1.6v6.8L15.4 17H8.6L7 15.4V8.6z" fill="var(--gl)" fill-opacity=".4" stroke="var(--gl)" stroke-width="1"/><path d="M8 2.8L8.6 7M16 2.8l-.6 4.2M21.2 8L17 8.6M21.2 16L17 15.4M16 21.2l-.6-4.2M8 21.2l.6-4.2M2.8 16L7 15.4M2.8 8L7 8.6" stroke="var(--gl)" stroke-width=".9"/><path d="M5.6 6.2l1.6-1.6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="gem-triangle" viewBox="0 0 24 24"><path d="M12 2.8l9.6 17H2.4z" fill="var(--g)" stroke="var(--gd)" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 8.6l4.8 8.4H7.2z" fill="var(--gl)" fill-opacity=".45" stroke="var(--gl)" stroke-width="1" stroke-linejoin="round"/><path d="M12 2.8v5.8M2.4 19.8l4.8-2.8M21.6 19.8L16.8 17" stroke="var(--gl)" stroke-width=".9"/><path d="M9.2 9.4l1.2-2" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="gem-round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.6" fill="var(--g)" stroke="var(--gd)" stroke-width="1.7"/><circle cx="12" cy="12" r="5.3" fill="var(--gl)" fill-opacity=".4" stroke="var(--gl)" stroke-width="1"/><path d="M12 2.4v4.3M12 17.3v4.3M2.4 12h4.3M17.3 12h4.3M5.2 5.2l3.1 3.1M15.7 15.7l3.1 3.1M18.8 5.2l-3.1 3.1M8.3 15.7l-3.1 3.1" stroke="var(--gl)" stroke-width=".9"/><path d="M6.4 8.4a6.4 6.4 0 0 1 3-3" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="gem-hexagon" viewBox="0 0 24 24"><path d="M12 2.2l8.6 5v9.6l-8.6 5-8.6-5V7.2z" fill="var(--g)" stroke="var(--gd)" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 7l4.3 2.5v5L12 17l-4.3-2.5v-5z" fill="var(--gl)" fill-opacity=".4" stroke="var(--gl)" stroke-width="1"/><path d="M12 2.2V7M20.6 7.2l-4.3 2.3M20.6 16.8l-4.3-2.3M12 21.8V17M3.4 16.8l4.3-2.3M3.4 7.2l4.3 2.3" stroke="var(--gl)" stroke-width=".9"/><path d="M6.4 7.8l2-1.2" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="gem-drop" viewBox="0 0 24 24"><path d="M12 2.2C12.9 5.3 20 10.4 20 15.3a8 8 0 0 1-16 0C4 10.4 11.1 5.3 12 2.2z" fill="var(--g)" stroke="var(--gd)" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 8c3 2.5 4.8 4.4 4.8 7.1a4.8 4.8 0 0 1-9.6 0C7.2 12.4 9 10.5 12 8z" fill="var(--gl)" fill-opacity=".4" stroke="var(--gl)" stroke-width="1"/><path d="M12 2.2V8M4.6 17.6l3.2-1.8M19.4 17.6l-3.2-1.8" stroke="var(--gl)" stroke-width=".9"/><path d="M7.4 14.6a4.8 4.8 0 0 1 1.2-3" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></symbol>
     <symbol id="t-treasure" viewBox="0 0 24 24"><path d="M3 11V8a6 6 0 0 1 6-6h6a6 6 0 0 1 6 6v3z" fill="currentColor"/><rect x="3" y="11" width="18" height="10" rx="1.5" fill="currentColor" opacity=".78"/><rect x="10" y="9" width="4" height="6" rx="1" fill="#fffaf0" stroke="#1d1712" stroke-width="1.2"/></symbol>
     <symbol id="t-immediate" viewBox="0 0 24 24"><path d="M13.5 1.5L4 13.5h6l-1.6 9L20 9.8h-6.4z" fill="currentColor" stroke="#1d1712" stroke-width="1" stroke-linejoin="round"/></symbol>
     <symbol id="t-power" viewBox="0 0 24 24"><g fill="currentColor"><ellipse cx="6" cy="10" rx="2.5" ry="3.3" transform="rotate(-18 6 10)"/><ellipse cx="10.2" cy="5.6" rx="2.5" ry="3.4"/><ellipse cx="14.2" cy="5.6" rx="2.5" ry="3.4"/><ellipse cx="18.2" cy="10" rx="2.5" ry="3.3" transform="rotate(18 18.2 10)"/><path d="M12.2 11c3.6 0 6.2 3.3 6.2 6 0 2.4-1.7 3.4-3.4 3.4-1.2 0-1.9-.5-2.8-.5s-1.6.5-2.8.5c-1.7 0-3.4-1-3.4-3.4 0-2.7 2.6-6 6.2-6z"/></g></symbol>
@@ -344,6 +409,16 @@ const DDB = {
     Ongoing:   { icon: 't-ongoing',   color: '#aab3bd', on: '#1d1712', pattern: 'p-ongoing',   role: 'Stays in play' },
     Monster:   { icon: 't-monster',   color: '#cf2f2f', on: '#ffffff', pattern: 'p-monster',   role: 'Roll, resolve, take damage' },
   },
+  // Every Geode is a different gem: colour and cut, so no two look alike and a flip is a little surprise. (Colour is never the only clue: each cut is a different shape.)
+  // A Geode takes its gem from its copy number (card uid, or the copy on a print sheet), so the 18 Geodes are three of each of the six.
+  gems: [
+    { name: 'Sapphire',    cut: 'kite',     color: '#2f7fe6', light: '#a9d2ff', dark: '#0d2f73', on: '#ffffff' },
+    { name: 'Emerald',     cut: 'octagon',  color: '#1fae5f', light: '#a6f0c4', dark: '#0b4a28', on: '#ffffff' },
+    { name: 'Topaz',       cut: 'triangle', color: '#f29a1f', light: '#ffe0a3', dark: '#7a4300', on: '#1d1712' },
+    { name: 'Rose Quartz', cut: 'round',    color: '#ec5fa6', light: '#ffc3df', dark: '#7a1c4e', on: '#ffffff' },
+    { name: 'Amethyst',    cut: 'hexagon',  color: '#9b52e0', light: '#dcb8ff', dark: '#431a73', on: '#ffffff' },
+    { name: 'Aquamarine',  cut: 'drop',     color: '#1bbdc2', light: '#a5f3f3', dark: '#065255', on: '#1d1712' },
+  ],
   // {code} in Card Text -> icon
   iconCodes: { heart: 'i-heart', grit: 'i-grit', reroll: 'i-reroll', damage: 'i-damage', gem: 'i-gem' },
   // Poker-size card, in hundredths of an inch (1 unit = 0.01 in).
@@ -1203,7 +1278,7 @@ const Board = (() => {
   }
   function pledge(b, id, survived, n) { if (!canPledge(b, id, survived, n)) return false; claim(b, id, 'pledge', n); return true; }
   const clearPledge = (b, id) => remove(b, id, 'pledge');
-  // The digital board moves your live marker for you: each Monster survived puts it on the best open spot under your new number
+  // The digital board moves your live marker for you: each Monster encountered puts it on the best open spot under your new number
   // (a pledge puts it ahead of you; it stays there until you catch up).
   function track(b, id, survived) {
     if (survived < 1) return false;
@@ -1423,7 +1498,7 @@ const Run = (() => {
   // The Dig keeps a copy of the Leaderboard's numbers (tracker, what it takes to lead). Other players can change them, so refresh before asking the Dig.
   function refresh(run) {
     const st = run.dig; if (!st || !st.board) return;
-    if (!st.over && !st.boardApplied) Board.track(run.board, run.me, st.survived);      // the live marker follows your run
+    if (!st.over && !st.boardApplied) Board.track(run.board, run.me, Math.max(st.monstersDug, st.survived));      // the live marker moves the moment you ENCOUNTER a Monster (owner), before you have faced it
     st.board.crown = Board.tracker(run.board); st.board.leadN = Board.leadN(run.board, run.me); st.board.lead = Board.inLead(run.board, run.me);
   }
   // The moment a Dig ends (bank or BOOM) the Board changes: a BOOM removes the Pledge marker, a bank locks the score in and may take the Crown right away.
@@ -1671,8 +1746,12 @@ const Match = (() => {
     art: { compact: { h: 62, textY: 166, textH: 178 } },
     textBox: art => ({ w: 213, h: R2.art[art].textH }),
   };
-  function tab(c, W) {
-    const t = typeColors(c);
+  // The gem a Geode shows: by its copy number (the card's uid in play, the copy on a print sheet).
+  const gemAt = n => D.gems[Math.abs(Math.floor(Number(n) || 0)) % D.gems.length];
+  const gemOf = (c, n) => c.type === 'Treasure' ? gemAt(n !== undefined ? n : c.uid) : null;
+  const gemSvg = (g, sz, extra = '') => `<svg viewBox="0 0 24 24" style="--g:${g.color};--gl:${g.light};--gd:${g.dark};width:${sz};height:${sz};flex:none;${extra}"><use href="#gem-${g.cut}"/></svg>`;
+  function tab(c, W, gem) {
+    const t = gem ? { ...typeColors(c), color: gem.color, on: gem.on } : typeColors(c);
     let s = box(0, 0, W, 375, '', `background:${t.color}`);
     s += box(22, 22, W - 44, 375 - 44, 'paper', `border-radius:${u(10)}`);
     s += box(28, 28, W - 56, 64, 'band', `background:${t.color};--on:${t.on};border-radius:${u(7)}`);
@@ -1693,38 +1772,39 @@ const Match = (() => {
       return box(x + i * (tw + gap), y, tw, h, '', `background:${on ? '#cf2f2f' : '#8a6b68'};color:#fff;border-radius:${u(10)};border:${u(3)} solid #1d1712;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:${u(fs)};${now ? `box-shadow:0 0 0 ${u(4)} #fff,0 0 0 ${u(8)} #1d1712;z-index:2` : ''}`, String(v));
     }).join('');
   }
-  function buildR2(c, tw, art, stat, step) {
-    const W = 275, a = R2.art[art];
-    let s = tab(c, W);
+  function buildR2(c, tw, art, stat, step, gemIdx) {
+    const W = 275, a = R2.art[art], gem = gemOf(c, gemIdx);
+    let s = tab(c, W, gem);
     const steps = c.type === 'Monster' ? E.damageSteps(c.text) : null, worth = c.type === 'Treasure' ? E.gemWorth(c.text) : null;
     const isStat = steps || worth !== null;
     if (!isStat) {
-      s += artBox(28, 100, W - 56, a.h, c);
+      s += artBox(28, 100, W - 56, a.h, c, gem);
       return s + box(31, a.textY, 213, a.textH, 'text', `font-size:${u(tw)}`, textHTML(c.text));
     }
     const gems = c.type === 'Monster' ? 1 : worth;                       // a Monster is worth 1 gem when survived (v2.7 Rules: Gems)
     const worthTxt = c.type === 'Monster' ? 'if survived' : 'each';
     if (stat === 1) {          // Monster: art on top, the damage ladder in big tiles, what it is worth if survived
-      s += artBox(28, 100, W - 56, 118, c);
+      s += artBox(28, 100, W - 56, 118, c, gem);
       if (steps) {
         s += box(31, 226, 213, 22, 'typeword', `font-size:${u(13)};color:#7a1d1d;display:flex;align-items:center;gap:${u(6)}`, `${dmgIcon(18)} DAMAGE, IN ORDER`);
         s += stepTiles(steps, 31, 250, 213, 62, steps.length > 4 ? 34 : 46, step);
       } else s += box(31, 226, 213, 90, 'stat', `font-size:${u(104)};display:flex;align-items:center;justify-content:center;gap:${u(10)};color:#1d1712`, `${gems}${gemIcon(90)}`);
       s += box(31, 318, 213, 26, 'stat', `font-size:${u(18)};display:flex;align-items:center;justify-content:center;gap:${u(6)};background:#2b86d1;color:#fff;border-radius:${u(8)}`, `${gems}${gemIcon(18)} ${worthTxt}`);
     } else {                   // two big tiles under a slim art strip
-      s += artBox(28, 100, W - 56, 84, c);
+      s += artBox(28, 100, W - 56, 84, c, gem);
       if (steps) {
         s += box(28, 192, 62, 152, '', 'background:#2b86d1;color:#fff;border-radius:' + u(10) + ';display:flex;flex-direction:column;align-items:center;justify-content:center;gap:' + u(4) + ';font-weight:900;font-size:' + u(60), `${gems}${gemIcon(44, 'filter:drop-shadow(0 0 1px #000)')}<span style="font-size:${u(11)};letter-spacing:.1em">WORTH</span>`);
         const rows = steps.length, rh = (152 - 6 * (rows - 1)) / rows;
         s += steps.map((v, i) => box(98, 192 + i * (rh + 6), 146, rh, '', `background:#cf2f2f;color:#fff;border-radius:${u(8)};border:${u(2.5)} solid #1d1712;display:flex;align-items:center;gap:${u(10)};padding:0 ${u(12)};font-weight:900;font-size:${u(Math.min(48, rh * 0.8))}`, `${dmgIcon(Math.min(34, rh * 0.7))}<span style="flex:1;text-align:center">${v}</span><span style="font-size:${u(11)};letter-spacing:.08em;opacity:.85">${['1ST', '2ND', '3RD', '4TH', '5TH'][i]}</span>`)).join('');
-      } else s += box(28, 192, W - 56, 152, '', `background:#e6f3fc;border:${u(3)} solid #1d1712;border-radius:${u(10)};display:flex;align-items:center;justify-content:center;gap:${u(12)};font-weight:900;font-size:${u(132)}`, `${gems}${gemIcon(118)}`);
+      } else if (gem) s += box(28, 192, W - 56, 152, '', `background:radial-gradient(circle at 72% 38%, #fff 0, ${gem.light} 52%, color-mix(in srgb, ${gem.light} 62%, ${gem.color}) 100%);border:${u(3)} solid ${gem.dark};border-radius:${u(10)};display:flex;align-items:center;justify-content:center;gap:${u(12)};font-weight:900;font-size:${u(132)};color:#1d1712`, `${gems}${gemSvg(gem, u(118), 'filter:drop-shadow(0 ' + u(3) + ' ' + u(3) + ' rgba(0,0,0,.35))')}`);
+      else s += box(28, 192, W - 56, 152, '', `background:#e6f3fc;border:${u(3)} solid #1d1712;border-radius:${u(10)};display:flex;align-items:center;justify-content:center;gap:${u(12)};font-weight:900;font-size:${u(132)}`, `${gems}${gemIcon(118)}`);
     }
     return s;
   }
-  function r2Card(c, tw, art, stat, scale, step) {
+  function r2Card(c, tw, art, stat, scale, step, gemIdx) {
     const g = state.guides, inset = n => `left:${u(n)};top:${u(n)};right:${u(n)};bottom:${u(n)}`;
     const gd = g ? `<div class="guides"><i class="bleed" style="${inset(0)}"></i><i class="trim" style="${inset(C.bleed)}"></i><i class="safe" style="${inset(C.bleed + C.safe)}"></i></div>` : '';
-    const card = `<div class="card${state.round && g ? ' round' : ''}" data-id="${esc(c.id)}" data-dir="B2" data-art="${art}" data-stat="${stat}" style="--u:${scale}px;width:${u(275)};height:${u(375)}" role="img" aria-label="${esc(c.name)}, ${esc(c.type)}${c.number !== null ? ', ' + c.number : ''}. ${esc(c.text)}">${buildR2(c, tw, art, stat, step)}${gd}</div>`;
+    const card = `<div class="card${state.round && g ? ' round' : ''}" data-id="${esc(c.id)}" data-dir="B2" data-art="${art}" data-stat="${stat}" style="--u:${scale}px;width:${u(275)};height:${u(375)}" role="img" aria-label="${esc(c.name)}, ${esc(c.type)}${c.number !== null ? ', ' + c.number : ''}. ${esc(c.text)}">${buildR2(c, tw, art, stat, step, gemIdx)}${gd}</div>`;
     return g ? card : `<div style="position:relative;--u:${scale}px;width:${u(250)};height:${u(350)};overflow:hidden;border-radius:${u(12.5)};flex:none"><div style="position:absolute;left:${u(-12.5)};top:${u(-12.5)}">${card}</div></div>`;
   }
   // ---------------- the chosen design: Top Tab, Geode = stat 3, Monster = stat 1, standard art ----------------
@@ -1738,26 +1818,39 @@ const Match = (() => {
     for (const c of state.all) if (c.type !== 'Monster' && c.type !== 'Treasure') tw = Math.min(tw, fitFont(textHTML(c.text), b.w, b.h));
     twCache = { key, tw }; return tw;
   }
-  function playCard(c, scale, opts = {}) { const g = state.guides; state.guides = false; try { return r2Card(c, deckTextSize(), 'compact', statFor(c), scale, opts.step); } finally { state.guides = g; } }
+  function playCard(c, scale, opts = {}) { const g = state.guides; state.guides = false; try { return r2Card(c, deckTextSize(), 'compact', statFor(c), scale, opts.step, opts.gem); } finally { state.guides = g; } }
   // For print sheets: a card at `scale` px per 0.01 in, square-cornered; with bleed the whole 2.75 x 3.75 in, otherwise as cut (2.5 x 3.5 in).
   function printCard(c, scale, bleed) {
-    const card = `<div class="card" data-id="${esc(c.id)}" style="--u:${scale}px;width:${u(275)};height:${u(375)}">${buildR2(c, deckTextSize(), 'compact', statFor(c))}</div>`;
+    const card = `<div class="card" data-id="${esc(c.id)}" style="--u:${scale}px;width:${u(275)};height:${u(375)}">${buildR2(c, deckTextSize(), 'compact', statFor(c), undefined, c.copy)}</div>`;
     return bleed ? card : `<div style="position:relative;--u:${scale}px;width:${u(250)};height:${u(350)};overflow:hidden;flex:none"><div style="position:absolute;left:${u(-12.5)};top:${u(-12.5)}">${card}</div></div>`;
   }
-  Object.assign(window.DigDigBoomUI.api, { ic, textHTML, esc, playCard, printCard });
+  Object.assign(window.DigDigBoomUI.api, { ic, textHTML, esc, playCard, printCard, gemAt, gemOf, gemSvg });
   function deckHTML(scale) {
     const pool = state.all.filter(c => c.type !== 'Monster' && c.type !== 'Treasure');
     const b = R2.textBox('compact'); let tw = 44;
     for (const c of pool) tw = Math.min(tw, fitFont(textHTML(c.text), b.w, b.h));
     const order = Object.keys(D.types), list = state.all.filter(c => state.filter === 'all' || c.type === state.filter).sort((a, b2) => order.indexOf(a.type) - order.indexOf(b2.type));
-    const cells = list.map(c => `<div class="cell">${r2Card(c, tw, 'compact', statFor(c), scale)}<span class="cap">${esc(c.id)} · ${esc(c.name)}${c.count > 1 ? ' ×' + c.count : ''}</span></div>`).join('');
+    const cells = list.flatMap(c => c.type === 'Treasure' ? D.gems.map((g, i) => `<div class="cell">${r2Card(c, tw, 'compact', statFor(c), scale, undefined, i)}<span class="cap">${esc(c.id)} · ${esc(c.name)} · ${esc(g.name)} ×${Math.round(c.count / D.gems.length)}</span></div>`) : [`<div class="cell">${r2Card(c, tw, 'compact', statFor(c), scale)}<span class="cap">${esc(c.id)} · ${esc(c.name)}${c.count > 1 ? ' ×' + c.count : ''}</span></div>`]).join('');
     return `<section class="dir" id="deck" data-round="deck"><h2>The whole deck</h2>
-      <p class="sub">Coloured border and header with the name, type and Power number; compact art, so the rules text gets the room. Geodes: slim art, then a huge gem count. Monsters: art, then the damage ladder in big tiles, with the gems a survived Monster is worth. Rules text is <b>${E.formatSize(tw)}</b> on every card. ${list.length} cards, live from your sheet.</p>
+      <p class="sub">Coloured border and header with the name, type and Power number; compact art, so the rules text gets the room. Geodes: slim art, then a huge gem count — and every Geode is a different gem (six colours and cuts, three of each), so a flip is a little surprise. Monsters: art, then the damage ladder in big tiles, with the gems a survived Monster is worth. Rules text is <b>${E.formatSize(tw)}</b> on every card. ${list.length} cards, live from your sheet.</p>
       <div class="row" id="deckRow">${cells}</div></section>`;
   }
   // ---------------- small helpers for the card drawing (all numbers are units of 0.01 in) ----------------
   const box = (x, y, w, h, cls, style, inner = '') => `<div class="abs ${cls}" style="left:${u(x)};top:${u(y)};width:${u(w)};height:${u(h)};${style}">${inner}</div>`;
-  const artBox = (x, y, w, h, c) => box(x, y, w, h, 'art', `font-size:${u(11)}`, c.type === 'Monster' || c.type === 'Treasure' ? `<svg viewBox="0 0 24 24" style="color:#000"><use href="#${D.types[c.type].icon}"/></svg>` : 'ART');
+  // Art is a placeholder until real art arrives, but a lively one: a gem glowing in its own colour, a Monster on a sunburst, and a pale tint of the card's colour for the rest.
+  function artBox(x, y, w, h, c, gem) {
+    const t = D.types[c.type], tint = p => `color-mix(in srgb, ${t.color} ${p}%, #fffaf0)`;
+    let cls = 'art', style = `font-size:${u(11)}`, inner = 'ART';
+    if (c.type === 'Treasure' && gem) {
+      cls += ' vivid'; style += `;background:radial-gradient(circle at 50% 52%, #fff 0, ${gem.light} 26%, ${gem.color} 100%);border-color:${gem.dark}`;
+      inner = `${gemSvg(gem, '70%', 'filter:drop-shadow(0 ' + u(2) + ' ' + u(3) + ' rgba(0,0,0,.35))')}<span class="sp" style="left:12%;top:14%">✦</span><span class="sp" style="right:12%;bottom:16%;font-size:${u(11)}">✦</span><span class="sp" style="right:22%;top:10%;font-size:${u(9)}">✦</span>`;
+    } else if (c.type === 'Monster') {
+      cls += ' vivid'; style += `;background:radial-gradient(circle at 50% 60%, rgba(255,226,150,.95) 0 20%, rgba(255,226,150,0) 48%), repeating-conic-gradient(from 0deg at 50% 60%, #f25a3c 0 9deg, #d23a27 9deg 18deg);border-color:#7a1d1d`;
+      inner = `<svg viewBox="0 0 24 24" style="color:#2a0d0d"><use href="#${t.icon}"/></svg>`;
+    } else if (c.type !== 'Treasure') style += `;background:repeating-linear-gradient(135deg, ${tint(22)} 0 ${u(6)}, ${tint(10)} ${u(6)} ${u(12)});border-color:color-mix(in srgb, ${t.color} 60%, #000);color:color-mix(in srgb, ${t.color} 70%, #1d1712)`;
+    else inner = `<svg viewBox="0 0 24 24" style="color:#000"><use href="#${t.icon}"/></svg>`;
+    return box(x, y, w, h, cls, style, inner);
+  }
   const powerBadge = (x, y, d, c) => c.number === null ? '' : box(x, y, d, d, 'num', `font-size:${u(d * 0.64)};border-width:${u(4)};border-color:#1d1712`, String(c.number));
   const typeColors = c => D.types[c.type];
   // ---------------- the page ----------------
@@ -1843,7 +1936,7 @@ const Match = (() => {
       const raw = localStorage.getItem(SAVE_KEY); if (!raw) return;
       const d = JSON.parse(raw); if (d.v !== 2) return;
       const match = d.match ? Match.load(cards(), d.match) : null, run = match ? Match.human(match) : d.run ? Run.load(cards(), d.run) : null, st = run ? run.dig : d.st ? Dig.load(cards(), d.st) : null;
-      S.match = match; S.opp = d.opp !== false; S.run = run; S.st = st; S.kit = d.kit || []; S.kitSize = d.kitSize; S.start = d.start; S.rounds = d.rounds; S.adv = d.adv; S.panel = d.panel; S.back = d.panel;
+      S.match = match; S.opp = d.opp !== false; S.run = run; S.st = st; S.fx = fxOf(st); S.kit = d.kit || []; S.kitSize = d.kitSize; S.start = d.start; S.rounds = d.rounds; S.adv = d.adv; S.panel = d.panel; S.back = d.panel;
     } catch (e) { try { localStorage.removeItem(SAVE_KEY); } catch (e2) { /* ignore */ } S.run = null; S.match = null; S.st = null; S.panel = 'menu'; }
   }
   const typeIcon = t => `<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#${D.types[t].icon}"/></svg>`;
@@ -1852,9 +1945,9 @@ const Match = (() => {
 
   // ----- a card as a table piece: coloured header (icon, name, number) and its effect text -----
   function piece(c, o = {}) {
-    const t = D.types[c.type], num = c.number !== null ? `<span class="n">${c.number}</span>` : '';
+    const g = c.type === 'Treasure' ? A.gemOf(c) : null, t = g ? { ...D.types[c.type], color: g.color, on: g.on } : D.types[c.type], num = c.number !== null ? `<span class="n">${c.number}</span>` : '';
     const tag = o.tag ? `<span class="tg">${A.esc(o.tag)}</span>` : '';
-    const body = `<span class="h">${typeIcon(c.type)}<span>${A.esc(c.name)}</span>${tag}${o.num === false ? '' : num}</span>${o.text === false ? '' : `<span class="t">${T(c.text)}</span>`}${o.extra || ''}`;
+    const body = `<span class="h">${g ? A.gemSvg(g, '15px') : typeIcon(c.type)}<span>${A.esc(c.name)}</span>${tag}${o.num === false ? '' : num}</span>${o.text === false ? '' : `<span class="t">${T(c.text)}</span>`}${o.extra || ''}`;
     const attrs = `class="piece ${o.cls || ''}" style="--c:${t.color};--on:${t.on}"`;
     return o.act ? `<button ${attrs} data-p="${o.act}" data-uid="${c.uid === undefined ? '' : c.uid}" data-id="${A.esc(c.id)}">${body}</button>` : `<div ${attrs}>${body}</div>`;
   }
@@ -1930,7 +2023,7 @@ const Match = (() => {
   const nameOf = (run, id) => (run.board.players.find(p => p.id === id) || {}).name || id;
   function lbHTML(run, st) {
     const bd = run.board, tr = Board.tracker(bd), holder = Board.holder(bd), me = run.me, players = bd.players;
-    const here = st && !st.over ? st.survived : -1;
+    const here = st && !st.over ? Math.max(st.monstersDug, st.survived) : -1;
     const marks = players.flatMap(p => ['best', 'pledge'].map(k => ({ p, k, m: Board.marker(bd, p.id, k) }))).filter(x => x.m);
     const max = Math.max(8, tr + 2, here + 2, ...marks.map(x => x.m.n + 1));
     let cells = '';
@@ -2007,7 +2100,7 @@ const Match = (() => {
   function track(res, max, cur, live, color) {
     let cells = '';
     for (let i = 0; i <= max; i++) cells += `<div class="tc ${i === cur ? 'now' : i < cur ? 'lit' : ''}">${i}</div>`;
-    return `<button class="track ${live ? 'live' : ''}" data-p="${res}" style="grid-template-columns:repeat(${max + 1},1fr);--tc:${color}" aria-label="${res} ${cur}">${cells}</button>`;
+    return `<button class="track ${live ? 'live' : ''}" data-p="${res}" style="--n:${max + 1};--tc:${color}" aria-label="${res} ${cur}">${cells}</button>`;
   }
   function drillHTML(st, can) {
     const f = st.fight, gritLive = can.grit || can.bonus;
@@ -2018,9 +2111,9 @@ const Match = (() => {
     const gritTrade = wb ? wbBtn('reroll', st.reroll >= wb.rerollCost && st.grit < R.caps.grit, `${wb.rerollCost}${sm('reroll')}→${wb.gritGain}${sm('grit')}`) : '';
     const rerollTrade = wb ? wbBtn('grit', st.grit >= wb.gritCost && st.reroll < R.caps.reroll, `${wb.gritCost}${sm('grit')}→${wb.rerollGain}${sm('reroll')}`) : '';
     return `<section class="drill"><div class="tracks">
-      <div class="trow"><span class="tlab">${ic('heart')}</span>${track('heart', R.caps.heart, st.heart, false, '#e8344e')}</div>
-      <div class="trow"><span class="tlab">${ic('grit')}</span>${track('grit', R.caps.grit, st.grit, gritLive, '#d9951a')}${gritTrade}</div>
-      <div class="trow"><span class="tlab">${ic('reroll')}</span>${track('reroll', R.caps.reroll, st.reroll, can.reroll, '#2eaf68')}${rerollTrade}</div>
+      <div class="trow"><span class="tlab">${ic('heart')}</span><div class="tbody">${track('heart', R.caps.heart, st.heart, false, '#e8344e')}</div></div>
+      <div class="trow"><span class="tlab">${ic('grit')}</span><div class="tbody">${track('grit', R.caps.grit, st.grit, gritLive, '#d9951a')}${gritTrade}</div></div>
+      <div class="trow"><span class="tlab">${ic('reroll')}</span><div class="tbody">${track('reroll', R.caps.reroll, st.reroll, can.reroll, '#2eaf68')}${rerollTrade}</div></div>
     </div><div class="ongoing"><h4>Ongoing ${st.ongoing.length ? '(' + st.ongoing.length + ')' : ''}</h4><div class="list">${ong || '<span class="note">Ongoing cards you dig stay here.</span>'}</div></div></section>`;
   }
   function lineHTML(st) {
@@ -2030,7 +2123,7 @@ const Match = (() => {
     for (let n = R.line.min; n <= R.line.max; n++) {
       const here = st.line.filter(e => e.at === n);
       const cls = total === null ? '' : n <= total ? 'on' : 'off';
-      cols.push(`<div class="lcol ${cls}">${here.map(e => { const done = f ? f.trig.filter(x => x === e).length : 0; return piece(e.card, {
+      cols.push(`<div class="lcol ${cls}" style="--h:${Math.round(205 - (n - R.line.min) * 21.7)}">${here.map(e => { const done = f ? f.trig.filter(x => x === e).length : 0; return piece(e.card, {
         act: 'card', cls: (st.pending && st.pending.kind === 'clone' ? 'pick ' : '') + (elig.includes(e) ? 'elig ' : '') + (done && !elig.includes(e) ? 'done' : ''),
         tag: (done ? '✓ ' : '') + (e.pet ? 'PET' : e.cloned ? '×2' : e.at < e.base ? '↓' + e.base : ''), num: false }); }).join('')}<span class="lnum">${n}</span></div>`);
     }
@@ -2039,7 +2132,8 @@ const Match = (() => {
   function fightHTML(st, can) {
     const f = st.fight, res = Dig.result(st), after = f.phase === 'after';
     const tokens = f.gritSteps.map((v, i) => `<button data-p="refund" aria-label="take back Grit">${ic('grit')}${v > 1 ? '<b style="position:absolute;font-size:12px">+' + v + '</b>' : ''}</button>`).join('');
-    const die = after ? `<div class="die">${f.fixed !== null ? f.fixed : f.die}</div>` : `<button class="die live" data-p="roll">Roll<small>tap</small></button>`;
+    const rollKey = `${st.digs}:${f.rolls}:${f.die}`;
+    const die = after ? `<div class="die ${rollKey !== S.fx.roll ? 'fx-tumble' : ''}">${f.fixed !== null ? f.fixed : f.die}</div>` : `<button class="die live" data-p="roll">Roll<small>tap</small></button>`;
     const calc = after
       ? `<div class="calc"><b>Result ${res.total}</b>${res.parts.map(p => p.set ? `becomes ${p.v}` : `${p.label} ${p.v >= 0 && p.label !== 'Die' && p.label !== 'Fixed' ? '+' : ''}${p.v}`).join(' · ')}</div>`
       : `<div class="calc">This Monster deals <b style="display:inline">${f.damage}</b> ${ic('damage', ' style="width:20px;height:20px;vertical-align:-4px"')}</div>`;
@@ -2047,11 +2141,23 @@ const Match = (() => {
       ? (can.trigger ? `${[can.bonus ? `Grit: ${R.gritAfter.cost} for +${R.gritAfter.bonus}` : '', can.reroll ? 'Rerolls: reroll' : ''].filter(Boolean).join(' · ') || 'Tap a glowing card to use it'} · tap the Monster for the damage (unused cards are skipped)`
         : 'Tap the Monster for the damage')
       : (st.grit ? 'Tap Grit: +1 · tap the die to roll' : 'Tap the die to roll');
-    return `<button class="mcard ${after ? 'live' : ''}" data-p="face" ${after ? '' : 'disabled'}>${A.playCard(f.monster, S.ms || 0.71, { step: f.step })}</button>
+    return `<button class="mcard ${after ? 'live' : ''}" data-p="face" ${after ? '' : 'disabled'}><span class="flipwrap ${f.monster.uid !== S.fx.mon ? 'fx-slam' : ''}">${A.playCard(f.monster, S.ms || 0.71, { step: f.step })}</span></button>
       <div class="rollp">${die}<div class="tokens">${tokens}</div>${calc}<div class="hint">${hint}</div></div>`;
   }
+  // ----- little things that pop. What is new since the last drawing is remembered, so each flourish plays once, on the thing that just happened. -----
+  const fxOf = st => st ? { last: st.last ? st.last.uid : null, mon: st.fight ? st.fight.monster.uid : null, roll: st.fight && st.fight.phase === 'after' ? `${st.digs}:${st.fight.rolls}:${st.fight.die}` : null, gems: st.geodeGems + st.monsterGems, over: st.over } : { last: null, mon: null, roll: null, gems: 0, over: null };
+  S.fx = fxOf(null);
+  const burstHTML = n => `<span class="burst">${Array.from({ length: n }, (_, i) => { const a = i / n * 6.283 + .35, d = 90 + (i * 37) % 55; return `<i style="--dx:${Math.round(Math.cos(a) * d)}px;--dy:${Math.round(Math.sin(a) * d)}px;animation-delay:${(i % 3) * 35}ms">${A.gemSvg(D.gems[i % D.gems.length], '22px')}</i>`; }).join('')}</span>`;
+  const confettiHTML = n => `<span class="confetti">${Array.from({ length: n }, (_, i) => `<i style="left:${4 + (i * 53) % 92}%;animation-delay:${(i * 97) % 900}ms">${A.gemSvg(D.gems[(i * 5) % D.gems.length], '22px')}</i>`).join('')}</span>`;
+  // The gems you have banked so far, in the colours of the Geodes they came from (Monsters survived are clear diamonds).
+  function heapHTML(st) {
+    const heap = []; for (const c of st.discard) if (c.type === 'Treasure') for (let i = 0; i < (Dig.compile(c).worth || 1); i++) heap.push(A.gemSvg(A.gemOf(c), '21px'));
+    while (heap.length < st.geodeGems) heap.push(A.gemSvg(A.gemAt(0), '21px')); heap.length = Math.min(heap.length, st.geodeGems);
+    for (let i = 0; i < st.monsterGems; i++) heap.push(ic('gem', ' style="width:21px;height:21px"'));
+    return `<span class="heap" aria-hidden="true">${heap.slice(-10).join('')}</span>`;
+  }
   function tableHTML() {
-    const st = S.st, can = Dig.can(st), f = st.fight;
+    const st = S.st, can = Dig.can(st), f = st.fight, fx = S.fx;
     S.matH = Math.max(214, Math.min(286, Math.round(innerHeight * 0.33))); S.ms = (S.matH - 22) / 350;     // the table's height follows the screen; the Monster card fits it
     const gems = st.geodeGems + st.monsterGems;
     const known = st.mine.slice(0, st.known).map(c => piece(c, { text: false, num: false, cls: '' })).join('');
@@ -2060,25 +2166,27 @@ const Match = (() => {
     const rb = st.board;
     const bankSub = can.bank ? 'tap to keep them' : rb && rb.final ? 'final round: no banking' : '';
     const right = `<div class="stack"><button class="pile" data-p="zoom" data-uid="${top ? top.uid : ''}" ${top ? '' : 'disabled'} style="${top ? 'color:#fff' : ''}">${top ? piece(top, { text: false, num: false }) : ''}<span>Discard · ${st.discard.length}</span></button>
-       <button class="pile bankp ${can.bank ? 'live' : ''}" data-p="bank" ${can.bank ? '' : 'disabled'}><span class="gemline">${gems}${ic('gem')}</span><span>Bank<br><span class="cap2">${bankSub}</span></span></button></div>`;
+       <button class="pile bankp ${can.bank ? 'live' : ''}" data-p="bank" ${can.bank ? '' : 'disabled'}><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span>${heapHTML(st)}<span>Bank<br><span class="cap2">${bankSub}</span></span></button></div>`;
     let mid;
     if (f) mid = `<div class="dig">${fightHTML(st, can)}</div>`;
     else if (st.pending) mid = `<div class="dig idle"><div>${A.esc(st.pending.card.name)} goes under one of your Power cards.<br><b style="color:var(--accent)">Tap a Power card on the line.</b></div></div>`;
-    else mid = `<div class="dig idle">${st.last ? `<button class="mcard" data-p="zoom" data-uid="${st.last.uid}">${A.playCard(st.last, S.ms || 0.71)}</button>` : ''}<div>${st.last ? 'Last card dug.<br>' : ''}<b style="color:var(--accent)">${can.dig ? 'Tap your Mine to dig.' : ''}</b></div></div>`;
+    else { const fresh = !!st.last && st.last.uid !== fx.last; mid = `<div class="dig idle">${st.last ? `<button class="mcard" data-p="zoom" data-uid="${st.last.uid}"><span class="flipwrap ${fresh ? 'fx-flip' : ''}">${A.playCard(st.last, S.ms || 0.71)}${fresh && st.last.type === 'Treasure' ? burstHTML(10) : ''}</span></button>` : ''}<div>${st.last ? 'Last card dug.<br>' : ''}<b style="color:var(--accent)">${can.dig ? 'Tap your Mine to dig.' : ''}</b></div></div>`; }
     const s = st.over ? Dig.score(st) : null;
     let over = '';
+    const ovFx = st.over && st.over !== fx.over ? 'fx' : '';
     if (st.over && S.run) {
       const fin = S.run.round === S.run.rounds, waiting = aiDigging();
       const next = waiting ? `<div class="note">The AI is still digging — watch it on the Leaderboard.</div><div class="row2"><button class="btn" data-p="ff">Fast forward</button></div>`
         : `${S.match ? `<div class="note">${A.esc(aiLine(S.match))}</div>` : ''}<div class="row2"><button class="btn" data-p="prep">${fin ? 'See the result' : 'To Prep'}</button></div>`;
       over = st.over.kind === 'boom'
-        ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${T(st.over.why)}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this round — your best on the Leaderboard stays.</div>${next}</div>`
-        : `<div class="over"><h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="big"><b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${(S.run.endInfo || {}).stoleCrown ? ' — <b>you take the Crown Jewel</b>' : (S.run.endInfo || {}).newBest ? ' — a new best' : ''}${fin ? '<br>Everyone else is out.' : `<br><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} before the Escape Bonus`}</div>${next}</div>`;
+        ? `<div class="over boom ${ovFx}"><h2>BOOM!</h2><div class="big">${T(st.over.why)}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this round — your best on the Leaderboard stays.</div>${next}</div>`
+        : `<div class="over ${ovFx}">${ovFx ? confettiHTML(16) : ''}<h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="big"><b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${(S.run.endInfo || {}).stoleCrown ? ' — <b>you take the Crown Jewel</b>' : (S.run.endInfo || {}).newBest ? ' — a new best' : ''}${fin ? '<br>Everyone else is out.' : `<br><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} before the Escape Bonus`}</div>${next}</div>`;
     } else if (st.over) {
       over = (st.over.kind === 'boom'
-      ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${T(st.over.why)}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this Dig.</div>`
-      : `<div class="over"><h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + (st.best ? `<div class="note">Best so far: ${st.best.now.survived} Monsters survived${st.best.newSurvived ? ' (new!)' : ''} · ${st.best.now.gems} gems banked${st.best.newGems ? ' (new!)' : ''}</div>` : '') + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>`;
+      ? `<div class="over boom ${ovFx}"><h2>BOOM!</h2><div class="big">${T(st.over.why)}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this Dig.</div>`
+      : `<div class="over ${ovFx}">${ovFx ? confettiHTML(16) : ''}<h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + (st.best ? `<div class="note">Best so far: ${st.best.now.survived} Monsters survived${st.best.newSurvived ? ' (new!)' : ''} · ${st.best.now.gems} gems banked${st.best.newGems ? ' (new!)' : ''}</div>` : '') + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>`;
     }
+    S.fx = fxOf(st);
     return `${S.run ? lbHTML(S.run, st) : ''}${drillHTML(st, can)}${lineHTML(st)}<div class="mat" style="position:relative;--mat-h:${S.matH}px">${mine}${mid}${right}${over}</div>`;
   }
   function logHTML(st) {
@@ -2094,7 +2202,7 @@ const Match = (() => {
       <li><b>Any card</b>: tap it to see it full size, tap again to close.</li>
       <li><b>Beyond the Mine</b>: when the Mine runs out, Bonus Monsters keep coming: ${R.beyond.firstDamage}, ${R.beyond.firstDamage + 1}, … damage, worth ${R.beyond.gems} gems.</li></ul>
       <p><b>A run</b> (Play a run): ${D.run.roundChoices.join(' or ')} rounds, each a Dig then a Prep. Before round 1 you open a ${D.run.firstPack} Pack. <b>Prep</b>: 1 Escape Bonus (if you banked: roll the die, add that many gems) · 2 count gems (Geodes + Monsters survived + Escape Bonus; BOOM is 0) · 3 Booster Pack from the reward ladder (BOOM: a ${D.run.boomPack} Pack) — draw some, keep some · 4 choose a Starter Kit from your cards (1, 2, 2, 3 by round) · 5 reset: a fresh Drill, and everything else you own is shuffled into your Mine. Only the cards you own and your best Dig carry over.</p>
-      <p><b>Leaderboard</b>: positions are Monsters survived. The Crown tracker starts at ${D.run.crownStart}. Before the Crown you dig or bank freely. There is no pledging in this version: your marker on the Leaderboard moves by itself the moment you survive a Monster, so you always see where you stand. Bank above the tracker and you take the Crown Jewel and move the tracker. A BOOM locks in nothing, but your best stays. The <b>final round</b> is a race: nobody banks. Whoever is in the lead (past the tracker, and ahead of everyone else's best and live number) may wait; everyone else has to keep digging, and rolling tens is how you catch up. If someone passes the leader, the old leader has to dig again. The round ends when everyone but the leader has gone BOOM, and the leader takes the Crown Jewel. Hold the Crown Jewel at the end and you win. On the Leaderboard: the ring is where you are in this Dig, the dot is your best locked-in Dig, the crown is the Crown tracker.</p>
+      <p><b>Leaderboard</b>: positions are Monsters survived. The Crown tracker starts at ${D.run.crownStart}. Before the Crown you dig or bank freely. There is no pledging in this version: your marker on the Leaderboard moves by itself the moment you encounter a Monster (before you have faced it), so you always see where you stand. Bank above the tracker and you take the Crown Jewel and move the tracker. A BOOM locks in nothing, but your best stays. The <b>final round</b> is a race: nobody banks. Whoever is in the lead (past the tracker, and ahead of everyone else's best and live number) may wait; everyone else has to keep digging, and rolling tens is how you catch up. If someone passes the leader, the old leader has to dig again. The round ends when everyone but the leader has gone BOOM, and the leader takes the Crown Jewel. Hold the Crown Jewel at the end and you win. On the Leaderboard: the ring is where you are in this Dig, the dot is your best locked-in Dig, the crown is the Crown tracker.</p>
       <p><b>Your two starting cards</b> are in play at the start of every Dig and do not count against your Starter Kit: your Pet (a Power card at 10: defeat the Monster) and the starting Ongoing card beside it (when the Monster's damage is equal to or greater than your Health, +1 to your roll).</p>
       <p><b>The AI</b> digs on its own clock while you dig, and preps at the same time as you (it opens its Booster Pack when you open yours). When you are done and it is not, tap Fast forward. It spends Grit and Rerolls to get useful cards going, and keeps digging rather than banking while its Health is high.</p>
       <p><b>Calls made where the rules are unclear</b> (all in QUESTIONS.md, one line each to change):</p>
@@ -2110,7 +2218,7 @@ const Match = (() => {
     if (document.body.dataset.mode !== 'play') return;
     const keep = $.querySelector('#setupScroll'), ks = keep ? keep.scrollTop : 0;
     const libLink = /^https?:$/.test(location.protocol) ? `<a class="back libback" href="${A.esc(D.library.href)}"><span>‹</span> ${A.esc(D.library.name)}</a>` : '';
-    const bar = `<div class="pbar">${libLink}<h1>Dig Dig BOOM!</h1><button class="chip" data-p="help">How it works</button><button class="chip" data-p="menu">Menu</button><button class="chip" data-p="cards">Cards</button></div>`;
+    const bar = `<div class="pbar">${libLink}<h1><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M20 8c2-3 5-3 7-6" fill="none" stroke="#c79a5a" stroke-width="2.4" stroke-linecap="round"/><circle cx="14" cy="19" r="10" fill="#2a2530" stroke="#0c0a10" stroke-width="2"/><ellipse cx="10.5" cy="15" rx="3" ry="2" fill="#fff" opacity=".35" transform="rotate(-35 10.5 15)"/><path d="M27 1l1.3 2.6 2.7.4-2 1.9.5 2.7L27 7.1l-2.5 1.3.5-2.7-2-1.9 2.7-.4z" fill="#ffd54a" stroke="#e8731a" stroke-width=".8"/></svg>Dig Dig BOOM!</h1><button class="chip" data-p="help">How it works</button><button class="chip" data-p="menu">Menu</button><button class="chip" data-p="cards">Cards</button></div>`;
     let body;
     if (S.panel === 'menu') body = menuHTML();
     else if (S.panel === 'prep' && S.run) body = prepHTML();
@@ -2231,7 +2339,7 @@ const Match = (() => {
   function cardList() {
     const order = ['Power', 'Treasure', 'Monster', 'Immediate', 'Ongoing'], out = [];
     const start = cards().filter(c => c.deck === D.rules.startingDeck), boost = cards().filter(c => c.deck !== D.rules.startingDeck);
-    for (const c of [...start, ...boost.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type) || a.id.localeCompare(b.id))]) for (let i = 0; i < (P.copies ? c.count : 1); i++) out.push(c);
+    for (const c of [...start, ...boost.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type) || a.id.localeCompare(b.id))]) for (let i = 0; i < (P.copies ? c.count : 1); i++) out.push({ ...c, copy: i });
     return out;
   }
   function cardSheets() {

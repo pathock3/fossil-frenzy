@@ -34,11 +34,11 @@ function playMatch(seed, rounds = 3) {
   return m;
 }
 
-test('the Board updates by itself: your live marker follows every Monster you survive, a BOOM clears it, a bank locks the score in', () => {
+test('the Board updates by itself: your live marker follows every Monster you encounter, a BOOM clears it, a bank locks the score in', () => {
   const run = Run.start(cards, { seed: 5, rounds: 2 }); Run.openPack(run); Run.toggleKeep(run, run.prep.offer[0].uid); Run.confirmKeep(run); Run.beginDig(run, { seed: 1 });
   const st = run.dig; st.mine = ['MO-01', 'MO-02', 'MO-01', 'MO-02'].map((id, i) => ({ ...by(id), uid: 9900 + i })); st.dice = Array(30).fill(10);
   Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge'), null, 'nothing survived yet');
-  for (let i = 1; i <= 3; i++) { Dig.dig(st); Dig.roll(st); Dig.autoFace(st); Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge').n, i, 'the marker is on your number'); }
+  for (let i = 1; i <= 3; i++) { Dig.dig(st); Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge').n, i, 'the marker moves the moment you ENCOUNTER the Monster, before you face it'); Dig.roll(st); Dig.autoFace(st); Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge').n, i, 'and stays there once you survive it'); }
   assert.ok(!Run.pledge(run, 4), 'there is no pledging in the app: nothing to say, the marker already moves for you');
   Dig.dig(st); Dig.roll(st); Dig.autoFace(st); Run.refresh(run); assert.equal(Board.marker(run.board, 'me', 'pledge').n, 4, 'the marker follows the fourth Monster at once');
   assert.ok(Run.bank(run)); assert.equal(Board.marker(run.board, 'me', 'pledge'), null); assert.equal(run.best, 4);

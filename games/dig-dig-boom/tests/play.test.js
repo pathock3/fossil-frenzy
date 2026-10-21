@@ -486,3 +486,40 @@ test('play: after the roll you tap the Power cards you want to trigger, in the o
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
+
+test('look: every Geode is a different gem (six colours and cuts, three of each); Health, Grit and Rerolls squares are all the same width and line up', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await begin(page, { mine: ['TR-01', 'TR-01', 'TR-01', 'TR-01', 'TR-01', 'TR-01', 'TR-01'] });
+    const seen = [];
+    for (let i = 0; i < 6; i++) {
+      await page.click('#play [data-p=dig]');
+      seen.push(await page.evaluate(() => { const c = document.querySelector('#play .mat .mcard .card'); const band = c.querySelector('.band'); return { bg: getComputedStyle(band).backgroundColor, cut: [...c.querySelectorAll('use')].map(u => u.getAttribute('href')).find(h => h.startsWith('#gem-')) }; }));
+    }
+    assert.equal(new Set(seen.map(x => x.bg)).size, 6, 'six different card colours in a row: ' + JSON.stringify(seen));
+    assert.equal(new Set(seen.map(x => x.cut)).size, 6, 'and six different cuts, so colour is never the only clue');
+    assert.equal(await page.locator('#play .heap svg').count(), 6, 'the Bank pile holds a heap of the gems in their own colours');
+    const cells = await page.evaluate(() => [...document.querySelectorAll('#play .track')].map(t => [...t.querySelectorAll('.tc')].map(c => { const r = c.getBoundingClientRect(); return [Math.round(r.left * 10) / 10, Math.round(r.width * 10) / 10]; })));
+    const [heart, grit, reroll] = cells;
+    assert.equal(heart.length, 11); assert.equal(grit.length, 7); assert.equal(reroll.length, 4);
+    for (const row of [grit, reroll]) row.forEach((c, i) => { assert.ok(Math.abs(c[0] - heart[i][0]) < 0.6 && Math.abs(c[1] - heart[i][1]) < 0.6, `square ${i} lines up with Health's: ${c} vs ${heart[i]}`); });
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('run: your Leaderboard marker moves the moment you ENCOUNTER a Monster, before you roll; BOOM on it takes the marker away', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await page.evaluate(() => { window.DigDigBoomPlay.S.opp = false; }); await page.click('#play [data-p=startrun]'); await page.click('#play [data-p=openpack]'); await page.click('#play .grid .piece >> nth=0'); await page.click('#play [data-p=keepgo]'); await page.click('#play [data-p=startround]');
+    await page.evaluate(() => { const P = window.DigDigBoomPlay, st = P.S.st, all = window.DigDigBoomUI.state.all; st.mine = ['MO-01', 'MO-02'].map((id, i) => ({ ...all.find(c => c.id === id), uid: 8000 + i })); st.dice = [10, 1]; st.heart = 1; P.render(); });
+    assert.equal(await page.locator('#play .lbc .mk.pledge').count(), 0, 'nothing encountered yet');
+    await page.click('#play [data-p=dig]');
+    assert.equal(await page.locator('#play .lbc.here').innerText().then(t => t.split('\n')[0].trim()), '1', 'the Monster is in front of you and already counts');
+    assert.equal(await page.locator('#play .lbc:has(.mk.pledge) .ln').innerText(), '1');
+    await page.click('#play [data-p=roll]'); await faceIt(page);
+    await page.click('#play [data-p=dig]'); assert.equal(await page.locator('#play .lbc.here').innerText().then(t => t.split('\n')[0].trim()), '2');
+    await page.click('#play [data-p=roll]'); await faceIt(page);
+    assert.match(await page.locator('#play .over').innerText(), /BOOM/); assert.equal(await page.locator('#play .lbc .mk.pledge').count(), 0);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
