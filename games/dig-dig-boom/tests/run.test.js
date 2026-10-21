@@ -72,7 +72,7 @@ test('Escape Bonus: after banking, one roll of the die adds gems; gems = Geodes 
   assert.equal(run.prep.step, 'escape'); assert.equal(run.prep.banked, true);
   run.dice = [7]; assert.ok(Run.rollEscape(run));
   assert.deepEqual([run.prep.geodes, run.prep.monsters, run.prep.escape, run.prep.gems], [4, 1, 7, 12]);
-  assert.deepEqual(Run.packInfo(run), { name: 'Bronze+', draw: 4, keep: 1 });
+  assert.deepEqual(Run.packInfo(run), { name: 'Silver', draw: 4, keep: 2 }, '12 gems');
   assert.ok(!Run.rollEscape(run), 'only once');
 });
 
@@ -85,9 +85,10 @@ test('BOOM: no Escape Bonus, 0 gems, and a Bronze Pack', () => {
   assert.equal(run.round, 2); assert.equal(run.prep.kitMax, 2);
 });
 
-test('the reward ladder (a placeholder until the owner rules): more gems, bigger packs', () => {
-  const at = g => { const p = Run.ladderFor(g); return [p.name, p.draw, p.keep]; };
-  assert.deepEqual([0, 9, 10, 19, 20, 29, 30, 99].map(at), [['Bronze', 3, 1], ['Bronze', 3, 1], ['Bronze+', 4, 1], ['Bronze+', 4, 1], ['Silver', 4, 2], ['Silver', 4, 2], ['Gold', 5, 3], ['Gold', 5, 3]]);
+test('the reward ladder (the owner\'s): gems -> draw:keep, in steps of 5', () => {
+  const at = g => { const p = Run.ladderFor(g); return `${p.draw}:${p.keep}`; };
+  assert.deepEqual([0, 4, 5, 9, 10, 14, 15, 19, 20, 24, 25, 29, 30, 34, 35, 99].map(at),
+    ['3:1', '3:1', '4:1', '4:1', '4:2', '4:2', '5:2', '5:2', '5:3', '5:3', '6:3', '6:3', '6:4', '6:4', '7:4', '7:4']);
 });
 
 test('Leaderboard and Crown Jewel: the tracker starts at 3; banking above it takes the Crown and moves the tracker; BOOM locks in nothing', () => {

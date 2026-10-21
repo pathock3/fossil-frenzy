@@ -4,12 +4,12 @@ let cache = null;
 function load() {
   if (cache) return cache;
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  for (const id of ['data', 'engine', 'dig', 'run']) {
+  for (const id of ['data', 'engine', 'dig', 'board', 'run']) {
     const m = html.match(new RegExp('<script id="' + id + '">([\\s\\S]*?)</script>'));
     if (!m) throw new Error('missing <script id="' + id + '">');
     vm.runInThisContext(m[1], { filename: 'index.html#' + id });
   }
-  cache = vm.runInThisContext('({ DDB, DDB_SAMPLE_CSV, Engine, Dig, Run })');
+  cache = vm.runInThisContext('({ DDB, DDB_SAMPLE_CSV, Engine, Dig, Board, Run })');
   return cache;
 }
 module.exports = load();

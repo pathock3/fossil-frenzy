@@ -251,10 +251,10 @@ test('run: bank, roll the Escape Bonus, open the pack the gems earn, keep, choos
     await page.evaluate(() => { window.DigDigBoomPlay.S.run.dice = [8]; });
     await page.click('#play [data-p=escape]');
     assert.match(await page.locator('#play .panel').innerText(), /Geodes 1 \+ Monsters survived 4 \+ Escape Bonus 8 = 13/);
-    assert.match(await page.locator('#play .panel').innerText(), /Bronze\+ Pack/);
+    assert.match(await page.locator('#play .panel').innerText(), /Silver Pack/);
     assert.match(await page.locator('#play .lb').innerText(), /you hold the crown jewel/i);
     await page.click('#play [data-p=openpack]'); assert.equal(await page.locator('#play .grid .piece').count(), 4);
-    await page.click('#play .grid .piece >> nth=0'); await page.click('#play [data-p=keepgo]');
+    await page.click('#play .grid .piece >> nth=0'); await page.click('#play .grid .piece >> nth=1'); await page.click('#play [data-p=keepgo]');
     assert.match(await page.locator('#play .panel').innerText(), /Starter Kit — up to 2/);
     await page.click('#play [data-p=startround]');
     assert.match(await page.locator('#play .lbhead').innerText(), /round 2 of 2 · final/i);
@@ -345,7 +345,7 @@ test('play: a reload puts you back exactly where you were — mid-fight in a run
 });
 
 test('play: monkey test — random taps through whole runs at iPad sizes: no errors, the page never scrolls, a legal tap always exists until the run is done', SKIP, async () => {
-  const ALL = `(document.querySelector('#play .zoom') ? [document.querySelector('#play .zoom')] : [...document.querySelectorAll('#play [data-p]:not([disabled])')]).filter(e => e.getBoundingClientRect().width > 0 && (!(e.closest('.pbar') || e.closest('.foot')) || ['startround', 'prep', 'keepgo', 'again'].includes(e.dataset.p)))`;
+  const ALL = `(document.querySelector('#play .zoom') ? [document.querySelector('#play .zoom')] : [...document.querySelectorAll('#play [data-p]:not([disabled])')]).filter(e => e.getBoundingClientRect().width > 0 && (!(e.closest('.pbar') || e.closest('.foot')) || ['startround', 'prep', 'keepgo', 'again'].includes(e.dataset.p)) && (r => e.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)))(e.getBoundingClientRect()))`;
   const AVOID = ['menu', 'practice', 'cards', 'print', 'help', 'startrun', 'setup', 'rounds', 'adv'];
   for (const [vp, seed] of [[{ width: 1180, height: 820 }, 1], [{ width: 820, height: 1180 }, 2], [{ width: 1024, height: 700 }, 3]]) {
     const { browser, page, errors } = await open({ viewport: vp, menu: true });

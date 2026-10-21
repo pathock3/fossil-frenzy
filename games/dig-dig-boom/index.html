@@ -198,7 +198,7 @@ body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidd
 #play .lbc.open { border-color: var(--accent); animation: pulse 1.4s ease-in-out infinite; color: #fff; }
 #play .lbc .ln { font-weight: 800; font-size: 14px; }
 #play .lbc .lm { display: flex; align-items: center; justify-content: center; gap: 3px; min-height: 22px; }
-#play .mk { display: inline-block; width: 16px; height: 16px; border-radius: 50%; }
+#play .mk { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; font-style: normal; font-weight: 900; color: #1d1712; }
 #play .mk.best { background: var(--accent); border: 2px solid #5a3a00; }
 #play .mk.here { width: 0; height: 0; border-radius: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid #fff; }
 #play .mk.pledge { border: 3px solid #fff; background: transparent; }
@@ -351,7 +351,7 @@ const DDB = {
     startingDeck: 'Starting',                            // the Deck column value for the Mine's cards and the Pet
     survivedGems: 1, geodeGems: 1,
     beyond: { firstDamage: 8, gems: 2 },                 // Monsters after the Mine runs out: 8, 9, ... and worth 2 gems
-    kitSizes: [1, 2, 2, 3],
+    kitSizes: [1, 2, 2, 3, 3],                           // Round tracker: Starter Kit cards per round; 4 rounds use the first four (owner: five rounds = 1, 2, 2, 3, 3)
     soloKit: 3,                                          // Starter Kit size offered in the solo prototype (the round tracker's round 1 is 1)                              // Round tracker: Starter Kit cards per round (testing)
     maxChain: 6,                                         // safety limit on effects that trigger effects
     rulings: {                                           // each one is a question in QUESTIONS.md; change the value to change the rule
@@ -362,7 +362,7 @@ const DDB = {
       gainAtCapFires: false,                             // #13 "Whenever you gain" needs the track to actually move
       panicRetriggers: true,                             // #10 a free reroll triggers the line again
       falconIncludesGrit: false,                         // sheet question on Falcon Finisher
-      kitImmediates: 'mine',                             // #14 Immediate Starter Kit cards are shuffled into the Mine
+      kitImmediates: 'top',                              // #14 an Immediate Starter Kit card is on top of your Mine: you dig it first and it does its thing then
     },
   },
   // ---- Print and play ----
@@ -372,12 +372,16 @@ const DDB = {
     rounds: 4, roundChoices: [4, 5],                     // "Testing 4 rounds against 5"
     crownStart: 3,                                       // the Crown tracker starts at 3
     boosterDeck: 'Booster',                              // the Deck column value of the Booster Deck
-    // Reward ladder. The Rules tab says it "needs a new version", aiming for steps like 20 gems = 2 keeps, 30 = 3. PLACEHOLDER (QUESTIONS #21).
+    // Reward ladder (owner): gems -> draw : keep. The pack names are placeholders (QUESTIONS #21).
     ladder: [
-      { at: 0,  name: 'Bronze',  draw: 3, keep: 1 },
-      { at: 10, name: 'Bronze+', draw: 4, keep: 1 },
-      { at: 20, name: 'Silver',  draw: 4, keep: 2 },
-      { at: 30, name: 'Gold',    draw: 5, keep: 3 },
+      { at: 0,  name: 'Bronze',   draw: 3, keep: 1 },
+      { at: 5,  name: 'Bronze+',  draw: 4, keep: 1 },
+      { at: 10, name: 'Silver',   draw: 4, keep: 2 },
+      { at: 15, name: 'Silver+',  draw: 5, keep: 2 },
+      { at: 20, name: 'Gold',     draw: 5, keep: 3 },
+      { at: 25, name: 'Gold+',    draw: 6, keep: 3 },
+      { at: 30, name: 'Diamond',  draw: 6, keep: 4 },
+      { at: 35, name: 'Diamond+', draw: 7, keep: 4 },
     ],
     firstPack: 'Bronze',                                 // opened before round 1 so there is something to choose for the Starter Kit (QUESTIONS #22)
     boomPack: 'Bronze',                                  // "If you went BOOM, open a Bronze Pack"
@@ -670,14 +674,17 @@ const Dig = (() => {
     const pet = starting.find(c => c.type === 'Power');
     const mine = []; for (const c of starting) if (c !== pet) mine.push(...copies(c));
     if (pet) { st.pet = copy(pet); st.line.push({ card: st.pet, at: pet.number, base: pet.number, pet: true }); }
+    const kitTop = [];
     for (const c of opts.extra || []) mine.push(copy(c));
     for (const c of kit) {
       const k = copy(c); st.kit.push(k);
       if (c.type === 'Power') st.line.push({ card: k, at: c.number, base: c.number });
       else if (c.type === 'Ongoing') { st.ongoing.push(k); if (compile(k).ongoing.flags.clone) st.pending = st.pending || { kind: 'clone', card: k }; }
+      else if (RL.kitImmediates === 'top') kitTop.push(k);
       else mine.push(k);
     }
     st.mine = shuffle(st, mine);
+    if (kitTop.length) { st.mine.unshift(...kitTop); st.known = kitTop.length; }     // Starter Kit Immediate cards: on top of the Mine, face up
     refreshPet(st);
     log(st, 'sys', `New Dig (seed ${seed}). Mine: ${st.mine.length} cards. ${st.pet ? st.pet.name + ' is on the line.' : ''}`);
     if (st.kit.length) log(st, 'sys', `Starter Kit: ${st.kit.map(k => k.name).join(', ')}.`);
@@ -1094,7 +1101,7 @@ const Dig = (() => {
     const f = st.fight, idle = !st.over && !f && !st.pending;
     return {
       dig: idle,
-      bank: idle && (RL.bankWhen === 'anytime' || st.survived >= 1) && (st.pledge === null || st.survived >= st.pledge) && !(st.board && st.board.final && st.survived <= st.board.crown),
+      bank: idle && (RL.bankWhen === 'anytime' || st.survived >= 1) && (st.pledge === null || st.survived >= st.pledge) && !(st.board && st.board.final && st.survived < (st.board.leadN !== undefined ? st.board.leadN : st.board.crown + 1)),
       grit: !!f && !st.over && f.phase === 'before' && st.grit >= 1,
       refund: !!f && !st.over && f.phase === 'before' && f.gritSteps.length > 0,
       roll: !!f && !st.over && f.phase === 'before',
@@ -1108,6 +1115,79 @@ const Dig = (() => {
 })();
 </script>
 
+<script id="board">
+/* =====================================================================
+   BOARD — the Leaderboard and the Crown Jewel (v2.7 Rules tab), for any number of players. No DOM, no Dig.
+   Positions are Monsters survived. Under each number there are spots, best spot first. Every player has two markers: the best locked-in
+   Dig (stays between rounds) and a live Pledge (this Dig only). Saying a number gets you the best open spot under it, so ties go to
+   whoever said it first. The leader (highest locked-in number; ties to the better spot) holds the Crown Jewel; the Crown tracker is their number.
+   ===================================================================== */
+const Board = (() => {
+  const RN = DDB.run;
+  const maxN = 99;
+  // players: [{ id, name, color }]
+  function create(players, crownStart = RN.crownStart) {
+    return { players: players.map(p => ({ ...p })), crownStart, spots: {}, clock: 0 };
+  }
+  const row = (b, n) => b.spots[n] || (b.spots[n] = Array(Math.max(2, b.players.length * 2)).fill(null));
+  // where a player's marker of this kind is: { n, rank (1 = best spot) } or null
+  function marker(b, id, kind) {
+    for (const n of Object.keys(b.spots)) { const i = b.spots[n].findIndex(s => s && s.pid === id && s.kind === kind); if (i >= 0) return { n: Number(n), rank: i + 1, t: b.spots[n][i].t }; }
+    return null;
+  }
+  function remove(b, id, kind) {
+    for (const n of Object.keys(b.spots)) { const r = b.spots[n], i = r.findIndex(s => s && s.pid === id && s.kind === kind); if (i >= 0) { r[i] = null; return; } }
+  }
+  function claim(b, id, kind, n) {                         // "Move your marker to the best open spot under that number."
+    remove(b, id, kind);
+    const r = row(b, n), i = r.findIndex(s => !s);
+    r[i] = { pid: id, kind, t: ++b.clock };
+    return i + 1;
+  }
+  // The leader: the highest locked-in best; ties go to the better spot. null while nobody has locked in a score.
+  function leader(b) {
+    let best = null;
+    for (const p of b.players) { const m = marker(b, p.id, 'best'); if (m && m.n > b.crownStart && (!best || m.n > best.n || (m.n === best.n && m.rank < best.rank))) best = { pid: p.id, n: m.n, rank: m.rank }; }
+    return best;
+  }
+  const tracker = b => { const l = leader(b); return l ? l.n : b.crownStart; };
+  const holder = b => { const l = leader(b); return l ? l.pid : null; };
+  // "When you reach it, you may pledge 1 more": the Crown's number reached, and only your current number or 1 more.
+  function canPledge(b, id, survived, n) {
+    const pl = marker(b, id, 'pledge');
+    return survived >= tracker(b) && (n === survived || n === survived + 1) && !(pl && pl.n === n);
+  }
+  function pledge(b, id, survived, n) { if (!canPledge(b, id, survived, n)) return false; claim(b, id, 'pledge', n); return true; }
+  const clearPledge = (b, id) => remove(b, id, 'pledge');
+  // The spot a player would hold if they locked in n now (their pledge's spot if it is under n, else the best open one).
+  function rankIf(b, id, n) {
+    const pl = marker(b, id, 'pledge'); if (pl && pl.n === n) return pl.rank;
+    const r = row(b, n), i = r.findIndex(s => !s || (s.pid === id && s.kind === 'best')); return i + 1;
+  }
+  // Would locking in n put this player in the lead (past the Crown tracker, or level with it on a better spot)?
+  function wouldLead(b, id, n) {
+    const l = leader(b);
+    if (!l) return n > b.crownStart;
+    if (l.pid === id) return n >= l.n;
+    return n > l.n || (n === l.n && rankIf(b, id, n) < l.rank);
+  }
+  function leadN(b, id) { for (let n = 0; n <= maxN; n++) if (wouldLead(b, id, n)) return n; return maxN; }
+  // Bank: your best marker moves to n if it is a new best; the Pledge marker goes. Returns { rank, tookLead, newBest }.
+  function lockIn(b, id, n) {
+    const before = holder(b), cur = marker(b, id, 'best'), pl = marker(b, id, 'pledge');
+    let newBest = false, rank = cur ? cur.rank : null;
+    if (!cur || n > cur.n) {
+      newBest = true; remove(b, id, 'best');
+      if (pl && pl.n === n) { const r = row(b, n); r[pl.rank - 1] = { pid: id, kind: 'best', t: pl.t }; rank = pl.rank; return { rank, tookLead: before !== id && holder(b) === id, newBest }; }
+      rank = claim(b, id, 'best', n);
+    }
+    remove(b, id, 'pledge');
+    return { rank, tookLead: before !== id && holder(b) === id, newBest };
+  }
+  return { create, marker, leader, tracker, holder, canPledge, pledge, clearPledge, wouldLead, leadN, lockIn, rankIf };
+})();
+</script>
+
 <script id="run">
 /* =====================================================================
    RUN — rounds of Dig + Prep for one player: Escape Bonus, gem count, Booster Pack, Starter Kit, reset; the Leaderboard and Crown Jewel.
@@ -1115,6 +1195,7 @@ const Dig = (() => {
    ===================================================================== */
 const Run = (() => {
   const RN = DDB.run, R = DDB.rules;
+  const ME = 'me';
   let uid = 500000;
   const copy = card => ({ ...card, uid: uid++ });
   const kitSize = (run, round) => R.kitSizes[Math.min(round, R.kitSizes.length) - 1];
@@ -1123,14 +1204,20 @@ const Run = (() => {
   const ladderFor = gems => { let best = RN.ladder[0]; for (const p of RN.ladder) if (gems >= p.at) best = p; return best; };
   const log = (run, text) => run.log.push(text);
 
+  // crown and best are read off the Board after every change, so the rest of the game can ask run.crown / run.best.
+  function sync(run) {
+    run.crown = { tracker: Board.tracker(run.board), holder: Board.holder(run.board) === run.me };
+    const m = Board.marker(run.board, run.me, 'best'); run.best = m ? m.n : 0;
+  }
   // all: every card of the sheet. opts: { rounds, seed, dice, advancedTrash }
   function start(all, opts = {}) {
     const seed = opts.seed === undefined ? (Math.random() * 4294967296) >>> 0 : opts.seed >>> 0;
     const run = { seed, rng: Dig.makeRng(seed), dice: opts.dice ? opts.dice.slice() : null, all, rounds: opts.rounds || RN.rounds, round: 1, phase: 'prep',
       advancedTrash: opts.advancedTrash === undefined ? RN.advancedTrash : opts.advancedTrash,
-      owned: [], kit: [], trash: [], deck: [], crown: { tracker: RN.crownStart, holder: false }, best: 0, history: [], dig: null, prep: null, log: [], result: null };
+      owned: [], kit: [], trash: [], deck: [], me: ME, board: Board.create([{ id: ME, name: 'You', color: DDB.print.playerColors[0] }]), crown: { tracker: RN.crownStart, holder: false }, best: 0, history: [], dig: null, prep: null, log: [], result: null };
     const deck = []; for (const c of all) if (c.deck === RN.boosterDeck) for (let i = 0; i < (c.count || 1); i++) deck.push(copy(c));
     run.deck = Dig.shuffle({ rng: run.rng }, deck);
+    sync(run);
     run.prep = newPrep(run, null); setPack(run);
     log(run, `A new run: ${run.rounds} rounds. Crown tracker at ${run.crown.tracker}. Before round 1, open a ${RN.firstPack} Pack.`);
     return run;
@@ -1200,7 +1287,7 @@ const Run = (() => {
     run.kit = run.owned.filter(c => pr.kitPick.includes(c.uid));
     const rest = run.owned.filter(c => !pr.kitPick.includes(c.uid));
     run.dig = Dig.start(run.all, run.kit, { seed: opts.seed === undefined ? (run.rng() * 4294967296) >>> 0 : opts.seed, dice: opts.dice, extra: rest,
-      board: { crown: run.crown.tracker, final: run.round === run.rounds } });
+      board: { crown: Board.tracker(run.board), final: run.round === run.rounds, leadN: Board.leadN(run.board, run.me) } });
     run.phase = 'dig'; run.prep = null;
     log(run, `Round ${run.round}${run.round === run.rounds ? ' (the final round: no banking until you are in the lead)' : ''}. Kit: ${run.kit.map(c => c.name).join(', ') || 'none'}.`);
     return true;
@@ -1211,9 +1298,9 @@ const Run = (() => {
     const o = st.over, final = run.round === run.rounds, rec = { round: run.round, kind: o.kind, survived: st.survived, geodes: st.geodeGems, monsters: st.monsterGems };
     rec.stoleCrown = false; rec.newBest = false;
     if (o.kind === 'bank') {                                  // locking in a score: your best marker moves, and the Crown may change hands
-      if (st.survived > run.best) { run.best = st.survived; rec.newBest = true; }
-      if (st.survived > run.crown.tracker) { run.crown.tracker = st.survived; run.crown.holder = true; rec.stoleCrown = true; }
-    }
+      const lock = Board.lockIn(run.board, run.me, st.survived); rec.stoleCrown = lock.tookLead; rec.newBest = lock.newBest; rec.rank = lock.rank;
+    } else Board.clearPledge(run.board, run.me);              // BOOM: the Pledge marker goes, the best marker stays
+    sync(run);
     run.history.push(rec);
     log(run, o.kind === 'bank' ? `Round ${run.round}: banked with ${st.survived} Monsters survived${rec.stoleCrown ? ' — you take the Crown Jewel' : ''}.` : `Round ${run.round}: BOOM after ${st.survived} Monsters survived.`);
     if (final) { run.phase = 'done'; run.result = { crown: run.crown.holder, best: run.best, tracker: run.crown.tracker }; return true; }
@@ -1227,23 +1314,33 @@ const Run = (() => {
   const refOf = c => ({ id: c.id, uid: c.uid });
   function save(run) {
     const pr = run.prep;
-    return { v: 1, seed: run.seed, rng: run.rng.state(), dice: run.dice, rounds: run.rounds, round: run.round, phase: run.phase, advancedTrash: run.advancedTrash,
-      owned: run.owned.map(refOf), kit: run.kit.map(refOf), trash: run.trash.map(refOf), deck: run.deck.map(refOf), crown: run.crown, best: run.best, history: run.history, log: run.log, result: run.result,
+    return { v: 2, board: run.board, me: run.me, seed: run.seed, rng: run.rng.state(), dice: run.dice, rounds: run.rounds, round: run.round, phase: run.phase, advancedTrash: run.advancedTrash,
+      owned: run.owned.map(refOf), kit: run.kit.map(refOf), trash: run.trash.map(refOf), deck: run.deck.map(refOf), history: run.history, log: run.log, result: run.result,
       prep: pr && { ...pr, pack: pr.pack && pr.pack.name, offer: pr.offer.map(refOf), extra: pr.extra.map(refOf) },
       dig: run.dig && Dig.save(run.dig) };
   }
   function load(all, d) {
+    if (d.v !== 2) throw new Error('an older save');
     const memo = new Map();
     const deref = r => { if (memo.has(r.uid)) return memo.get(r.uid); const base = all.find(x => x.id === r.id); if (!base) throw new Error('the sheet no longer has card ' + r.id); const c = { ...base, uid: r.uid }; memo.set(r.uid, c); return c; };
     const rng = Dig.makeRng(d.seed); rng.restore(d.rng);
     const run = { seed: d.seed, rng, dice: d.dice, all, rounds: d.rounds, round: d.round, phase: d.phase, advancedTrash: d.advancedTrash,
-      owned: d.owned.map(deref), kit: d.kit.map(deref), trash: d.trash.map(deref), deck: d.deck.map(deref), crown: d.crown, best: d.best, history: d.history, log: d.log, result: d.result,
+      me: d.me, board: d.board, crown: null, best: 0, owned: d.owned.map(deref), kit: d.kit.map(deref), trash: d.trash.map(deref), deck: d.deck.map(deref), history: d.history, log: d.log, result: d.result,
       prep: d.prep && { ...d.prep, pack: d.prep.pack ? packFor(d.prep.pack) : null, offer: d.prep.offer.map(deref), extra: d.prep.extra.map(deref) },
       dig: d.dig ? Dig.load(all, d.dig) : null };
     for (const k of memo.keys()) uid = Math.max(uid, k + 1);
+    sync(run);
     return run;
   }
-  return { save, load, start, rollEscape, packInfo, trashOwned, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
+  // Pledge (needs the Crown's number reached): say your number, or 1 more, aloud — the best open spot under it is yours.
+  function pledge(run, n) {
+    const st = run.dig; if (!st || st.over || run.phase !== 'dig') return false;
+    if (!Dig.canPledge(st, n) || !Board.canPledge(run.board, run.me, st.survived, n)) return false;
+    Board.pledge(run.board, run.me, st.survived, n); Dig.pledge(st, n);
+    st.board.leadN = Board.leadN(run.board, run.me);          // your spot may now be good enough to lead at the Crown's own number
+    return true;
+  }
+  return { pledge, sync, save, load, start, rollEscape, packInfo, trashOwned, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
 })();
 </script>
 
@@ -1783,12 +1880,13 @@ const Run = (() => {
   }
   // The Leaderboard: positions are Monsters survived. The Crown tracker starts at 3; your best locked-in score stays between rounds.
   function lbHTML(run, st) {
-    const cr = run.crown, here = st && !st.over ? st.survived : -1, pl = st ? st.pledge : null;
+    const cr = run.crown, here = st && !st.over ? st.survived : -1, bm = Board.marker(run.board, run.me, 'best'), pm = Board.marker(run.board, run.me, 'pledge'), pl = pm ? pm.n : null;
     const max = Math.max(8, cr.tracker + 2, run.best + 1, here + 2, (pl || 0) + 1);
     let cells = '';
     for (let n = 0; n <= max; n++) {
-      const open = st && Dig.canPledge(st, n);
-      const mk = (n === here ? '<i class="mk here" title="you are here"></i>' : '') + (n === run.best && run.best > 0 ? '<i class="mk best" title="your best"></i>' : '') + (pl === n ? '<i class="mk pledge" title="your pledge"></i>' : '');
+      const open = st && Dig.canPledge(st, n) && Board.canPledge(run.board, run.me, st.survived, n);
+      const rk = m => (m.rank > 1 ? m.rank : '');
+      const mk = (n === here ? '<i class="mk here" title="you are here"></i>' : '') + (bm && n === bm.n ? `<i class="mk best" title="your best">${rk(bm)}</i>` : '') + (pm && n === pm.n ? `<i class="mk pledge" title="your pledge">${rk(pm)}</i>` : '');
       cells += `<button class="lbc ${n === here ? 'here' : ''} ${n <= cr.tracker ? 'free' : ''} ${open ? 'open' : ''}" data-p="pledge" data-n="${n}" ${open ? '' : 'disabled'}><span class="ln">${n === 0 ? 'Start' : n}</span><span class="lm">${n === cr.tracker ? `<b class="crownmk ${cr.holder ? 'mine' : ''}">♛</b>` : ''}${mk}</span></button>`;
     }
     const hint = st && Dig.can(st).dig && st.survived >= cr.tracker && st.pledge === null ? ' · tap a number to pledge it' : '';
@@ -1818,7 +1916,7 @@ const Run = (() => {
       } else rows.push(`<div class="pstep"><h3>3 · Booster Pack</h3><p>${info.name} Pack · kept ${run.owned.length ? 'and now own' : ''}: ${run.owned.map(c => A.esc(c.name)).join(', ') || 'nothing'}</p></div>`);
     }
     if (step === 'kit') {
-      rows.push(`<div class="pstep live"><h3>4 · Starter Kit — up to ${pr.kitMax}</h3><p class="note">Start the Dig with these in play (${pr.kitPick.length}/${pr.kitMax}). Every other card you own is shuffled into your Mine. Immediate cards do nothing in play, so a kit Immediate is shuffled into the Mine too.</p>
+      rows.push(`<div class="pstep live"><h3>4 · Starter Kit — up to ${pr.kitMax}</h3><p class="note">Start the Dig with these in play (${pr.kitPick.length}/${pr.kitMax}). Every other card you own is shuffled into your Mine. Any card can be in your kit: a Power or Ongoing card starts in play, an Immediate card goes on top of your Mine so you dig it first.</p>
         <div class="grid">${run.owned.map(c => piece(c, { act: 'kitpick', cls: pr.kitPick.includes(c.uid) ? 'sel' : '', tag: pr.kitPick.includes(c.uid) ? '✓ kit' : '' })).join('')}</div></div>
         <div class="pstep"><h3>5 · Reset, then ready</h3><p class="note">Health ${R.start.heart}, Grit ${R.start.grit}, Rerolls ${R.start.reroll}. Your Mine: the ${25} starting cards + ${run.owned.length - pr.kitPick.length} of yours.</p></div>`);
     }
@@ -1979,7 +2077,7 @@ const Run = (() => {
       case 'kitpick': Run.toggleKit(S.run, Number(ds.uid)); break;
       case 'startround': if (Run.beginDig(S.run)) { S.st = S.run.dig; S.panel = 'dig'; } break;
       case 'prep': Run.finishDig(S.run); S.panel = S.run.phase === 'done' ? 'done' : 'prep'; break;
-      case 'pledge': if (S.st) Dig.pledge(S.st, Number(ds.n)); break;
+      case 'pledge': if (S.run) Run.pledge(S.run, Number(ds.n)); break;
       case 'tab': S.tab = ds.v; break;
       case 'kit': { const c = cards().find(x => x.id === ds.id); if (!c || !Dig.supported(c)) break; const i = S.kit.indexOf(c.id); if (i >= 0) S.kit.splice(i, 1); else if (S.kit.length < S.kitSize) S.kit.push(c.id); break; }
       case 'size': S.kitSize = Math.max(0, Math.min(8, S.kitSize + Number(ds.d))); S.kit = S.kit.slice(0, S.kitSize); break;

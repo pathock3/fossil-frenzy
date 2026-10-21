@@ -48,10 +48,12 @@ test('the Drill by the rules: a d10, Health 0-10 starting at 10, Grit 0-6 and Re
   const h = game({ mine: ['IM-13'], start: { heart: 8 } }); Dig.dig(h); assert.equal(h.heart, 10, 'Health stops at 10');
 });
 
-test('Starter Kit: Power cards go on the line, Ongoing cards in play, Immediate cards are shuffled into the Mine', () => {
+test('Starter Kit: Power cards go on the line, Ongoing cards in play, Immediate cards go on top of the Mine (dug first, face up)', () => {
   const st = Dig.start(cards, ['PW-02', 'ON-33', 'IM-13'].map(by), { seed: 1 });
   assert.equal(st.line.length, 2); assert.equal(st.ongoing.length, 1); assert.equal(st.mine.length, 26);
-  assert.ok(st.mine.some(c => c.id === 'IM-13'));
+  assert.equal(st.mine[0].id, 'IM-13'); assert.equal(st.known, 1);
+  const two = Dig.start(cards, ['IM-13', 'IM-10'].map(by), { seed: 1, start: { heart: 2, grit: 0 } }); Dig.dig(two); Dig.dig(two);
+  assert.deepEqual([two.heart, two.grit], [6, 4], 'both kit Immediates were the first two cards you dug');
 });
 
 test('digging a Geode scores 1 gem and discards it; the Mine shrinks', () => {
