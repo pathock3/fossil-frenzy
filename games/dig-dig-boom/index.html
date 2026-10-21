@@ -62,6 +62,7 @@ summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .card .art svg { width: 62%; height: 62%; opacity: .55; }
 .card .art.vivid { position: absolute; overflow: hidden; }
 .card .art.vivid svg { opacity: 1; }
+.card .gemtile .sp { position: absolute; color: #fff; line-height: 1; letter-spacing: 0; text-shadow: 0 0 calc(var(--u) * 4) rgba(255,255,255,.9); opacity: .9; }
 .card .art .sp { position: absolute; color: #fff; font-size: calc(var(--u) * 16); line-height: 1; letter-spacing: 0; text-shadow: 0 0 calc(var(--u) * 4) rgba(255,255,255,.9); opacity: .9; }
 .card .num { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #fffaf0; color: #1d1712; font-weight: 900; border-style: solid; }
 .card .disc { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #fffaf0; }
@@ -1559,7 +1560,7 @@ const AI = (() => {
     }
     if (st.board.final && st.board.lead) return false;                       // in the final round the leader waits; everyone else has to keep digging
     const confident = st.heart >= A.confidentHealth;
-    if (c.bank && st.survived >= 1 && (st.heart <= A.bankAtHealth || (!confident && st.survived >= st.board.leadN))) { Run.bank(run); return true; }
+    if (c.bank && st.survived >= 1 && (st.heart <= A.bankAtHealth || st.mine.length === 0 || (!confident && st.survived >= st.board.leadN))) { Run.bank(run); return true; }          // (an empty Mine means only Bonus Monsters are left: it stops there)
     if (c.dig) { Dig.dig(st); return true; }
     return false;
   }
@@ -1783,8 +1784,8 @@ const Match = (() => {
     if (c.type === 'Treasure') {          // a Geode is one giant section: the count and the gem ARE the art, on the gem's own colour (the trim and header stay brown)
       const g = gem || { color: '#2fb7e6', light: '#bfeaff', dark: '#0a3f66', cut: null };
       const sp = (st) => `<span class="sp" style="${st}">✦</span>`;
-      return s + box(28, 100, W - 56, 244, 'gemtile', `background:radial-gradient(circle at 70% 36%, #fff 0, ${g.light} 38%, ${g.color} 100%);border:${u(3)} solid ${g.dark};border-radius:${u(10)};display:flex;align-items:center;justify-content:center;gap:${u(8)};font-weight:900;font-size:${u(150)};color:#1d1712;overflow:hidden`,
-        `${worth}${gem ? gemSvg(gem, u(124), 'filter:drop-shadow(0 ' + u(4) + ' ' + u(4) + ' rgba(0,0,0,.35))') : gemIcon(124)}${sp(`left:${u(12)};top:${u(10)};font-size:${u(22)}`)}${sp(`right:${u(14)};top:${u(26)};font-size:${u(14)}`)}${sp(`right:${u(22)};bottom:${u(14)};font-size:${u(20)}`)}${sp(`left:${u(20)};bottom:${u(24)};font-size:${u(12)}`)}`);
+      return s + box(28, 100, W - 56, 244, 'gemtile', `background:radial-gradient(circle at 70% 36%, #fff 0, ${g.light} 38%, ${g.color} 100%);border:${u(3)} solid ${g.dark};border-radius:${u(10)};display:flex;align-items:center;justify-content:center;gap:${u(4)};font-weight:900;font-size:${u(130)};line-height:1;color:#1d1712;overflow:hidden`,
+        `<span style="flex:none">${worth}</span>${gem ? gemSvg(gem, u(108), 'filter:drop-shadow(0 ' + u(4) + ' ' + u(4) + ' rgba(0,0,0,.35))') : gemIcon(108)}${sp(`left:${u(12)};top:${u(10)};font-size:${u(22)}`)}${sp(`right:${u(14)};top:${u(26)};font-size:${u(14)}`)}${sp(`right:${u(22)};bottom:${u(14)};font-size:${u(20)}`)}${sp(`left:${u(20)};bottom:${u(24)};font-size:${u(12)}`)}`);
     }
     const gems = c.type === 'Monster' ? 1 : worth;                       // a Monster is worth 1 gem when survived (v2.7 Rules: Gems)
     const worthTxt = c.type === 'Monster' ? 'if survived' : 'each';
@@ -2031,7 +2032,7 @@ const Match = (() => {
         <div class="bigopt"><h3>Practice Dig</h3><p class="note">One Dig with any Starter Kit you like, to try cards out. No Prep, no Leaderboard.${inProgress ? ' Starting one replaces your game in progress.' : ''}</p>${prac}
           ${b.survived || b.gems ? `<p class="note">Your best Practice Dig: ${b.survived} Monsters survived · ${b.gems} gems banked.</p>` : ''}</div>
         <div class="bigopt"><h3>Run options</h3>
-          <p class="note">Rounds: ${D.run.roundChoices.map(n => `<button class="chip ${S.rounds === n ? 'on' : ''}" data-p="rounds" data-v="${n}">${n}</button>`).join(' ')}</p>
+          <p class="note">Rounds: ${D.run.roundChoices.map(n => `<button class="chip ${S.rounds === n ? 'on' : ''}" data-p="rounds" data-v="${n}">${n}</button>`).join(' ')}</p></div>
         <div class="bigopt"><h3>The cards</h3><p class="note">Every card of your sheet, as designed.</p><button class="btn alt" data-p="cards">See the cards</button></div>
       </div>
     </div><div class="foot"><button class="chip" data-p="menu">‹ Main menu</button></div></div>`;

@@ -194,3 +194,9 @@ test('a match saves and resumes exactly, mid-Dig and mid-Prep', () => {
     if (Match.human(a).dig.over) { Match.finishRound(a); Match.finishRound(b); const c = Match.load(cards, roundtrip(Match.save(b))); assert.equal(c.runs.me.prep && c.runs.me.prep.step, a.runs.me.prep && a.runs.me.prep.step); }
   }
 });
+
+test('the AI banks when its Mine is empty (only Bonus Monsters are left), however healthy it is, so a round always ends', () => {
+  const { m, st } = aiDig(6, 2, 10); st.mine = [{ ...by('MO-01'), uid: 9990 }]; st.dice = Array(20).fill(10);
+  let steps = 0; while (!st.over && steps++ < 20) Match.aiStep(m);
+  assert.equal(st.over.kind, 'bank'); assert.equal(st.survived, 1);
+});

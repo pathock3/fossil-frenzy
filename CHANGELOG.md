@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+- **Dig Dig BOOM!**: the AI now banks when its Mine runs out (it could get stuck digging forever); fixed the Menu panel layout; the Geode's number and gem no longer clip each other.
 - **Dig Dig BOOM! — round 1 fixed:** you open a Bronze Pack (draw 3, keep 1) and choose your Starter Kit only from the cards you own (no catalogue of every card). Places you do not fill with a card are filled with gems automatically, so there is no gem to tap.
 - **Dig Dig BOOM! — opening the game:** tapping it on the shelf now shows the main menu (with Continue) instead of flashing the menu and jumping into your last game. A reload still puts you straight back where you were.
 - **Dig Dig BOOM! prototype scope:** Advanced trash is out of the game (it stays in the rule book as an optional rule). Lucky Coin stays +1. The 35 Grit and card-moving cards stay out of the game in their proposed form (QUESTIONS.md).
