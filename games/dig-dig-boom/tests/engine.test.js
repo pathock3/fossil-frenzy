@@ -61,7 +61,6 @@ test('data: the card sheet and rules tab are the owner\'s Google Sheet; the page
   const sample = E.cards(E.parseCSV(DDB_SAMPLE_CSV), DDB.columns);
   assert.equal(sample.length, 7);
   assert.deepEqual(new Set(sample.map(c => c.type)), new Set(['Power', 'Ongoing', 'Immediate', 'Treasure', 'Monster']), 'the sample has every type');
-  assert.deepEqual(DDB.labIds.map(id => id.slice(0, 2)), ['PW', 'PW', 'ON', 'IM', 'TR', 'MO']);
 });
 
 test('card geometry: poker size with a 0.125 in bleed and a 0.125 in safe zone', () => {

@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **Dig Dig BOOM! — your rulings:** the d10, Health 0–10 from 10, the reward ladder (0 gems 3:1 … 35 gems 7:4), five-round kit sizes (1, 2, 2, 3, 3), any card in the Starter Kit (a kit Immediate card goes on top of your Mine). The Pledge is fully implemented as a Leaderboard of spots (dibs, ranks, the lead) ready for an AI opponent. The old card-design explorations are gone: the Cards page now shows only the chosen design.
 - **Dig Dig BOOM! resumes after a reload:** the run or Practice Dig is saved in the browser after every tap (iPad Safari reloads pages); the menu offers Continue.
 - **Dig Dig BOOM! print & play sheets (step 2):** Print sheets (from Cards or the menu): every card by its count, 3 × 3 per Letter or A4 page at exactly 2.5 × 3.5 in with cut marks; or one card per page with bleed for a print shop. Plus the Power line (3 pages to tape), the Drill (one per player, trim in the player colour, ★ on the starting spaces), the Leaderboard with the Crown tracker, a table mat with the Booster Pack ladder and round tracker, and card backs.
 - **Dig Dig BOOM! — a run for one player:** "Play a run" is 4 or 5 rounds of Dig then Prep: Escape Bonus, gem count, Booster Pack (reward ladder, placeholder until you rule), Starter Kit, reset, with a Leaderboard (best marker, live Pledge, Crown tracker at 3) and the Crown Jewel; the final round has no banking until you are in the lead. Practice Dig keeps the old "pick any kit" Dig. The die is a d10; Health is 0–10 and starts at 10.
