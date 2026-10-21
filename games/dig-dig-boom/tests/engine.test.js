@@ -53,16 +53,24 @@ test('fitting: the largest size that still fits, in quarter steps', () => {
 test('data: the card sheet and rules tab are the owner\'s Google Sheet; the page does not carry the card list', () => {
   assert.equal(DDB.sheet.id, '1cKcNNs38CydvvhW7rUJIc4DWHgEvT-deluLdhrIpk04');
   assert.deepEqual(DDB.sheet.tabs, { cards: 2, rules: 3 });
-  assert.match(DDB.sheet.urls[0](DDB.sheet.id, 2), /^https:\/\/docs\.google\.com\/spreadsheets\/d\/.+\/gviz\/tq\?tqx=out:csv&gid=2$/);
-  assert.match(DDB.sheet.urls[1](DDB.sheet.id, 3), /export\?format=csv&gid=3$/);
+  assert.match(DDB.sheet.urls[0](DDB.sheet.id, 2), /^https:\/\/docs\.google\.com\/spreadsheets\/d\/e\/2PACX-[\w-]+\/pub\?gid=2&single=true&output=csv$/, 'the published-to-web link comes first');
+  assert.match(DDB.sheet.urls[1](DDB.sheet.id, 2), /\/gviz\/tq\?tqx=out:csv&gid=2$/);
+  assert.match(DDB.sheet.urls[2](DDB.sheet.id, 3), /export\?format=csv&gid=3$/);
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   assert.ok((html.match(/Salvage Yard|Panic Button|Drill Pup/g) || []).length <= 2, 'only the six-row design sample mentions card names');
   const sample = E.cards(E.parseCSV(DDB_SAMPLE_CSV), DDB.columns);
-  assert.equal(sample.length, 6);
+  assert.equal(sample.length, 7);
   assert.deepEqual(new Set(sample.map(c => c.type)), new Set(['Power', 'Ongoing', 'Immediate', 'Treasure', 'Monster']), 'the sample has every type');
   assert.deepEqual(DDB.labIds.map(id => id.slice(0, 2)), ['PW', 'PW', 'ON', 'IM', 'TR', 'MO']);
 });
 
 test('card geometry: poker size with a 0.125 in bleed and a 0.125 in safe zone', () => {
   assert.deepEqual(DDB.card, { trimW: 250, trimH: 350, bleed: 12.5, safe: 12.5 });
+});
+
+test('stats: a Monster\'s damage ladder and a Treasure\'s gem worth are read from the card text', () => {
+  assert.deepEqual(E.damageSteps('{damage} 1 → 3 → 5 → 7'), [1, 3, 5, 7]);
+  assert.deepEqual(E.damageSteps('{damage} 2 → 4 → 6'), [2, 4, 6]);
+  assert.equal(E.damageSteps('Block 1 {damage}'), null);
+  assert.equal(E.gemWorth('1 {gem}'), 1); assert.equal(E.gemWorth('2 {gem}'), 2); assert.equal(E.gemWorth('+1 {heart}'), null);
 });

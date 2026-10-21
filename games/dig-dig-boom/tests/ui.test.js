@@ -29,8 +29,8 @@ test('lab: reads the sheet live (not a copy), says so, and shows the five direct
   const { browser, page, errors, requests } = await open();
   try {
     assert.match(await page.locator('.status').first().innerText(), /Live from your sheet · 11 cards/);
-    assert.ok(requests.some(u => /docs\.google\.com\/spreadsheets\/d\/1cKcNNs38CydvvhW7rUJIc4DWHgEvT-deluLdhrIpk04\/gviz\/tq\?tqx=out:csv&gid=2/.test(u)), 'it asked the sheet for the card tab');
-    assert.deepEqual(await page.locator('section.dir').evaluateAll(els => els.map(e => e.dataset.dir)), ['A', 'B', 'C', 'D', 'E']);
+    assert.ok(requests.some(u => /docs\.google\.com\/spreadsheets\/d\/e\/2PACX-[\w-]+\/pub\?gid=2&single=true&output=csv/.test(u)), 'it asked the published sheet for the card tab');
+    assert.deepEqual(await page.locator('section.dir[data-dir]').evaluateAll(els => els.map(e => e.dataset.dir)), ['A', 'B', 'C', 'D', 'E']);
     for (const d of 'ABCDE') assert.equal(await page.locator(`section[data-dir=${d}] .row .card`).count(), 6, d);
     const types = await page.locator('section[data-dir=A] .row .card').evaluateAll(els => els.map(e => e.getAttribute('aria-label')));
     for (const t of ['Power', 'Ongoing', 'Immediate', 'Treasure', 'Monster']) assert.ok(types.some(x => x.includes(', ' + t)), 'a ' + t + ' card');

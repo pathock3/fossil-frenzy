@@ -33,6 +33,7 @@ h2 { margin: 0 0 4px; font-size: 22px; }
 .dir { margin: 0 0 34px; padding: 16px; border-radius: 18px; background: var(--panel); border: 2px solid var(--line); }
 .dir .why { margin: 0 0 12px; padding-left: 20px; font-size: 15px; line-height: 1.45; }
 .dir .why li { margin: 3px 0; }
+.h3 { margin: 18px 0 6px; font-size: 17px; }
 .dir .tag { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--accent); }
 .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
 .cell { display: flex; flex-direction: column; gap: 4px; align-items: center; }
@@ -117,7 +118,9 @@ const DDB = {
   sheet: {
     id: '1cKcNNs38CydvvhW7rUJIc4DWHgEvT-deluLdhrIpk04',
     tabs: { cards: 2, rules: 3 },                      // gid of "v2.7 Draft" (the cards) and "v2.7 Rules"
+    published: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT9Dj7h1xNJd67s2p8OoqN2pHYIuj4rNi5TmivT6gtkgdR8Sl_igL_icc9uYsxwwgA92IraLkDpHmi3/pub',   // "Publish to web" link (browsers may read it)
     urls: [                                            // tried in order; the first that answers wins
+      (id, gid) => `${DDB.sheet.published}?gid=${gid}&single=true&output=csv`,
       (id, gid) => `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`,
       (id, gid) => `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`,
     ],
@@ -139,6 +142,7 @@ const DDB = {
   card: { trimW: 250, trimH: 350, bleed: 12.5, safe: 12.5 },
   // The cards used on the design pages (by ID), one or more of each type, including the card with the longest text.
   labIds: ['PW-18', 'PW-21', 'ON-22', 'IM-24', 'TR-01', 'MO-01'],
+  round2: { textIds: ['PW-18', 'PW-21', 'ON-22', 'IM-24'], statIds: ['TR-01', 'MO-01', 'MO-02'] },
   texts: { longestHint: 'IM-24' },
 };
 // Design-time sample ONLY (a snapshot of six rows, taken 2026-10-21): shown, clearly labelled, if the sheet cannot be fetched.
@@ -148,7 +152,8 @@ PW-21,Falcon Finisher,Power,8,Booster,1,Roll again. If it's 10 or more\\, defeat
 ON-22,Panic Button,Ongoing,,Booster,1,The first time each Dig a roll would make you BOOM\\, reroll it for free,Rewritten,UP-19,,would_boom,,,,,,,
 IM-24,Salvage Yard,Immediate,,Booster,1,Reveal cards from your Mine until you find a Power or Ongoing card. Play it and shuffle the rest back,Rewritten,EV-15,,immediate,,,,,,,
 TR-01,Geode,Treasure,,Starting,18,1 {gem},Rewritten,Gem,,,,,,,,,
-MO-01,Monster A,Monster,,Starting,4,{damage} 1 → 3 → 5 → 7,Rewritten,Gaia,,,,,,,,Name TBD. Each copy dug this Dig deals the next damage in the list.,`.replace(/\\,/g, '\u0001');
+MO-01,Monster A,Monster,,Starting,4,{damage} 1 → 3 → 5 → 7,Rewritten,Gaia,,,,,,,,Name TBD. Each copy dug this Dig deals the next damage in the list.,
+MO-02,Monster B,Monster,,Starting,3,{damage} 2 → 4 → 6,Rewritten,Filth / Lost Soul,,,,,,,,Name TBD.,`.replace(/\\,/g, '\u0001');
 </script>
 
 <script id="engine">
@@ -202,8 +207,17 @@ const Engine = (() => {
     while (a < b) { const mid = Math.ceil((a + b) / 2); if (fits(mid * step)) a = mid; else b = mid - 1; }
     return a * step;
   }
+  // "{damage} 1 → 3 → 5 → 7" -> [1, 3, 5, 7]   (null when the text is not a damage ladder)
+  function damageSteps(text) {
+    const m = /^\s*\{damage\}\s*([\d\s→>,\-]+)$/.exec(text);
+    if (!m) return null;
+    const nums = m[1].split(/[^\d]+/).filter(Boolean).map(Number);
+    return nums.length ? nums : null;
+  }
+  // "1 {gem}" -> 1   (how many gems a Treasure card is worth)
+  const gemWorth = text => { const m = /^\s*(\d+)\s*\{gem\}\s*$/.exec(text); return m ? Number(m[1]) : null; };
   const formatSize = u => (u / 100).toFixed(2) + ' in (' + (u * 0.01 * 72).toFixed(1) + ' pt)';
-  return { parseCSV, table, cards, questions, tokens, largestFitting, formatSize };
+  return { parseCSV, table, cards, questions, tokens, largestFitting, damageSteps, gemWorth, formatSize };
 })();
 </script>
 
@@ -275,6 +289,87 @@ const Engine = (() => {
     const l1 = words.slice(0, best).join(' '), l2 = words.slice(best).join(' ');
     const sz = Math.min(fitWidth(l1, 800, maxSize * 0.82, w, 11), fitWidth(l2, 800, maxSize * 0.82, w, 11), h / 2 / 0.98);
     return box(x, y, w, h, cls, `font-size:${u(sz)};display:flex;flex-direction:column;justify-content:center;line-height:.98`, `<span>${esc(l1)}</span><span>${esc(l2)}</span>`);
+  }
+
+  // ---------------- round 2: Top Tab refined ----------------
+  // The tab is the same as direction B, a little bigger. Art can be standard or compact (compact hands its height to the text).
+  // Treasure and Monster cards put what matters — gems worth and damage — in very large type, three ways (stat 1, 2, 3).
+  const R2 = {
+    art: { standard: { h: 92, textY: 196, textH: 148 }, compact: { h: 62, textY: 166, textH: 178 } },
+    textBox: art => ({ w: 213, h: R2.art[art].textH }),
+  };
+  function tab(c, W) {
+    const t = typeColors(c);
+    let s = box(0, 0, W, 375, '', `background:${t.color}`);
+    s += box(22, 22, W - 44, 375 - 44, 'paper', `border-radius:${u(10)}`);
+    s += box(28, 28, W - 56, 64, 'band', `background:${t.color};--on:${t.on};border-radius:${u(7)}`);
+    s += `<svg class="abs" style="left:${u(28)};top:${u(28)};width:${u(W - 56)};height:${u(64)};border-radius:${u(7)}" preserveAspectRatio="none"><rect width="100%" height="100%" fill="url(#${t.pattern})"/></svg>`;
+    s += box(33, 36, 46, 46, 'disc', '', typeIcon(c.type, '78%', '#1d1712'));
+    const nw = c.number === null ? W - 56 - 62 : W - 56 - 62 - 50;
+    s += nameBlock(c.name, 86, 34, nw, 38, 30, 17.5);
+    s += box(86, 72, nw, 15, 'typeword band', `font-size:${u(13)}`, esc(c.type));
+    s += powerBadge(W - 28 - 50, 35, 44, c);
+    return s;
+  }
+  const gemIcon = (sz, extra = '') => `<svg viewBox="0 0 24 24" style="width:${u(sz)};height:${u(sz)};flex:none;${extra}"><use href="#i-gem"/></svg>`;
+  const dmgIcon = sz => `<svg viewBox="0 0 24 24" style="width:${u(sz)};height:${u(sz)};flex:none"><use href="#i-damage"/></svg>`;
+  function stepTiles(steps, x, y, w, h, fs) {
+    const n = steps.length, gap = 8, tw = (w - gap * (n - 1)) / n;
+    return steps.map((v, i) => box(x + i * (tw + gap), y, tw, h, '', `background:#cf2f2f;color:#fff;border-radius:${u(10)};border:${u(3)} solid #1d1712;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:${u(fs)}`, String(v))).join('');
+  }
+  function buildR2(c, tw, art, stat) {
+    const W = 275, a = R2.art[art];
+    let s = tab(c, W);
+    const steps = c.type === 'Monster' ? E.damageSteps(c.text) : null, worth = c.type === 'Treasure' ? E.gemWorth(c.text) : null;
+    const isStat = steps || worth !== null;
+    if (!isStat) {
+      s += artBox(28, 100, W - 56, a.h, c);
+      return s + box(31, a.textY, 213, a.textH, 'text', `font-size:${u(tw)}`, textHTML(c.text));
+    }
+    const gems = c.type === 'Monster' ? 1 : worth;                       // a Monster is worth 1 gem when survived (v2.7 Rules: Gems)
+    const worthTxt = c.type === 'Monster' ? 'if survived' : 'each';
+    if (stat === 1) {          // art on top; one huge stat panel underneath
+      s += artBox(28, 100, W - 56, 118, c);
+      if (steps) {
+        s += box(31, 226, 213, 22, 'typeword', `font-size:${u(13)};color:#7a1d1d;display:flex;align-items:center;gap:${u(6)}`, `${dmgIcon(18)} DAMAGE, IN ORDER`);
+        s += stepTiles(steps, 31, 250, 213, 62, steps.length > 4 ? 34 : 46);
+      } else s += box(31, 226, 213, 90, 'stat', `font-size:${u(104)};display:flex;align-items:center;justify-content:center;gap:${u(10)};color:#1d1712`, `${gems}${gemIcon(90)}`);
+      s += box(31, 318, 213, 26, 'stat', `font-size:${u(18)};display:flex;align-items:center;justify-content:center;gap:${u(6)};background:#2b86d1;color:#fff;border-radius:${u(8)}`, `${gems}${gemIcon(18)} ${worthTxt}`);
+    } else if (stat === 2) {   // a stat ribbon right under the tab, art below
+      if (steps) s += stepTiles(steps, 31, 100, 213, 84, steps.length > 4 ? 44 : 58);
+      else s += box(31, 100, 213, 84, 'stat', `font-size:${u(80)};display:flex;align-items:center;justify-content:center;gap:${u(8)};background:#e6f3fc;border-radius:${u(10)};border:${u(3)} solid #1d1712`, `${gems}${gemIcon(70)}`);
+      s += artBox(28, 192, W - 56, 118, c);
+      s += box(28, 316, W - 56, 28, 'stat', `font-size:${u(19)};display:flex;align-items:center;justify-content:center;gap:${u(6)};background:${steps ? '#2b86d1' : '#cfe8f8'};color:${steps ? '#fff' : '#1d1712'};border-radius:${u(8)}`, steps ? `${gems}${gemIcon(19)} ${worthTxt}` : 'GEODE · 1 GEM EACH');
+    } else {                   // two big tiles under a slim art strip
+      s += artBox(28, 100, W - 56, 84, c);
+      if (steps) {
+        s += box(28, 192, 62, 152, '', 'background:#2b86d1;color:#fff;border-radius:' + u(10) + ';display:flex;flex-direction:column;align-items:center;justify-content:center;gap:' + u(4) + ';font-weight:900;font-size:' + u(60), `${gems}${gemIcon(44, 'filter:drop-shadow(0 0 1px #000)')}<span style="font-size:${u(11)};letter-spacing:.1em">WORTH</span>`);
+        const rows = steps.length, rh = (152 - 6 * (rows - 1)) / rows;
+        s += steps.map((v, i) => box(98, 192 + i * (rh + 6), 146, rh, '', `background:#cf2f2f;color:#fff;border-radius:${u(8)};border:${u(2.5)} solid #1d1712;display:flex;align-items:center;gap:${u(10)};padding:0 ${u(12)};font-weight:900;font-size:${u(Math.min(48, rh * 0.8))}`, `${dmgIcon(Math.min(34, rh * 0.7))}<span style="flex:1;text-align:center">${v}</span><span style="font-size:${u(11)};letter-spacing:.08em;opacity:.85">${['1ST', '2ND', '3RD', '4TH', '5TH'][i]}</span>`)).join('');
+      } else s += box(28, 192, W - 56, 152, '', `background:#e6f3fc;border:${u(3)} solid #1d1712;border-radius:${u(10)};display:flex;align-items:center;justify-content:center;gap:${u(12)};font-weight:900;font-size:${u(132)}`, `${gems}${gemIcon(118)}`);
+    }
+    return s;
+  }
+  function r2Card(c, tw, art, stat, scale) {
+    const g = state.guides, inset = n => `left:${u(n)};top:${u(n)};right:${u(n)};bottom:${u(n)}`;
+    const gd = g ? `<div class="guides"><i class="bleed" style="${inset(0)}"></i><i class="trim" style="${inset(C.bleed)}"></i><i class="safe" style="${inset(C.bleed + C.safe)}"></i></div>` : '';
+    const card = `<div class="card${state.round && g ? ' round' : ''}" data-id="${esc(c.id)}" data-dir="B2" data-art="${art}" data-stat="${stat}" style="--u:${scale}px;width:${u(275)};height:${u(375)}" role="img" aria-label="${esc(c.name)}, ${esc(c.type)}${c.number !== null ? ', ' + c.number : ''}. ${esc(c.text)}">${buildR2(c, tw, art, stat)}${gd}</div>`;
+    return g ? card : `<div style="position:relative;--u:${scale}px;width:${u(250)};height:${u(350)};overflow:hidden;border-radius:${u(12.5)};flex:none"><div style="position:absolute;left:${u(-12.5)};top:${u(-12.5)}">${card}</div></div>`;
+  }
+  function round2HTML(by, scale) {
+    const text = D.round2.textIds.map(id => by[id]).filter(Boolean), stat = D.round2.statIds.map(id => by[id]).filter(Boolean);
+    const pool = state.all.filter(c => c.type !== 'Monster' && c.type !== 'Treasure');
+    const sizeFor = art => { let best = 44; const b = R2.textBox(art); for (const c of pool) best = Math.min(best, fitFont(textHTML(c.text), b.w, b.h)); return best; };
+    const sizes = { standard: sizeFor('standard'), compact: sizeFor('compact') };
+    let h = `<section class="dir round2" data-round="2"><span class="tag">Round 2 · you picked B</span><h2>B · Top Tab, refined — legibility first</h2>
+      <p class="sub">Same tab (coloured border and header with the name, the type and the Power number), a little bigger. Two questions: <b>how much art height</b> to give up for text, and <b>how to show a Monster's strength and a card's gem worth</b> in very large type.</p>
+      <h3 class="h3">1 · Text cards: standard art or compact art</h3>
+      <div class="row">${['standard', 'compact'].map(art => `<div><div class="cap" style="margin-bottom:6px"><b>${art === 'standard' ? 'Standard art' : 'Compact art (more room for words)'}</b> — rules text ${(sizes[art] * 0.72).toFixed(1)} pt on every card</div><div class="row">${text.map(c => `<div class="cell">${r2Card(c, sizes[art], art, 0, scale)}<span class="cap">${esc(c.id)}</span></div>`).join('')}</div></div>`).join('')}</div>
+      <h3 class="h3">2 · Gem and Monster cards: three ways to make the numbers huge</h3>
+      <p class="sub">Geode = worth in gems. Monster = the damage each copy dug deals, in order (a Monster you survive is worth 1 gem).</p>
+      ${[1, 2, 3].map(n => `<div class="cap" style="margin:12px 0 6px"><b>${['', 'Stat 1 · Art on top, big stat panel below', 'Stat 2 · Stat ribbon right under the tab, art below', 'Stat 3 · Slim art strip, two big tiles (worth | damage ladder)'][n]}</b></div><div class="row">${stat.map(c => `<div class="cell">${r2Card(c, sizes.standard, 'standard', n, scale)}<span class="cap">${esc(c.id)} · ${esc(c.name)}</span></div>`).join('')}</div>`).join('')}
+      </section>`;
+    return h;
   }
 
   // ---------------- three design directions ----------------
@@ -475,6 +570,9 @@ const Engine = (() => {
       <tr><td>Rules text block</td>${Object.keys(DIRS).map(k => `<td>${(DIRS[k].textBox.w / 100).toFixed(2)} × ${(DIRS[k].textBox.h / 100).toFixed(2)} in</td>`).join('')}</tr>
       <tr><td>When overlapped you see</td>${Object.keys(DIRS).map(k => `<td>${{ A: 'icon, name, type, number', B: 'icon, name, type, number', C: 'number, icon, name', D: 'index, name, type', E: 'icon, type word, number (no name)' }[k]}</td>`).join('')}</tr>
       <tr><td>Best at</td>${Object.keys(DIRS).map(k => `<td>${{ A: 'staying close to today', B: 'balance of text and overlap', C: 'sideways Power line, tall text', D: 'cards held any way up', E: 'long effects, reading at arm\'s length' }[k]}</td>`).join('')}</tr></table>`;
+    const by0 = Object.fromEntries(state.all.map(c => [c.id, c]));
+    html += round2HTML(by0, scaleFor(DIRS.B));
+    html += '<details class="round1"><summary>Round 1 — the five directions you chose from (A–E)</summary>';
     for (const key of Object.keys(DIRS)) {
       const d = DIRS[key], tw = uniformSize(key), s = scaleFor(d) * 1.0;
       const longest = state.all.filter(c => c.type !== 'Monster' && c.type !== 'Treasure').reduce((a, c) => (!a || c.text.length > a.text.length ? c : a), null);
@@ -490,6 +588,7 @@ const Engine = (() => {
         <p class="sub">Rules text: <b>${E.formatSize(tw)}</b> on every card — set by the longest card (${esc(state.all.filter(c => c.type !== 'Monster' && c.type !== 'Treasure').reduce((a, c) => (!a || c.text.length > a.text.length ? c : a), null).name)}).</p>
         <div class="row">${cells}</div>${fan}</section>`;
     }
+    html += '</details>';
     const qs = E.questions(state.all);
     html += `<details><summary>Questions already written in your sheet (${qs.length})</summary><ul class="qs">${qs.map(q => `<li><b>${esc(q.name)}</b> (${esc(q.id)}): ${esc(q.q)}</li>`).join('')}</ul></details>
       <details><summary>Icon key</summary><p class="sub">${Object.keys(D.iconCodes).map(k => `${ic(k, ' style="width:28px;height:28px;vertical-align:middle"')} {${k}}`).join(' &nbsp; ')}</p></details>`;
