@@ -571,3 +571,20 @@ test('cards: Monster A and Monster B are different at a glance (their own creatu
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
+
+test('menu: opening the game from the shelf shows the main menu with Continue (not straight into your game); a reload still puts you back where you were', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await startRun(page); await page.click('#play [data-p=dig]');
+    const ctx = page.context(), fresh = await ctx.newPage();
+    await fresh.addInitScript(() => { window.DDB_AI_PACE = 3600000; });
+    await fresh.route('**/docs.google.com/**', r => r.fulfill({ status: 200, contentType: 'text/csv', body: csv }));
+    await fresh.goto(FILE); await fresh.waitForSelector('#play .home');
+    await fresh.waitForTimeout(400);
+    assert.equal(await fresh.locator('#play .ptable').count(), 0, 'not straight into the game');
+    assert.match(await fresh.locator('#play .homemenu').innerText(), /Continue[\s\S]*Round 1 of 4 · Dig/);
+    await fresh.click('#play [data-p=resume]'); await fresh.waitForSelector('#play .ptable');
+    await fresh.reload(); await fresh.waitForSelector('#play .ptable');          // a reload resumes mid-game
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});

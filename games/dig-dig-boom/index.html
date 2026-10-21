@@ -1936,7 +1936,10 @@ const Match = (() => {
       const raw = localStorage.getItem(SAVE_KEY); if (!raw) return;
       const d = JSON.parse(raw); if (d.v !== 2) return;
       const match = d.match ? Match.load(cards(), d.match) : null, run = match ? Match.human(match) : d.run ? Run.load(cards(), d.run) : null, st = run ? run.dig : d.st ? Dig.load(cards(), d.st) : null;
-      S.match = match; S.opp = d.opp !== false; S.run = run; S.st = st; S.fx = fxOf(st); S.kit = d.kit || []; S.kitSize = d.kitSize; S.start = d.start; S.rounds = d.rounds; S.panel = d.panel; S.back = d.panel;
+      S.match = match; S.opp = d.opp !== false; S.run = run; S.st = st; S.fx = fxOf(st); S.kit = d.kit || []; S.kitSize = d.kitSize; S.start = d.start; S.rounds = d.rounds; S.back = d.panel;
+      // Tapping the game on the shelf (a fresh visit) opens the main menu, where Continue waits; a reload (iPad Safari does that to a backgrounded tab) puts you straight back where you were.
+      const nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {};
+      S.panel = nav.type === 'navigate' ? 'menu' : d.panel;
     } catch (e) { try { localStorage.removeItem(SAVE_KEY); } catch (e2) { /* ignore */ } S.run = null; S.match = null; S.st = null; S.panel = 'menu'; }
   }
   const typeIcon = t => `<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#${D.types[t].icon}"/></svg>`;
