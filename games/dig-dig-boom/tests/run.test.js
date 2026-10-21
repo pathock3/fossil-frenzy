@@ -211,3 +211,37 @@ test('saving and resuming: a Dig and a run survive a reload — same cards, same
   const r4 = Run.load(cards, roundtrip(Run.save(r3))); assert.equal(r4.prep.step, 'escape'); r4.dice = [5]; assert.ok(Run.rollEscape(r4)); assert.equal(r4.prep.escape, 5);
   assert.equal(new Set([...r4.deck, ...r4.owned, ...r4.trash].map(c => c.uid)).size, r4.deck.length + r4.owned.length + r4.trash.length);
 });
+
+test('the Board changes the moment a Dig ends: a bank locks in and may take the Crown at once, a BOOM removes the Pledge marker (no waiting for Prep)', () => {
+  const run = firstRound({ keepIds: ['PW-02'] }); Run.beginDig(run, { seed: 20 });
+  const st = run.dig; st.mine = Array.from({ length: 6 }, (_, i) => ({ ...by(i % 2 ? 'MO-02' : 'MO-01'), uid: 9400 + i })); st.dice = Array(30).fill(10);
+  for (let i = 0; i < 4; i++) { Dig.dig(st); Dig.roll(st); Dig.face(st); }
+  assert.ok(Run.pledge(run, 5)); assert.equal(Board.marker(run.board, 'me', 'pledge').n, 5);
+  assert.ok(!Run.pledge(run, 4), 'a pledge cannot be lowered');
+  assert.ok(!Run.bank(run), 'cannot bank below the pledge');
+  Dig.dig(st); Dig.roll(st); Dig.face(st);
+  assert.ok(Run.bank(run)); assert.equal(run.crown.holder, true, 'the Crown moved at the moment of banking'); assert.equal(run.crown.tracker, 5); assert.equal(run.best, 5);
+  assert.equal(Board.marker(run.board, 'me', 'pledge'), null);
+  const r2 = firstRound({ keepIds: ['PW-02'] }); Run.beginDig(r2, { seed: 21 });
+  const s2 = r2.dig; s2.mine = Array.from({ length: 6 }, (_, i) => ({ ...by('MO-01'), uid: 9500 + i })); s2.dice = Array(30).fill(10);
+  for (let i = 0; i < 3; i++) { Dig.dig(s2); Dig.roll(s2); Dig.face(s2); }
+  Run.pledge(r2, 4); assert.ok(Board.marker(r2.board, 'me', 'pledge'));
+  s2.heart = 1; s2.dice = [1]; Dig.dig(s2); Dig.roll(s2); Dig.face(s2);
+  assert.equal(s2.over.kind, 'boom'); Run.checkOver(r2);
+  assert.equal(Board.marker(r2.board, 'me', 'pledge'), null, 'BOOM removed the Pledge marker right away');
+  Run.finishDig(r2); assert.equal(r2.history[0].kind, 'boom');
+});
+
+test('the Dig\'s copy of the Leaderboard is refreshed from the live Board before it is asked (another player can change what it takes to lead)', () => {
+  const run = Run.start(cards, { seed: 30, rounds: 2 }); Run.openPack(run); Run.toggleKeep(run, run.prep.offer[0].uid); Run.confirmKeep(run); Run.beginDig(run, { seed: 1 });
+  run.board.players.push({ id: 'ai', name: 'AI', color: '#000' });
+  const first = run.dig; Dig.bank(first); Run.checkOver(run); Run.finishDig(run);
+  run.dice = [3]; Run.rollEscape(run); Run.openPack(run); for (const c of run.prep.offer.slice(0, Run.keepCount(run))) Run.toggleKeep(run, c.uid); Run.confirmKeep(run); Run.beginDig(run, { seed: 2 });
+  const st = run.dig; st.mine = Array.from({ length: 9 }, (_, i) => ({ ...by(i % 2 ? 'MO-02' : 'MO-01'), uid: 9600 + i })); st.dice = Array(40).fill(10);
+  assert.equal(st.board.leadN, 4);
+  Board.lockIn(run.board, 'ai', 7);                       // the AI banks 7 while I am digging
+  Run.refresh(run); assert.equal(st.board.leadN, 8); assert.equal(st.board.crown, 7);
+  for (let i = 0; i < 7; i++) { Dig.dig(st); Dig.roll(st); Dig.face(st); }
+  assert.ok(!Dig.can(st).bank, '7 only ties the AI, and the AI has the better spot: banking now would not lead');
+  Dig.dig(st); Dig.roll(st); Dig.face(st); assert.ok(Dig.can(st).bank);
+});

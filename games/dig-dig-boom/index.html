@@ -1060,7 +1060,7 @@ const Dig = (() => {
       pending: st.pending && { kind: st.pending.kind, card: refOf(st.pending.card) },
       fight: st.fight && { ...st.fight, monster: refOf(st.fight.monster), trig: [] },
       petLower: st.petLower, setCount: st.setCount, beyond: st.beyond, digs: st.digs, monstersDug: st.monstersDug, survived: st.survived, defeated: st.defeated,
-      geodeGems: st.geodeGems, monsterGems: st.monsterGems, panicUsed: st.panicUsed, heart: st.heart, grit: st.grit, reroll: st.reroll, rules: st.rules, board: st.board, pledge: st.pledge, best: st.best };
+      geodeGems: st.geodeGems, monsterGems: st.monsterGems, panicUsed: st.panicUsed, heart: st.heart, grit: st.grit, reroll: st.reroll, rules: st.rules, board: st.board, pledge: st.pledge, best: st.best, boardApplied: !!st.boardApplied };
   }
   // Rebuild a Dig from save(). Cards are looked up in `all` by id, so one card is one object everywhere it appears.
   function load(all, d) {
@@ -1078,7 +1078,7 @@ const Dig = (() => {
       pending: d.pending && { kind: d.pending.kind, card: deref(d.pending.card) },
       fight: d.fight && { ...d.fight, monster: deref(d.fight.monster), trig: [] },
       petLower: d.petLower, setCount: d.setCount, beyond: d.beyond, digs: d.digs, monstersDug: d.monstersDug, survived: d.survived, defeated: d.defeated,
-      geodeGems: d.geodeGems, monsterGems: d.monsterGems, panicUsed: d.panicUsed, heart: d.heart, grit: d.grit, reroll: d.reroll, rules: d.rules, board: d.board, pledge: d.pledge, best: d.best };
+      geodeGems: d.geodeGems, monsterGems: d.monsterGems, panicUsed: d.panicUsed, heart: d.heart, grit: d.grit, reroll: d.reroll, rules: d.rules, board: d.board, pledge: d.pledge, best: d.best, boardApplied: !!d.boardApplied };
     for (const k of memo.keys()) uid = Math.max(uid, k + 1);
     return st;
   }
@@ -1086,7 +1086,7 @@ const Dig = (() => {
   // The Leaderboard (v2.7): once you have survived as many Monsters as the Crown tracker, you may pledge your current number or 1 more.
   function canPledge(st, n) {
     const b = st.board; if (!b || st.over || st.fight || st.pending) return false;
-    return st.survived >= b.crown && (n === st.survived || n === st.survived + 1) && n !== st.pledge;
+    return st.survived >= b.crown && (n === st.survived || n === st.survived + 1) && (st.pledge === null || n > st.pledge);
   }
   function pledge(st, n) { if (!canPledge(st, n)) return false; st.pledge = n; log(st, 'sys', `You pledge ${n}.`); return true; }
   function bank(st) {
@@ -1151,7 +1151,7 @@ const Board = (() => {
   // "When you reach it, you may pledge 1 more": the Crown's number reached, and only your current number or 1 more.
   function canPledge(b, id, survived, n) {
     const pl = marker(b, id, 'pledge');
-    return survived >= tracker(b) && (n === survived || n === survived + 1) && !(pl && pl.n === n);
+    return survived >= tracker(b) && (n === survived || n === survived + 1) && !(pl && n <= pl.n);       // once said, a pledge can only go up
   }
   function pledge(b, id, survived, n) { if (!canPledge(b, id, survived, n)) return false; claim(b, id, 'pledge', n); return true; }
   const clearPledge = (b, id) => remove(b, id, 'pledge');
@@ -1162,9 +1162,10 @@ const Board = (() => {
   }
   // Would locking in n put this player in the lead (past the Crown tracker, or level with it on a better spot)?
   function wouldLead(b, id, n) {
-    const l = leader(b);
+    const l = leader(b), cur = marker(b, id, 'best');
+    if (l && l.pid === id) return n >= l.n;                   // the leader stays the leader at their own number (and above)
+    if (cur && n < cur.n) return false;                       // a lower score than your best changes nothing
     if (!l) return n > b.crownStart;
-    if (l.pid === id) return n >= l.n;
     return n > l.n || (n === l.n && rankIf(b, id, n) < l.rank);
   }
   function leadN(b, id) { for (let n = 0; n <= maxN; n++) if (wouldLead(b, id, n)) return n; return maxN; }
@@ -1172,6 +1173,16 @@ const Board = (() => {
   function lockIn(b, id, n) {
     const before = holder(b), cur = marker(b, id, 'best'), pl = marker(b, id, 'pledge');
     let newBest = false, rank = cur ? cur.rank : null;
+    if (cur && n === cur.n) {                               // locking in the number you already hold: a better spot (your pledge's, or one left open) moves the marker
+      const target = rankIf(b, id, n);
+      if (target < cur.rank) {
+        remove(b, id, 'best');
+        if (pl && pl.n === n && pl.rank === target) { row(b, n)[target - 1] = { pid: id, kind: 'best', t: pl.t }; rank = target; return { rank, tookLead: before !== id && holder(b) === id, newBest: false }; }
+        rank = claim(b, id, 'best', n);
+      }
+      remove(b, id, 'pledge');
+      return { rank, tookLead: before !== id && holder(b) === id, newBest: false };
+    }
     if (!cur || n > cur.n) {
       newBest = true; remove(b, id, 'best');
       if (pl && pl.n === n) { const r = row(b, n); r[pl.rank - 1] = { pid: id, kind: 'best', t: pl.t }; rank = pl.rank; return { rank, tookLead: before !== id && holder(b) === id, newBest }; }
@@ -1292,11 +1303,8 @@ const Run = (() => {
   function finishDig(run) {
     const st = run.dig; if (!st || !st.over || run.phase !== 'dig') return false;
     const o = st.over, final = run.round === run.rounds, rec = { round: run.round, kind: o.kind, survived: st.survived, geodes: st.geodeGems, monsters: st.monsterGems };
-    rec.stoleCrown = false; rec.newBest = false;
-    if (o.kind === 'bank') {                                  // locking in a score: your best marker moves, and the Crown may change hands
-      const lock = Board.lockIn(run.board, run.me, st.survived); rec.stoleCrown = lock.tookLead; rec.newBest = lock.newBest; rec.rank = lock.rank;
-    } else Board.clearPledge(run.board, run.me);              // BOOM: the Pledge marker goes, the best marker stays
-    sync(run);
+    checkOver(run);
+    const ei = run.endInfo || { stoleCrown: false, newBest: false, rank: null }; rec.stoleCrown = ei.stoleCrown; rec.newBest = ei.newBest; rec.rank = ei.rank;
     run.history.push(rec);
     log(run, o.kind === 'bank' ? `Round ${run.round}: banked with ${st.survived} Monsters survived${rec.stoleCrown ? ' — you take the Crown Jewel' : ''}.` : `Round ${run.round}: BOOM after ${st.survived} Monsters survived.`);
     if (final) { run.phase = 'done'; run.result = { crown: run.crown.holder, best: run.best, tracker: run.crown.tracker }; return true; }
@@ -1311,7 +1319,7 @@ const Run = (() => {
   function save(run) {
     const pr = run.prep;
     return { v: 2, board: run.board, me: run.me, seed: run.seed, rng: run.rng.state(), dice: run.dice, rounds: run.rounds, round: run.round, phase: run.phase, advancedTrash: run.advancedTrash,
-      owned: run.owned.map(refOf), kit: run.kit.map(refOf), trash: run.trash.map(refOf), deck: run.deck.map(refOf), history: run.history, log: run.log, result: run.result,
+      owned: run.owned.map(refOf), kit: run.kit.map(refOf), trash: run.trash.map(refOf), deck: run.deck.map(refOf), history: run.history, log: run.log, result: run.result, endInfo: run.endInfo,
       prep: pr && { ...pr, pack: pr.pack && pr.pack.name, offer: pr.offer.map(refOf), extra: pr.extra.map(refOf) },
       dig: run.dig && Dig.save(run.dig) };
   }
@@ -1321,7 +1329,7 @@ const Run = (() => {
     const deref = r => { if (memo.has(r.uid)) return memo.get(r.uid); const base = all.find(x => x.id === r.id); if (!base) throw new Error('the sheet no longer has card ' + r.id); const c = { ...base, uid: r.uid }; memo.set(r.uid, c); return c; };
     const rng = Dig.makeRng(d.seed); rng.restore(d.rng);
     const run = { seed: d.seed, rng, dice: d.dice, all, rounds: d.rounds, round: d.round, phase: d.phase, advancedTrash: d.advancedTrash,
-      me: d.me, board: d.board, crown: null, best: 0, owned: d.owned.map(deref), kit: d.kit.map(deref), trash: d.trash.map(deref), deck: d.deck.map(deref), history: d.history, log: d.log, result: d.result,
+      me: d.me, board: d.board, crown: null, best: 0, owned: d.owned.map(deref), kit: d.kit.map(deref), trash: d.trash.map(deref), deck: d.deck.map(deref), history: d.history, log: d.log, result: d.result, endInfo: d.endInfo,
       prep: d.prep && { ...d.prep, pack: d.prep.pack ? packFor(d.prep.pack) : null, offer: d.prep.offer.map(deref), extra: d.prep.extra.map(deref) },
       dig: d.dig ? Dig.load(all, d.dig) : null };
     for (const k of memo.keys()) uid = Math.max(uid, k + 1);
@@ -1329,14 +1337,29 @@ const Run = (() => {
     return run;
   }
   // Pledge (needs the Crown's number reached): say your number, or 1 more, aloud — the best open spot under it is yours.
+  // The Dig keeps a copy of the Leaderboard's numbers (tracker, what it takes to lead). Other players can change them, so refresh before asking the Dig.
+  function refresh(run) {
+    const st = run.dig; if (!st || !st.board) return;
+    st.board.crown = Board.tracker(run.board); st.board.leadN = Board.leadN(run.board, run.me);
+  }
+  // The moment a Dig ends (bank or BOOM) the Board changes: a BOOM removes the Pledge marker, a bank locks the score in and may take the Crown right away.
+  function checkOver(run) {
+    const st = run.dig; if (!st || !st.over || st.boardApplied || run.phase !== 'dig') return false;
+    st.boardApplied = true;
+    if (st.over.kind === 'bank') { const lock = Board.lockIn(run.board, run.me, st.survived); run.endInfo = { stoleCrown: lock.tookLead, newBest: lock.newBest, rank: lock.rank }; }
+    else { Board.clearPledge(run.board, run.me); run.endInfo = { stoleCrown: false, newBest: false, rank: null }; }
+    sync(run); return true;
+  }
+  function bank(run) { refresh(run); const st = run.dig; if (!st || !Dig.bank(st)) return false; checkOver(run); return true; }
   function pledge(run, n) {
     const st = run.dig; if (!st || st.over || run.phase !== 'dig') return false;
+    refresh(run);
     if (!Dig.canPledge(st, n) || !Board.canPledge(run.board, run.me, st.survived, n)) return false;
     Board.pledge(run.board, run.me, st.survived, n); Dig.pledge(st, n);
     st.board.leadN = Board.leadN(run.board, run.me);          // your spot may now be good enough to lead at the Crown's own number
     return true;
   }
-  return { pledge, sync, save, load, start, rollEscape, packInfo, trashOwned, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
+  return { pledge, bank, refresh, checkOver, sync, save, load, start, rollEscape, packInfo, trashOwned, openPack, keepCount, toggleKeep, confirmKeep, toggleKit, beginDig, finishDig, ladderFor, kitSize };
 })();
 </script>
 
@@ -1785,7 +1808,7 @@ const Run = (() => {
       const fin = S.run.round === S.run.rounds, next = `<div class="row2"><button class="btn" data-p="prep">${fin ? 'See the result' : 'To Prep'}</button></div>`;
       over = st.over.kind === 'boom'
         ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${A.esc(st.over.why).replace(/\{heart\}/g, '')}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this round — your best on the Leaderboard stays.</div>${next}</div>`
-        : `<div class="over"><h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="big"><b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${st.survived > S.run.crown.tracker ? ' — <b>you take the Crown Jewel</b>' : st.survived > S.run.best ? ' — a new best' : ''}<br><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} before the Escape Bonus</div>${next}</div>`;
+        : `<div class="over"><h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="big"><b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${(S.run.endInfo || {}).stoleCrown ? ' — <b>you take the Crown Jewel</b>' : (S.run.endInfo || {}).newBest ? ' — a new best' : ''}<br><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} before the Escape Bonus</div>${next}</div>`;
     } else if (st.over) {
       over = (st.over.kind === 'boom'
       ? `<div class="over boom"><h2>BOOM!</h2><div class="big">${A.esc(st.over.why).replace(/\{heart\}/g, '')}.<br>You survived <b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'}. No gems this Dig.</div>`
@@ -1879,10 +1902,11 @@ const Run = (() => {
       case 'roll': Dig.roll(st); break;
       case 'reroll': if (f && f.phase === 'after') Dig.reroll(st); break;
       case 'face': Dig.face(st); break;
-      case 'bank': Dig.bank(st); break;
+      case 'bank': if (S.run) Run.bank(S.run); else Dig.bank(st); break;
       case 'trade': Dig.trade(st, el.dataset.v); break;
       case 'heart': break;
     }
+    if (S.run) { Run.checkOver(S.run); if (S.run.phase === 'dig') Run.refresh(S.run); }
     if (S.st && S.st.over && !S.st.best && !S.run) recordBest(S.st);
     persist(); render();
   }

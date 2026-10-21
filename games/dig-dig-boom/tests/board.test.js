@@ -44,12 +44,12 @@ test('an unpledged lock-in takes the best open spot at that moment', () => {
 });
 
 test('BOOM: the Pledge marker is removed and its spot is free again; the best marker stays', () => {
-  const b = mk('a', 'c');
+  const b = mk('a', 'c', 'd');
   Board.lockIn(b, 'a', 4); Board.pledge(b, 'a', 4, 5); Board.pledge(b, 'c', 4, 5);
   assert.equal(Board.marker(b, 'c', 'pledge').rank, 2);
   Board.clearPledge(b, 'a');
   assert.equal(Board.marker(b, 'a', 'pledge'), null); assert.equal(Board.marker(b, 'a', 'best').n, 4);
-  Board.pledge(b, 'c', 4, 4); Board.pledge(b, 'c', 4, 5); assert.equal(Board.marker(b, 'c', 'pledge').rank, 1, 'the freed first spot is the best open one');
+  Board.pledge(b, 'd', 4, 5); assert.equal(Board.marker(b, 'd', 'pledge').rank, 1, 'the freed first spot is the best open one');
 });
 
 test('the best marker only moves up: a lower bank keeps it, a higher one frees the old spot', () => {
@@ -80,4 +80,24 @@ test('six players: every marker finds a spot, and the order of claims is the ord
   assert.equal(Board.holder(b), 'a');
   ids.forEach(id => Board.pledge(b, id, 5, 6));
   assert.deepEqual(ids.map(id => Board.marker(b, id, 'pledge').rank), [1, 2, 3, 4, 5, 6]);
+});
+
+test('a pledge only goes up: you cannot say a lower number once you have said one', () => {
+  const b = mk('a');
+  assert.ok(Board.pledge(b, 'a', 4, 5)); assert.ok(!Board.canPledge(b, 'a', 4, 4), 'lowering it is not allowed'); assert.ok(!Board.canPledge(b, 'a', 5, 5), 'saying it again is not a new pledge'); assert.ok(Board.canPledge(b, 'a', 5, 6));
+});
+
+test('locking in the number you already hold takes a better spot: your pledge\'s, or one left open (so leadN and lockIn agree)', () => {
+  const b = mk('l', 'p', 'x');
+  Board.lockIn(b, 'x', 5); Board.lockIn(b, 'l', 5); Board.lockIn(b, 'p', 5);          // x 1st, l 2nd, p 3rd under 5
+  assert.equal(Board.holder(b), 'x');
+  const b2 = mk('l', 'p'); Board.lockIn(b2, 'l', 5); Board.lockIn(b2, 'p', 5);
+  b2.spots[5][0] = null;                                                              // the first spot is open (its owner moved up)
+  assert.equal(Board.holder(b2), 'p', 'the holder is whoever has the best spot left');
+  const c = mk('a', 'b'); Board.lockIn(c, 'a', 5); Board.lockIn(c, 'b', 5);
+  Board.lockIn(c, 'a', 6);                                                            // a moves up and leaves spot 1 under 5 open
+  const wl = Board.wouldLead(c, 'b', 5), r = Board.lockIn(c, 'b', 5);
+  assert.equal(Board.marker(c, 'b', 'best').rank, 1, 'b takes the open first spot'); assert.equal(wl, r.tookLead, 'what wouldLead promised, lockIn did');
+  const d = mk('a', 'b'); Board.lockIn(d, 'a', 5); Board.lockIn(d, 'b', 5); Board.pledge(d, 'a', 5, 6);
+  assert.equal(Board.leadN(d, 'b'), 6);
 });
