@@ -83,7 +83,7 @@ const LIBRARY = {
     {
       id: 'dig-dig-boom',
       title: 'Dig Dig BOOM!',
-      tagline: 'Dig as deep as you dare, then build a better mine — play a run against an AI, with the v2.7 cards read live from the design sheet.',
+      tagline: 'Dig deep, push your luck, don\'t go BOOM. Build a better mine round by round against an AI.',
       players: '1–6 players',
       icon: '💣',
       art: 'dig-dig-boom',
@@ -163,20 +163,29 @@ const LIBRARY = {
         <rect x="52" y="346" width="196" height="24" rx="12" fill="#0b0620" fill-opacity=".88" stroke="#7affe6" stroke-opacity=".6"/>
         <text x="150" y="359" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="800" textLength="164" lengthAdjust="spacing" fill="#d9fff7">JUST ONE MORE…</text></svg>`;
     },
-    // Dig Dig BOOM! (placeholder cover art): a fizzing bomb in the dirt
-    'dig-dig-boom': () => `<svg viewBox="0 0 300 380" role="img" aria-label="Dig Dig BOOM!"><defs>
-        <linearGradient id="dbB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a331b"/><stop offset="1" stop-color="#2a0f0a"/></linearGradient>
-        <radialGradient id="dbG" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd24a" stop-opacity=".75"/><stop offset="1" stop-color="#ffd24a" stop-opacity="0"/></radialGradient></defs>
-        <rect width="300" height="380" fill="url(#dbB)"/>
-        <rect x="18" y="0" width="14" height="250" fill="#5a3a1e"/><rect x="268" y="0" width="14" height="250" fill="#5a3a1e"/><rect x="10" y="22" width="280" height="14" rx="4" fill="#6b4426"/>
-        <path d="M0 270 Q60 250 120 272 T240 268 T300 262 V380 H0Z" fill="#6b4426"/><path d="M0 305 Q70 288 130 308 T260 302 T300 300 V380 H0Z" fill="#4a2e18"/><path d="M0 338 Q80 326 150 340 T300 334 V380 H0Z" fill="#33200f"/>
-        <polygon points="40,300 58,282 76,300 58,326" fill="#2fb7e6" stroke="#0a3f66" stroke-width="3"/><polygon points="236,312 250,296 266,312 250,334" fill="#2fb7e6" stroke="#0a3f66" stroke-width="3"/><polygon points="196,288 206,276 218,288 206,304" fill="#7fd8f5" stroke="#0a3f66" stroke-width="3"/>
-        <circle cx="208" cy="132" r="70" fill="url(#dbG)"/><circle cx="140" cy="222" r="72" fill="#17171c"/><circle cx="140" cy="222" r="72" fill="none" stroke="#3a3a44" stroke-width="5"/><ellipse cx="116" cy="186" rx="22" ry="14" fill="#fff" fill-opacity=".16" transform="rotate(-30 116 186)"/>
-        <rect x="126" y="134" width="28" height="18" rx="4" fill="#3a3a44"/><path d="M142 134 Q150 100 190 106 T208 132" fill="none" stroke="#c9a46a" stroke-width="6" stroke-linecap="round"/>
-        <polygon points="208,108 214,124 230,126 217,136 221,152 208,143 195,152 199,136 186,126 202,124" fill="#ffd24a" stroke="#ff8a1d" stroke-width="3"/>
-        <circle cx="232" cy="96" r="4" fill="#ffd24a"/><circle cx="180" cy="86" r="3" fill="#ff8a1d"/><circle cx="248" cy="128" r="3" fill="#ffd24a"/>
-        <text x="150" y="62" text-anchor="middle" font-size="46" font-weight="900" fill="#ffd24a" stroke="#2a0f0a" stroke-width="8" stroke-linejoin="round" paint-order="stroke">DIG DIG</text>
-        <text x="150" y="322" text-anchor="middle" font-size="58" font-weight="900" fill="#ff8a1d" stroke="#2a0f0a" stroke-width="9" stroke-linejoin="round" paint-order="stroke">BOOM!</text></svg>`,
+    // Dig Dig BOOM!: the front of the box, taken from the game's main menu — two Monster cards looming over a fan of Geodes, each a different gem.
+    'dig-dig-boom': () => {
+      const G = [['#2f7fe6', '#a9d2ff', '#0d2f73', 'M-9-13H9L16-4 0 15-16-4Z'], ['#1fae5f', '#a6f0c4', '#0b4a28', 'M-6-14H6L14-6V6L6 14H-6L-14 6V-6Z'], ['#f29a1f', '#ffe0a3', '#7a4300', 'M0-14L15 12H-15Z'],
+        ['#ec5fa6', '#ffc3df', '#7a1c4e', 'M-14 0a14 14 0 1 0 28 0a14 14 0 1 0-28 0Z'], ['#9b52e0', '#dcb8ff', '#431a73', 'M0-15L13-7.5V7.5L0 15-13 7.5V-7.5Z'], ['#1bbdc2', '#a5f3f3', '#065255', 'M0-15C2-8 12-2 12 5a12 12 0 0 1-24 0C-12-2-2-8 0-15Z']];
+      const geode = (i, x, y, r) => { const [c, l, d, path] = G[i]; return `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="-29" y="-40" width="58" height="80" rx="7" fill="#8a5a2b" stroke="#3b2410" stroke-width="2"/><rect x="-24" y="-35" width="48" height="11" rx="3" fill="#a8723a"/><rect x="-24" y="-21" width="48" height="56" rx="5" fill="${l}" stroke="${d}" stroke-width="2"/><circle cx="8" cy="3" r="22" fill="${c}" opacity=".35"/><text x="-21" y="26" font-size="25" font-weight="900" fill="#1d1712">1</text><g transform="translate(9 4)"><path d="${path}" fill="${c}" stroke="${d}" stroke-width="2" stroke-linejoin="round"/><path d="M-6-6l4-4" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></g></g>`; };
+      const rays = (cx, cy, c1, c2, id) => Array.from({ length: 16 }, (_, i) => { const a = i * 22.5 * Math.PI / 180, b = (i + 1) * 22.5 * Math.PI / 180; return `<polygon points="${cx},${cy} ${(cx + 120 * Math.cos(a)).toFixed(1)},${(cy + 120 * Math.sin(a)).toFixed(1)} ${(cx + 120 * Math.cos(b)).toFixed(1)},${(cy + 120 * Math.sin(b)).toFixed(1)}" fill="${i % 2 ? c1 : c2}"/>`; }).join('');
+      const mon = (x, y, r, edge, c1, c2, ink, face, tiles, id) => `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="-52" y="-72" width="104" height="144" rx="9" fill="${edge}" stroke="#3a0d0d" stroke-width="2"/><rect x="-46" y="-66" width="92" height="132" rx="6" fill="#fffaf0"/><rect x="-46" y="-66" width="92" height="22" rx="5" fill="${edge}"/>
+        <clipPath id="${id}"><rect x="-42" y="-40" width="84" height="64" rx="5"/></clipPath><g clip-path="url(#${id})">${rays(0, -8, c1, c2)}<circle cx="0" cy="-8" r="26" fill="#fff" opacity=".35"/></g><rect x="-42" y="-40" width="84" height="64" rx="5" fill="none" stroke="${edge}" stroke-width="2"/>${face}
+        ${tiles.map((v, i) => `<rect x="${-42 + i * (84 / tiles.length)}" y="32" width="${84 / tiles.length - 3}" height="26" rx="5" fill="#cf2f2f" stroke="#1d1712" stroke-width="2"/><text x="${-42 + i * (84 / tiles.length) + (84 / tiles.length - 3) / 2}" y="46" text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="900" fill="#fff">${v}</text>`).join('')}</g>`;
+      const beast = `<g transform="translate(0 -8)"><path d="M-20-16L-26-34-10-22ZM20-16L26-34 10-22Z" fill="#2a0d0d"/><circle r="22" fill="#2a0d0d"/><circle cx="-8" cy="-3" r="5" fill="#fffaf0"/><circle cx="8" cy="-3" r="5" fill="#fffaf0"/><path d="M-9 10l3 6 3-6 3 6 3-6" fill="none" stroke="#fffaf0" stroke-width="2"/></g>`;
+      const slime = `<g transform="translate(0 -6)"><path d="M-24 16C-28-8-16-24 0-24S28-8 24 16C18 22 12 18 6 22S-6 18-12 22-20 20-24 16Z" fill="#0d2a14"/><path d="M0-24V-34M-5-34h10" stroke="#0d2a14" stroke-width="3" stroke-linecap="round"/><circle cx="0" cy="-4" r="11" fill="#fffaf0"/><circle cx="2" cy="-2" r="5.5" fill="#1d1712"/></g>`;
+      return `<svg viewBox="0 0 300 380" role="img" aria-label="Dig Dig BOOM!"><defs>
+        <radialGradient id="dbBg" cx="30%" cy="26%" r="95%"><stop offset="0" stop-color="#7a431d"/><stop offset=".45" stop-color="#3a2110"/><stop offset="1" stop-color="#150d08"/></radialGradient>
+        <radialGradient id="dbGl" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffa032" stop-opacity=".6"/><stop offset="1" stop-color="#ffa032" stop-opacity="0"/></radialGradient>
+        <linearGradient id="dbT1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset=".6" stop-color="#ffb62e"/><stop offset="1" stop-color="#d9731a"/></linearGradient>
+        <linearGradient id="dbT2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".4" stop-color="#ffa42b"/><stop offset=".8" stop-color="#ee4a1c"/><stop offset="1" stop-color="#b81d12"/></linearGradient></defs>
+        <rect width="300" height="380" fill="url(#dbBg)"/><circle cx="150" cy="170" r="150" fill="url(#dbGl)"/>
+        ${mon(98, 126, -7, '#cf2f2f', '#f25a3c', '#d23a27', '#2a0d0d', beast, [1, 3, 5, 7], 'dbcA')}${mon(202, 136, 6, '#cf2f2f', '#6fd16a', '#3fa84a', '#0d2a14', slime, [2, 4, 6], 'dbcB')}
+        ${geode(0, 50, 246, -22)}${geode(1, 98, 258, -13)}${geode(2, 148, 264, -4)}${geode(3, 198, 262, 5)}${geode(4, 247, 252, 15)}
+        <text x="150" y="46" text-anchor="middle" font-size="42" font-weight="900" fill="url(#dbT1)" stroke="#2a0f0a" stroke-width="8" stroke-linejoin="round" paint-order="stroke">DIG DIG</text>
+        <g transform="rotate(-4 150 346)"><text x="150" y="354" text-anchor="middle" font-size="70" font-weight="900" fill="url(#dbT2)" stroke="#2a0f0a" stroke-width="10" stroke-linejoin="round" paint-order="stroke">BOOM!</text></g>
+        <polygon points="268,318 272,330 284,332 275,340 278,352 268,345 258,352 261,340 252,332 264,330" fill="#ffd54a" stroke="#e8731a" stroke-width="2"/></svg>`;
+    },
   };
   const art = g => (ART[g.art] ? ART[g.art]() : `<svg viewBox="0 0 300 380" role="img" aria-label="${esc(g.title)}"><rect width="300" height="380" fill="${esc(g.accent || '#d9953a')}"/><text x="150" y="190" text-anchor="middle" font-size="64">${esc(g.icon || '🎲')}</text></svg>`);
 
