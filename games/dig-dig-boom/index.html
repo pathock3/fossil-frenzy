@@ -3459,7 +3459,7 @@ const AI = (() => {
     if (S.danger && S.danger.st === st && S.danger.on) return;
     S.danger = { st, on: true }; S.dangerNote = true;
   }
-  const dangerHTML = () => { const st = S.st; if (!S.dangerNote || S.panel !== 'dig' || !st) return ''; return `<div class="mnote-back"><div class="mnote" role="alertdialog" aria-label="Careful"><h3>Careful!</h3><p>You have <b>${st.heart}</b> ${ic('heart')} and the next Monster could deal up to <b>${Dig.maxNextDamage(st)}</b> ${ic('damage')}. It could knock you out.</p><button class="btn" data-p="dangerok">Got it</button></div></div>`; };
+  const dangerHTML = () => { const st = S.st; if (!S.dangerNote || S.panel !== 'dig' || !st) return ''; return `<div class="mnote-back"><div class="mnote" role="alertdialog" aria-label="Careful"><h3>Careful!</h3><p>The next Monster could make you go <b>BOOM!</b></p><button class="btn" data-p="dangerok">Got it</button></div></div>`; };
   function render() {
     if (document.body.dataset.mode !== 'play') return;
     const keep = $.querySelector('#setupScroll'), ks = keep ? keep.scrollTop : 0;

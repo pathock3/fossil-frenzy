@@ -962,7 +962,7 @@ test('table: a Careful note in the middle of the screen, to be dismissed, when t
     await page.evaluate(() => { window.DDB_NO_DANGER = false; });
     await begin(page, { mine: ['TR-01', 'TR-01', 'MO-02', 'TR-01'], dice: [1, 1], line: [], start: { heart: 2 } });
     await page.waitForSelector('#play .mnote[aria-label=Careful]');
-    assert.match(await page.locator('#play .mnote').innerText(), /Careful[\s\S]*2[\s\S]*could knock you out/i);
+    assert.match(await page.locator('#play .mnote').innerText(), /Careful[\s\S]*next Monster could make you go BOOM/i);
     assert.equal(await page.evaluate(() => { const e = document.elementFromPoint(innerWidth / 2, innerHeight / 2); return !!e.closest('.mnote'); }), true, 'it is in the middle of the screen');
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.digs), 0);
     await page.click('#play [data-p=dangerok]');
