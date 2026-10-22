@@ -23,6 +23,15 @@ test('library: the designer is credited once, at the top — not under each game
   assert.doesNotMatch(html, /Designed by \$\{/);
 });
 
+test('library: an About Patrick section under the shelf (for a publisher): who he is, that Claude Code built the app, and how to reach him', () => {
+  const t = [...LIBRARY.about.lines, LIBRARY.about.contact.lead].join(' ');
+  assert.equal(LIBRARY.about.heading, 'About Patrick');
+  assert.match(t, /Patrick Blim-Hockberger is a composer and elementary music teacher in Boulder, Colorado/);
+  assert.match(t, /board game designs[\s\S]*Claude Code/);
+  assert.equal(LIBRARY.about.contact.email, 'patrickhockberger@gmail.com');
+  assert.match(html, /mailto:\$\{esc\(L\.about\.contact\.email\)\}/, 'the address is a mail link');
+});
+
 test('library: every game folder is in the catalogue, and every local catalogue entry has a game', () => {
   const ids = LIBRARY.games.map(g => g.id);
   assert.equal(new Set(ids).size, ids.length, 'ids are unique');
