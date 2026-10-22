@@ -28,8 +28,8 @@ test('naming: the game stores everything under tabletop-library-fossil-frenzy-â€
   assert.doesNotMatch(outsideLegacy, /'fossil-frenzy-[a-z0-9-]+'/, 'an old-style storage key is still in use');
 });
 
-test('naming: the library is titled Tabletop Library; the game keeps its own title', () => {
-  assert.match(read('index.html'), /<title>Tabletop Library<\/title>/);
-  assert.match(read('index.html'), /apple-mobile-web-app-title" content="Tabletop Library"/);
+test('naming: the library is titled Patrick\'s Tabletop Library; the game keeps its own title', () => {
+  assert.match(read('index.html'), /<title>Patrick's Tabletop Library<\/title>/);
+  assert.match(read('index.html'), /apple-mobile-web-app-title" content="Patrick's Tabletop Library"/);
   assert.match(read('games/fossil-frenzy/index.html'), /<title>Fossil Frenzy<\/title>/);
 });

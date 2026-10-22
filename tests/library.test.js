@@ -12,9 +12,9 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const LIBRARY = vm.runInNewContext(html.match(/<script id="data">([\s\S]*?)<\/script>/)[1] + ';LIBRARY');
 const gameDirs = fs.readdirSync(path.join(root, 'games')).filter(d => fs.existsSync(path.join(root, 'games', d, 'index.html')));
 
-test('library: the collection is called Tabletop Library', () => {
-  assert.equal(LIBRARY.name, 'Tabletop Library');
-  assert.match(html, /<title>Tabletop Library<\/title>/);
+test('library: the collection is called Patrick\'s Tabletop Library', () => {
+  assert.equal(LIBRARY.name, "Patrick's Tabletop Library");
+  assert.match(html, /<title>Patrick's Tabletop Library<\/title>/);
 });
 
 test('library: the designer is credited once, at the top — not under each game', () => {
@@ -82,7 +82,7 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     // Dig Dig BOOM! reads its cards from the owner's Google Sheet; the test must not depend on the network
     await page.route('**/docs.google.com/**', r => r.fulfill({ status: 200, contentType: 'text/csv', body: 'ID,Name,Type,Number,Deck,Count,Card Text\n' }));
     await page.goto(base + '/index.html');
-    assert.equal(await page.title(), 'Tabletop Library');
+    assert.equal(await page.title(), "Patrick's Tabletop Library");
     assert.equal(await page.evaluate(() => getComputedStyle(document.body).overscrollBehaviorY), 'none', 'no pull-to-refresh on the shelf');
     const listed = LIBRARY.games.filter(g => g.listed && (g.path || g.url));
     assert.equal(await page.locator('a.box').count(), listed.length, 'only listed games with an address are on the shelf');
@@ -138,7 +138,7 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
       assert.ok(link && link.x < 40 && link.y < 40 && link.height >= 44, g.id + ' has the way back in the top-left: ' + JSON.stringify(link));
     }
     await page.goto(base + '/index.html');
-    assert.equal(await page.title(), 'Tabletop Library');
+    assert.equal(await page.title(), "Patrick's Tabletop Library");
     assert.equal(await page.locator('.played').count(), 0, 'boxes carry no Played tag');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); server.close(); }

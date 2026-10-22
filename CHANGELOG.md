@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Tabletop Library — the header is now "Patrick's Tabletop Library"** (also the page title and the home-screen name), and the box art is richer: a printed lid edge, rim shadow and a soft gloss sheen on every box, a wood-grain table behind the shelf, and fuller cover scenes (sparkles and a burst behind BOOM!, an ammonite and a bigger board for Fossil Frenzy, big faint numerals for Advanced Counting, cave stalactites and light rays for One More…). Still art only: no text on the boxes.
+
 - **Dig Dig BOOM! — small buffs to the cards the AI picked least** (sheet and fixture): All In sets Health to 2, Thorned Gadget costs 1 Health, Floor Jack floors at 5, Applause Meter needs 3+ cards, Giant Slayer 6+ damage, Reset Button sets Health to 8, Risky Shortcut loses 1 Health, Crumple Zone 4+ damage. Design notes and the 32 proposed cards: `games/dig-dig-boom/NEW-BOOSTERS.md`.
 
 - **Dig Dig BOOM! — roll by tapping the Mine:** when a Monster is in front of you the die sits on the Mine ("Tap to roll"); the result lands on the same spot. Take damage is in the action area beside the Monster, never on the Mine, so a quick tap cannot take the damage. The Bank column holds only the Bank.
