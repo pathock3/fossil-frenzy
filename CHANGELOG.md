@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **Dig Dig BOOM! — the Leaderboard replay waits again:** it plays the moves by itself but stops after each bank or BOOM (the piece stays, with its gem or starburst) and says "Tap to continue"; Fast forward still runs through everything. (It was too fast to follow.)
+- **Dig Dig BOOM! — the Leaderboard replay is slower, with nothing to tap:** it plays by itself, lingers on each bank or BOOM (the piece stays, with its gem or starburst), and Fast forward runs through it. Take damage only asks about an Extra Roll when the damage would BOOM you.
 
 - **Dig Dig BOOM! — the drag glitch (really found), the Leaderboard, and a batch from your notes:**
   - **Dragging a card over a Keep place:** the place got the class `over`, which is also the end-of-Dig overlay's class, so it jumped to the top-left corner full screen and flipped back at every pixel (that was the flicker, and why the title and cards moved). It now uses its own class.
