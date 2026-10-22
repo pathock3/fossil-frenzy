@@ -961,6 +961,25 @@ test('the last round: when everyone else has gone BOOM you have won, but the Dig
   } finally { await browser.close(); }
 });
 
+test('leaderboard: a bank keeps its piece with a blue gem showing what it earned, a BOOM keeps its piece in a starburst; both stay until you tap, then they go', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await page.evaluate(() => { window.DigDigBoomPlay.S.opp = true; window.DDB_BOARD_PACE = 3600000; }); await page.click('#play [data-p=startrun]'); await page.waitForSelector('#play [data-p=openpack]');
+    await page.evaluate(() => { const P = window.DigDigBoomPlay; P.S.bests0 = { me: 0, easy: 0, medium: 0, hard: 0 }; P.S.boardAnim = { from: P.S.bests0, newBest: false, events: [{ r: 1, id: 'hard', k: 'move', n: 2 }, { r: 1, id: 'hard', k: 'bank', n: 2, gems: 7 }, { r: 1, id: 'easy', k: 'boom', n: 0 }], k: 0, stop: false, timer: null, rects: null, fx: null }; P.S.panel = 'board'; P.render(); });
+    await page.click('#play .bigboard .scroll');          // skip to the first result
+    assert.equal(await page.locator('#play .bgem').innerText(), '7', 'a gem with what it earned');
+    assert.equal(await page.locator('#play .bdisc[data-pid=hard]').count(), 1, 'and its piece is still there');
+    await page.click('#play .bigboard .scroll'); await page.waitForTimeout(100);
+    assert.equal(await page.locator('#play .bgem').count(), 0, 'a tap: the gem goes');
+    assert.equal(await page.locator('#play .bdisc[data-pid=hard]').count(), 0, 'with its piece');
+    assert.equal(await page.locator('#play .bdisc.blown[data-pid=easy]').count(), 1, 'the piece that went BOOM is still there, in its starburst'); assert.equal(await page.locator('#play .bboom').count(), 1);
+    assert.match(await page.locator('#play .bcap').innerText(), /tap to continue/i, 'even the last result waits for a tap');
+    await page.click('#play .bigboard .scroll'); await page.waitForTimeout(100);
+    assert.equal(await page.locator('#play .bdisc[data-pid=easy]').count(), 0, 'and goes at the next tap');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
 test('leaderboard: nothing scrolls at any iPad size (the whole screen is drawn smaller to fit), and your piece says You', SKIP, async () => {
   for (const viewport of [{ width: 1180, height: 820 }, { width: 1024, height: 700 }, { width: 820, height: 1180 }, { width: 1180, height: 600 }]) {
     const { browser, page, errors } = await open({ viewport, menu: true });
@@ -1031,7 +1050,7 @@ test('leaderboard: 0 instead of Start; a gold-trimmed chip for each player stack
     await page.waitForSelector('#play .newbest');
     assert.equal(await page.locator('#play .bcrown').count(), 0, 'once someone locks in 3 or more the Crown Jewel leaves the board...');
     assert.equal(await page.locator('#play .bpl.me .cjewel').count(), 1, '...for their name');
-    assert.match(await page.locator('#play .bcap').innerText(), /You banked at 5 with 9 gems/); assert.equal(await page.locator('#play .bcap small').count(), 0, 'and that was the last result');
+    assert.match(await page.locator('#play .bcap').innerText(), /You banked at 5 with 9 gems/); assert.equal(await page.locator('#play .bcap small').count(), 1, 'the last result waits for a tap too'); await page.click('#play .bigboard .scroll'); await page.waitForTimeout(100); assert.equal(await page.locator('#play .bcap small').count(), 0, 'and then that was the last');
     await page.evaluate(() => { const P = window.DigDigBoomPlay; Board.lockIn(P.S.match.board, 'easy', 6); P.S.boardAnim = null; P.render(); });
     assert.equal(await page.locator('#play .bpl[data-pid=easy] .cjewel').count(), 1, 'a higher number steals the Crown Jewel');
     assert.equal(await page.locator('#play .newbest').count(), 0);
