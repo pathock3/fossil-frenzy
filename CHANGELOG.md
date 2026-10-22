@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — iPhone on its side:** a screen shorter than 640 px (an iPhone 17 in landscape is 874 × 402) now gets the same layout as a tall one, scaled down to fit, instead of a squeezed one: the pack, Starter Kit, table (with its Bank and die), Banking screen and Leaderboard all fit, and dragging cards still works. (It is `DDB.screen.designHeight`.)
+
 - **Dig Dig BOOM! — Bonus Monster cards** no longer mention gems: just the damage number, big.
 
 - **Dig Dig BOOM! — the reward ladder (yours), Bonus Monsters, and the screen flashing:** packs are now Bronze 0, Bronze+ 6, Silver 12, Silver+ 18, Gold 24, Gold+ 30 (Gold+ is the top; no Diamond), BOOM gets Bronze; Bonus Monsters are worth 0 gems. The banking screen is titled **Banking** (centred at the top), and tapping a part of the sum moves only that part (it swells and settles; nothing else redraws or animates). A pack answers the first tap at once (it swells, then opens on the next frame; extra taps meanwhile do nothing). The table no longer dims and undims every time a Monster appears and you roll (that was the flash), and the glow on the die and the Take damage button now breathes by fading a ring instead of repainting the button. Take damage shows the damage icon, not the word. Card effect text is sized card by card, as large as fits up to 32 (a long card no longer makes the rest small; Venom Spider and Monster Jerky are bigger).

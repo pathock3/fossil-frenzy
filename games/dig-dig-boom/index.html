@@ -78,7 +78,7 @@ table.cmp th { background: var(--panel); color: var(--accent); }
 /* ---------- the game screen (solo Dig) ---------- */
 body[data-mode=play] #app, body[data-mode=cards] #play { display: none; }
 body[data-mode=play] { padding: 0; height: 100vh; height: 100dvh; overflow: hidden; position: fixed; inset: 0; width: 100%; }
-#play { height: 100%; display: flex; flex-direction: column; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+#play { height: 100%; display: flex; flex-direction: column; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; padding: calc(env(safe-area-inset-top) / var(--k, 1)) calc(env(safe-area-inset-right) / var(--k, 1)) calc(env(safe-area-inset-bottom) / var(--k, 1)) calc(env(safe-area-inset-left) / var(--k, 1)); }
 #play .pbar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; flex: none; }
 #play .pbar .chip { padding: 6px 12px; font-size: 14px; }
 #play .pbar .back { min-height: 44px; padding: 6px 12px 6px 8px; font-size: 14px; }
@@ -259,6 +259,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .pksheen { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, rgba(255,255,255,0) 40%, rgba(255,255,255,.55) 50%, rgba(255,255,255,0) 60%); background-size: 260% 100%; background-position: 160% 0; animation: pksheen 2.8s ease-in-out infinite; mix-blend-mode: soft-light; }
 @keyframes pksheen { 0%, 20% { background-position: 160% 0; } 70%, 100% { background-position: -60% 0; } }
 @keyframes packglow { 50% { filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)) drop-shadow(0 0 14px rgba(255,214,110,.75)); } }
+#play .pool .pack, #play .pool .tear .tpack { zoom: var(--pks, 1); }          /* on a short screen the pack is drawn smaller, to fit the place the cards will be dealt in */
 #play .pack:active { transform: scale(.97); animation: none; }
 #play .pack.pressed { transform: scale(1.1); animation: none; filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)) drop-shadow(0 0 22px rgba(255,226,140,.95)); transition: transform .12s ease-out, filter .12s; }
 /* the tear: the pack shakes harder and harder, the top strip rips off, foil bits and a column of light burst out, the cards come after */
@@ -427,6 +428,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 
 /* ---------- the top of the screen stays clear of the iPad status bar ---------- */
 :root { --top: calc(max(env(safe-area-inset-top, 0px), 24px) + 8px); }
+#play.scaled { --top: calc(max(env(safe-area-inset-top, 0px) / var(--k, 1), 4px) + 6px); }          /* a phone on its side has no status bar to keep clear of */
 #play { padding-top: 0; }
 #play .pbar { padding-top: var(--top); }
 #play .home { padding-top: var(--top); }
@@ -1074,6 +1076,7 @@ const DDB = {
   // {code} in Card Text -> icon
   iconCodes: { heart: 'i-heart', reroll: 'i-reroll', damage: 'i-damage', gem: 'i-gem' },
   // Poker-size card, in hundredths of an inch (1 unit = 0.01 in).
+  screen: { designHeight: 640 },                      // the game is laid out for a screen at least this tall (CSS px); a shorter one (an iPhone on its side) gets the same layout, scaled down to fit
   card: { trimW: 250, trimH: 350, bleed: 12.5, safe: 12.5, textMax: 32, textKeep: 27 },          // textMax: the biggest effect text on a card; textKeep: it is only made smaller than this to fit a long text, or to keep lines of more than a word or two
   // ---- The rules of a Dig (v2.7 Rules tab). Numbers here are the rules; the engine (script "dig") only does what they say. ----
   rules: {
@@ -2938,6 +2941,16 @@ const AI = (() => {
 (() => {
   'use strict';
   const D = DDB, R = D.rules, UI = window.DigDigBoomUI, A = UI.api, $ = document.getElementById('play');
+  // A short screen (an iPhone on its side) gets the layout of a taller one, scaled down: the game is drawn VW x VH "design pixels" and the whole thing is shrunk by K to fit.
+  let K = 1;
+  const VW = () => innerWidth / K, VH = () => innerHeight / K;
+  const rr = el => { const r = el.getBoundingClientRect(); return { left: r.left / K, top: r.top / K, width: r.width / K, height: r.height / K }; };          // where something is, in design pixels
+  function applyScale() {
+    K = Math.min(1, innerHeight / D.screen.designHeight);
+    if (K < 1) { $.style.cssText = `position:absolute;left:0;top:0;width:${innerWidth / K}px;height:${innerHeight / K}px;transform:scale(${K});transform-origin:0 0;--k:${K}`; $.classList.add('scaled'); }
+    else { $.style.cssText = ''; $.classList.remove('scaled'); }
+  }
+  applyScale();
   // S.opp: always true in the app (owner: one AI opponent, no option to play without); the solo Run path stays in the engine and tests switch it off.
   const S = { tally: null, st: null, run: null, rounds: D.run.rounds, kit: [], kitSize: R.soloKit, start: { ...R.start }, tab: 'Power', kitTab: 'Power', fxEsc: null, gmenu: false, zoom: null, help: false, panel: 'menu', back: null, restored: false, confirmNew: null, match: null, opp: true };
   const cards = () => UI.state.all;
@@ -3095,7 +3108,7 @@ const AI = (() => {
   }
   function fitHero() {
     const a = $.querySelector('.hero-art'), st = $.querySelector('.hero-stage'); if (!a || !st) return;
-    const r = a.getBoundingClientRect(); st.style.setProperty('--k', Math.max(.3, Math.min(r.width / 560, r.height / 620)).toFixed(3));
+    const r = rr(a); st.style.setProperty('--k', Math.max(.3, Math.min(r.width / 560, r.height / 620)).toFixed(3));
   }
   // Size the cards to the screen: the dig row and the Power / Ongoing row share what is left under the Drill.
   function fitTable() {
@@ -3178,7 +3191,7 @@ const AI = (() => {
     return best;
   };
   const cardScale = (n, hi, lo) => {                        // as big as will fit on the screen without scrolling: one row, or two when that gives bigger cards
-    const w = Math.min(innerWidth, 1180) - 48, h = innerHeight - 250; let best = lo;
+    const w = Math.min(VW(), 1180) - 48, h = VH() - 250; let best = lo;
     for (let rows = 1; rows <= 3 && rows <= n; rows++) { const per = Math.ceil(n / rows); best = Math.max(best, Math.min(hi, (w - (per - 1) * 14) / (per * 250), (h - (rows - 1) * 14) / (rows * 350))); }
     return Math.max(.4, best);
   };
@@ -3257,14 +3270,15 @@ const AI = (() => {
     return t + (you && e.newBest ? '. New Best!' : '.');
   }
   // The pieces that moved slide from where they were (the Leaderboard is drawn again after every event; the old places were noted just before).
-  const boardRects = () => Object.fromEntries([...$.querySelectorAll('.bgrid .bdisc[data-pid], .bgrid .pchip[data-pid]')].map(el => [el.className.split(' ')[0] + el.dataset.pid, el.getBoundingClientRect()]));
+  const boardRects = () => Object.fromEntries([...$.querySelectorAll('.bgrid .bdisc[data-pid], .bgrid .pchip[data-pid]')].map(el => [el.className.split(' ')[0] + el.dataset.pid, rr(el)]));
   function boardAnimate() {
     const an = S.boardAnim; if (!an || !an.rects || S.panel !== 'board') return;
     const old = an.rects, fx = an.fx; an.rects = null; an.fx = null;
     if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const o0 = fx && old['bdisc' + fx.id];
     if (o0) {          // the piece whose Dig just ended: it fades where it stood, with a little BOOM or what it earned
-      const mk = (cls, html) => { const d = document.createElement('div'); d.className = 'bfx ' + cls; d.style.cssText = `left:${o0.left}px;top:${o0.top}px;width:${o0.width}px;height:${o0.height}px`; d.innerHTML = html; document.body.appendChild(d); setTimeout(() => d.remove(), 1300); return d; };
+      const host = document.createElement('div'); host.style.cssText = `position:fixed;left:0;top:0;width:0;height:0;transform-origin:0 0;transform:scale(${K});pointer-events:none;z-index:60`; document.body.appendChild(host); setTimeout(() => host.remove(), 1400);          // (the little effects are drawn in design pixels, like the board they sit on)
+      const mk = (cls, html) => { const d = document.createElement('div'); d.className = 'bfx ' + cls; d.style.cssText = `left:${o0.left}px;top:${o0.top}px;width:${o0.width}px;height:${o0.height}px`; d.innerHTML = html; host.appendChild(d); return d; };
       const pl = S.run.board.players.find(p => p.id === fx.id);
       if (fx.k === 'leave') { const g = mk('ghost', ''), c = pl ? pl.color : '#888'; g.style.background = `radial-gradient(circle at 34% 28%, color-mix(in srgb, ${c} 55%, #fff), ${c} 58%, color-mix(in srgb, ${c} 55%, #000))`; g.style.border = `2px solid color-mix(in srgb, ${c} 60%, #000)`; }
       if (fx.k === 'boom') {
@@ -3274,7 +3288,7 @@ const AI = (() => {
     }
     for (const el of $.querySelectorAll('.bgrid .bdisc[data-pid], .bgrid .pchip[data-pid]')) {
       const o = old[el.className.split(' ')[0] + el.dataset.pid]; if (!o) continue;
-      const r = el.getBoundingClientRect(), dx = o.left - r.left, dy = o.top - r.top;
+      const r = rr(el), dx = o.left - r.left, dy = o.top - r.top;
       if (Math.abs(dx) + Math.abs(dy) > 2) el.animate([{ translate: `${dx}px ${dy}px`, zIndex: 5 }, { translate: '0 0', zIndex: 5 }], { duration: 300, easing: 'cubic-bezier(.4,.1,.3,1)' });
     }
   }
@@ -3297,7 +3311,7 @@ const AI = (() => {
     an.rects = boardRects(); while (an.k < an.events.length && an.events[an.k].k === 'move') an.k++;
     if (an.k < an.events.length) an.k++; an.stop = true; const ev = an.events[an.k - 1]; an.fx = ev && ev.k === 'boom' ? ev : null; render();
   }
-  const boardScale = () => Math.max(.5, Math.min(1, (innerHeight - 24) / 860)).toFixed(3);
+  const boardScale = () => Math.max(.5, Math.min(1, (VH() - 24) / 860)).toFixed(3);
   // The full-size Leaderboard, opened by tapping the little one while you dig (the opponents keep going behind it).
   function lbFullHTML() {
     if (!S.lbFull || S.panel !== 'dig' || !S.run) return '';
@@ -3359,31 +3373,31 @@ const AI = (() => {
     else if (step === 'pack') {
       // The same layout the cards will be dealt into: the Keep places on top and, in the middle of the row below, the closed pack. It tears open right there.
       const info = Run.packInfo(run), col = (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a', plus = /\+$/.test(info.name);
-      const need = Math.min(info.keep, info.draw), W = Math.min(innerWidth, 1180) - 48, avail = innerHeight - 32 - 150 - 92 - 30 - 20;
+      const need = Math.min(info.keep, info.draw), W = Math.min(VW(), 1180) - 48, avail = VH() - 32 - 150 - 92 - 30 - 20;
       const ss = Math.min(.6, fitCards(need, .6, W, avail * .46)), sh = 350 * ss, ps = Math.min(.8, fitCards(info.draw, .8, W, avail - sh - 14, 12));
       const slots = Array.from({ length: need }, (_, i) => `<div class="kslot empty" data-i="${i}" style="width:${250 * ss}px;height:${sh}px"><span class="kplus">keep</span></div>`).join('');
-      body = `<div class="kitbar"><b>${A.esc(packName(info.name))} Pack</b></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool closedpack" style="height:${350 * ps}px"><button class="pack" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(packName(info.name))} Pack">${packArt(info.name, info.draw, info.keep)}</button></div>`;
+      body = `<div class="kitbar"><b>${A.esc(packName(info.name))} Pack</b></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool closedpack" style="height:${350 * ps}px;--pks:${Math.min(1, Math.max(.45, 350 * ps / 270)).toFixed(3)}"><button class="pack" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(packName(info.name))} Pack">${packArt(info.name, info.draw, info.keep)}</button></div>`;
       foot = `<button class="btn" data-p="keepgo" disabled>Keep</button>`;          // (already there, so nothing moves when the cards are dealt)
     } else if (step === 'keep') {
       const need = Run.keepCount(run);
       const fxKey = `${run.round}:${pr.offer.map(c => c.uid).join()}`, first = S.fxPack !== fxKey; S.fxPack = fxKey;       // the pack tears open once, the first time these cards are drawn
       // The same layout as the Starter Kit: your places on top, the cards you drew below. Tap a card to move it up (tap it again to put it back), or drag it.
-      const W = Math.min(innerWidth, 1180) - 48, avail = innerHeight - 32 - 150 - 92 - 30 - 20;
+      const W = Math.min(VW(), 1180) - 48, avail = VH() - 32 - 150 - 92 - 30 - 20;
       const ss = Math.min(.6, fitCards(need, .6, W, avail * .46)), sh = 350 * ss;
       const chosen = pr.picked.map(id => pr.offer.find(c => c.uid === id)).filter(Boolean), hand = pr.offer.filter(c => !pr.picked.includes(c.uid));
       const ps = Math.min(.8, fitCards(hand.length, .8, W, avail - sh - 14, 12));
       const slots = Array.from({ length: need }, (_, i) => { const c = chosen[i]; return `<div class="kslot ${c ? '' : 'empty'}" data-i="${i}" style="width:${250 * ss}px;height:${sh}px">${c ? pcard(c, ss, { act: 'pick', sel: true, badge: i + 1, kslot: true }) : '<span class="kplus">keep</span>'}</div>`; }).join('');
-      body = `<div class="kitbar"><b>${A.esc(packName(pr.pack.name))} Pack</b></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool ${first && S.packFrom ? 'fly' : ''}">${first ? tearHTML(pr.pack) : ''}${first && S.packFrom ? flyPackHTML(pr.pack) : ''}${hand.map((c, i) => pcard(c, ps, { act: 'pick', i: pr.offer.indexOf(c), deal: first, dx: ((pr.offer.length - 1) / 2 - pr.offer.indexOf(c)) * (250 * ps + 14) })).join('')}</div>`;
+      body = `<div class="kitbar"><b>${A.esc(packName(pr.pack.name))} Pack</b></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool ${first && S.packFrom ? 'fly' : ''}" style="--pks:${Math.min(1, Math.max(.45, 350 * ps / 270)).toFixed(3)}">${first ? tearHTML(pr.pack) : ''}${first && S.packFrom ? flyPackHTML(pr.pack) : ''}${hand.map((c, i) => pcard(c, ps, { act: 'pick', i: pr.offer.indexOf(c), deal: first, dx: ((pr.offer.length - 1) / 2 - pr.offer.indexOf(c)) * (250 * ps + 14) })).join('')}</div>`;
       foot = `${run.owned.length ? `<button class="btn alt ownedbtn" data-p="owned">Your cards (${run.owned.length})</button>` : ''}<button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'}>Keep</button>`;
     } else if (step === 'reveal') {            // a Mystery Box: the same screen as the pack. The cards you did not keep fly away, then the next card of the deck is dealt face down in the row and turns over; nothing moves on until you say so
       const key = `${run.round}:reveal`, first = S.fxReveal !== key; S.fxReveal = key;
       const kept = pr.offer.filter(c => pr.picked.includes(c.uid)), rest = pr.offer.filter(c => !pr.picked.includes(c.uid)), need = kept.length;
-      const W = Math.min(innerWidth, 1180) - 48, avail = innerHeight - 32 - 150 - 92 - 30 - 20;
+      const W = Math.min(VW(), 1180) - 48, avail = VH() - 32 - 150 - 92 - 30 - 20;
       const ss = Math.min(.6, fitCards(need, .6, W, avail * .46)), sh = 350 * ss, ps = Math.min(.8, fitCards(rest.length, .8, W, avail - sh - 14, 12));          // (the same sizes as on the pack screen)
       const slots = kept.map((c, i) => `<div class="kslot" data-i="${i}" style="width:${250 * ss}px;height:${sh}px">${pcard(c, ss, { act: 'noop', sel: true, badge: i + 1, kslot: true })}</div>`).join('');
       const from = first ? S.keepFrom : null;
       const sweep = first && rest.length ? `<div class="sweep" aria-hidden="true">${rest.map((c, i) => {
-        const r = from && from[c.uid] ? from[c.uid] : { x: innerWidth / 2 - 63 + (i - (rest.length - 1) / 2) * 130, y: innerHeight * .5, w: 125, h: 175 };
+        const r = from && from[c.uid] ? from[c.uid] : { x: VW() / 2 - 63 + (i - (rest.length - 1) / 2) * 130, y: VH() * .5, w: 125, h: 175 };
         return `<span class="sweepcard" style="--i:${i};left:${Math.round(r.x)}px;top:${Math.round(r.y)}px;width:${Math.round(r.w)}px;height:${Math.round(r.h)}px;--tx:${-Math.round(r.x + r.w + 120)}px;--ty:${-Math.round(r.y + r.h + 100)}px">${A.playCard(c, r.w / 250)}</span>`;
       }).join('')}</div>` : '';
       const flip = (c, i) => `<span class="flipcard ${first ? '' : 'still'}" style="--i:${i};width:${250 * ps}px;height:${350 * ps}px"><span class="fback"><span class="cardback"></span></span><span class="ffront">${A.playCard(c, ps)}</span></span>`;
@@ -3391,7 +3405,7 @@ const AI = (() => {
       foot = `<button class="btn" data-p="continuereveal">Choose your Starter Kit</button>`;
     } else {            // the Starter Kit: your places on top (last round's kit is already in them), the rest of your cards below
       const key = `${run.round}:kit`, first = S.fxKit !== key; S.fxKit = key;
-      const W = Math.min(innerWidth, 1180) - 48, avail = innerHeight - 32 - 150 - 92 - 30 - 52;
+      const W = Math.min(VW(), 1180) - 48, avail = VH() - 32 - 150 - 92 - 30 - 52;
       const ss = Math.min(.6, fitCards(pr.kitMax, .6, W, avail * .46)), sh = 350 * ss;
       const prev = (run.kit || []).map(c => c.uid), kitCards = pr.kitPick.map(id => run.owned.find(c => c.uid === id)).filter(Boolean);
       const hand = run.owned.filter(c => !pr.kitPick.includes(c.uid)).sort((x, y) => (pr.gained.includes(y.uid) ? 1 : 0) - (pr.gained.includes(x.uid) ? 1 : 0));          // what you just won comes first, top left
@@ -3404,7 +3418,7 @@ const AI = (() => {
       const say = 'These will be the first cards you draw.';
       const from = first ? S.keepFrom : null, rest = first && !pr.extra.length ? pr.offer.filter(c => !pr.picked.includes(c.uid)) : [];          // (after a Mystery Box they flew away on the pack screen already: only once)
       const sweep = rest.length ? `<div class="sweep" aria-hidden="true">${rest.map((c, i) => {
-        const r = from && from[c.uid] ? from[c.uid] : { x: innerWidth / 2 - 63 + (i - (rest.length - 1) / 2) * 130, y: innerHeight * .34, w: 125, h: 175 };
+        const r = from && from[c.uid] ? from[c.uid] : { x: VW() / 2 - 63 + (i - (rest.length - 1) / 2) * 130, y: VH() * .34, w: 125, h: 175 };
         return `<span class="sweepcard" style="--i:${i};left:${Math.round(r.x)}px;top:${Math.round(r.y)}px;width:${Math.round(r.w)}px;height:${Math.round(r.h)}px;--tx:${-Math.round(r.x + r.w + 120)}px;--ty:${-Math.round(r.y + r.h + 100)}px">${A.playCard(c, r.w / 250)}</span>`;
       }).join('')}</div>` : '';
       body = `${sweep}<div class="kitbar"><b>Starter Kit</b></div><div class="krow"><div class="kslots ${first ? 'kfirst' : ''}">${slots}</div><p class="kdef">${say}<small>Any place you leave empty gets a ${ic('gem')} gem instead.</small></p></div><div class="poolhead">Your cards</div><div class="cards pool ${first ? 'kfirst' : ''}" style="min-height:${Math.round(350 * ps) + 24}px">${hand.map((c, i) => pcard(c, ps, { act: 'kitpick', i, ...tagOf2(c) })).join('')}</div>`;
@@ -3631,7 +3645,7 @@ const AI = (() => {
     else if (S.panel === 'setup' || !S.st) body = setupHTML();
     else body = `<div class="pmain"><div class="ptable ${S.st.fight && S.st.fight.phase === 'before' && !S.st.over ? 'await-roll' : ''}" data-step="${S.st.over ? 'over' : S.st.fight ? (S.st.fight.phase === 'before' ? 'roll' : 'damage') : 'dig'}">${tableHTML()}</div></div>`;       // a Monster is in front of you and nothing else matters until you roll: the rest of the table dims
     const zdyn = S.zoom && S.st && S.panel === 'dig' ? Dig.dynamic(S.st, S.zoom) : null;          // a card whose power depends on the game says what it is worth right now
-    const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, Math.min(1.35, (innerHeight - 110) / 350))}${zdyn ? `<div class="zdyn">Right now: <b>${T(zdyn)}</b></div>` : ''}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}</div>` : '';
+    const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, Math.min(1.35, (VH() - 110) / 350))}${zdyn ? `<div class="zdyn">Right now: <b>${T(zdyn)}</b></div>` : ''}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}</div>` : '';
     const bottom = S.panel === 'dig' && S.st && !S.st.mine.length && !S.st.over && !S.st.fight && !S.st.pending && S.emptySeen !== S.st && !S.help;          // you dug the last card of your Mine: say what happens next, once
     const B = D.rules.beyond, note = bottom ? `<div class="mnote-back"><div class="mnote" role="dialog" aria-label="The bottom of your Mine"><h3>You've reached the bottom of your Mine</h3><p>Keep digging to face <b>Bonus Monsters</b>. They are face up, start at <b>${B.firstDamage}</b> damage and go up by <b>1</b> each time. You can still bank at any time.</p><button class="btn" data-p="emptyok">Got it</button></div></div>` : '';
     let fin = '';
@@ -3642,16 +3656,16 @@ const AI = (() => {
     }
     let ownedP = '';
     if (S.showOwned && S.run && (S.panel === 'prep' || S.panel === 'done')) {          // a look at the cards you already own, while you choose (tap anywhere to close)
-      const list = S.run.owned, sc = Math.min(.55, fitCards(list.length, .55, Math.min(innerWidth, 1180) - 80, innerHeight - 190, 12)), inKit = new Set((S.run.kit || []).map(c => c.uid));
+      const list = S.run.owned, sc = Math.min(.55, fitCards(list.length, .55, Math.min(VW(), 1180) - 80, VH() - 190, 12)), inKit = new Set((S.run.kit || []).map(c => c.uid));
       ownedP = `<div class="ownedback" data-p="ownedclose"><div class="ownedpanel" role="dialog" aria-label="Your cards"><h3>Your cards</h3><div class="cards">${list.map(c => `<span class="ocard" style="width:${250 * sc}px;height:${350 * sc}px">${A.playCard(c, sc)}${inKit.has(c.uid) ? '<span class="ctag last">In your kit</span>' : ''}</span>`).join('') || '<span class="note">You do not own any cards yet.</span>'}</div></div></div>`;
     }
     $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z + note + fin + dangerHTML() + lbFullHTML() + ownedP;
     const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
     fitHero(); heroPlay(); fitTable(); playDice(); boardAnimate();
-    if (S.packFrom) { const fp = $.querySelector('.flypack'); if (fp) { const r = fp.getBoundingClientRect(); fp.style.setProperty('--fx', Math.round(S.packFrom.x - (r.left + r.width / 2)) + 'px'); fp.style.setProperty('--fy', Math.round(S.packFrom.y - (r.top + r.height / 2)) + 'px'); } S.packFrom = null; }
+    if (S.packFrom) { const fp = $.querySelector('.flypack'); if (fp) { const r = rr(fp); fp.style.setProperty('--fx', Math.round(S.packFrom.x - (r.left + r.width / 2)) + 'px'); fp.style.setProperty('--fy', Math.round(S.packFrom.y - (r.top + r.height / 2)) + 'px'); } S.packFrom = null; }
     if (S.keepFrom && $.querySelector('.pcard.kept')) {          // the cards you kept slide from where they were to their places; the others are dealt in after them
       $.querySelectorAll('.pcard.kept').forEach(el => {
-        const o = S.keepFrom[el.dataset.uid], n = el.getBoundingClientRect(); if (!o || !n.width) return;
+        const o = S.keepFrom[el.dataset.uid], n = rr(el); if (!o || !n.width) return;
         el.style.transformOrigin = '0 0'; el.style.zIndex = 20;
         const an = el.animate([{ transform: `translate(${o.x - n.left}px, ${o.y - n.top}px) scale(${o.w / n.width})` }, { transform: 'none' }], { duration: 750, delay: 250, easing: 'cubic-bezier(.3,.8,.3,1)', fill: 'backwards' });
         an.onfinish = () => { el.style.zIndex = ''; };
@@ -3733,13 +3747,13 @@ const AI = (() => {
         requestAnimationFrame(() => setTimeout(() => { S.opening = false; act('openpackgo', el); }, 0));
         return;
       }
-      case 'openpackgo': { const pk = $.querySelector('[data-p=openpack]'); if (pk && pk.closest('.tallymain')) { const r = pk.getBoundingClientRect(); S.packFrom = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; } } if (S.match) { Match.openPack(S.match, { defer: true }); setTimeout(() => { if (S.match) Match.prepAIAsync(S.match, persist); }, 400); } else Run.openPack(S.run); break;
+      case 'openpackgo': { const pk = $.querySelector('[data-p=openpack]'); if (pk && pk.closest('.tallymain')) { const r = rr(pk); S.packFrom = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; } } if (S.match) { Match.openPack(S.match, { defer: true }); setTimeout(() => { if (S.match) Match.prepAIAsync(S.match, persist); }, 400); } else Run.openPack(S.run); break;
       case 'pick': {                       // tap a card to choose it, tap it again to put it back; once you have chosen all you may, you must put one back before choosing another
         const uid = Number(ds.uid), pr = S.run.prep;
         Run.toggleKeep(S.run, uid); break;                  // (the engine refuses a card beyond the limit)
       }
       case 'keepgo': {                     // remember where each card is, so the next screen can slide the kept ones to their places and fly the others away from where they were
-        S.keepFrom = {}; $.querySelectorAll('.pcard[data-p=pick]').forEach(el => { const r = el.getBoundingClientRect(); S.keepFrom[el.dataset.uid] = { x: r.left, y: r.top, w: r.width, h: r.height }; });
+        S.keepFrom = {}; $.querySelectorAll('.pcard[data-p=pick]').forEach(el => { const r = rr(el); S.keepFrom[el.dataset.uid] = { x: r.left, y: r.top, w: r.width, h: r.height }; });
         Run.confirmKeep(S.run); break;
       }
       case 'continuereveal': S.keepFrom = null;  S.keepFrom = null; Run.continueReveal(S.run); break;
@@ -3805,10 +3819,10 @@ const AI = (() => {
     if (!drag) return;
     if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > 12) {
       drag.moved = true; const r = drag.el.getBoundingClientRect(), g = drag.el.cloneNode(true); g.removeAttribute('data-p'); g.classList.remove('deal'); g.querySelectorAll('.dback').forEach(x => x.remove()); g.style.animation = 'none'; g.querySelectorAll('*').forEach(x => { x.style.animation = 'none'; }); g.classList.add('dragghost');          // (a copy of a card that was just dealt must not replay the deal: its turn-over made the drag flicker between the card's back and its face; it is placed under the finger before it is shown and has no transition, or it would glide in from the top-left corner and lag behind the finger)
-      g.style.cssText += `;position:fixed;left:0;top:0;width:${r.width}px;height:${r.height}px;z-index:40;pointer-events:none;margin:0;transition:none;will-change:transform;transform:translate(${e.clientX - r.width / 2}px, ${e.clientY - r.height * .6}px) rotate(-3deg) scale(1.05)`; document.body.appendChild(g); drag.ghost = g; drag.w = r.width; drag.h = r.height; drag.el.classList.add('dragging');
+      g.style.cssText += `;position:fixed;left:0;top:0;width:${r.width / K}px;height:${r.height / K}px;z-index:40;pointer-events:none;margin:0;transition:none;will-change:transform;transform-origin:0 0;transform:translate(${e.clientX - r.width / 2}px, ${e.clientY - r.height * .6}px) rotate(-3deg) scale(${1.05 * K})`; document.body.appendChild(g); drag.ghost = g; drag.w = r.width; drag.h = r.height; drag.el.classList.add('dragging');
     }
     if (drag.moved) {
-      drag.ghost.style.transform = `translate(${e.clientX - drag.w / 2}px, ${e.clientY - drag.h * .6}px) rotate(-3deg) scale(1.05)`;
+      drag.ghost.style.transform = `translate(${e.clientX - drag.w / 2}px, ${e.clientY - drag.h * .6}px) rotate(-3deg) scale(${1.05 * K})`;
       const t = document.elementFromPoint(e.clientX, e.clientY), slot = t && t.closest('.kslot');
       $.querySelectorAll('.kslot.over').forEach(x => { if (x !== slot) x.classList.remove('over'); }); if (slot) slot.classList.add('over');
     }
@@ -3832,6 +3846,7 @@ const AI = (() => {
   document.addEventListener('ddb-cards', () => { restore(); render(); }); document.addEventListener('ddb-mode', render);
   let sized = innerWidth + 'x' + innerHeight, sizeTimer = null;
   window.addEventListener('resize', () => {
+    applyScale();
     if (document.body.dataset.mode !== 'play') return;
     fitHero();
     clearTimeout(sizeTimer);          // turning the iPad changes the size the table and the cards are drawn for: draw them again

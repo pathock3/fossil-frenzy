@@ -11,7 +11,7 @@ A collection of Patrick Blim-Hockberger's tabletop game designs, adapted as brow
 6. **Commit after each working change** with a short message. Note user-visible changes in `CHANGELOG.md`.
 
 ## Target device
-The primary target is the current base (non-Pro, non-Air) iPad **in landscape**, opened from the home screen as a web app: 1180 × 820 CSS pixels, with the status bar overlapping the top edge. Design and check at that size first; other sizes and portrait must work but are secondary. Keep content clear of the top status-bar area.
+The primary target is the current base (non-Pro, non-Air) iPad **in landscape**, opened from the home screen as a web app: 1180 × 820 CSS pixels, with the status bar overlapping the top edge. Design and check at that size first; other sizes and portrait must work but are secondary. Dig Dig BOOM! also scales its whole layout down on screens shorter than `DDB.screen.designHeight` (an iPhone on its side: 874 × 402); inside it, use `VW()`/`VH()` and `rr(el)` instead of `innerWidth`/`innerHeight`/`getBoundingClientRect`. Keep content clear of the top status-bar area.
 
 ## Layout
 - `index.html` — the Tabletop Library front page; its data block lists the games. To add a game: create `games/<id>/` with `index.html` (build-stamp meta included), then add a catalogue entry. A test fails if they disagree.

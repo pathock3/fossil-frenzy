@@ -999,6 +999,31 @@ test('leaderboard: 0 to 9 by default; tap the small one while you dig for the fu
   } finally { await browser.close(); }
 });
 
+test('an iPhone on its side (874 x 402): the layout of a taller screen, scaled down to fit — the pack, the Starter Kit, the table with its Bank and die, the Leaderboard all fit; dragging a card to a Keep place still works', SKIP, async () => {
+  const { browser, page, errors } = await open({ viewport: { width: 874, height: 402 }, menu: true });
+  try {
+    const inside = sel => page.evaluate(s => { const e = document.querySelector(s); if (!e) return 'missing ' + s; const r = e.getBoundingClientRect(); return r.top >= -1 && r.bottom <= innerHeight + 1 && r.left >= -1 && r.right <= innerWidth + 1 ? 'ok' : `${s} at ${Math.round(r.left)},${Math.round(r.top)} to ${Math.round(r.right)},${Math.round(r.bottom)}`; }, sel);
+    assert.ok(await page.evaluate(() => document.getElementById('play').classList.contains('scaled')), 'a short screen is scaled');
+    await page.evaluate(() => { window.DigDigBoomPlay.S.opp = true; }); await page.click('#play [data-p=startrun]'); await page.waitForSelector('#play [data-p=openpack]');
+    assert.equal(await inside('#play .pack'), 'ok'); assert.equal(await inside('#play [data-p=keepgo]'), 'ok');
+    await page.click('#play [data-p=openpack]'); await page.waitForSelector('#play .pcard[data-p=pick]'); await page.waitForTimeout(3600);
+    const card = await page.locator('#play .pcard[data-p=pick]').first().boundingBox(), slot = await page.locator('#play .kslot').first().boundingBox();
+    await page.mouse.move(card.x + card.width / 2, card.y + card.height / 2); await page.mouse.down(); await page.mouse.move(card.x + card.width / 2 + 30, card.y + card.height / 2 - 30, { steps: 4 });
+    const g = await page.locator('.dragghost').boundingBox(); assert.ok(Math.abs(g.width - card.width * 1.05) < card.width * .12, `the card you carry is the size of the one you picked up: ${g.width} vs ${card.width}`);
+    await page.mouse.move(slot.x + slot.width / 2, slot.y + slot.height / 2, { steps: 8 }); await page.mouse.up(); await page.waitForTimeout(150);
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.run.prep.picked.length), 1, 'dropped on the Keep place');
+    await page.click('#play [data-p=keepgo]'); await page.waitForSelector('#play [data-p=kitpick]'); await page.waitForTimeout(800);
+    assert.equal(await inside('#play [data-p=startround]'), 'ok');
+    await page.click('#play [data-p=kitpick] >> nth=0'); await page.click('#play [data-p=startround]'); await page.waitForSelector('#play .ptable');
+    for (const sel of ['#play section.lb', '#play .piles .bankp', '#play .deck']) assert.equal(await inside(sel), 'ok');
+    await page.evaluate(() => { const P = window.DigDigBoomPlay; P.S.st.mine = ['MO-01', 'TR-01'].map((id, i) => ({ ...window.DigDigBoomUI.state.all.find(c => c.id === id), uid: 8000 + i })); P.S.st.known = 0; P.S.st.heart = 30; P.render(); });
+    await page.click('#play [data-p=dig]'); await page.waitForSelector('#play [data-p=roll]');
+    for (const sel of ['#play [data-p=roll]', '#play .tableau', '#play .piles .bankp']) assert.equal(await inside(sel), 'ok');
+    assert.equal(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth), true, 'the page does not scroll');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
 test('leaderboard: nothing scrolls at any iPad size (the whole screen is drawn smaller to fit), and your piece says You', SKIP, async () => {
   for (const viewport of [{ width: 1180, height: 820 }, { width: 1024, height: 700 }, { width: 820, height: 1180 }, { width: 1180, height: 600 }]) {
     const { browser, page, errors } = await open({ viewport, menu: true });
