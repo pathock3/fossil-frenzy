@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — small buffs to the cards the AI picked least** (sheet and fixture): All In sets Health to 2, Thorned Gadget costs 1 Health, Floor Jack floors at 5, Applause Meter needs 3+ cards, Giant Slayer 6+ damage, Reset Button sets Health to 8, Risky Shortcut loses 1 Health, Crumple Zone 4+ damage. Design notes and the 32 proposed cards: `games/dig-dig-boom/NEW-BOOSTERS.md`.
+
 - **Dig Dig BOOM! — roll by tapping the Mine:** when a Monster is in front of you the die sits on the Mine ("Tap to roll"); the result lands on the same spot. Take damage is in the action area beside the Monster, never on the Mine, so a quick tap cannot take the damage. The Bank column holds only the Bank.
 
 - **Dig Dig BOOM! — new card mechanics and 32 proposed Booster cards** (`NEW-BOOSTERS.csv`, not on the sheet yet; the game already understands them): Powers that raise the die (chains), Powers that defeat small Monsters, cards that react to the number rolled or the result you face with, damage caps / ignores / every-3rd-Monster, Extra Roll rules (keep the higher die, first one free, bonus per Extra Roll, overflow), a one-shot Phoenix Feather, and Immediates that move Monsters in the Mine or on their ladders. Tests in `tests/newcards.test.js`.

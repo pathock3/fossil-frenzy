@@ -287,12 +287,12 @@ test('Magpie and Echo copy the top Immediate card in the discard pile', () => {
 test('Immediate cards happen when dug, then go to the discard pile', () => {
   const st = game({ mine: ['IM-13', 'IM-23'], start: { heart: 4, reroll: 0 } });
   Dig.dig(st); assert.deepEqual([st.heart, st.reroll], [8, 0]);
-  Dig.dig(st); assert.deepEqual([st.heart, st.reroll], [6, 2]); assert.equal(st.discard.length, 2);
+  Dig.dig(st); assert.deepEqual([st.heart, st.reroll], [7, 2]); assert.equal(st.discard.length, 2);
 });
 
-test('Immediate cards can BOOM you (Risky Shortcut at 2 Health); All In sets Health to 1 and fills Rerolls; Reset Button sets Health to 7', () => {
-  const st = game({ mine: ['IM-23'], start: { heart: 2 } }); Dig.dig(st); assert.equal(st.over.kind, 'boom');
-  const a = game({ mine: ['IM-01', 'IM-21'], start: { heart: 9 } }); Dig.dig(a); assert.deepEqual([a.heart, a.reroll], [1, 4]); Dig.dig(a); assert.equal(a.heart, 7);
+test('Immediate cards can BOOM you (Risky Shortcut at 1 Health); All In sets Health to 2 and fills Rerolls; Reset Button sets Health to 8', () => {
+  const st = game({ mine: ['IM-23'], start: { heart: 1 } }); Dig.dig(st); assert.equal(st.over.kind, 'boom');
+  const a = game({ mine: ['IM-01', 'IM-21'], start: { heart: 9 } }); Dig.dig(a); assert.deepEqual([a.heart, a.reroll], [2, 4]); Dig.dig(a); assert.equal(a.heart, 8);
 });
 
 test('count-based Immediates: Duct Tape (Ongoing cards), Scrap Heap (Immediates in discard, including itself), Second Wind and Repair Kit', () => {
@@ -370,8 +370,8 @@ test('roll bonuses: Tune-Up, Redline (3 Health or less), Monster Scope / Giant S
   const fw = game({ mine: ['MO-01'], ongoing: ['ON-15'], dice: [4] }); fw.discard = Array(5).fill(0).map(() => ({ ...by('IM-13') })); Dig.dig(fw); Dig.roll(fw); assert.equal(Dig.result(fw).total, 7);
 });
 
-test('result changes: Floor Jack (below 4 becomes 4), Backfire (you may make a 1 a 10), Wrecking Ball doubles the first Monster each Dig; in the ruled order', () => {
-  const fj = game({ mine: ['MO-01'], ongoing: ['ON-14'], dice: [2] }); Dig.dig(fj); Dig.roll(fj); assert.equal(Dig.result(fj).total, 4);
+test('result changes: Floor Jack (below 5 becomes 5), Backfire (you may make a 1 a 10), Wrecking Ball doubles the first Monster each Dig; in the ruled order', () => {
+  const fj = game({ mine: ['MO-01'], ongoing: ['ON-14'], dice: [2] }); Dig.dig(fj); Dig.roll(fj); assert.equal(Dig.result(fj).total, 5);
   const bf = game({ mine: ['MO-01'], ongoing: ['ON-03'], dice: [1, 4], start: { reroll: 1 } }); Dig.dig(bf); Dig.roll(bf);
   assert.equal(Dig.result(bf).total, 1, 'Backfire is a choice: until you use it the result is still 1'); assert.deepEqual(Dig.mayUse(bf).map(o => o.id), ['ON-03']);
   assert.equal(Dig.can(bf).reroll, true); assert.ok(Dig.useMod(bf, Dig.mayUse(bf)[0])); assert.equal(Dig.result(bf).total, 10); assert.deepEqual(Dig.mayUse(bf), [], 'once');
@@ -381,7 +381,7 @@ test('result changes: Floor Jack (below 4 becomes 4), Backfire (you may make a 1
   const wb = game({ mine: ['MO-01', 'MO-01'], ongoing: ['ON-37'], start: { heart: 12 }, dice: [3, 3] });
   Dig.dig(wb); Dig.roll(wb); assert.equal(Dig.result(wb).total, 6); Dig.autoFace(wb);
   Dig.dig(wb); Dig.roll(wb); assert.equal(Dig.result(wb).total, 3, 'only the first Monster');
-  const both = game({ mine: ['MO-01'], ongoing: ['ON-37', 'ON-14'], dice: [1] }); Dig.dig(both); Dig.roll(both); assert.equal(Dig.result(both).total, 4, '1 doubled is 2, then the floor makes it 4');
+  const both = game({ mine: ['MO-01'], ongoing: ['ON-37', 'ON-14'], dice: [1] }); Dig.dig(both); Dig.roll(both); assert.equal(Dig.result(both).total, 5, '1 doubled is 2, then the floor makes it 5');
 });
 
 test('the Lucky Coin is out of the game (the sheet may still list it), and the Pet triggers on a roll of 9 or more', () => {
@@ -434,8 +434,9 @@ test('damage and defeat watchers: Patch Kit, Crumple Zone (5+), Monster Jerky, V
   assert.deepEqual([none.heart, none.reroll], [5, 0], 'surviving is not defeating');
 });
 
-test('"Whenever 4+ cards trigger on one roll" (Applause Meter)', () => {
-  const ap = game({ mine: ['MO-01'], power: ['PW-02', 'PW-03', 'PW-09'], ongoing: ['ON-02'], start: { heart: 6, reroll: 0 }, dice: [3] }); fight(ap); assert.equal(ap.reroll, 0, 'only 3 cards trigger at a 3 (the Pet needs 10)');
+test('"Whenever 3+ cards trigger on one roll" (Applause Meter)', () => {
+  const ap = game({ mine: ['MO-01'], power: ['PW-02', 'PW-03'], ongoing: ['ON-02'], start: { heart: 6, reroll: 0 }, dice: [3] }); fight(ap); assert.equal(ap.reroll, 0, 'only 2 cards trigger at a 3 (the Pet needs 10)');
+  const ap3 = game({ mine: ['MO-01'], power: ['PW-02', 'PW-03', 'PW-09'], ongoing: ['ON-02'], start: { heart: 6, reroll: 0 }, dice: [3] }); fight(ap3); assert.equal(ap3.reroll, 1, 'the third card is the one that pays');
   const ap2 = game({ mine: ['MO-01'], power: ['PW-02', 'PW-03', 'PW-07', 'PW-09'], ongoing: ['ON-02'], start: { heart: 3, reroll: 0 }, dice: [4] });       // (3 Health: Nervous Mouse wants 4 or less) fight(ap2); assert.equal(ap2.reroll, 1);
 });
 
@@ -459,8 +460,8 @@ test('Panic Button: the first time each Dig a roll would BOOM you, a free reroll
 });
 
 test('Thorned Gadget pays Health for a reroll when you have none', () => {
-  const tg = game({ mine: ['MO-01'], ongoing: ['ON-31'], start: { reroll: 0, heart: 6 }, dice: [1, 4] }); Dig.dig(tg); Dig.roll(tg); assert.ok(Dig.can(tg).reroll); Dig.reroll(tg); assert.deepEqual([tg.heart, Dig.result(tg).total], [4, 4]);
-  const no = game({ mine: ['MO-01'], ongoing: ['ON-31'], start: { reroll: 0, heart: 2 }, dice: [1] }); Dig.dig(no); Dig.roll(no); assert.ok(!Dig.can(no).reroll, 'it would BOOM you');
+  const tg = game({ mine: ['MO-01'], ongoing: ['ON-31'], start: { reroll: 0, heart: 6 }, dice: [1, 4] }); Dig.dig(tg); Dig.roll(tg); assert.ok(Dig.can(tg).reroll); Dig.reroll(tg); assert.deepEqual([tg.heart, Dig.result(tg).total], [5, 4]);
+  const no = game({ mine: ['MO-01'], ongoing: ['ON-31'], start: { reroll: 0, heart: 1 }, dice: [1] }); Dig.dig(no); Dig.roll(no); assert.ok(!Dig.can(no).reroll, 'it would BOOM you');
 });
 
 test('Cloning Machine makes one Power card trigger twice', () => {
@@ -602,11 +603,12 @@ test('Extra Rolls can be spent at any time in a battle, even after cards have fi
   Dig.dig(duck); Dig.roll(duck); Dig.trigger(duck, entryOf(duck, 'PW-05')); Dig.face(duck); assert.equal(duck.reroll, 1, 'chosen alone: +1');
   Dig.dig(duck); Dig.roll(duck); Dig.trigger(duck, entryOf(duck, 'PW-05')); Dig.trigger(duck, entryOf(duck, 'PW-02')); Dig.face(duck); assert.equal(duck.reroll, 1, 'with another card: nothing');
 });
-test('Applause Meter fires when the fourth different card triggers', () => {
+test('Applause Meter fires when the third different card triggers', () => {
   const st = game({ mine: ['MO-01'], power: ['PW-02', 'PW-03', 'PW-09', 'PW-07'], ongoing: ['ON-02'], start: { heart: 1, reroll: 0 }, dice: [4] });          // (Nervous Mouse wants 4 Health or less when it triggers: 1 + 1 + 2)
   Dig.dig(st); Dig.roll(st);
-  for (const id of ['PW-02', 'PW-03', 'PW-09']) Dig.trigger(st, entryOf(st, id)); assert.equal(st.reroll, 0);
-  Dig.trigger(st, entryOf(st, 'PW-07')); assert.equal(st.reroll, 2, 'Nervous Mouse gives its own Reroll (at 4 Health or less), and the fourth card gives the Applause Meter\'s');
+  for (const id of ['PW-02', 'PW-03']) Dig.trigger(st, entryOf(st, id)); assert.equal(st.reroll, 0);
+  Dig.trigger(st, entryOf(st, 'PW-09')); assert.equal(st.reroll, 1, 'the third card gives the Applause Meter\'s');
+  Dig.trigger(st, entryOf(st, 'PW-07')); assert.equal(st.reroll, 2, 'Nervous Mouse gives its own Reroll (at 4 Health or less)');
 });
 test('triggerAll (what the AI and a hurried player use) is highest number first; the Pet defeats the Monster only if you trigger it', () => {
   const st = game({ mine: ['MO-01', 'MO-01'], power: ['PW-02'], start: { heart: 6 }, dice: [10, 10] });

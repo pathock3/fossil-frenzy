@@ -37,22 +37,22 @@ PW-30,Jackpot Ferret,Power,10,Booster,1,"+1 {reroll}, +1 {grit} and +2 {heart}"
 PW-31,Proud Lion,Power,10,Booster,1,+2 {reroll}
 PW-32,Sponge Slug,Power,10,Booster,1,Gain {heart} equal to this Monster's {damage}
 ON-01,Adrenaline Pump,Ongoing,,Booster,1,"Whenever you gain {heart}, +1 {grit}"
-ON-02,Applause Meter,Ongoing,,Booster,1,"Whenever 4+ cards trigger on one roll, +1 {reroll}"
+ON-02,Applause Meter,Ongoing,,Booster,1,"Whenever 3+ cards trigger on one roll, +1 {reroll}"
 ON-03,Backfire,Ongoing,,Booster,1,"If your result is 1, you may make it a 10"
 ON-04,Bounty Poster,Ongoing,,Booster,1,Monsters you defeat are worth 2 {gem}
 ON-05,Bumper,Ongoing,,Booster,1,Block 1 {damage} from every Monster
 ON-06,Cloning Machine,Ongoing,,Booster,1,Place under one of your Power cards. That card triggers twice
 ON-07,Confetti Cannon,Ongoing,,Booster,1,"Whenever you dig an Immediate card, +1 {grit}"
 ON-08,Cowcatcher,Ongoing,,Booster,1,Your first Monster each Dig deals no {damage}
-ON-09,Crumple Zone,Ongoing,,Booster,1,"Whenever you take 5+ {damage}, +1 {reroll}"
+ON-09,Crumple Zone,Ongoing,,Booster,1,"Whenever you take 4+ {damage}, +1 {reroll}"
 ON-10,Danger Siren,Ongoing,,Booster,1,"Whenever you dig a Monster with 6+ {damage}, +2 {grit}"
 ON-11,Depth Gauge,Ongoing,,Booster,1,+1 to your rolls for every 3 Monsters you've survived this Dig
 ON-12,Disco Ball,Ongoing,,Booster,1,"Whenever you dig an Immediate card, +1 {heart}"
 ON-13,Drone Booster,Ongoing,,Booster,1,The first {grit} you spend before each roll gives +2
-ON-14,Floor Jack,Ongoing,,Booster,1,"If your result is less than 4, it becomes 4"
+ON-14,Floor Jack,Ongoing,,Booster,1,"If your result is less than 5, it becomes 5"
 ON-15,Flywheel,Ongoing,,Booster,1,"+1 to your rolls for each Immediate card in your discard pile, up to +3"
 ON-16,Generator,Ongoing,,Booster,1,"At the start of each Dig, +2 {grit}"
-ON-17,Giant Slayer,Ongoing,,Booster,1,+3 to your rolls against Monsters with 7+ {damage}
+ON-17,Giant Slayer,Ongoing,,Booster,1,+3 to your rolls against Monsters with 6+ {damage}
 ON-18,Grit Caddy,Ongoing,,Booster,1,"Whenever you spend 3+ {grit} on one roll, get 1 back"
 ON-19,Monster Jerky,Ongoing,,Booster,1,"Whenever you defeat a Monster, +3 {heart}"
 ON-20,Monster Scope,Ongoing,,Booster,1,+2 to your rolls against Monsters with 5+ {damage}
@@ -66,13 +66,13 @@ ON-27,Redline,Ongoing,,Booster,1,"While you have 3 {heart} or less, +2 to your r
 ON-28,Salvage Claw,Ongoing,,Booster,1,"Whenever you defeat a Monster, +1 {grit} and +1 {heart}"
 ON-29,Second Spark,Ongoing,,Booster,1,"If your result is 3 or less, reroll for free"
 ON-30,Stubborn Engine,Ongoing,,Booster,1,"Whenever you take {damage}, +1 {grit}"
-ON-31,Thorned Gadget,Ongoing,,Booster,1,"At any time, you may lose 2 {heart} to take an Extra Roll"
+ON-31,Thorned Gadget,Ongoing,,Booster,1,"At any time, you may lose 1 {heart} to take an Extra Roll"
 ON-32,Trophy Case,Ongoing,,Booster,1,"Whenever you defeat a Monster, +2 {grit}"
 ON-33,Tune-Up,Ongoing,,Booster,1,+1 to your rolls
 ON-35,Victory Bell,Ongoing,,Booster,1,"Whenever you defeat a Monster, +1 {reroll}"
 ON-36,Workbench,Ongoing,,Booster,1,"Any time, trade 3 {grit} for 1 {reroll}, or 1 {reroll} for 3 {grit}"
 ON-37,Wrecking Ball,Ongoing,,Booster,1,Double your result against your first Monster each Dig
-IM-01,All In,Immediate,,Booster,1,Set your {heart} to 1. Fill up your {reroll}
+IM-01,All In,Immediate,,Booster,1,Set your {heart} to 2. Fill up your {reroll}
 IM-02,Boomerang,Immediate,,Booster,1,+2 {grit}. Slide this card back into the middle of your Mine
 IM-03,Cave Scout,Immediate,,Booster,1,"Keep digging until you dig a Monster. Put it back on top of your Mine, face up"
 IM-04,Crystal Ball,Immediate,,Booster,1,Look at the top 3 cards of your Mine. Play any Power or Ongoing cards you see; put the rest back
@@ -92,9 +92,9 @@ IM-17,Old Map,Immediate,,Booster,1,"Look at the top card of your Mine. If it's a
 IM-18,Pet Treat,Immediate,,Booster,1,Your Pet triggers 1 lower until Prep
 IM-19,Pocket Scanner,Immediate,,Booster,1,+1 {grit}. Look at the top 3 cards of your Mine
 IM-20,Repair Kit,Immediate,,Booster,1,+1 {reroll} for each Monster you've survived this Dig
-IM-21,Reset Button,Immediate,,Booster,1,Set your {heart} to 7
+IM-21,Reset Button,Immediate,,Booster,1,Set your {heart} to 8
 IM-22,Rewind Tape,Immediate,,Booster,1,Put the top Immediate card of your discard pile on top of your Mine
-IM-23,Risky Shortcut,Immediate,,Booster,1,Lose 2 {heart}. +2 {reroll}
+IM-23,Risky Shortcut,Immediate,,Booster,1,Lose 1 {heart}. +2 {reroll}
 IM-24,Salvage Yard,Immediate,,Booster,1,Reveal cards from your Mine until you find a Power or Ongoing card. Play it and shuffle the rest back
 IM-25,Scrap Heap,Immediate,,Booster,1,"+1 {heart} for each Immediate card in your discard pile, including this one"
 IM-26,Second Wind,Immediate,,Booster,1,+1 {heart} for each Monster you've survived this Dig
