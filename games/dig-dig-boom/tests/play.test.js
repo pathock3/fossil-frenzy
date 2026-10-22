@@ -516,7 +516,7 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     await page.click('#play [data-p=bank]');
     assert.match(await page.locator('#play .over').innerText(), /banked![\s\S]*4 Monsters survived · ♛/i);
     await page.click('#play [data-p=prep]');
-    assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'first the Leaderboard, full screen: a column for each number, with spots stacked in it'); assert.ok(await page.locator('#play .bigboard .bspot').count() >= 9, 'one row for each player'); assert.equal(await page.locator('#play .bdisc').count(), 1, 'your marker is on it, in the top spot'); assert.equal(await page.locator('#play .bigboard .bspot.top .bdisc').count(), 1);
+    assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'first the Leaderboard, full screen: a column for each number, with spots stacked in it'); assert.ok(await page.locator('#play .bigboard .bspot').count() >= 9, 'one row for each player'); assert.equal(await page.locator('#play .bdisc').count(), 0, 'your Dig is over, so its piece is gone: your chip (best) is in the top row'); assert.equal(await page.locator('#play .bigboard .pchip.me').count(), 1); assert.match(await page.locator('#play .bigboard .blabels').innerText(), /best[\s\S]*this round/i, 'the rows are labelled');
     await page.evaluate(() => { window.DigDigBoomPlay.S.run.dice = [8]; });
     await page.click('#play [data-p=boardgo]');
     assert.equal(await page.locator('#play .bigdie, #play [data-p=escape]').count(), 0, 'nothing to tap: the die rolls by itself');

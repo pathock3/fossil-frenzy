@@ -765,7 +765,24 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .bstack .bcol { display: flex; flex-direction: column; gap: 5px; }
 #play .bstack .bhead { height: 56px; border-radius: 10px; background: #ead9b7; border: 2px solid #8a6c3c; display: flex; align-items: center; justify-content: center; gap: 4px; font-family: Georgia, serif; font-weight: 700; font-size: 22px; color: #5a3d17; position: relative; }
 #play .bstack .bcol.free .bhead { background: #f0d68e; }
-#play .bstack .blabels .bhead { background: transparent; border: 0; }
+#play .bstack .blabels .bhead { background: transparent; border: 0; align-items: flex-end; justify-content: flex-start; padding: 6px 8px 0 0; text-align: right; }
+#play .bstack .blabels .bhead .blab { font: 900 20px/1 system-ui, -apple-system, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: #5a3d17; }
+#play .bstack .blabels .bhead small { font: 800 12px/1.1 system-ui, -apple-system, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: #7a5a2a; }
+#play .bstack .bband { height: 20px; position: relative; }
+#play .bstack .bband span { position: absolute; left: 0; top: 2px; z-index: 3; white-space: nowrap; font: 900 13px/16px system-ui, -apple-system, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #5a3d17; }
+#play .bstack .bband::after { content: ""; position: absolute; left: 0; right: 0; bottom: 3px; border-top: 2px dashed rgba(90,61,23,.45); }
+#play .bstack .blabels .bband::after { display: none; }
+/* a piece's Dig ends: a BOOM blows it up; a bank shows what it earned and floats away */
+.bfx { position: fixed; z-index: 60; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+.bfx.ghost { border-radius: 50%; animation: bghost .55s ease-in forwards; }
+@keyframes bghost { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(.2); } }
+.bfx.boom i { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: radial-gradient(circle, #fff 0, #ffd45e 45%, #ff6a1f 100%); opacity: 0; animation: bspark .6s ease-out forwards; }
+.bfx.boom .core { width: 70px; height: 70px; margin: -35px 0 0 -35px; animation: bcoreb .5s ease-out forwards; }
+@keyframes bspark { 0% { opacity: 1; transform: translate(0, 0) scale(1); } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(.3); } }
+@keyframes bcoreb { 0% { opacity: 1; transform: scale(.3); } 60% { opacity: 1; transform: scale(1.5); } 100% { opacity: 0; transform: scale(2); } }
+.bfx.gain { flex-direction: row; gap: 2px; padding: 4px 10px 4px 8px; border-radius: 99px; background: #fffaf0; border: 3px solid #1d1712; font: 900 22px/1 system-ui, -apple-system, sans-serif; color: #1d1712; animation: bgain 1.1s ease-out forwards; }
+.bfx.gain svg { width: 24px; height: 24px; }
+@keyframes bgain { 0% { opacity: 0; transform: translateY(6px) scale(.4); } 18% { opacity: 1; transform: translateY(-14px) scale(1.1); } 70% { opacity: 1; transform: translateY(-22px) scale(1); } 100% { opacity: 0; transform: translateY(-34px) scale(1); } }
 #play .bstack .bspot { height: 64px; border-radius: 10px; background: #ead9b7; border: 2px solid #8a6c3c; box-shadow: inset 0 3px 6px rgba(70,42,12,.45); display: flex; align-items: center; justify-content: center; }
 #play .bstack .bcol.free .bspot { background: #f0d68e; }
 #play .bstack .bspot.top { box-shadow: inset 0 3px 6px rgba(70,42,12,.45), 0 0 0 3px rgba(255,200,70,.55); }
@@ -2211,7 +2228,7 @@ const Run = (() => {
   function checkOver(run) {
     const st = run.dig; if (!st || !st.over || st.boardApplied || run.phase !== 'dig') return false;
     st.boardApplied = true;
-    if (st.over.kind === 'bank') { const lock = Board.lockIn(run.board, run.me, st.survived); run.endInfo = { stoleCrown: lock.tookLead, newBest: lock.newBest, rank: lock.rank }; Board.note(run.board, { r: run.round, id: run.me, k: 'bank', n: st.survived, gems: st.over.total, crown: lock.tookLead, newBest: lock.newBest }); }
+    if (st.over.kind === 'bank') { const lock = Board.lockIn(run.board, run.me, st.survived); run.endInfo = { stoleCrown: lock.tookLead, newBest: lock.newBest, rank: lock.rank }; Board.note(run.board, { r: run.round, id: run.me, k: 'bank', n: st.survived, gems: st.over.total, crown: lock.tookLead, newBest: lock.newBest, final: !!(st.board && st.board.final) }); }
     else { Board.clearPledge(run.board, run.me); run.endInfo = { stoleCrown: false, newBest: false, rank: null }; Board.note(run.board, { r: run.round, id: run.me, k: 'boom', n: st.survived }); }
     sync(run); return true;
   }
@@ -3157,18 +3174,18 @@ const AI = (() => {
     const bestN = p => rs ? rs.best[p.id] : rawBest(p);
     const tr = rs ? Math.max(bd.crownStart, ...players.map(p => rs.best[p.id])) : Board.tracker(bd);
     const holder = rs ? rs.holder : Board.holder(bd);
-    const live = rs ? players.map(p => { const n = rs.pos[p.id] !== undefined ? rs.pos[p.id] : rs.best[p.id]; return { p, m: { n, rank: rs.at[n].indexOf(p.id) + 1 }, going: rs.pos[p.id] !== undefined }; })
-      : players.map(p => ({ p, m: Board.marker(bd, p.id, 'pledge') || Board.marker(bd, p.id, 'best') })).filter(x => x.m);
+    const live = rs ? players.filter(p => !rs.done.has(p.id)).map(p => { const n = rs.pos[p.id] || 0; return { p, m: { n, rank: rs.at[n].indexOf(p.id) + 1 }, going: true }; })
+      : [];          // (a round that is over has no second markers: each Dig ended, and with it the piece)
     const max = Math.max(8, tr + 2, ...players.map(p => bestN(p) + 1), ...live.map(x => x.m.n + 1));
     const crownCol = bd.crownStart + 1;
     const ord = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
     const rankOf = p => { const m = Board.marker(bd, p.id, 'best'); return m ? m.rank : 0; };
     const stackOrder = players.slice().reverse().sort((a, b) => rankOf(b) - rankOf(a));          // in a stack the better spot lies on top (before anyone has banked, you do)
-    const labels = `<div class="bcol blabels"><div class="bhead"></div>${Array.from({ length: rows }, (_, i) => `<div class="bspot lab">${ord[i] || i + 1 + 'th'}</div>`).join('')}</div>`;
+    const labels = `<div class="bcol blabels"><div class="bhead"><b class="blab">Best</b><small>locked in</small></div><div class="bband"><span>This round · not banked</span></div>${Array.from({ length: rows }, (_, i) => `<div class="bspot lab">${ord[i] || i + 1 + 'th'}</div>`).join('')}</div>`;
     const cols = Array.from({ length: max + 1 }, (_, n) => {
       const chips = stackOrder.filter(p => bestN(p) === n).map((p, k) => `<i class="pchip ${p.id === run.me ? 'me' : ''}" data-pid="${p.id}" style="--pc:${p.color};--k:${k}" title="${A.esc(p.name)}: best ${n}">${p.id === run.me ? '<b>You</b>' : ''}</i>`).join('');
       const here = live.filter(x => x.m.n === n).sort((x, y) => x.m.rank - y.m.rank);
-      return `<div class="bcol ${n <= tr ? 'free' : ''}"><div class="bhead"><span class="bn">${n}${!holder && n === crownCol ? '<span class="bcrown" aria-label="Crown Jewel">♛</span>' : ''}</span><span class="bchips">${chips}</span></div>${Array.from({ length: rows }, (_, i) => {
+      return `<div class="bcol ${n <= tr ? 'free' : ''}"><div class="bhead"><span class="bn">${n}${!holder && n === crownCol ? '<span class="bcrown" aria-label="Crown Jewel">♛</span>' : ''}</span><span class="bchips">${chips}</span></div><div class="bband"></div>${Array.from({ length: rows }, (_, i) => {
         const x = here[i];
         return `<div class="bspot ${i === 0 ? 'top' : ''}">${x ? `<i class="bdisc" data-pid="${x.p.id}" style="--pc:${x.p.color}" title="${A.esc(x.p.name)}${(rs ? x.going : Board.marker(bd, x.p.id, 'pledge')) ? ': this Dig' : ''}"></i>` : ''}</div>`;
       }).join('')}</div>`;
@@ -3177,26 +3194,23 @@ const AI = (() => {
     return `<div class="bbwrap bstack"><div class="bgrid" style="grid-template-columns:70px repeat(${max + 1},minmax(0,1fr))">${labels}${cols}</div></div><div class="bplayers">${names}</div>`;
   }
   // The round, played back: every move of every marker in the order it happened, quickly, until someone's Dig ends (a bank or a BOOM); then it waits for a tap and says what happened.
-  const boardEvents = run => (run.board.log || []).filter(e => e.r === run.round - 1);
+  const boardEvents = run => (run.board.log || []).filter(e => e.r === (run.phase === 'done' ? run.round : run.round - 1));
   function replayState(run, an) {
-    const bd = run.board, ps = bd.players, best = Object.fromEntries(ps.map(p => [p.id, an.from[p.id] || 0])), pos = {}, at = {}, banked = new Set();
+    const bd = run.board, ps = bd.players, best = Object.fromEntries(ps.map(p => [p.id, an.from[p.id] || 0])), pos = {}, at = { 0: ps.map(p => p.id) }, done = new Set(), banked = new Set();
     const put = (id, n) => { for (const k of Object.keys(at)) at[k] = at[k].filter(x => x !== id); (at[n] || (at[n] = [])).push(id); };
-    const rk = p => { const m = Board.marker(bd, p.id, 'best'); return m ? m.rank : 99; };
-    ps.slice().sort((a, b) => rk(a) - rk(b)).forEach(p => put(p.id, best[p.id]));
     let top = bd.crownStart, holder = null; for (const p of ps) if (best[p.id] > top) { top = best[p.id]; holder = p.id; }          // who held the Crown before the round
     for (const e of an.events.slice(0, an.k)) {
       if (e.k === 'move') { pos[e.id] = e.n; put(e.id, e.n); continue; }
-      delete pos[e.id];
+      done.add(e.id); at[pos[e.id] || 0] = (at[pos[e.id] || 0] || []).filter(x => x !== e.id);
       if (e.k === 'bank') { if (e.n > best[e.id]) best[e.id] = e.n; if (e.crown) holder = e.id; banked.add(e.id); }
-      put(e.id, best[e.id]);
     }
-    for (const p of ps) if (!at[best[p.id]]) put(p.id, best[p.id]);
-    return { best, pos, at, holder, banked };
+    return { best, pos, at, holder, banked, done };
   }
   function boardText(run, e, from) {
     const you = e.id === run.me, nm = you ? 'You' : run.board.players.find(p => p.id === e.id).name;
     if (e.k === 'move') return `${nm} ${you ? 'reach' : 'reaches'} ${e.n}.`;
     if (e.k === 'boom') return `${nm} went BOOM${e.n ? ` at ${e.n}` : ''}.`;
+    if (e.final) return `${nm} ${you ? 'finish' : 'finishes'} in the lead at ${e.n}.`;
     const g = e.gems || 0; let t = `${nm} banked at ${e.n} with ${g} gem${g === 1 ? '' : 's'}`;
     if (e.crown) t += ' and took the Crown Jewel';
     return t + (you && e.newBest ? '. New Best!' : '.');
@@ -3205,8 +3219,16 @@ const AI = (() => {
   const boardRects = () => Object.fromEntries([...$.querySelectorAll('.bgrid .bdisc[data-pid], .bgrid .pchip[data-pid]')].map(el => [el.className.split(' ')[0] + el.dataset.pid, el.getBoundingClientRect()]));
   function boardAnimate() {
     const an = S.boardAnim; if (!an || !an.rects || S.panel !== 'board') return;
-    const old = an.rects; an.rects = null;
+    const old = an.rects, fx = an.fx; an.rects = null; an.fx = null;
     if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const o0 = fx && old['bdisc' + fx.id];
+    if (o0) {          // the piece whose Dig just ended: it fades where it stood, with a little BOOM or what it earned
+      const mk = (cls, html) => { const d = document.createElement('div'); d.className = 'bfx ' + cls; d.style.cssText = `left:${o0.left}px;top:${o0.top}px;width:${o0.width}px;height:${o0.height}px`; d.innerHTML = html; document.body.appendChild(d); setTimeout(() => d.remove(), 1300); return d; };
+      const pl = S.run.board.players.find(p => p.id === fx.id);
+      { const g = mk('ghost', ''), c = pl ? pl.color : '#888'; g.style.background = `radial-gradient(circle at 34% 28%, color-mix(in srgb, ${c} 55%, #fff), ${c} 58%, color-mix(in srgb, ${c} 55%, #000))`; g.style.border = `2px solid color-mix(in srgb, ${c} 60%, #000)`; }
+      if (fx.k === 'boom') mk('boom', `<i class="core"></i>${Array.from({ length: 12 }, (_, i) => { const a = i / 12 * 6.283, d = 34 + (i % 3) * 14; return `<i style="--dx:${Math.round(Math.cos(a) * d)}px;--dy:${Math.round(Math.sin(a) * d)}px"></i>`; }).join('')}`);
+      else if (!fx.final) mk('gain', `${fx.gems || 0}${ic('gem')}`);
+    }
     for (const el of $.querySelectorAll('.bgrid .bdisc[data-pid], .bgrid .pchip[data-pid]')) {
       const o = old[el.className.split(' ')[0] + el.dataset.pid]; if (!o) continue;
       const r = el.getBoundingClientRect(), dx = o.left - r.left, dy = o.top - r.top;
@@ -3216,7 +3238,7 @@ const AI = (() => {
   const REPLAY_MS = () => window.DDB_BOARD_PACE !== undefined ? window.DDB_BOARD_PACE : 380;
   function boardNext() {          // the next event
     const an = S.boardAnim; if (!an || an.k >= an.events.length) return;
-    an.rects = boardRects(); an.k++; an.stop = an.events[an.k - 1].k !== 'move'; render();
+    an.rects = boardRects(); an.k++; an.stop = an.events[an.k - 1].k !== 'move'; an.fx = an.stop ? an.events[an.k - 1] : null; render();
     if (!an.stop && an.k < an.events.length) boardPlay();
   }
   function boardPlay(first) {
@@ -3228,7 +3250,7 @@ const AI = (() => {
     clearTimeout(an.timer); an.timer = null;
     if (an.stop) { an.stop = false; boardNext(); return; }
     an.rects = boardRects(); while (an.k < an.events.length && an.events[an.k].k === 'move') an.k++;
-    if (an.k < an.events.length) an.k++; an.stop = true; render();
+    if (an.k < an.events.length) an.k++; an.stop = true; an.fx = an.events[an.k - 1] || null; render();
   }
   function boardHTML() {
     const run = S.run, final = run.phase === 'done', an = S.boardAnim, more = !!an && an.k < an.events.length;
@@ -3665,7 +3687,7 @@ const AI = (() => {
       }
       case 'startround': startRound(); break;
       case 'ff': S.ff = true; stopClocks(); break;
-      case 'prep': if (S.match) Match.finishRound(S.match); else Run.finishDig(S.run); S.panel = S.run.phase === 'done' ? 'done' : 'board'; S.tally = null; if (S.bests0 && S.match) { const now = bestsNow(); S.boardAnim = { from: S.bests0, newBest: now[S.run.me] > (S.bests0[S.run.me] || 0), events: boardEvents(S.run), k: 0, stop: false, timer: null, rects: null }; if (S.panel === 'board') boardPlay(true); } break;          // a round: first a look at where everyone stands; the last round: straight to the end, which is the Leaderboard          // first, a look at where everyone stands
+      case 'prep': if (S.match) Match.finishRound(S.match); else Run.finishDig(S.run); S.panel = S.run.phase === 'done' && !(S.bests0 && S.match) ? 'done' : 'board'; S.tally = null; if (S.bests0 && S.match) { const now = bestsNow(); S.boardAnim = { from: S.bests0, newBest: now[S.run.me] > (S.bests0[S.run.me] || 0), events: boardEvents(S.run), k: 0, stop: false, timer: null, rects: null, fx: null }; boardPlay(true); } break;          // a round: first a look at where everyone stands; the last round: straight to the end, which is the Leaderboard          // first, a look at where everyone stands
       case 'boardgo': if (S.boardAnim) { clearTimeout(S.boardAnim.timer); S.boardAnim.timer = null; S.boardAnim.k = S.boardAnim.events.length; } S.panel = S.run.phase === 'done' ? 'done' : 'prep'; break;
             case 'tab': S.tab = ds.v; break;
       case 'kit': { const c = cards().find(x => x.id === ds.id); if (!c || !Dig.supported(c)) break; const i = S.kit.indexOf(c.id); if (i >= 0) S.kit.splice(i, 1); else if (S.kit.length < S.kitSize) S.kit.push(c.id); break; }
