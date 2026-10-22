@@ -707,6 +707,16 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .eq .t.sum { min-width: 118px; }
 #play .krow { display: flex; align-items: center; justify-content: center; gap: 30px; }
 #play .kdef { margin: 0; max-width: 240px; font-size: 22px; font-weight: 800; line-height: 1.25; color: var(--text); }
+
+/* The Bank is a button, not a place for cards: a raised gold key at the right edge, bottom-aligned, that presses down */
+#play .piles { width: auto; height: auto; align-self: flex-end; margin-left: 0; flex: none; }
+#play .pile.bankp, #play .pile.bankp.live { flex: none; width: 210px; height: auto; min-height: 96px; padding: 10px 24px; flex-direction: row; gap: 14px; border-radius: 24px; border: 3px solid #fff0b8; color: #2a1700; font-size: 34px; font-weight: 900; letter-spacing: .02em; background: linear-gradient(180deg, #ffd45e, #e8920f); box-shadow: 0 8px 0 #8a4f06, 0 16px 24px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.55); overflow: visible; transition: transform .08s, box-shadow .08s; }
+#play .pile.bankp .gemline { display: inline-flex; align-items: center; gap: 6px; font-size: 34px; color: inherit; }
+#play .pile.bankp .gemline svg { width: 36px; height: 36px; }
+#play .pile.bankp > span:last-child { text-transform: uppercase; }
+#play .pile.bankp:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 3px 0 #8a4f06, 0 6px 12px rgba(0,0,0,.4), inset 0 2px 0 rgba(255,255,255,.4); }
+#play .pile.bankp.live { animation: none; }
+#play .pile.bankp:disabled, #play .pile.bankp.live:disabled { opacity: 1; filter: none; color: #cdbb8e; border-color: #8f7a4c; background: linear-gradient(180deg, #6f5d3a, #4d3f26); box-shadow: 0 5px 0 #2a2012, 0 10px 16px rgba(0,0,0,.35); }
 </style>
 </head>
 <body>
@@ -1125,7 +1135,7 @@ const Dig = (() => {
   const copy = card => ({ ...card, uid: uid++ });
   const copies = card => Array.from({ length: card.count || 1 }, () => copy(card));
   // allCards: every card of the sheet. kit: Booster cards chosen for the Starter Kit. opts: { seed, start, dice }
-  // opts: { seed, dice, start, extra: cards shuffled into the Mine (your acquired cards), board: { crown, final } for a run }
+  // opts: { seed, dice, start, extra: cards shuffled into the Mine (your acquired cards), gems: empty Kit places (Geodes face up on top), board: { crown, final } for a run }
   function start(allCards, kit = [], opts = {}) {
     const seed = opts.seed === undefined || opts.seed === null ? null : opts.seed >>> 0;                  // no seed: the secure random source
     const st = { seed, rng: makeRng(seed), dice: opts.dice ? opts.dice.slice() : null, log: [], over: null, fight: null, pending: null, flags: {}, known: 0,
@@ -1141,10 +1151,14 @@ const Dig = (() => {
     const kitTop = [];
     for (const c of kit) { const k = copy(c); k.fromKit = true; st.kit.push(k); kitTop.push(k); }
     st.mine = shuffle(st, [...mine, ...(opts.extra || []).map(copy)]);                // everything else you own is shuffled into the Mine with the Starting cards
-    st.mine.unshift(...kitTop); st.known = kitTop.length;                              // the Starter Kit goes on top, face up, in the order you chose
+    // Kit places you left empty are gems: Geode cards, face up on top of the Mine right after your Kit cards (you dig them first)
+    const gemBase = starting.find(c => c.type === 'Treasure'), gemCards = gemBase ? Array.from({ length: opts.gems || 0 }, () => { const g = copy(gemBase); g.fromKit = true; g.kitGem = true; return g; }) : [];
+    if (!gemBase && opts.gems) st.geodeGems += opts.gems;
+    st.mine.unshift(...kitTop, ...gemCards); st.known = kitTop.length + gemCards.length;   // the Starter Kit goes on top, face up, in the order you chose
     refreshPet(st);
     log(st, 'sys', `New Dig${seed === null ? "" : ` (seed ${seed})`}. Mine: ${st.mine.length} cards. ${st.pet ? st.pet.name + ' is on the line.' : ''}${st.ongoing.length ? ' ' + st.ongoing.map(o => o.name).join(', ') + ' is in play.' : ''}`);
     if (st.kit.length) log(st, 'sys', `Starter Kit: ${st.kit.map(k => k.name).join(', ')}.`);
+    if (gemCards.length) log(st, 'sys', `${gemCards.length} {gem} face up on top of your Mine.`);
     return st;
   }
   function log(st, kind, text, extra) { st.log.push({ kind, text, ...(extra || {}) }); }
@@ -1811,10 +1825,8 @@ const Run = (() => {
     const pr = run.prep; if (!pr || pr.step !== 'kit') return false;
     run.kit = pr.kitPick.map(id => run.owned.find(c => c.uid === id)).filter(Boolean);       // in the order you chose
     const rest = run.owned.filter(c => !pr.kitPick.includes(c.uid));
-    run.dig = Dig.start(run.all, run.kit, { seed: opts.seed !== undefined ? opts.seed : run.seed === null ? undefined : (run.rng() * 4294967296) >>> 0, dice: opts.dice, extra: rest,
+    run.dig = Dig.start(run.all, run.kit, { seed: opts.seed !== undefined ? opts.seed : run.seed === null ? undefined : (run.rng() * 4294967296) >>> 0, dice: opts.dice, extra: rest, gems: Math.max(0, pr.kitMax - run.kit.length) * RN.startGems,          // places you did not fill with a card are gems, face up on top
       board: { crown: Board.tracker(run.board), final: run.round === run.rounds, leadN: Board.leadN(run.board, run.me) } });
-    const empty = pr.kitMax - run.kit.length;                          // places you did not fill with a card are filled with gems
-    if (empty > 0) { run.dig.geodeGems += empty * RN.startGems; run.dig.log.push({ kind: 'sys', text: `You start with ${empty * RN.startGems} {gem}.` }); }
     run.phase = 'dig'; run.prep = null;
     log(run, `Round ${run.round}${run.round === run.rounds ? ' (the final round: a race, nobody banks; whoever is in the lead may wait)' : ''}. Kit: ${run.kit.map(c => c.name).join(', ') || 'none'}.`);
     return true;
@@ -2714,7 +2726,7 @@ const Match = (() => {
     // the Mine: a deck of cards, the same size as the cards you dig. Cards you can see coming are on top, face up.
     const deck = `<div class="stack"><button class="deck ${live ? 'live' : ''}" data-p="dig" ${live ? '' : 'disabled'} aria-label="Mine, ${st.mine.length} cards">${st.mine.length ? `<span class="cw" style="--s:var(--ca)"><span class="cs">${up ? A.playCard(up, 1) : '<span class="cardback"></span>'}</span></span>` : '<span class="cw" style="--s:var(--ca)"><span class="cs"><span class="cardback none"></span></span></span>'}<span class="cnt">${st.mine.length}</span></button></div>`;
     // There is no separate discard pile: the cards you flip land in one spot beside the Mine, and the ones before it are stacked underneath. (Monsters move on to the Monster pile above.)
-    const piles = `<div class="piles"><button class="pile bankp ${bankLive ? 'live' : ''}" data-p="bank" ${bankLive ? '' : 'disabled'}><span class="gpile" aria-hidden="true">${Array.from({ length: Math.min(gems, 24) }, (_, i) => `<i style="left:${8 + (i % 7) * 19 + (Math.floor(i / 7) % 2) * 9}px;bottom:${Math.floor(i / 7) * 13 + (i * 5) % 4}px">${A.gemSvg(D.gems[i % D.gems.length], '24px')}</i>`).join('')}</span><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span><span>Bank</span></button></div>`;
+    const piles = `<div class="piles"><button class="pile bankp ${bankLive ? 'live' : ''}" data-p="bank" ${bankLive ? '' : 'disabled'}><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span><span>Bank</span></button></div>`;
     const dug = `<div class="dugz"><div class="slot ${st.discard.length ? 'stacked' : ''}">${dugHTML(st)}</div></div>`;
     const action = `<div class="dicez">${diceHTML(st, can)}</div>`;
     const s = st.over ? Dig.score(st) : null;
@@ -2733,7 +2745,7 @@ const Match = (() => {
       : `<div class="over ${ovFx}">${ovFx ? confettiHTML(16) : ''}<h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + (st.best && st.over.kind === 'bank' ? `<div class="note">Best so far: ${st.best.now.survived} Monsters survived${st.best.newSurvived ? ' (new!)' : ''} · ${st.best.now.gems} gems banked${st.best.newGems ? ' (new!)' : ''}</div>` : '') + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>`;
     }
     S.fx = fxOf(st);
-    return `${drillHTML(st, can)}${tableauHTML(st, freshUid)}<div class="mat">${deck}${dug}${piles}${action}${over}</div>`;
+    return `${drillHTML(st, can)}${tableauHTML(st, freshUid)}<div class="mat">${deck}${dug}${action}${piles}${over}</div>`;
   }
   // The in-game menu: quiet, small. Your game is saved after every tap, so "Main menu" leaves nothing to lose; there you can Continue it or start a new one.
   function gmenuHTML() {

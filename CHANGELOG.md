@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — Starter Kit gems and the Bank:** a Starter Kit place you leave empty is now a real gem card (a Geode), face up on top of your Mine right after your Kit cards — you dig it first, and it counts when you do (it is no longer put in the Bank at the start). The **Bank is a button**, not a card-shaped place: a raised gold key at the bottom right that shows your gems and presses down when tapped (greyed while you cannot bank).
+
 - **Dig Dig BOOM! — end of a Dig:** "Fast forward" now says what it does ("Your opponent is still digging" / "Fast-forward the AI"). Before the gems are added up, a full-screen **Leaderboard** shows where everyone stands (the Crown and one row per player, markers dropping in); "Add up your gems" continues. The Escape Bonus die now **rolls by itself** once the tally has shown Treasure and Monsters. In the sum, every piece (Treasure, Monsters, die, total) has its place from the start, so nothing moves when the next one appears.
 - **Dig Dig BOOM! — pack and Starter Kit are one interface:** your places on top (Keep N / your Starter Kit), your cards below; tap a card to move it up, tap it again to put it back, or drag it — onto a place to put it there or swap, off the places to take it out. The Starter Kit's definition ("These will be the first cards you draw.") sits beside the places instead of under them. The cards you did not keep fly off the screen (no visible discard pile). No "then <names>" line under the Mine, and the Health/Reroll spaces are no longer greyed out: they are just spaces and the discs show where you are.
 - **Fix:** a test that stopped the preview from rebuilding (it read the wrong card during the new draw animation) is fixed; that is why the newest changes had not shown up.

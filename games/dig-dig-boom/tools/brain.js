@@ -146,8 +146,7 @@ function makeBrain(over = {}) {
   function evalDeck(run, ctx, kit, rest, n, seed0, kitMax) {
     let sum = 0; const empty = kitMax - kit.length;
     for (let j = 0; j < n; j++) {
-      const st = Dig.start(run.all, kit, { seed: seed0 + j * 104729, extra: rest, board: { crown: ctx.crown, final: ctx.final, leadN: ctx.leadN } });
-      st.geodeGems += empty * RN.startGems;
+      const st = Dig.start(run.all, kit, { seed: seed0 + j * 104729, extra: rest, gems: empty * RN.startGems, board: { crown: ctx.crown, final: ctx.final, leadN: ctx.leadN } });
       for (let i = 0; i < 500 && !st.over; i++) { if (st.digs > P.digCap) { st.over = { kind: 'boom' }; break; } if (!baseAct(st, ctx, ctx.T)) break; }
       sum += valueOf(st, ctx);
     }
