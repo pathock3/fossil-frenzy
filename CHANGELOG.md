@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — rules:** the **Lucky Coin is out of the game** and the **Pet triggers on a roll of 9 or more** (both are rulings in the data block — `DDB.rules.removedCards` and `DDB.rules.pet` — so they hold even while the sheet still lists the Lucky Coin and prints a 10 on the Pet).
+
 - **Dig Dig BOOM! — cards that depend on the game:** tap a card like Duct Tape, Scrap Heap, Second Wind, Depth Gauge or Flywheel and it says what it is worth **right now** ("Right now: +3 ♥").
 
 - **Dig Dig BOOM! — the end of a run:** the Leaderboard *is* the result: a big "You win!" (or "The AI wins") over the board, with the Crown Jewel on the winner's token. Buttons below: **Round by round** (what each of you did every round: banked or BOOM, gems, who took the Crown), **Your cards** (the cards you built), **New run**; from any of them you can go back to the Leaderboard. (The little table is gone, and so is the second "you won" screen.)

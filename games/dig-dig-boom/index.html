@@ -907,7 +907,8 @@ const DDB = {
     caps: { heart: 10, reroll: 3 },                      // Drill tracks: Health 0-10, Rerolls 0-3 (owner; Grit is cut)
     start: { heart: 10, reroll: 0 },                     // each track's reset space at the start of a round (owner)
     rerollCost: 1,
-    pet: { at: 10 },                                     // the Pet (the Starting Power card) sits on the Power line at 10
+    pet: { at: 9 },                                      // the Pet (the Starting Power card) sits on the Power line at 9 (owner): it triggers on a roll of 9 or more, whatever number the sheet still prints
+    removedCards: ['ON-38'],                             // cards the owner has taken out of the game (Lucky Coin): they are left out wherever the sheet is read, whether or not the sheet still lists them
     line: { min: 1, max: 10 },
     startingDeck: 'Starting',                            // the Deck column value for the Mine's cards and the Pet
     survivedGems: 1, geodeGems: 1,
@@ -1093,12 +1094,13 @@ const Engine = (() => {
     return rows.slice(1).map(r => Object.fromEntries(head.map((h, i) => [h, (r[i] === undefined ? '' : r[i]).replace(/\u0001/g, ',')])));
   }
   function cards(rows, cols) {
-    return table(rows).filter(r => r[cols.id] && r[cols.name]).map(r => ({
+    const RU = DDB.rules;          // the owner's rulings come first: removed cards are not read at all, and the Pet's number is the rules' number
+    return table(rows).filter(r => r[cols.id] && r[cols.name] && !RU.removedCards.includes(r[cols.id].trim())).map(r => ({
       id: r[cols.id].trim(), name: r[cols.name].trim(), type: r[cols.type].trim(),
       number: r[cols.number] === '' || r[cols.number] === undefined ? null : Number(r[cols.number]),
       deck: r[cols.deck].trim(), count: Number(r[cols.count]) || 1, text: r[cols.text].trim(),
       trigger: (r[cols.trigger] || '').trim(), note: (r[cols.notes] || '').trim(), raw: r,
-    }));
+    })).map(c => (c.deck === RU.startingDeck && c.type === 'Power' ? { ...c, number: RU.pet.at } : c));
   }
   // "+1 {reroll}. When dug, +1 {heart}" -> [{t:'text',v:'+1 '},{t:'icon',v:'reroll'},...]
   function tokens(text, iconCodes) {

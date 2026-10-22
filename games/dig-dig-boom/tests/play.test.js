@@ -142,7 +142,7 @@ test('practice: the Starter Kit chooser lists only cards the game can play; pick
     assert.match(await page.locator('#play .foot .note').innerText(), /2 of 3 chosen/);
     await page.click('#play [data-p=go]'); await page.waitForSelector('#play .ptable');
     assert.equal(await page.locator('#play .tcard:not(.inplay)').count(), 1, 'only the Pet is in play at the start');
-    assert.equal(await page.locator('#play .tcard.inplay').count(), 1, 'the Lucky Coin is in play from the start');
+    assert.equal(await page.locator('#play .tcard.inplay').count(), 0, 'nothing but the Pet is in play at the start: the Lucky Coin is out of the game');
     assert.match(await page.locator('#play .deck .cnt').innerText(), /^27$/, 'the 25 plus the 2 kit cards');
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.known), 2, 'the kit is on top of the Mine, face up'); assert.equal(await page.locator('#play .deck .card').count(), 1, 'the top card of the Mine is shown face up on the deck');
     assert.equal(await page.locator('#logEntries').count(), 0, 'there is no "What happened" panel');
@@ -950,7 +950,7 @@ test('tapping a card whose power depends on the game says what it is worth right
     await begin(page, { mine: ['IM-05', 'TR-01'], ongoing: ['ON-33'], start: { heart: 4 } });                  // Duct Tape: +1 Health for each Ongoing card you have
     await page.click('#play [data-p=dig]'); await page.waitForTimeout(600);
     await page.click('#play .slot [data-p=zoom]');
-    assert.match(await page.locator('#play .zoom .zdyn').innerText(), /Right now:\s*\+2/, 'Lucky Coin and Tune-Up are in play: +2');
+    assert.match(await page.locator('#play .zoom .zdyn').innerText(), /Right now:\s*\+1/, 'Tune-Up is the one Ongoing card in play: +1');
     assert.doesNotMatch(await page.locator('#play .zoom').innerText(), /tap anywhere/i);
     await page.click('#play .zoom');
     assert.deepEqual(errors, []);

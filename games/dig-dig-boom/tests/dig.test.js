@@ -29,7 +29,7 @@ function fight(st) { assert.ok(Dig.dig(st)); assert.ok(Dig.roll(st)); if (st.fig
 const UNSUPPORTED = ["PW-04", "PW-06", "PW-08", "PW-10", "PW-11", "PW-13", "PW-18", "PW-23", "PW-25", "PW-26", "PW-29", "PW-30", "ON-01", "ON-07", "ON-10", "ON-13", "ON-16", "ON-18", "ON-24", "ON-25", "ON-26", "ON-28", "ON-30", "ON-32", "ON-36", "IM-02", "IM-09", "IM-10", "IM-12", "IM-15", "IM-18", "IM-19", "IM-27", "IM-29", "IM-31", "IM-34"];
 test('the rules are data: nothing the engine needs is missing from DDB.rules; every card text is understood except the Grit cards and the two player-chosen moves, which are cut', () => {
   for (const k of ['die', 'caps', 'start', 'pet', 'beyond', 'rulings']) assert.ok(DDB.rules[k] !== undefined, k);
-  assert.equal(cards.length, 107);
+  assert.equal(cards.length, 106, 'the sheet\'s 107 cards, less the Lucky Coin (taken out of the game)');
   const bad = cards.filter(c => !Dig.supported(c)).map(c => c.id);
   assert.deepEqual(bad.slice().sort(), UNSUPPORTED.slice().sort(), 'exactly these cards are unsupported — everything else is understood');
   assert.equal(bad.length, 36);
@@ -37,13 +37,13 @@ test('the rules are data: nothing the engine needs is missing from DDB.rules; ev
   assert.ok(cards.filter(c => c.deck === 'Booster' && Dig.supported(c)).length > 60, 'the Booster Deck is the supported cards only');
 });
 
-test('a new Dig: Mine of 25 (18 Geodes, 7 Monsters), the Pet on the line at 10, Health and Rerolls at their starting spaces', () => {
+test('a new Dig: Mine of 25 (18 Geodes, 7 Monsters), the Pet on the line at 9, Health and Rerolls at their starting spaces', () => {
   const st = Dig.start(cards, [], { seed: 5 });
   assert.equal(st.mine.length, 25);
   assert.equal(st.mine.filter(c => c.type === 'Treasure').length, 18);
   assert.equal(st.mine.filter(c => c.type === 'Monster').length, 7);
   assert.deepEqual(st.mine.map(c => c.id).filter(i => i === 'MO-01').length, 4);
-  assert.equal(st.line.length, 1); assert.equal(st.line[0].card.name, 'Drill Pup'); assert.equal(st.line[0].at, 10); assert.ok(st.line[0].pet);
+  assert.equal(st.line.length, 1); assert.equal(st.line[0].card.name, 'Drill Pup'); assert.equal(st.line[0].at, 9, 'the Pet triggers on a 9 or more'); assert.ok(st.line[0].pet);
   assert.deepEqual([st.heart, st.reroll], [DDB.rules.start.heart, DDB.rules.start.reroll]);
   assert.deepEqual(Dig.start(cards, [], { seed: 5 }).mine.map(c => c.id), st.mine.map(c => c.id), 'same seed, same Mine');
   assert.notDeepEqual(Dig.start(cards, [], { seed: 6 }).mine.map(c => c.id), st.mine.map(c => c.id));
@@ -68,12 +68,12 @@ test('the Drill by the rules: a d10, Health 0-10 starting at 10, Rerolls 0-3 sta
 
 test('Starter Kit: every kit card goes on top of the Mine, face up, in the order chosen; nothing else is in play at the start', () => {
   const st = Dig.start(cards, ['PW-02', 'ON-33', 'IM-13'].map(by), { seed: 1 });
-  assert.equal(st.line.length, 1, 'only the Pet'); assert.deepEqual(st.ongoing.map(c => c.id), ['ON-38'], 'and the Lucky Coin: both starting cards are in play, outside the kit'); assert.equal(st.mine.length, 28);
+  assert.equal(st.line.length, 1, 'only the Pet'); assert.deepEqual(st.ongoing.map(c => c.id), [], 'and no Ongoing card: the Lucky Coin is out of the game'); assert.equal(st.mine.length, 28);
   assert.deepEqual(st.mine.slice(0, 3).map(c => c.id), ['PW-02', 'ON-33', 'IM-13']); assert.equal(st.known, 3);
   const two = Dig.start(cards, ['IM-13', 'IM-11'].map(by), { seed: 1, start: { heart: 2 } }); Dig.dig(two); Dig.dig(two);
   assert.deepEqual([two.heart, two.reroll], [6, 2], 'both kit Immediates were the first two cards you dug');
   const three = Dig.start(cards, ['PW-02', 'ON-33'].map(by), { seed: 1 }); Dig.dig(three); Dig.dig(three);
-  assert.equal(three.line.length, 2); assert.equal(three.ongoing.length, 2, 'digging the kit puts the cards in play (the Lucky Coin was already there)');
+  assert.equal(three.line.length, 2); assert.equal(three.ongoing.length, 1, 'digging the kit puts the cards in play');
   const rev = Dig.start(cards, ['ON-33', 'PW-02'].map(by), { seed: 1 }); assert.deepEqual(rev.mine.slice(0, 2).map(c => c.id), ['ON-33', 'PW-02'], 'the order you chose');
 });
 
@@ -291,7 +291,7 @@ test('Immediate cards can BOOM you (Risky Shortcut at 2 Health); All In sets Hea
 
 test('count-based Immediates: Duct Tape (Ongoing cards), Scrap Heap (Immediates in discard, including itself), Second Wind and Repair Kit', () => {
   const st = game({ mine: ['IM-05'], ongoing: ['ON-33', 'ON-14'], start: { heart: 2 } });
-  Dig.dig(st); assert.equal(st.heart, 5, '+1 for each of 3 Ongoing cards (the Lucky Coin counts)');
+  Dig.dig(st); assert.equal(st.heart, 4, '+1 for each of 2 Ongoing cards');
   const s2 = game({ mine: ['IM-13', 'IM-25'], start: { heart: 1 } }); Dig.dig(s2); Dig.dig(s2); assert.equal(s2.heart, 5 + 2, 'Med Kit +4, then 2 Immediates (itself included) = +2');
   const s3 = game({ mine: ['MO-01', 'IM-26', 'IM-20'], start: { heart: 6 }, dice: [6] });
   fight(s3); Dig.dig(s3); assert.equal(s3.heart, 5 + 1); Dig.dig(s3); assert.equal(s3.reroll, 0, 'nothing defeated');
@@ -320,7 +320,7 @@ test('Stink Bomb, Crystal Ball, Fuzzy Radar, Rewind Tape, Wishing Well; Look, Sh
   const sb = game({ mine: ['IM-30', 'MO-01', 'TR-01', 'MO-02', 'TR-01'] }); Dig.dig(sb);
   assert.deepEqual(sb.mine.map(c => c.id), ['TR-01', 'TR-01', 'MO-01', 'MO-02']);
   const cb = game({ mine: ['IM-04', 'TR-01', 'PW-02', 'ON-33', 'MO-01'] }); Dig.dig(cb);
-  assert.equal(cb.ongoing.length, 2); assert.equal(cb.line.length, 2); assert.deepEqual(cb.mine.map(c => c.id), ['TR-01', 'MO-01']);
+  assert.equal(cb.ongoing.length, 1); assert.equal(cb.line.length, 2); assert.deepEqual(cb.mine.map(c => c.id), ['TR-01', 'MO-01']);
   const fr = game({ mine: ['IM-08', 'MO-01', 'MO-02', 'TR-01', 'TR-01', 'TR-01', 'TR-01'], start: { heart: 6 } }); Dig.dig(fr); assert.equal(fr.heart, 10); assert.equal(fr.mine.length, 6);
   const rw = game({ mine: ['IM-13', 'IM-22', 'TR-01'], start: { heart: 1 } }); Dig.dig(rw); Dig.dig(rw); assert.equal(rw.mine[0].id, 'IM-13'); Dig.dig(rw); assert.equal(rw.heart, 9);
   const wl = game({ mine: ['IM-13', 'IM-11', 'IM-32'] }); Dig.dig(wl); Dig.dig(wl); Dig.dig(wl); assert.equal(wl.mine.length, 2); assert.equal(wl.discard.length, 1);
@@ -334,7 +334,7 @@ test('Stink Bomb, Crystal Ball, Fuzzy Radar, Rewind Tape, Wishing Well; Look, Sh
 
 test('Salvage Yard plays the first Power or Ongoing card found; Wormhole does the first Immediate; the rest are shuffled back', () => {
   const sy = game({ mine: ['IM-24', 'TR-01', 'MO-01', 'ON-33', 'TR-01'] }); Dig.dig(sy);
-  assert.equal(sy.ongoing.length, 2); assert.equal(sy.mine.length, 3); assert.deepEqual(sy.mine.map(c => c.id).sort(), ['MO-01', 'TR-01', 'TR-01']);
+  assert.equal(sy.ongoing.length, 1); assert.equal(sy.mine.length, 3); assert.deepEqual(sy.mine.map(c => c.id).sort(), ['MO-01', 'TR-01', 'TR-01']);
   const wh = game({ mine: ['IM-33', 'TR-01', 'IM-13', 'TR-01'], start: { heart: 2 } }); Dig.dig(wh); assert.equal(wh.heart, 6); assert.equal(wh.mine.length, 2);
 });
 
@@ -368,18 +368,14 @@ test('result changes: Floor Jack (below 4 becomes 4), Backfire (1 becomes 10), W
   const both = game({ mine: ['MO-01'], ongoing: ['ON-37', 'ON-14'], dice: [1] }); Dig.dig(both); Dig.roll(both); assert.equal(Dig.result(both).total, 4, '1 doubled is 2, then the floor makes it 4');
 });
 
-test('Lucky Coin (the second starting card, in play from the start and not part of the kit): +1 to your roll when the Monster\'s damage is equal to or greater than your Health', () => {
-  const roll = (heart, die, id = 'MO-01', step) => { const st = game({ mine: [id], start: { heart }, dice: [die] }); Dig.dig(st); Dig.roll(st); return st; };
-  assert.equal(Dig.result(roll(1, 4)).total, 5, 'damage 1 against 1 Health: it would BOOM you');
-  assert.equal(Dig.result(roll(2, 4)).total, 4, 'damage 1 against 2 Health: no bonus');
-  assert.equal(Dig.result(roll(3, 4, 'MO-02')).total, 4, 'damage 2 against 3 Health');
-  assert.equal(Dig.result(roll(2, 4, 'MO-02')).total, 5, 'damage 2 against 2 Health: equal counts');
-  const st = roll(1, 9); assert.equal(Dig.result(st).total, 10); assert.deepEqual(Dig.eligible(st).map(e => e.pet), [true], 'a 9 at the brink reaches the Pet at 10');
-  Dig.autoFace(st); assert.ok(!st.over, 'the Drill Pup saved you'); assert.equal(st.survived, 1);
-  const safe = roll(10, 9); assert.equal(Dig.result(safe).total, 9, 'no bonus when the Monster could not BOOM you');
-  const d = Dig.start(cards, [], { seed: 3 }); assert.deepEqual(d.ongoing.map(c => c.name), ['Lucky Coin']); assert.equal(d.kit.length, 0, 'it is not a Starter Kit card');
-  assert.ok(!d.mine.some(c => c.id === 'ON-38'), 'and it is not in the Mine');
-  const back = Dig.load(cards, JSON.parse(JSON.stringify(Dig.save(d)))); assert.deepEqual(back.ongoing.map(c => c.name), ['Lucky Coin']);
+test('the Lucky Coin is out of the game (the sheet may still list it), and the Pet triggers on a roll of 9 or more', () => {
+  assert.ok(!cards.some(c => c.id === 'ON-38'), 'it is not read from the sheet'); assert.deepEqual(DDB.rules.removedCards, ['ON-38']);
+  const d = Dig.start(cards, [], { seed: 3 }); assert.deepEqual(d.ongoing, [], 'nothing is in play at the start'); assert.equal(d.kit.length, 0);
+  const roll = (heart, die, id = 'MO-01') => { const st = game({ mine: [id], start: { heart }, dice: [die] }); Dig.dig(st); Dig.roll(st); return st; };
+  assert.equal(Dig.result(roll(1, 4)).total, 4, 'no bonus to the roll at the brink any more');
+  const nine = roll(1, 9); assert.deepEqual(Dig.eligible(nine).map(e => e.pet), [true], 'a 9 reaches the Pet');
+  Dig.autoFace(nine); assert.ok(!nine.over, 'the Drill Pup saved you'); assert.equal(nine.survived, 1);
+  assert.deepEqual(Dig.eligible(roll(1, 8)).map(e => e.pet), [], 'an 8 does not');
 });
 
 test('Pet Whistle is gone: there is no way to move the Pet, so its text is not playable and it stays out of the game', () => {
@@ -720,7 +716,7 @@ test('Burnout: a card you do not trigger does not move, and no other card ever m
   assert.equal(entryOf(st, b.id).at, 2); assert.equal(entryOf(st, other.id).at, 1);
   Dig.dig(st); Dig.roll(st);                                                              // a 1: below it
   assert.deepEqual(Dig.eligible(st).map(e => e.card.id), [other.id]); Dig.face(st);
-  assert.equal(entryOf(st, b.id).at, 2); assert.equal(st.line.find(e => e.pet).at, 10);
+  assert.equal(entryOf(st, b.id).at, 2); assert.equal(st.line.find(e => e.pet).at, 9);
   const t = game({ mine: ['MO-01'], power: [b, other], start: { heart: 6 }, dice: [6] }); Dig.dig(t); Dig.roll(t); Dig.autoFace(t);
   assert.equal(entryOf(t, b.id).at, 4); assert.equal(entryOf(t, other.id).at, 1, 'only the Burnout card moved');
 });
@@ -826,7 +822,7 @@ test('a Bonus Monster is worth what the rules say (2 gems), a Starting Monster 1
 test('a card whose power depends on the game can say what it is worth right now (Duct Tape, Scrap Heap, Second Wind, Depth Gauge, Flywheel)', () => {
   const st = game({ mine: [], ongoing: ['ON-33', 'ON-14'], start: { heart: 5 } });
   const tape = cards.find(c => c.id === 'IM-05');                  // +1 {heart} for each Ongoing card you have
-  assert.equal(Dig.dynamic(st, tape), '+3 {heart}', 'Lucky Coin, Tune-Up and Floor Jack are in play');
+  assert.equal(Dig.dynamic(st, tape), '+2 {heart}', 'Tune-Up and Floor Jack are in play');
   st.discard.push(cards.find(c => c.id === 'IM-13'), cards.find(c => c.id === 'IM-13'));
   assert.equal(Dig.dynamic(st, cards.find(c => c.id === 'IM-25')), '+3 {heart}', 'Scrap Heap counts itself too: 2 in the discard pile + 1');
   st.survived = 4; assert.equal(Dig.dynamic(st, cards.find(c => c.id === 'IM-26')), '+4 {heart}', 'Second Wind: one for each Monster survived');
