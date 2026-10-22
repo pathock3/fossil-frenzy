@@ -142,7 +142,7 @@ test('practice: the Starter Kit chooser lists only cards the game can play; pick
     await page.click('#play [data-p=go]'); await page.waitForSelector('#play .ptable');
     assert.equal(await page.locator('#play .tcard:not(.inplay)').count(), 1, 'only the Pet is in play at the start');
     assert.equal(await page.locator('#play .tcard.inplay').count(), 0, 'nothing but the Pet is in play at the start: the Lucky Coin is out of the game');
-    assert.match(await page.locator('#play .deck .cnt').innerText(), /^27$/, 'the 25 plus the 2 kit cards');
+    assert.match(await page.locator('#play .deck .cnt').innerText(), /^29$/, 'the 27 plus the 2 kit cards');
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.known), 2, 'the kit is on top of the Mine, face up'); assert.equal(await page.locator('#play .deck .card').count(), 1, 'the top card of the Mine is shown face up on the deck');
     assert.equal(await page.locator('#logEntries').count(), 0, 'there is no "What happened" panel');
     assert.deepEqual(errors, []);
