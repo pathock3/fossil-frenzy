@@ -953,10 +953,10 @@ test('the last round: when everyone else has gone BOOM you have won, but the Dig
     await page.click('#play [data-p=finalok]');
     await page.evaluate(() => { const P = window.DigDigBoomPlay, m = P.S.match; Board.lockIn(m.board, 'me', 5); for (const id of Match.botIds(m)) { const r = m.runs[id]; r.dig.over = { kind: 'boom', why: 'test', seq: 99 }; Run.checkOver(r); } Run.refresh(P.S.run); Match.finalCheck(m); P.render(); });
     assert.equal(await page.locator('#play .over').count(), 0, 'your Dig has not ended by itself');
-    assert.match(await page.locator('#play .aprompt').innerText(), /Everyone else went BOOM[\s\S]*Keep digging/i);
+    assert.match(await page.locator('#play .aprompt').innerText(), /You won[\s\S]*Keep digging/i);
     assert.equal(await page.locator('#play [data-p=dig]:not([disabled])').count(), 1, 'you may keep digging');
-    await page.click('#play [data-p=hold]'); await page.waitForSelector('#play .over');
-    assert.match(await page.locator('#play .over').innerText(), /in the lead/i);
+    await page.click('#play [data-p=hold]'); await page.waitForSelector('#play .bigboard');
+    assert.equal(await page.locator('#play .over').count(), 0, 'no ribbon and no little message first: straight to the Leaderboard');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

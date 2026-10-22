@@ -1961,7 +1961,7 @@ const Dig = (() => {
   // The final round: whoever is in the lead when everyone else has gone BOOM stands (nothing to bank; the Dig simply ends with their score).
   function hold(st) {
     if (st.over || st.fight || st.pending || !(st.board && st.board.final)) return false;
-    const s = score(st); st.over = { kind: 'bank', held: true, ...s, seq: ++overSeq }; log(st, 'sys', `Everyone else is out: you stand with ${s.survived} Monster${s.survived === 1 ? '' : 's'} survived.`); return true;
+    const s = score(st); st.over = { kind: 'bank', held: true, ...s, seq: ++overSeq }; log(st, 'sys', `You won: you stand with ${s.survived} Monster${s.survived === 1 ? '' : 's'} survived.`); return true;
   }
   function can(st) {
     const f = st.fight, idle = !st.over && !f && !st.pending;
@@ -3518,7 +3518,7 @@ const AI = (() => {
     if (st.pending) return { html: `<div class="action"><div class="aprompt">${A.esc(st.pending.card.name)}: tap a Power card</div></div>`, die: '' };
     if (st.over) return { html: '', die: '' };
     // The last round is a race: nobody banks. Say so, and say what to do: keep digging until you lead; once you lead, wait (digging on only risks the lead).
-    const lastRound = !!(S.run && st.board && st.board.final), say = lastRound ? (st.board.allOut ? 'Everyone else went BOOM. You win the round! Keep digging to push your score higher, or see the result.' : st.board.lead ? `You are in the lead with ${(leaderLine() || {}).n}. Keep digging to push it higher, or wait to see if everyone else goes BOOM.` : leaderLine() ? `${leaderLine().name} ${leaderLine().is} in the lead with ${leaderLine().n}. Try to beat that score.` : 'The last round: nobody banks. Dig until you are in the lead.') : can.bank ? 'Tap the Mine to dig, or the Bank to keep your gems' : 'Tap the Mine to dig';
+    const lastRound = !!(S.run && st.board && st.board.final), say = lastRound ? (st.board.allOut ? 'You won! Keep digging to push your score higher, or see the result.' : st.board.lead ? `You are in the lead with ${(leaderLine() || {}).n}. Keep digging to push it higher, or wait to see if everyone else goes BOOM.` : leaderLine() ? `${leaderLine().name} ${leaderLine().is} in the lead with ${leaderLine().n}. Try to beat that score.` : 'The last round: nobody banks. Dig until you are in the lead.') : can.bank ? 'Tap the Mine to dig, or the Bank to keep your gems' : 'Tap the Mine to dig';
     const holdBtn = lastRound && st.board.allOut ? `<button class="btn" data-p="hold">See the result</button>` : '';
     const ffBtn = lastRound && st.board.lead && aiDigging() ? `<button class="btn alt ffbtn" data-p="ff" ${S.ff ? 'disabled' : ''}>${S.ff ? 'Fast-forwarding…' : 'Fast-forward your opponents'}</button>` : '';          // you wait; this speeds the opponent up until they pass you or go BOOM
     return { html: `<div class="action"><div class="aprompt">${say}</div>${ffBtn}${holdBtn}</div>`, die: '' };
@@ -3783,7 +3783,7 @@ const AI = (() => {
       case 'reroll': if (f && f.phase === 'after') Dig.reroll(st); break;
       case 'face': if (st && (Dig.eligible(st).length || Dig.mayUse(st).length) && !S.confirmFace) { S.confirmFace = true; break; } S.confirmFace = false; Dig.face(st); break;
       case 'bank': if (S.run) Run.bank(S.run); else Dig.bank(st); break;
-      case 'hold': Dig.hold(st); break;
+      case 'hold': Dig.hold(st); if (S.run) Run.checkOver(S.run); return act('prep', el);          // you won: no little message first, straight to the Leaderboard and then the full-screen result
       case 'heart': break;
     }
     if (S.run) { Run.checkOver(S.run); if (S.run.phase === 'dig') Run.refresh(S.run); if (S.match) Match.finalCheck(S.match); else Run.finalCheck([S.run]); }
