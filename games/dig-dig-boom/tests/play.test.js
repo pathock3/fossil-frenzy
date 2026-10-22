@@ -49,6 +49,7 @@ async function script(page, { mine = [], dice = [], start = {}, line = [], ongoi
 }
 // Keep the first n offered cards that are not a Mystery Box (which would keep one more and make card counts depend on luck).
 async function keepNonMystery(page, n) {
+  await page.waitForSelector('#play .pcard[data-p=pick]');          // (the pack opens a frame after the tap)
   const uids = await page.evaluate(() => window.DigDigBoomPlay.S.run.prep.offer.filter(c => !/When kept/.test(c.text)).map(c => c.uid));
   for (const u of uids.slice(0, n)) await page.click(`#play [data-p=pick][data-uid="${u}"]`);          // tap to move each card up into a place...
   await page.click('#play [data-p=keepgo]');                                                          // ...then Keep (bottom right)
@@ -315,7 +316,7 @@ test('table: after the roll a button takes the damage — then you see your new 
     await page.click('#play [data-p=roll]');
     assert.ok(await page.locator('#play .deck').isDisabled() && await page.locator('#play [data-p=bank]').isDisabled(), 'the Mine and the Bank wait until the damage is taken');
     await page.waitForSelector('#play [data-p=face]', { state: 'visible' });          // (it appears when the die has landed)
-    assert.match(await page.locator('#play [data-p=face]').innerText(), /^Take 1 damage$/);
+    assert.match(await page.locator('#play [data-p=face]').innerText(), /^Take 1\s*$/); assert.equal(await page.locator('#play [data-p=face] svg.ic').count(), 1, 'the damage icon, not the word');
     await page.click('#play [data-p=face]');
     assert.deepEqual(await stOf(page, () => { const s = window.DigDigBoomPlay.S.st; return [s.heart, s.survived, !!s.fight]; }), [2, 1, false], 'your Health is updated first');
     assert.match(await page.locator('#play .stamp').innerText(), /survived/i, 'the Monster card says how it ended');
@@ -462,7 +463,7 @@ test('run: round 1 opens a Bronze Pack (draw 3, keep 1), then you choose your St
     await page.evaluate(() => { window.DigDigBoomPlay.S.opp = false; }); await page.click('#play [data-p=startrun]');
     assert.equal(await page.locator('#play .pack b').innerText(), 'Bronze'); assert.match(await page.locator('#play .pack:not(.ghostpack)').innerText(), /Draw 3 · Keep 1/);
     assert.equal(await page.locator('#play .tabs').count(), 0, 'no catalogue of cards');
-    await page.click('#play [data-p=openpack]'); assert.equal(await page.locator('#play [data-p=pick]').count(), 3);
+    await page.click('#play [data-p=openpack]'); await page.waitForSelector('#play [data-p=pick]'); assert.equal(await page.locator('#play [data-p=pick]').count(), 3);
     assert.ok(await page.locator('#play [data-p=keepgo]').isDisabled(), 'Keep waits until you have chosen');
     const pos = await page.locator('#play [data-p=keepgo]').evaluate(e => { const r = e.getBoundingClientRect(); return [r.right > innerWidth * .6, r.bottom > innerHeight * .8]; });
     assert.deepEqual(pos, [true, true], 'the confirm button is bottom right, where the most reachable things are');
@@ -524,7 +525,7 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     await page.waitForSelector('#play .pack:not(.ghostpack)'); await page.waitForFunction(() => /13/.test(document.querySelector('#play .eq .sum').textContent)); assert.match(await page.locator('#play .eq .sum').innerText(), /13/); assert.equal(await page.locator('#play .pack b').innerText(), 'Silver');
     assert.equal(await page.locator('#play .lb, #play .pbar h1').count(), 0, 'no Leaderboard and no title in Prep: just a Menu in the corner');
     assert.equal(await page.locator('#play .pbar [data-p=gmenu]').count(), 1);
-    await page.click('#play [data-p=openpack]'); assert.equal(await page.locator('#play [data-p=pick]').count(), 4);
+    await page.click('#play [data-p=openpack]'); await page.waitForSelector('#play [data-p=pick]'); assert.equal(await page.locator('#play [data-p=pick]').count(), 4);
     const w = await page.locator('#play [data-p=pick]').first().evaluate(e => e.offsetWidth); assert.ok(w >= 150, 'whole cards, not a reduction: ' + w);
     assert.doesNotMatch(await page.locator('#play .panel').innerText(), /[Ll]ast [Dd]ig|banked after/);
     await keepNonMystery(page, 2);

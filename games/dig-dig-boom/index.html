@@ -260,6 +260,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 @keyframes pksheen { 0%, 20% { background-position: 160% 0; } 70%, 100% { background-position: -60% 0; } }
 @keyframes packglow { 50% { filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)) drop-shadow(0 0 14px rgba(255,214,110,.75)); } }
 #play .pack:active { transform: scale(.97); animation: none; }
+#play .pack.pressed { transform: scale(1.1); animation: none; filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)) drop-shadow(0 0 22px rgba(255,226,140,.95)); transition: transform .12s ease-out, filter .12s; }
 /* the tear: the pack shakes harder and harder, the top strip rips off, foil bits and a column of light burst out, the cards come after */
 #play .tpack { position: relative; width: 190px; height: 260px; filter: drop-shadow(0 12px 14px rgba(0,0,0,.5)); animation: tpack 1.5s ease-in both; }
 #play .tpack .pk { position: absolute; left: 0; width: 190px; overflow: hidden; }
@@ -524,11 +525,8 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .hint { flex-direction: row; flex-wrap: wrap; justify-content: center; font-size: 15px; font-weight: 800; color: var(--accent); }
 #play .deck .dcap-unused { position: absolute; z-index: 3; left: 8%; right: 8%; bottom: 12px; padding: 8px 6px; border-radius: 12px; background: rgba(20,12,8,.88); border: 2px solid var(--accent); color: #fff; font-size: 16px; font-weight: 800; line-height: 1.2; text-align: center; }
 
-/* a Monster is in front of you: only the Monster and the die stay lit */
-#play .ptable .drill, #play .ptable .tableau, #play .ptable .deck, #play .ptable .piles .bankp { transition: opacity .25s, filter .25s; }
-#play .ptable.await-roll .drill, #play .ptable.await-roll .tableau, #play .ptable.await-roll .deck, #play .ptable.await-roll .piles .bankp { opacity: .3; filter: saturate(.5) brightness(.8); }
-#play .ptable.await-roll .deck.live { animation: none; outline: none; }
-#play .dieb.live { position: relative; animation: glowpulse 1.3s ease-in-out infinite; }
+#play .dieb.live { position: relative; filter: drop-shadow(0 0 20px rgba(255,177,59,.85)) drop-shadow(0 6px 0 rgba(0,0,0,.45)); }
+#play .dieb.live::after { content: ""; position: absolute; inset: -4px; border-radius: 24px; box-shadow: 0 0 34px 10px rgba(255,200,90,.95); opacity: 0; pointer-events: none; animation: ringpulse 1.3s ease-in-out infinite; }          /* (the glow breathes by changing its opacity only: animating a filter or a shadow repaints the die every frame, and the iPad flickers) */
 #play .dieb.live .d10 { animation: dbounce 1.3s ease-in-out infinite; }
 #play .dieb.live .tapword { font-size: 20px; white-space: nowrap; background: var(--accent); color: #1c1410; padding: 6px 16px; border-radius: 99px; letter-spacing: .04em; }
 @keyframes glowpulse { 0%, 100% { filter: drop-shadow(0 0 14px rgba(255,177,59,.7)) drop-shadow(0 6px 0 rgba(0,0,0,.45)); } 50% { filter: drop-shadow(0 0 34px rgba(255,200,90,1)) drop-shadow(0 6px 0 rgba(0,0,0,.45)); } }
@@ -544,7 +542,10 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .aprompt { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 12px; font-size: 21px; font-weight: 800; color: var(--text); text-align: center; line-height: 1.25; }
 #play .arow { display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; }
 #play .astack { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-#play .takedmg { min-height: 64px; padding: 10px 26px; border-radius: 18px; background: linear-gradient(180deg, #ff8a4a, #e0481c); border: 3px solid #ffd2b0; color: #fff; font-size: 24px; font-weight: 900; box-shadow: 0 6px 0 #7a2a0c, 0 12px 20px rgba(0,0,0,.4); animation: pulse 1.4s ease-in-out infinite; }
+#play .takedmg { min-height: 64px; padding: 10px 26px; border-radius: 18px; background: linear-gradient(180deg, #ff8a4a, #e0481c); border: 3px solid #ffd2b0; color: #fff; font-size: 24px; font-weight: 900; box-shadow: 0 6px 0 #7a2a0c, 0 12px 20px rgba(0,0,0,.4); position: relative; }
+#play .takedmg::after { content: ""; position: absolute; inset: -5px; border-radius: 22px; box-shadow: 0 0 0 4px rgba(255,177,59,.6); opacity: 0; pointer-events: none; animation: ringpulse 1.4s ease-in-out infinite; }
+#play .takedmg.sure::after { display: none; }
+#play .takedmg .ic { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -.2em; }
 #play .takedmg.lethal { background: linear-gradient(180deg, #ff5b4a, #b81d12); border-color: #fff; }
 #play .takedmg:active { transform: translateY(3px); box-shadow: 0 2px 0 #7a2a0c; }
 #play .rollp, #play .hint { }
@@ -634,7 +635,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .eq button.t { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
 #play .eq button.t.asked { box-shadow: 0 0 0 3px var(--accent); }
 #play .tnote { margin: 0; min-height: 56px; max-width: 420px; text-align: center; font-size: 22px; font-weight: 800; line-height: 1.25; color: var(--text); }
-#play .tallytitle { margin-bottom: -6px; }
+#play .tallytop { position: fixed; top: max(16px, env(safe-area-inset-top)); left: 0; right: 0; margin: 0; text-align: center; pointer-events: none; z-index: 2; }
 #play .tallyrow { display: flex; align-items: center; justify-content: center; gap: 56px; width: 100%; }
 #play .tallymain { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; min-width: 330px; min-height: 360px; }
 #play .pop { animation: popin .45s cubic-bezier(.2,.8,.3,1) backwards; }
@@ -1073,7 +1074,7 @@ const DDB = {
   // {code} in Card Text -> icon
   iconCodes: { heart: 'i-heart', reroll: 'i-reroll', damage: 'i-damage', gem: 'i-gem' },
   // Poker-size card, in hundredths of an inch (1 unit = 0.01 in).
-  card: { trimW: 250, trimH: 350, bleed: 12.5, safe: 12.5 },
+  card: { trimW: 250, trimH: 350, bleed: 12.5, safe: 12.5, textMax: 32, textKeep: 27 },          // textMax: the biggest effect text on a card; textKeep: it is only made smaller than this to fit a long text, or to keep lines of more than a word or two
   // ---- The rules of a Dig (v2.7 Rules tab). Numbers here are the rules; the engine (script "dig") only does what they say. ----
   rules: {
     die: 10,                                             // sides of the die (owner: a d10)
@@ -1085,7 +1086,7 @@ const DDB = {
     line: { min: 1, max: 10 },
     startingDeck: 'Starting',                            // the Deck column value for the Mine's cards and the Pet
     survivedGems: 1, geodeGems: 1,
-    beyond: { firstDamage: 8, maxDamage: 19, gems: 1 },  // Monsters after the Mine runs out: 8, 9, ... up to 19 (there is a Bonus Monster card for each), and worth 1 gem (Loot) like every other Monster (owner)
+    beyond: { firstDamage: 8, maxDamage: 19, gems: 0 },  // Monsters after the Mine runs out: 8, 9, ... up to 19 (there is a Bonus Monster card for each), and worth 0 gems (owner: by then you already have 30, the top pack)
     kitSizes: [1, 2, 3, 4],                              // Round tracker: Starter Kit cards per round: the kit is as big as the round number (owner: 4 rounds)
     pledges: false,                                      // owner: the app has no pledging; your live marker simply follows every Monster you survive (the engine still knows pledges)
     soloKit: 3,                                          // Starter Kit size offered in the solo prototype (the round tracker's round 1 is 1)                              // Round tracker: Starter Kit cards per round (testing)
@@ -1139,16 +1140,14 @@ const DDB = {
     crownStart: 2,                                       // the Crown tracker starts at 2 (owner): reaching 3 Monsters is enough to claim the Crown Jewel
     boosterDeck: 'Booster',                              // the Deck column value of the Booster Deck
     boosterBan: ['\\{gem\\}'],                            // (owner) no Booster cards that boost gems: a card whose text matches one of these stays out of the Booster Deck
-    // Reward ladder (owner): gems -> draw : keep. The pack names are placeholders (QUESTIONS #21).
+    // Reward ladder (owner, "Booster Pack Reward Ladder"): your gems (Geodes + Monsters survived + the Escape Bonus) -> the highest tier you reach: draw that many, keep that many, trash the rest. BOOM = 0 gems = Bronze. Gold+ is the top: more gems do not help.
     ladder: [
       { at: 0,  name: 'Bronze',   draw: 3, keep: 1, color: '#b8743a' },
-      { at: 5,  name: 'Bronze+',  draw: 4, keep: 1, color: '#b8743a' },
-      { at: 10, name: 'Silver',   draw: 4, keep: 2, color: '#b9c5d2' },
-      { at: 15, name: 'Silver+',  draw: 5, keep: 2, color: '#b9c5d2' },
-      { at: 20, name: 'Gold',     draw: 5, keep: 3, color: '#f2c21b' },
-      { at: 25, name: 'Gold+',    draw: 6, keep: 3, color: '#f2c21b' },
-      { at: 30, name: 'Diamond',  draw: 6, keep: 4, color: '#6fe0ff' },
-      { at: 35, name: 'Diamond+', draw: 7, keep: 4, color: '#6fe0ff' },
+      { at: 6,  name: 'Bronze+',  draw: 4, keep: 1, color: '#b8743a' },
+      { at: 12, name: 'Silver',   draw: 4, keep: 2, color: '#b9c5d2' },
+      { at: 18, name: 'Silver+',  draw: 5, keep: 2, color: '#b9c5d2' },
+      { at: 24, name: 'Gold',     draw: 5, keep: 3, color: '#f2c21b' },
+      { at: 30, name: 'Gold+',    draw: 6, keep: 3, color: '#f2c21b' },
     ],
     firstPack: 'Bronze',                                 // round 1 opens with a pack too (draw 3, keep 1), then you choose your Starter Kit from the cards you own
     boardNumbers: 9,                                     // the Leaderboard shows 0 to this many by default (the Mine holds 9 Monsters: 4 + 3 + 2); it grows by one place beyond whoever is furthest (somebody at 9 makes a 10)
@@ -2845,19 +2844,18 @@ const AI = (() => {
     for (const c of state.all) if (c.type !== 'Monster' && c.type !== 'Treasure' && Dig.supported(c)) tw = Math.min(tw, fitFont(textHTML(c.text), b.w, b.h));
     twCache = { key, tw }; return tw;
   }
-  // In the game there is room: a card's effect text is as large as fits its box, never smaller than the deck's uniform size and never more than 1.4 times it (short effects read from across the table; long ones stay in step with the rest).
+  // In the game there is room: a card's effect text is as large as fits its box, up to D.card.textMax: every card is sized on its own, so one long card never makes the rest small.
   const twOwn = new Map();
   function textSizeFor(c) {
     const base = deckTextSize();
     if (c.type === 'Monster' || c.type === 'Treasure') return base;
-    const key = c.id + '|' + c.text + '|' + base; if (twOwn.has(key)) return twOwn.get(key);
-    const b = R2.textBox(), html = textHTML(c.text);
-    let v = Math.min(fitFont(html, b.w, b.h, 10, 64), Math.round(base * 1.4));
+    const key = c.id + '|' + c.text; if (twOwn.has(key)) return twOwn.get(key);
+    const b = R2.textBox(), html = textHTML(c.text), fit = fitFont(html, b.w, b.h, 10, 64);
+    let v = Math.min(fit, DDB.card.textMax);
     // Bigger is better only while lines stay readable: about 2 to 3 words a line at the very least, never a line break every word or two.
-    const words = c.text.replace(/\{[a-z]+\}/g, 'x').split(/\s+/).filter(Boolean).length, maxLines = words <= 2 ? 1 : Math.max(2, Math.floor(words / 2.5));
+    const words = c.text.replace(/\{[a-z]+\}/g, 'x').split(/\s+/).filter(Boolean).length, maxLines = words <= 2 ? 1 : Math.max(2, Math.floor(words / 2)), floor = Math.min(fit, DDB.card.textKeep);
     const lines = z => { meas.style.width = b.w + 'px'; meas.style.fontSize = z + 'px'; meas.innerHTML = html; return Math.round(meas.scrollHeight / (z * 1.13)); };
-    while (v > base && lines(v) > maxLines) v -= 0.5;
-    v = Math.max(base, v);
+    while (v > floor && lines(v) > maxLines) v -= 0.5;
     twOwn.set(key, v); return v;
   }
   function playCard(c, scale, opts = {}) { return r2Card(c, textSizeFor(c), 'compact', statFor(c), scale, opts.step, opts.gem); }
@@ -3338,6 +3336,8 @@ const AI = (() => {
     const next = L.find(t => t.at > lvl);
     return `<aside class="gchart" style="--lv:${from}%" data-to="${pct(lvl)}%" aria-label="${lvl} gems"><div class="gtube"><div class="gfill"></div></div><div class="gbubble"><b class="cnt" ${countFrom !== null && countFrom !== undefined ? `data-cf="${countFrom}" data-ct="${lvl}"` : ''}>${lvl}</b>${ic('gem')}</div>${rows}</aside>`;
   }
+  // What each part of the sum is (tap it to see this line).
+  const tallySays = pr => ({ geo: `${pr.geodes} gem${pr.geodes === 1 ? '' : 's'} from Geode cards.`, mon: `${pr.monsters} gem${pr.monsters === 1 ? '' : 's'} from Monster cards: ${D.rules.survivedGems} for each Monster you survived.`, die: `The Escape Bonus: when you escape, you get a random bonus from 1 to ${D.rules.die}.`, sum: `Your gems this round. The more you have, the bigger your Booster Pack.` });
   function prepHTML() {
     const run = S.run, pr = run.prep, step = pr.step, rolled = pr.escape !== null;
     const key = `${run.round}:${pr.escape}`, tumble = rolled && S.fxEsc !== key; S.fxEsc = key;
@@ -3350,12 +3350,11 @@ const AI = (() => {
       const cl = n => stage >= n ? 'pop' : 'unseen';
       const part = (k, cls, title, inner) => `<button class="t ${cls} ${S.tallyInfo === k ? 'asked' : ''}" data-p="tallyinfo" data-k="${k}" title="${title}" aria-label="${title}: what is this?">${inner}</button>`;
       const eq = `<div class="eq">${part('geo', cl(1), 'Geode cards', ico('Treasure') + pr.geodes)}<span class="op ${cl(2)}">+</span>${part('mon', cl(2), 'Monster cards', ico('Monster') + pr.monsters)}<span class="op ${cl(3)}">+</span>${part('die', 'die ' + cl(3), 'Escape Bonus', rolled ? d10(tumble ? '' : pr.escape, tumble ? 'fx-tumble' : '', pr.escape) : d10('', 'idle'))}<span class="op ${cl(5)}">=</span>${part('sum', 'sum ' + cl(5), 'Gems', `<b class="cnt" ${stage === 5 ? `data-cf="${pr.geodes + pr.monsters}" data-ct="${pr.gems}"` : ''}>${stage >= 5 ? pr.gems : pr.geodes + pr.monsters}</b>${ic('gem')}`)}</div>`;
-      const sg = D.rules.survivedGems, says = { geo: `${pr.geodes} gem${pr.geodes === 1 ? '' : 's'} from Geode cards.`, mon: `${pr.monsters} gem${pr.monsters === 1 ? '' : 's'} from Monster cards: ${sg} for each Monster you survived.`, die: `The Escape Bonus: when you escape, you get a random bonus from 1 to ${D.rules.die}.`, sum: `Your gems this round. The more you have, the bigger your Booster Pack.` };
-      const tnote = `<p class="tnote" role="status">${S.tallyInfo && says[S.tallyInfo] ? says[S.tallyInfo] : ''}</p>`;
+      const tnote = `<p class="tnote" role="status">${S.tallyInfo ? tallySays(pr)[S.tallyInfo] || '' : ''}</p>`;
       const info = rolled ? Run.packInfo(run) : null, col = info ? (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a' : '', plus = info && /\+$/.test(info.name);
       const packBtn = stage >= 6 ? `<button class="pack pop" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(packName(info.name))} Pack">${packArt(info.name, info.draw, info.keep)}</button>` : '';
       const packRoom = stage >= 6 ? packBtn : `<span class="pack ghostpack" aria-hidden="true"></span>`;          // the pack's place is kept from the start, so nothing moves when it appears
-      body = `<div class="tallyrow" ${stage < 6 ? 'data-p="skiptally"' : ''}><div class="tallymain"><div class="kitbar tallytitle"><b>Booster Pack</b></div>${eq}${tnote}${packRoom}</div>${gemChart(lvl, stage >= 6, stage === 5 ? pr.geodes + pr.monsters : null)}</div>`;
+      body = `<div class="tallyrow" ${stage < 6 ? 'data-p="skiptally"' : ''}><h2 class="steptitle tallytop">Banking</h2><div class="tallymain">${eq}${tnote}${packRoom}</div>${gemChart(lvl, stage >= 6, stage === 5 ? pr.geodes + pr.monsters : null)}</div>`;
     } else if (step === 'escape') body = '';
     else if (step === 'pack') {
       // The same layout the cards will be dealt into: the Keep places on top and, in the middle of the row below, the closed pack. It tears open right there.
@@ -3508,7 +3507,7 @@ const AI = (() => {
       const open = can.reroll;
       const rr = open ? `<button class="rerollbtn" data-p="reroll" aria-label="Extra Roll">${ic('reroll')}<span>Extra Roll</span><small>${st.reroll} left</small></button>` : '';
       const die = `<div class="dieb rollbtn still">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}<span class="tapword" aria-hidden="true" style="visibility:hidden">Tap to roll</span></div>`;          // (the hidden word keeps the die exactly where the Roll button was)
-      const take = `<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''} ${sure ? 'sure' : ''} ${fresh ? 'waitroll' : ''}" data-p="face">${sure ? `You can still use cards.<br>Tap again to ${f.defeat ? 'move on' : dmg ? `take ${dmg} damage` : 'carry on'}` : f.defeat ? 'Monster defeated: continue' : dmg ? `Take ${dmg} damage` : 'Take no damage'}</button>`;          // (it sits in the right-hand column, above the die: where your hand already is)
+      const take = `<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''} ${sure ? 'sure' : ''} ${fresh ? 'waitroll' : ''}" data-p="face">${sure ? `You can still use cards.<br>Tap again to ${f.defeat ? 'move on' : dmg ? `take ${dmg} ${ic('damage')}` : 'carry on'}` : f.defeat ? 'Monster defeated: continue' : dmg ? `Take ${dmg} ${ic('damage')}` : `Take 0 ${ic('damage')}`}</button>`;          // (it sits in the right-hand column, above the die: where your hand already is)
       return { die, take, html: `<div class="action">${elig.length > 1 ? `<div class="aprompt"><button class="chip" data-p="triggerall">Use all ${elig.length}</button></div>` : ''}
         <div class="astack">${calc}${rr}</div></div>` };
     }
@@ -3587,7 +3586,7 @@ const AI = (() => {
         <li>If it's upright and at or below the die, do it and turn it. A card that raises your result slides the die up, and any upright cards it now reaches (the Pet too) fire as well. Everything is untapped after the battle.</li>
         <li>An Extra Roll rolls again and replaces your result. Cards you have already used stay used, and the new result may reach different upright cards.</li>
         <li>Cards that deal damage to the Monster put damage markers on it: you take its damage minus its markers (never below 0). Damage is halved before markers are taken off.</li>
-        <li>Survive a Monster, take its Loot: a gem (1, for every Monster, the Bonus Monsters too).</li>
+        <li>Survive a Monster, take its Loot: a gem (1 each; Bonus Monsters are worth 0: by then you already have the top pack).</li>
         <li>Result changes apply in order: bonuses, then double, then "becomes", then "less than".</li>
         <li>"Whenever you gain" only counts when the track actually moves.</li>
         <li>The last round is a race: nobody banks. Whoever is in the lead may wait; the rest must keep digging.</li>
@@ -3728,7 +3727,13 @@ const AI = (() => {
       case 'resume': S.panel = S.back || 'menu'; break;
       case 'practice': if (resumable() && S.confirmNew !== 'practice') { S.confirmNew = 'practice'; break; } S.confirmNew = null; S.run = null; S.match = null; S.st = null; S.panel = 'setup'; S.back = null; break;
       case 'startrun': { if (resumable() && S.confirmNew !== 'startrun') { S.confirmNew = 'startrun'; break; } S.confirmNew = null; if (S.opp) { S.match = Match.start(cards(), { rounds: S.rounds, bots: D.ai.opponents }); S.run = Match.human(S.match); } else { S.match = null; S.run = Run.start(cards(), { rounds: S.rounds }); } S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
-      case 'openpack': { const pk = $.querySelector('[data-p=openpack]'); if (pk && pk.closest('.tallymain')) { const r = pk.getBoundingClientRect(); S.packFrom = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; } } if (S.match) { Match.openPack(S.match, { defer: true }); setTimeout(() => { if (S.match) Match.prepAIAsync(S.match, persist); }, 400); } else Run.openPack(S.run); break;
+      case 'openpack': {          // the pack answers at once (it swells), and the opening itself, which takes a moment to draw, follows on the next frame; more taps meanwhile do nothing
+        if (S.opening) return; S.opening = true;
+        const pk0 = $.querySelector('[data-p=openpack]'); if (pk0) pk0.classList.add('pressed');
+        requestAnimationFrame(() => setTimeout(() => { S.opening = false; act('openpackgo', el); }, 0));
+        return;
+      }
+      case 'openpackgo': { const pk = $.querySelector('[data-p=openpack]'); if (pk && pk.closest('.tallymain')) { const r = pk.getBoundingClientRect(); S.packFrom = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; } } if (S.match) { Match.openPack(S.match, { defer: true }); setTimeout(() => { if (S.match) Match.prepAIAsync(S.match, persist); }, 400); } else Run.openPack(S.run); break;
       case 'pick': {                       // tap a card to choose it, tap it again to put it back; once you have chosen all you may, you must put one back before choosing another
         const uid = Number(ds.uid), pr = S.run.prep;
         Run.toggleKeep(S.run, uid); break;                  // (the engine refuses a card beyond the limit)
@@ -3740,7 +3745,13 @@ const AI = (() => {
       case 'continuereveal': S.keepFrom = null;  S.keepFrom = null; Run.continueReveal(S.run); break;
       case 'lbopen': if (S.panel === 'dig') S.lbFull = true; break;
       case 'lbclose': S.lbFull = false; break;
-      case 'tallyinfo': S.tallyInfo = S.tallyInfo === ds.k ? null : ds.k; break;
+      case 'tallyinfo': {          // only the part you tapped moves (it grows and settles); nothing else on the screen is redrawn or animated
+        S.tallyInfo = S.tallyInfo === ds.k ? null : ds.k;
+        const note = $.querySelector('.tnote'); if (note) note.textContent = S.tallyInfo && S.run && S.run.prep ? tallySays(S.run.prep)[S.tallyInfo] || '' : '';
+        $.querySelectorAll('.eq button.t').forEach(b => b.classList.toggle('asked', b.dataset.k === S.tallyInfo));
+        if (el && el.animate) el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.28)' }, { transform: 'scale(1)' }], { duration: 280, easing: 'ease-out' });
+        return;
+      }
       case 'skiptally': if (S.tally) { if (S.tally.stage >= 4) S.tally.stage = 6; else { S.tally.stage = 3; escapeRoll(S.tally); } } break;          // the tally plays out on its own; a tap anywhere on it skips ahead
       case 'kitpick': {                    // tap to choose, in the order you want them on top; tap a chosen one to take it back; a full Kit takes no more
         const uid = Number(ds.uid), pr = S.run.prep;

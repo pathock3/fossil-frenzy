@@ -173,11 +173,11 @@ test('banking: between cards only; you keep the gems from Geodes and survived Mo
   assert.deepEqual([st.over.kind, st.over.total, st.over.geodes, st.over.monsters, st.over.survived], ['bank', 3, 2, 1, 1]);
 });
 
-test('Beyond the Mine: after the Mine runs out, Bonus Monsters deal 8, 9, ... and are worth 1 gem each, like every Monster', () => {
+test('Beyond the Mine: after the Mine runs out, Bonus Monsters deal 8, 9, ... and are worth 0 gems (by then you have the top pack)', () => {
   const st = game({ mine: [], start: { heart: 12 }, dice: [1, 1] });
   Dig.dig(st); assert.equal(st.fight.damage, 8); assert.ok(st.fight.monster.bonus);
   Dig.roll(st); Dig.autoFace(st);
-  assert.equal(st.heart, 4); assert.equal(st.monsterGems, 1, 'a Bonus Monster pays 1 gem of Loot');
+  assert.equal(st.heart, 4); assert.equal(st.monsterGems, 0, 'a Bonus Monster pays 0 gems');
   Dig.dig(st); assert.equal(st.fight.damage, 9);
 });
 
@@ -820,8 +820,8 @@ test('beyond the Mine: the next Bonus Monster is known and does not change until
   st.beyond = 30; assert.equal(Dig.peekBonus(st).damageNow, DDB.rules.beyond.maxDamage, 'there is no card above 19');
 });
 
-test('a Bonus Monster is worth what the rules say (2 gems), a Starting Monster 1: the card and the notice agree with what the engine pays', () => {
-  assert.equal(DDB.rules.beyond.gems, 1, "a Bonus Monster pays 1 gem of Loot, like every Monster"); assert.equal(DDB.rules.survivedGems, 1);
+test('a Bonus Monster is worth what the rules say (0 gems), a Starting Monster 1: the card and the notice agree with what the engine pays', () => {
+  assert.equal(DDB.rules.beyond.gems, 0, "a Bonus Monster pays 0 gems: reaching one means you already have the top pack"); assert.equal(DDB.rules.survivedGems, 1);
   const st = game({ mine: [], start: { heart: 10 }, dice: [10] }); Dig.dig(st); Dig.roll(st); Dig.autoFace(st);
   assert.equal(st.monsterGems, DDB.rules.beyond.gems, 'surviving a Bonus Monster pays the rules\' number');
 });

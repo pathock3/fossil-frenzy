@@ -144,10 +144,11 @@ test('BOOM: no Escape Bonus, 0 gems, and a Bronze Pack', () => {
   assert.equal(run.round, 2); assert.equal(run.prep.kitMax, 2);
 });
 
-test('the reward ladder (the owner\'s): gems -> draw:keep, in steps of 5', () => {
+test('the reward ladder (the owner\'s): gems -> draw:keep, in steps of 6, Gold+ at 30 is the top', () => {
   const at = g => { const p = Run.ladderFor(g); return `${p.draw}:${p.keep}`; };
-  assert.deepEqual([0, 4, 5, 9, 10, 14, 15, 19, 20, 24, 25, 29, 30, 34, 35, 99].map(at),
-    ['3:1', '3:1', '4:1', '4:1', '4:2', '4:2', '5:2', '5:2', '5:3', '5:3', '6:3', '6:3', '6:4', '6:4', '7:4', '7:4']);
+  assert.deepEqual([0, 5, 6, 11, 12, 17, 18, 23, 24, 29, 30, 31, 99].map(at),
+    ['3:1', '3:1', '4:1', '4:1', '4:2', '4:2', '5:2', '5:2', '5:3', '5:3', '6:3', '6:3', '6:3']);
+  assert.deepEqual(DDB.run.ladder.map(p => p.name), ['Bronze', 'Bronze+', 'Silver', 'Silver+', 'Gold', 'Gold+']);
 });
 
 test('Leaderboard and Crown Jewel: the tracker starts at 2; banking above it (3 is enough) takes the Crown and moves the tracker; BOOM locks in nothing', () => {
