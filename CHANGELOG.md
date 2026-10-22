@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — the Leaderboard replay waits again:** it plays the moves by itself but stops after each bank or BOOM (the piece stays, with its gem or starburst) and says "Tap to continue"; Fast forward still runs through everything. (It was too fast to follow.)
+
 - **Dig Dig BOOM! — the drag glitch (really found), the Leaderboard, and a batch from your notes:**
   - **Dragging a card over a Keep place:** the place got the class `over`, which is also the end-of-Dig overlay's class, so it jumped to the top-left corner full screen and flipped back at every pixel (that was the flicker, and why the title and cards moved). It now uses its own class.
   - **Leaderboard between rounds:** nothing to tap. The round plays by itself, every piece that finished stays where it stopped with its gem (what it banked) or a starburst (BOOM), the continue button is there the whole time, and **Fast forward** jumps to the end. The Crown no longer flashes at every move. A piece stands on 0 on the little Leaderboard while you have not met a Monster.

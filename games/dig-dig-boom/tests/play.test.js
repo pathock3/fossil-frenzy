@@ -999,14 +999,20 @@ test('leaderboard: the round plays by itself; a piece whose Dig ended stays wher
     await page.evaluate(() => { window.DigDigBoomPlay.S.opp = true; }); await page.click('#play [data-p=startrun]'); await page.waitForSelector('#play [data-p=openpack]');
     await page.evaluate(() => { window.DDB_BOARD_PACE = 3600000; const P = window.DigDigBoomPlay; P.S.bests0 = { me: 0, easy: 0, medium: 0, hard: 0 }; P.S.boardAnim = { from: P.S.bests0, newBest: false, events: [{ r: 1, id: 'hard', k: 'move', n: 2 }, { r: 1, id: 'hard', k: 'bank', n: 2, gems: 7 }, { r: 1, id: 'easy', k: 'boom', n: 0 }, { r: 1, id: 'me', k: 'move', n: 1 }], k: 0, timer: null, rects: null, fx: null }; P.S.panel = 'board'; P.render(); });
     assert.equal(await page.locator('#play [data-p=boardgo]').count(), 1, 'the way on is there from the start'); assert.equal(await page.locator('#play [data-p=boardfast]').count(), 1, 'and so is Fast forward');
-    assert.equal(await page.locator('#play .bcap small').count(), 0, 'nothing says tap');
-    await page.evaluate(() => { window.DDB_BOARD_PACE = 5; window.DigDigBoomPlay.act('boardfast'); });
+    await page.click('#play .bigboard .scroll');          // a tap while it plays: on to the first result
+    assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.boardAnim.k), 2); assert.equal(await page.locator('#play .bgem').innerText(), '7', 'the gem with what it earned');
+    assert.match(await page.locator('#play .bcap').innerText(), /tap to continue/i, 'it stops after a result: too much at once is hard to follow');
+    await page.click('#play .bigboard .scroll');          // on to the BOOM
+    assert.equal(await page.evaluate(() => window.DigDigBoomPlay.S.boardAnim.k), 3);
+    assert.equal(await page.locator('#play .bgem').innerText(), '7', 'the gem is still there'); assert.equal(await page.locator('#play .bdisc[data-pid=hard]').count(), 1, 'and so is its piece');
+    await page.evaluate(() => { window.DDB_BOARD_PACE = 5; });
+    await page.click('#play .bigboard .scroll');          // and the last move plays on by itself
     await page.waitForFunction(() => window.DigDigBoomPlay.S.boardAnim.k === 4);
     assert.equal(await page.locator('#play .bgem').innerText(), '7', 'the gem with what it earned stays');
     assert.equal(await page.locator('#play .bdisc[data-pid=hard]').count(), 1, 'and so does its piece');
     assert.equal(await page.locator('#play .bdisc.blown[data-pid=easy]').count(), 1, 'the piece that went BOOM stays, in its starburst'); assert.equal(await page.locator('#play .bboom').count(), 1);
     assert.equal(await page.locator('#play [data-p=boardfast]').count(), 0, 'at the end there is nothing left to fast forward');
-    assert.equal(await page.locator('#play .bigboard .scroll[data-p=boardstep]').count(), 0, 'nothing to tap');
+    assert.equal(await page.locator('#play .bigboard .scroll[data-p=boardstep]').count(), 0, 'the last result has nothing to tap');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
