@@ -1373,9 +1373,16 @@ const Dig = (() => {
   }
 
   // ---------------- effects ----------------
+  // The cards that count as having triggered this roll, for the cards that count them ("for each other card that triggers", "if no other card triggers", "N+ cards trigger"): the ones you used, and the ones whose number the roll reached
+  // that could do nothing (a heal at full Health, a Block with no damage left): those cannot be tapped, but they passed the number, so they count.
+  function triggered(st, trig) {
+    const set = new Set((trig || []).map(e => e.card)), f = st.fight;
+    if (f && f.phase === 'after') { const r = resultTotal(st); for (const e of st.line) if (e.at <= r && !set.has(e.card) && unmetFor(st, e) === null && pointless(st, e)) set.add(e.card); }
+    return set;
+  }
   const per = (st, key, ctx) => {
     switch (key) {
-      case 'otherTriggers': return Math.max(0, (ctx.trig ? new Set(ctx.trig.map(e => e.card)).size : 1) - 1);
+      case 'otherTriggers': return Math.max(0, (ctx.trig ? triggered(st, ctx.trig).size : 1) - 1);
       case 'ongoing': return st.ongoing.length;
       case 'immediateInDiscard': return st.discard.filter(c => c.type === 'Immediate').length;
       case 'immediateInDiscardThis': return st.discard.filter(c => c.type === 'Immediate').length + 1;
@@ -1395,7 +1402,7 @@ const Dig = (() => {
       case 'gainDmg': gain(st, 'heart', f ? f.damage : 0, src, depth); break;
       case 'gainPer': gain(st, e.res, e.n * per(st, e.per, ctx), src, depth); break;
       case 'if': {
-        const ok = e.cond.noOther ? (ctx.trig ? new Set(ctx.trig.map(x => x.card)).size : 1) <= 1 : e.cond.heartAtMost !== undefined ? st.heart <= e.cond.heartAtMost : true;
+        const ok = e.cond.noOther ? (ctx.trig ? triggered(st, ctx.trig).size : 1) <= 1 : e.cond.heartAtMost !== undefined ? st.heart <= e.cond.heartAtMost : true;
         if (ok) apply(st, e.then, ctx); else log(st, 'effect', `${src}: its condition is not met`);
         break;
       }
@@ -1649,7 +1656,7 @@ const Dig = (() => {
     const effs = compile(entry.card).effects;
     log(st, 'roll', `You trigger ${entry.card.name}${needsFinal(effs) ? ' (it counts the other cards once you have chosen)' : ''}`);
     if (needsFinal(effs)) f.deferred.push(entry); else run(st, effs, { src: entry.card, result: resultTotal(st), trig: f.trig, depth: 0 });
-    if (!over(st) && firstTime) fire(st, 'triggers', { n: new Set(f.trig.map(e => e.card)).size }, 1);
+    if (!over(st) && firstTime) fire(st, 'triggers', { n: triggered(st, f.trig).size }, 1);
     if (!hold && st.fight === f && !over(st) && f.deferred.length && !eligible(st).length) runDeferred(st);          // no other card can trigger any more: "if no other card triggers" is settled, so it happens now
     return true;
   }
@@ -2617,8 +2624,11 @@ const AI = (() => {
     s += `<svg class="abs" style="left:${u(28)};top:${u(28)};width:${u(W - 56)};height:${u(64)};border-radius:${u(7)}" preserveAspectRatio="none"><rect width="100%" height="100%" fill="url(#${t.pattern})"/></svg>`;
     s += box(33, 36, 46, 46, 'disc', '', typeIcon(c.type, '78%', '#1d1712'));
     const nw = c.number === null ? W - 56 - 62 : W - 56 - 62 - 50;
-    s += nameBlock(c.name, 86, 34, nw, 38, 30, 17.5);
-    s += box(86, 72, nw, 15, 'typeword band', `font-size:${u(13)}`, esc(c.type));
+    if (c.type === 'Monster') s += nameBlock(c.name, 86, 33, nw, 52, 32, 17.5);          // a Monster's name says what it is: no type line under it
+    else {
+      s += nameBlock(c.name, 86, 34, nw, 38, 30, 17.5);
+      s += box(86, 72, nw, 15, 'typeword band', `font-size:${u(13)}`, esc(c.type));
+    }
     s += powerBadge(W - 28 - 50, 35, 44, c);
     return s;
   }
@@ -2650,8 +2660,11 @@ const AI = (() => {
     if (stat === 1) {          // Monster: art on top, the damage ladder in big tiles, what it is worth
       s += artBox(28, 100, W - 56, 118, c);
       if (steps) {
-        s += box(31, 226, 213, 22, 'typeword', `font-size:${u(13)};color:#7a1d1d;display:flex;align-items:center;gap:${u(6)}`, `${dmgIcon(18)} DAMAGE, IN ORDER`);
-        s += stepTiles(steps, 31, 250, 213, 62, steps.length > 4 ? 34 : 46, step);
+        if (c.bonus) s += stepTiles(steps, 31, 236, 213, 76, 56, step);          // a Bonus Monster has one number and no order to speak of
+        else {
+          s += box(31, 226, 213, 22, 'typeword', `font-size:${u(13)};color:#7a1d1d;display:flex;align-items:center;gap:${u(6)}`, `${dmgIcon(18)} DAMAGE, IN ORDER`);
+          s += stepTiles(steps, 31, 250, 213, 62, steps.length > 4 ? 34 : 46, step);
+        }
       } else s += box(31, 226, 213, 90, 'stat', `font-size:${u(104)};display:flex;align-items:center;justify-content:center;gap:${u(10)};color:#1d1712`, `${gems}${gemIcon(90)}`);
       s += box(31, 318, 213, 26, 'stat', `font-size:${u(18)};display:flex;align-items:center;justify-content:center;gap:${u(6)};background:#2b86d1;color:#fff;border-radius:${u(8)}`, `${gems}${gemIcon(18)} ${worthTxt}`);
     } else {                   // two big tiles under a slim art strip

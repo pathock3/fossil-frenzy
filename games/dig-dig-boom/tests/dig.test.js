@@ -880,3 +880,9 @@ test('a card that only heals you is not offered at full Health (but is when you 
   Dig.dig(mixed); Dig.roll(mixed);
   assert.equal(Dig.eligible(mixed).length, 1, 'it also gives a Reroll, so it still does something');
 });
+
+test('cards that count how many cards trigger also count the cards the roll reached that could do nothing (a heal at full Health, a Block with no damage left)', () => {
+  const run = hp => { const st = game({ mine: ['MO-01'], power: ['PW-05', 'PW-02'], start: { heart: hp, reroll: 0 }, dice: [6] }); Dig.dig(st); Dig.roll(st); Dig.trigger(st, Dig.eligible(st).find(e => e.card.id === 'PW-05')); Dig.face(st); return st; };
+  assert.equal(run(9).reroll, 1, 'hurt: Nurse Newt could be used but was not, so the Duck triggered alone and gets its Reroll');
+  assert.equal(run(10).reroll, 0, 'full Health: Nurse Newt cannot be used, but it passed the number, so the Duck is not alone');
+});

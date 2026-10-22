@@ -53,7 +53,7 @@ test('cards: when the sheet cannot be reached (or answers with a web page) it sa
   }
 });
 
-test('cards: type is told four ways on every card — icon, type word, pattern and colour — and numbers only on Power cards', SKIP, async () => {
+test('cards: type is told on every card — icon, type word, pattern and colour (a Monster\'s name says it, so it has no separate type word) — and numbers only on Power cards', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     const info = await page.locator('#deckRow .card').evaluateAll(els => els.map(e => ({
@@ -61,7 +61,7 @@ test('cards: type is told four ways on every card — icon, type word, pattern a
       word: [...e.querySelectorAll('.typeword')].some(w => /^(Power|Ongoing|Immediate|Treasure|Monster)/i.test(w.textContent.trim())),
       pattern: e.querySelectorAll('rect[fill^="url(#p-"]').length, nums: [...e.querySelectorAll('.num')].map(n => n.textContent.trim()),
     })));
-    for (const c of info) { assert.ok(c.icons >= 1, 'icon: ' + c.label); assert.ok(c.word, 'type word: ' + c.label); assert.ok(c.pattern >= 1, 'pattern: ' + c.label); }
+    for (const c of info) { assert.ok(c.icons >= 1, 'icon: ' + c.label); assert.ok(c.word || /, Monster\./.test(c.label), 'type word: ' + c.label); assert.ok(c.pattern >= 1, 'pattern: ' + c.label); }
     assert.ok(info.filter(c => /, Power/.test(c.label)).every(c => c.nums.length >= 1), 'Power cards show their number');
     assert.ok(info.filter(c => !/, Power/.test(c.label)).every(c => c.nums.length === 0), 'nobody else does');
     assert.deepEqual(errors, []);
