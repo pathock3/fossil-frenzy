@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — cards that depend on the game:** tap a card like Duct Tape, Scrap Heap, Second Wind, Depth Gauge or Flywheel and it says what it is worth **right now** ("Right now: +3 ♥").
+
 - **Dig Dig BOOM! — the end of a run:** the Leaderboard *is* the result: a big "You win!" (or "The AI wins") over the board, with the Crown Jewel on the winner's token. Buttons below: **Round by round** (what each of you did every round: banked or BOOM, gems, who took the Crown), **Your cards** (the cards you built), **New run**; from any of them you can go back to the Leaderboard. (The little table is gone, and so is the second "you won" screen.)
 - **Dig Dig BOOM! — final round:** if you are in the lead you get a **Fast-forward your opponent** button; it speeds them up until they pass you or go BOOM (then it slows down again).
 - **Dig Dig BOOM! — fixes:** Prep screens can no longer be scrolled (the opening pack's sparks used to make them scrollable); the chosen card stays clear of the "Starter Kit" title; a Bonus Monster card shows the same worth (2 gems) as the notice and the rules.

@@ -801,6 +801,8 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .rounds .rwhat b { font-size: 26px; font-weight: 900; color: var(--text); } #play .rounds .rwhat b.boom { color: #ff6b5b; }
 #play .rounds .rsub { font-size: 17px; color: var(--dim); } #play .rounds .rsub b.took { color: #ffd45e; }
 #play .ffbtn { margin-top: 6px; }
+#play .zoom .zdyn { margin-top: 14px; padding: 10px 24px; border-radius: 99px; background: #2a1f18; border: 3px solid #ffb13b; font-size: 26px; font-weight: 800; color: var(--text); text-align: center; }
+#play .zoom .zdyn b { color: #ffd45e; }
 /* The Bank is a button, not a place for cards: a raised gold key at the right edge, bottom-aligned, that presses down */
 #play .piles { width: auto; height: auto; align-self: flex-end; margin-left: 0; flex: none; }
 #play .pile.bankp, #play .pile.bankp.live { flex: none; width: 210px; height: auto; min-height: 96px; padding: 10px 24px; flex-direction: row; gap: 14px; border-radius: 24px; border: 3px solid #fff0b8; color: #2a1700; font-size: 34px; font-weight: 900; letter-spacing: .02em; background: linear-gradient(180deg, #ffd45e, #e8920f); box-shadow: 0 8px 0 #8a4f06, 0 16px 24px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.55); overflow: visible; transition: transform .08s, box-shadow .08s; }
@@ -1700,6 +1702,20 @@ const Dig = (() => {
       pending: st.pending && { ...st.pending }, fight: st.fight && { ...st.fight, trig: remap(st.fight.trig), deferred: remap(st.fight.deferred) },
       setCount: { ...st.setCount }, board: st.board && { ...st.board }, rules: st.rules };
   }
+  // What a card is worth RIGHT NOW, for the cards whose number depends on the game ("+1 {heart} for each Ongoing card you have", "+1 to your rolls for every 3 Monsters you've survived"):
+  // a short line for the zoomed card, or null when the card does not depend on anything.
+  function dynamic(st, card) {
+    const b = compile(card), imm = st.discard.filter(c => c.type === 'Immediate').length;
+    const count = key => key === 'ongoing' ? st.ongoing.length : key === 'immediateInDiscard' ? imm : key === 'immediateInDiscardThis' ? imm + 1 : key === 'defeatedDig' ? st.defeated : key === 'survivedDig' ? st.survived : null;
+    const find = effs => { for (const e of effs || []) { if (e.op === 'gainPer') { const c = count(e.per); if (c !== null) return `+${e.n * c} {${e.res}}`; } if (e.op === 'seq') { const r = find(e.list); if (r) return r; } if (e.op === 'if') { const r = find([e.then]); if (r) return r; } } return null; };
+    const fromEffects = find(b.effects) || find(b.dug);
+    if (fromEffects) return fromEffects;
+    for (const m of (b.ongoing ? b.ongoing.mods : [])) {
+      if (m.perSurvived) return `+${m.plus * Math.floor(st.survived / m.perSurvived)} to your rolls`;
+      if (m.perImmediate) return `+${Math.min(m.cap, m.plus * imm)} to your rolls`;
+    }
+    return null;
+  }
   function score(st) { return { geodes: st.geodeGems, monsters: st.monsterGems, total: st.geodeGems + st.monsterGems, survived: st.survived }; }
   // The Leaderboard (v2.7): once you have survived as many Monsters as the Crown tracker, you may pledge your current number or 1 more.
   function canPledge(st, n) {
@@ -1728,7 +1744,7 @@ const Dig = (() => {
       choose: !!st.pending && !st.over,
     };
   }
-  return { save, load, compile, supported, parseEffects, parseOngoing, start, clone, can, pledge, canPledge, dig, roll, reroll, face, autoFace, eligible, unmetFor, trigger, triggerFully, triggerAll, bank, chooseClone, cloneTargets, peekBonus, hold, score, result, makeRng, shuffle, flag, previewDamage };
+  return { save, load, compile, supported, parseEffects, parseOngoing, start, clone, can, pledge, canPledge, dig, roll, reroll, face, autoFace, eligible, unmetFor, trigger, triggerFully, triggerAll, bank, chooseClone, cloneTargets, peekBonus, dynamic, hold, score, result, makeRng, shuffle, flag, previewDamage };
 })();
 </script>
 
@@ -3201,7 +3217,8 @@ const AI = (() => {
     else if (S.panel === 'rounds' && S.run) body = roundsHTML();
     else if (S.panel === 'setup' || !S.st) body = setupHTML();
     else body = `<div class="pmain"><div class="ptable ${S.st.fight && S.st.fight.phase === 'before' && !S.st.over ? 'await-roll' : ''}" data-step="${S.st.over ? 'over' : S.st.fight ? (S.st.fight.phase === 'before' ? 'roll' : 'damage') : 'dig'}">${tableHTML()}</div></div>`;       // a Monster is in front of you and nothing else matters until you roll: the rest of the table dims
-    const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, Math.min(1.35, (innerHeight - 70) / 350))}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}</div>` : '';
+    const zdyn = S.zoom && S.st && S.panel === 'dig' ? Dig.dynamic(S.st, S.zoom) : null;          // a card whose power depends on the game says what it is worth right now
+    const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, Math.min(1.35, (innerHeight - 110) / 350))}${zdyn ? `<div class="zdyn">Right now: <b>${T(zdyn)}</b></div>` : ''}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}</div>` : '';
     const bottom = S.panel === 'dig' && S.st && !S.st.mine.length && !S.st.over && !S.st.fight && !S.st.pending && S.emptySeen !== S.st && !S.help;          // you dug the last card of your Mine: say what happens next, once
     const B = D.rules.beyond, note = bottom ? `<div class="mnote-back"><div class="mnote" role="dialog" aria-label="The bottom of your Mine"><h3>That was the bottom of your Mine</h3><p>From now on, every card you dig is a <b>Bonus Monster</b>. The next one is face up on the Mine: it deals <b>${B.firstDamage}</b> damage, the one after <b>${B.firstDamage + 1}</b>, and so on. Survive one and it is worth <b>${B.gems}</b> gems. You can still bank any time.</p><button class="btn" data-p="emptyok">Got it</button></div></div>` : '';
     let fin = '';

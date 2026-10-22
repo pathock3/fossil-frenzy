@@ -943,3 +943,16 @@ test('the last round: when you are in the lead you can fast-forward the opponent
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
+
+test('tapping a card whose power depends on the game says what it is worth right now', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await begin(page, { mine: ['IM-05', 'TR-01'], ongoing: ['ON-33'], start: { heart: 4 } });                  // Duct Tape: +1 Health for each Ongoing card you have
+    await page.click('#play [data-p=dig]'); await page.waitForTimeout(600);
+    await page.click('#play .slot [data-p=zoom]');
+    assert.match(await page.locator('#play .zoom .zdyn').innerText(), /Right now:\s*\+2/, 'Lucky Coin and Tune-Up are in play: +2');
+    assert.doesNotMatch(await page.locator('#play .zoom').innerText(), /tap anywhere/i);
+    await page.click('#play .zoom');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});

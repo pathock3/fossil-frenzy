@@ -822,3 +822,15 @@ test('a Bonus Monster is worth what the rules say (2 gems), a Starting Monster 1
   const st = game({ mine: [], start: { heart: 10 }, dice: [10] }); Dig.dig(st); Dig.roll(st); Dig.autoFace(st);
   assert.equal(st.monsterGems, DDB.rules.beyond.gems, 'surviving a Bonus Monster pays the rules\' number');
 });
+
+test('a card whose power depends on the game can say what it is worth right now (Duct Tape, Scrap Heap, Second Wind, Depth Gauge, Flywheel)', () => {
+  const st = game({ mine: [], ongoing: ['ON-33', 'ON-14'], start: { heart: 5 } });
+  const tape = cards.find(c => c.id === 'IM-05');                  // +1 {heart} for each Ongoing card you have
+  assert.equal(Dig.dynamic(st, tape), '+3 {heart}', 'Lucky Coin, Tune-Up and Floor Jack are in play');
+  st.discard.push(cards.find(c => c.id === 'IM-13'), cards.find(c => c.id === 'IM-13'));
+  assert.equal(Dig.dynamic(st, cards.find(c => c.id === 'IM-25')), '+3 {heart}', 'Scrap Heap counts itself too: 2 in the discard pile + 1');
+  st.survived = 4; assert.equal(Dig.dynamic(st, cards.find(c => c.id === 'IM-26')), '+4 {heart}', 'Second Wind: one for each Monster survived');
+  assert.equal(Dig.dynamic(st, cards.find(c => c.id === 'ON-11')), '+1 to your rolls', 'Depth Gauge: +1 for every 3 survived');
+  assert.equal(Dig.dynamic(st, cards.find(c => c.id === 'ON-15')), '+2 to your rolls', 'Flywheel: +1 for each Immediate in the discard pile');
+  assert.equal(Dig.dynamic(st, cards.find(c => c.id === 'IM-13')), null, 'Med Kit does not depend on anything');
+});
