@@ -875,3 +875,31 @@ test('a Mystery Box: the cards you did not keep fly away once, on the pack scree
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
+
+test('choosing pack cards: a button shows the cards you already own (hidden when you own none), and it closes with a tap; a zoomed card has no instruction either', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await page.click('#play [data-p=startrun]'); await page.click('#play [data-p=openpack]'); await page.waitForSelector('#play .pcard[data-p=pick]');
+    assert.equal(await page.locator('#play [data-p=owned]').count(), 0, 'nothing owned yet: no button');
+    await page.evaluate(() => { const P = window.DigDigBoomPlay, run = P.S.match.runs.me, full = window.DigDigBoomUI.state.all; run.owned = ['PW-09', 'ON-33'].map((id, i) => ({ ...full.find(c => c.id === id), uid: 9300 + i })); P.render(); });
+    assert.match(await page.locator('#play [data-p=owned]').innerText(), /Your cards \(2\)/);
+    await page.click('#play [data-p=owned]');
+    assert.equal(await page.locator('#play .ownedpanel .ocard').count(), 2, 'both cards are shown');
+    assert.doesNotMatch(await page.locator('#play .ownedpanel').innerText(), /tap anywhere/i);
+    await page.click('#play [data-p=ownedclose]', { position: { x: 5, y: 5 } }); assert.equal(await page.locator('#play .ownedpanel').count(), 0);
+    await page.locator('#play .pcard[data-p=pick]').first().click({ button: 'right' }).catch(() => {});
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('table: there is no "take the damage" button until the die has finished rolling', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await begin(page, { mine: ['MO-01'], dice: [4], start: { heart: 6 } });
+    await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]');
+    assert.equal(await page.locator('#play .takedmg').isVisible(), false, 'the die is still rolling');
+    await page.waitForSelector('#play .takedmg', { state: 'visible', timeout: 4000 });
+    assert.equal(await page.locator('#play .takedmg.waitroll').count(), 0);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});

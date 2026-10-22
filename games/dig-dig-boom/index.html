@@ -774,6 +774,15 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .bstack .bdisc b { font-size: 17px; letter-spacing: .02em; }
 #play .bstack .bdisc .cjewel { position: absolute; left: 50%; top: -22px; transform: translateX(-50%); font-size: 30px; line-height: 1; color: #ffd13a; text-shadow: 0 2px 0 #8a5a00, 0 0 12px rgba(255,200,60,.9); animation: cjdrop .5s cubic-bezier(.3,1.4,.4,1) 1.2s backwards; }
 @keyframes cjdrop { 0% { transform: translate(-50%, -40px) scale(.5); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+/* your cards, to look at while you choose */
+#play .foot .ownedbtn { margin-right: auto; min-width: 0; padding-left: 22px; padding-right: 22px; }
+#play .ownedback { position: fixed; inset: 0; z-index: 32; display: flex; align-items: center; justify-content: center; background: rgba(10,6,3,.82); }
+#play .ownedpanel { max-width: calc(100vw - 40px); max-height: calc(100vh - 40px); overflow: auto; padding: 20px 24px 14px; border-radius: 22px; background: #241a14; border: 3px solid #e7b866; text-align: center; }
+#play .ownedpanel h3 { margin: 0 0 12px; font-size: 26px; font-weight: 900; color: #ffd45e; }
+#play .ownedpanel .cards { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+#play .ownedpanel .ocard { position: relative; display: block; flex: none; }
+#play .ownedpanel .closehint { margin-top: 10px; color: var(--dim); font-size: 15px; }
+#play .takedmg.waitroll { visibility: hidden; pointer-events: none; }          /* no "take the damage" until the die has landed */
 /* The Bank is a button, not a place for cards: a raised gold key at the right edge, bottom-aligned, that presses down */
 #play .piles { width: auto; height: auto; align-self: flex-end; margin-left: 0; flex: none; }
 #play .pile.bankp, #play .pile.bankp.live { flex: none; width: 210px; height: auto; min-height: 96px; padding: 10px 24px; flex-direction: row; gap: 14px; border-radius: 24px; border: 3px solid #fff0b8; color: #2a1700; font-size: 34px; font-weight: 900; letter-spacing: .02em; background: linear-gradient(180deg, #ffd45e, #e8920f); box-shadow: 0 8px 0 #8a4f06, 0 16px 24px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.55); overflow: visible; transition: transform .08s, box-shadow .08s; }
@@ -2829,8 +2838,8 @@ const AI = (() => {
   // The roll, played out: numbers flick past on the die and settle on the real result (already decided; this is only for the eye).
   function playDice() {
     $.querySelectorAll('.d10.fx-tumble .dnum[data-final]').forEach(el => {
-      const fast = !!el.closest('.action'), steps = fast ? 8 : 18, ms = fast ? 55 : 85;        // the roll in a fight happens a lot: quick; the Escape Bonus is a moment: slower
-      let n = 0; const fin = el.dataset.final, iv = setInterval(() => { n++; if (n >= steps || !el.isConnected) { clearInterval(iv); el.textContent = fin; return; } el.textContent = 1 + Math.floor(Math.random() * 10); }, ms);
+      const fast = !!el.closest('.action'), steps = fast ? 8 : 15, ms = fast ? 55 : 80;        // the roll in a fight happens a lot: quick; the Escape Bonus is a moment: slower
+      let n = 0; const fin = el.dataset.final, iv = setInterval(() => { n++; if (n >= steps || !el.isConnected) { clearInterval(iv); el.textContent = fin; const tb = el.closest('.action'); if (tb) tb.querySelectorAll('.waitroll').forEach(b => b.classList.remove('waitroll')); return; } el.textContent = 1 + Math.floor(Math.random() * 10); }, ms);
     });
   }
   function lbHTML(run, st) {
@@ -2895,7 +2904,7 @@ const AI = (() => {
     if (!S.tally || S.tally.run !== run || S.tally.key !== run.round) {
       const t = S.tally = { run, key: run.round, stage: pr.escape !== null ? 6 : 0, shown: 0 };
       const go = (n, ms) => setTimeout(() => { if (S.tally === t && t.stage < n) { t.stage = n; if (S.panel === 'prep' && S.run === run) render(); } }, ms * TP());
-      if (t.stage < 3) { go(1, 500); go(2, 2200); setTimeout(() => escapeRoll(t), 3300 * TP()); }          // the die appears already rolling
+      if (t.stage < 3) { go(1, 500); go(2, 1400); setTimeout(() => escapeRoll(t), 2300 * TP()); }          // Treasure, Monsters, the die: one beat apart          // the die appears already rolling
     }
     return S.tally.stage;
   }
@@ -2904,7 +2913,7 @@ const AI = (() => {
     const run = t.run; if (S.tally !== t || t.stage >= 4 || !run.prep || run.prep.step !== 'escape') return;
     if (S.match) Match.rollEscape(S.match); else Run.rollEscape(run);
     t.stage = 4; persist();
-    const up = n => ms => setTimeout(() => { if (S.tally === t && t.stage < n) { t.stage = n; if (S.panel === 'prep' && S.run === run) render(); } }, ms * TP()); up(5)(1900); up(6)(3500);
+    const up = n => ms => setTimeout(() => { if (S.tally === t && t.stage < n) { t.stage = n; if (S.panel === 'prep' && S.run === run) render(); } }, ms * TP()); up(5)(1700); up(6)(3300);
     if (S.panel === 'prep' && S.run === run) render();
   }
   // The reward ladder as a thermometer: the pack you would get at each number of gems, lit as the fill passes it.
@@ -2949,7 +2958,7 @@ const AI = (() => {
       const ps = Math.min(.8, fitCards(hand.length, .8, W, avail - sh - 14, 12));
       const slots = Array.from({ length: need }, (_, i) => { const c = chosen[i]; return `<div class="kslot ${c ? '' : 'empty'}" data-i="${i}" style="width:${250 * ss}px;height:${sh}px">${c ? pcard(c, ss, { act: 'pick', sel: true, badge: i + 1, kslot: true }) : '<span class="kplus">keep</span>'}</div>`; }).join('');
       body = `<div class="kitbar"><b>${A.esc(pr.pack.name)} Pack</b><span class="count" aria-label="${pr.picked.length} of ${need} chosen">Keep ${pr.picked.length} of ${need}</span></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool ${first && S.packFrom ? 'fly' : ''}">${first ? tearHTML(pr.pack) : ''}${first && S.packFrom ? flyPackHTML(pr.pack) : ''}${hand.map((c, i) => pcard(c, ps, { act: 'pick', i: pr.offer.indexOf(c), deal: first, dx: ((pr.offer.length - 1) / 2 - pr.offer.indexOf(c)) * (250 * ps + 14) })).join('')}</div>`;
-      foot = `<button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'}>Keep</button>`;
+      foot = `${run.owned.length ? `<button class="btn alt ownedbtn" data-p="owned">Your cards (${run.owned.length})</button>` : ''}<button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'}>Keep</button>`;
     } else if (step === 'reveal') {            // a Mystery Box: the same screen as the pack. The cards you did not keep fly away, then the next card of the deck is dealt face down in the row and turns over; nothing moves on until you say so
       const key = `${run.round}:reveal`, first = S.fxReveal !== key; S.fxReveal = key;
       const kept = pr.offer.filter(c => pr.picked.includes(c.uid)), rest = pr.offer.filter(c => !pr.picked.includes(c.uid)), need = kept.length;
@@ -3075,7 +3084,7 @@ const AI = (() => {
       const rr = open ? `<button class="rerollbtn" data-p="reroll" aria-label="Reroll">${ic('reroll')}<span>Reroll</span><small>${st.reroll} left</small></button>` : locked ? '<div class="lockednote">Locked in</div>' : '';
       return `<div class="action">${elig.length > 1 ? `<div class="aprompt"><button class="chip" data-p="triggerall">Use all ${elig.length}</button></div>` : ''}
         <div class="arow"><div class="dieb">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}${lock}</div>
-          <div class="astack">${calc}${rr}<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''} ${sure ? 'sure' : ''}" data-p="face">${sure ? `You can still use cards.<br>Tap again to ${f.defeat ? 'move on' : dmg ? `take ${dmg} damage` : 'carry on'}` : f.defeat ? 'Monster defeated: continue' : dmg ? `Take ${dmg} damage` : 'Take no damage'}</button></div></div></div>`;
+          <div class="astack">${calc}${rr}<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''} ${sure ? 'sure' : ''} ${fresh ? 'waitroll' : ''}" data-p="face">${sure ? `You can still use cards.<br>Tap again to ${f.defeat ? 'move on' : dmg ? `take ${dmg} damage` : 'carry on'}` : f.defeat ? 'Monster defeated: continue' : dmg ? `Take ${dmg} damage` : 'Take no damage'}</button></div></div></div>`;
     }
     if (st.pending) return `<div class="action"><div class="aprompt">${A.esc(st.pending.card.name)}: tap a Power card</div></div>`;
     if (st.over) return '';
@@ -3164,7 +3173,7 @@ const AI = (() => {
     else if (S.panel === 'done' && S.run) body = doneHTML();
     else if (S.panel === 'setup' || !S.st) body = setupHTML();
     else body = `<div class="pmain"><div class="ptable ${S.st.fight && S.st.fight.phase === 'before' && !S.st.over ? 'await-roll' : ''}" data-step="${S.st.over ? 'over' : S.st.fight ? (S.st.fight.phase === 'before' ? 'roll' : 'damage') : 'dig'}">${tableHTML()}</div></div>`;       // a Monster is in front of you and nothing else matters until you roll: the rest of the table dims
-    const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, Math.min(1.35, (innerHeight - 70) / 350))}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}<div class="closehint">tap anywhere to close</div></div>` : '';
+    const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, Math.min(1.35, (innerHeight - 70) / 350))}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}</div>` : '';
     const bottom = S.panel === 'dig' && S.st && !S.st.mine.length && !S.st.over && !S.st.fight && !S.st.pending && S.emptySeen !== S.st && !S.help;          // you dug the last card of your Mine: say what happens next, once
     const B = D.rules.beyond, note = bottom ? `<div class="mnote-back"><div class="mnote" role="dialog" aria-label="The bottom of your Mine"><h3>That was the bottom of your Mine</h3><p>From now on, every card you dig is a <b>Bonus Monster</b>. The next one is face up on the Mine: it deals <b>${B.firstDamage}</b> damage, the one after <b>${B.firstDamage + 1}</b>, and so on. Survive one and it is worth <b>${B.gems}</b> gems. You can still bank any time.</p><button class="btn" data-p="emptyok">Got it</button></div></div>` : '';
     let fin = '';
@@ -3173,7 +3182,12 @@ const AI = (() => {
       const where = lead ? 'You are in the lead already. Wait for your opponent; dig only if they pass you.' : need ? `To take the lead, survive ${need} Monster${need === 1 ? '' : 's'}.` : '';
       fin = `<div class="fnote-back"><div class="fnote" role="dialog" aria-label="The final round"><div class="fbig">FINAL ROUND</div><p class="fsub">${sub}</p>${where ? `<p class="fwhere">${where}</p>` : ''}<div class="frules ${S.finalHow ? 'open' : ''}"><ul><li><b>Nobody banks.</b> You keep digging until you are in the lead, or you go BOOM.</li><li>The <b>leader</b> is whoever has survived the most Monsters (your best from earlier rounds counts). Level, the one who got there first leads.</li><li>Once you are in the lead, <b>stop and wait</b>: digging on only risks it. If your opponent passes you, dig again.</li><li>The round ends when everyone else has gone BOOM: whoever is still in the lead holds the Crown Jewel.</li></ul></div><div class="fbtns"><button class="btn alt" data-p="finalhow">${S.finalHow ? 'Hide the rules' : 'How the final round works'}</button><button class="btn" data-p="finalok">Start digging</button></div></div></div>`;
     }
-    $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z + note + fin;
+    let ownedP = '';
+    if (S.showOwned && S.run && S.panel === 'prep') {          // a look at the cards you already own, while you choose (tap anywhere to close)
+      const list = S.run.owned, sc = Math.min(.55, fitCards(list.length, .55, Math.min(innerWidth, 1180) - 80, innerHeight - 190, 12)), inKit = new Set((S.run.kit || []).map(c => c.uid));
+      ownedP = `<div class="ownedback" data-p="ownedclose"><div class="ownedpanel" role="dialog" aria-label="Your cards"><h3>Your cards</h3><div class="cards">${list.map(c => `<span class="ocard" style="width:${250 * sc}px;height:${350 * sc}px">${A.playCard(c, sc)}${inKit.has(c.uid) ? '<span class="ctag last">In your kit</span>' : ''}</span>`).join('') || '<span class="note">You do not own any cards yet.</span>'}</div></div></div>`;
+    }
+    $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z + note + fin + ownedP;
     const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
     fitHero(); heroPlay(); fitTable(); playDice();
     if (S.packFrom) { const fp = $.querySelector('.flypack'); if (fp) { const r = fp.getBoundingClientRect(); fp.style.setProperty('--fx', Math.round(S.packFrom.x - (r.left + r.width / 2)) + 'px'); fp.style.setProperty('--fy', Math.round(S.packFrom.y - (r.top + r.height / 2)) + 'px'); } S.packFrom = null; }
@@ -3271,6 +3285,8 @@ const AI = (() => {
       case 'cards': S.help = false; UI.setMode('cards'); return;
       case 'unzoom': S.zoom = null; break;
       case 'emptyok': S.emptySeen = S.st; break;
+      case 'owned': S.showOwned = true; break;
+      case 'ownedclose': S.showOwned = false; break;
       case 'finalok': S.finalSeen = S.st; S.finalHow = false; S.aiDelay = D.ai.pace.startMs; break;
       case 'finalhow': S.finalHow = !S.finalHow; break;
       case 'zoom': S.zoom = findCard(ds.uid); break;

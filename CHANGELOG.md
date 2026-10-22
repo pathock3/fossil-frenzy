@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — small things:** while choosing pack cards, a **Your cards** button (bottom left, once you own some) shows the cards you already have. Adding up your gems is evenly paced (Treasure, Monsters, then the die, one beat apart) and the Escape Bonus die rolls a hair quicker. The "take N damage" button does not appear until the die has finished rolling. A zoomed card no longer says "tap anywhere to close". The Leaderboard tokens say **You** (blue) and **AI** (red), with the Crown Jewel sitting on the leader's token.
+
 - **Dig Dig BOOM! — the final round is announced:** before anyone digs in the last round a big FINAL ROUND card says so (and what you need to lead), with a button for a reminder of how the final round works; the AI waits until you start. In the final round there is **no Bank and no gem count** at all. The die you tap to roll now sits at the bottom right, above the Bank, for your right hand. After a Mystery Box the cards you did not keep fly away once (not again on the Starter Kit screen).
 - **Dig Dig BOOM! — AI difficulty levels:** `DDB.ai.level` is **normal** (the thinking AI on a small budget: quick to compute, about 69% against the old AI); **easy** is the old rules of thumb; **best** is the strongest we can build (for testing only). Change `level` in the data block.
 
