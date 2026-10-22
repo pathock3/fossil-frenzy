@@ -708,6 +708,10 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .krow { display: flex; align-items: center; justify-content: center; gap: 30px; }
 #play .kdef { margin: 0; max-width: 240px; font-size: 22px; font-weight: 800; line-height: 1.25; color: var(--text); }
 
+#play .mode.waiting { opacity: .7; }
+#play .cards.pool { position: relative; }
+#play .cards.pool.closedpack { display: flex; align-items: center; justify-content: center; }
+#play .cards.pool .tear { inset: 0; }
 /* The Bank is a button, not a place for cards: a raised gold key at the right edge, bottom-aligned, that presses down */
 #play .piles { width: auto; height: auto; align-self: flex-end; margin-left: 0; flex: none; }
 #play .pile.bankp, #play .pile.bankp.live { flex: none; width: 210px; height: auto; min-height: 96px; padding: 10px 24px; flex-direction: row; gap: 14px; border-radius: 24px; border: 3px solid #fff0b8; color: #2a1700; font-size: 34px; font-weight: 900; letter-spacing: .02em; background: linear-gradient(180deg, #ffd45e, #e8920f); box-shadow: 0 8px 0 #8a4f06, 0 16px 24px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.55); overflow: visible; transition: transform .08s, box-shadow .08s; }
@@ -2250,33 +2254,43 @@ const AI = (() => {
   const state = { all: [], source: '', status: 'loading', error: '', view: 'color', filter: 'all' };
 
   // ---------------- the sheet ----------------
-  async function fetchTab(gid) {
-    let lastErr = '';
-    for (const mk of D.sheet.urls) {
-      const url = mk(D.sheet.id, gid), ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), D.sheet.timeoutMs);
-      try {
-        const res = await fetch(url, { signal: ctl.signal, cache: 'no-store', credentials: 'omit' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const text = await res.text();
-        if (/^\s*<(!doctype|html)/i.test(text)) throw new Error('got a web page, not CSV (is the sheet shared as "anyone with the link"?)');
-        return text;
-      } catch (e) { lastErr = (e && e.message) || String(e); } finally { clearTimeout(timer); }
-    }
-    throw new Error(lastErr);
+  // Every address is asked at once and the first good answer wins (the others are dropped): a slow or blocked address no longer holds the game up.
+  function fetchTab(gid) {
+    const ctls = D.sheet.urls.map(() => new AbortController());
+    return new Promise((resolve, reject) => {
+      let left = ctls.length, lastErr = '';
+      D.sheet.urls.forEach(async (mk, i) => {
+        const timer = setTimeout(() => ctls[i].abort(), D.sheet.timeoutMs);
+        try {
+          const res = await fetch(mk(D.sheet.id, gid), { signal: ctls[i].signal, cache: 'no-store', credentials: 'omit' });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const text = await res.text();
+          if (/^\s*<(!doctype|html)/i.test(text)) throw new Error('got a web page, not CSV (is the sheet shared as "anyone with the link"?)');
+          ctls.forEach((c, k) => { if (k !== i) c.abort(); }); resolve(text);
+        } catch (e) { lastErr = (e && e.message) || String(e); if (--left === 0) reject(new Error(lastErr)); } finally { clearTimeout(timer); }
+      });
+    });
   }
-  async function load() {
-    state.status = 'loading'; render();
+  const savedCopy = () => { try { const c = JSON.parse(localStorage.getItem(D.sheet.cacheKey)); return c && c.text ? c : null; } catch (e) { return null; } };
+  // The page opens at once from the copy this browser kept the last time it read your sheet, then reads the sheet in the background; only if the sheet has changed
+  // does the game hear about it. (The very first visit has no copy yet: the menu is there, and Play lights up when the cards arrive.)
+  async function load(force) {
+    const saved = savedCopy();
+    if (saved && !force && !state.all.length) { state.all = E.cards(E.parseCSV(saved.text), D.columns); state.source = 'cache'; state.status = 'ok'; state.cachedAt = saved.t; state.fresh = false; }
+    else if (!state.all.length || force) { state.status = 'loading'; render(); }
+    let changed = true;
     try {
       const text = await fetchTab(D.sheet.tabs.cards);
-      state.all = E.cards(E.parseCSV(text), D.columns); state.source = 'sheet'; state.status = 'ok'; state.error = '';
+      changed = !saved || saved.text !== text || state.source !== 'cache' && state.source !== 'sheet';
+      if (changed) state.all = E.cards(E.parseCSV(text), D.columns);
+      state.source = 'sheet'; state.status = 'ok'; state.error = ''; state.fresh = true;
       try { localStorage.setItem(D.sheet.cacheKey, JSON.stringify({ t: Date.now(), text })); } catch (e2) { /* private window: fine */ }
     } catch (e) {
-      // Offline or the sheet is unreachable: use the copy this browser saved the last time it read the sheet (not part of the game's files), else the design sample.
-      let cached = null; try { cached = JSON.parse(localStorage.getItem(D.sheet.cacheKey)); } catch (e2) { /* none */ }
-      if (cached && cached.text) { state.all = E.cards(E.parseCSV(cached.text), D.columns); state.source = 'cache'; state.status = 'offline'; state.error = e.message; state.cachedAt = cached.t; }
+      // Offline or the sheet is unreachable: keep the copy this browser saved the last time it read the sheet (not part of the game's files), else the design sample.
+      if (saved) { if (!state.all.length) state.all = E.cards(E.parseCSV(saved.text), D.columns); state.source = 'cache'; state.status = 'offline'; state.error = e.message; state.cachedAt = saved.t; changed = force || false; }
       else { state.all = E.cards(E.parseCSV(DDB_SAMPLE_CSV), D.columns); state.source = 'sample'; state.status = 'offline'; state.error = e.message; }
     }
-    render(); document.dispatchEvent(new Event('ddb-cards'));
+    render(); if (changed || force) document.dispatchEvent(new Event('ddb-cards'));
   }
   const setMode = m => { document.body.dataset.mode = m; if (m === 'cards') render(); else document.dispatchEvent(new Event('ddb-mode')); };
   window.DigDigBoomUI = { state, load, render: () => render(), setMode, build: BUILD, api: {} };
@@ -2438,7 +2452,7 @@ const AI = (() => {
   const typeColors = c => D.types[c.type];
   // ---------------- the page ----------------
   function statusLine() {
-    if (state.status === 'loading') return '<span class="status">Reading your sheet…</span>';
+    if (state.status === 'loading' || (state.source === 'cache' && state.status === 'ok')) return '<span class="status">Reading your sheet…</span>';
     if (state.source === 'sheet') return `<span class="status"><b>Live from your sheet</b> · ${state.all.length} cards read just now</span>`;
     if (state.source === 'cache') return `<span class="status bad"><b>Could not reach the sheet</b> (${esc(state.error)}). Using the copy from ${new Date(state.cachedAt).toLocaleString()}. <button class="chip" data-act="reload">Try again</button></span>`;
     return `<span class="status bad"><b>Could not reach the sheet</b> (${esc(state.error)}). Showing a 6-card design sample only. <button class="chip" data-act="reload">Try again</button></span>`;
@@ -2467,7 +2481,7 @@ const AI = (() => {
     const a = el.dataset.act;
     if (a === 'view') state.view = el.dataset.v;
     else if (a === 'filter') state.filter = el.dataset.v;
-    else if (a === 'reload') { load(); return; }
+    else if (a === 'reload') { load(true); return; }
     else if (a === 'mode') { setMode(el.dataset.v); return; }
     render();
   });
@@ -2662,10 +2676,10 @@ const AI = (() => {
     // one circle per round: filled for the rounds you have finished, ringed for the one you are in
     const pips = run ? `<span class="pips" role="img" aria-label="Round ${Math.min(run.round, run.rounds)} of ${run.rounds}">${Array.from({ length: run.rounds }, (_, i) => `<i class="${i < run.round - 1 ? 'on' : i === run.round - 1 ? 'now' : ''}"></i>`).join('')}</span>` : '';
     const libLink = /^https?:$/.test(location.protocol) ? `<a class="libback" href="${A.esc(D.library.href)}"><span>‹</span> ${A.esc(D.library.name)}</a>` : '';
-    const newRun = `<button class="mode ${inProgress ? '' : 'primary'} ${S.confirmNew === 'startrun' ? 'confirm' : ''}" data-p="startrun" ${ready ? '' : 'disabled'}><b>${S.confirmNew === 'startrun' ? 'Tap again to replace your game' : inProgress ? 'New run' : 'Play'}</b></button>`;
-    const note = !ready ? (st.status === 'loading' ? 'Reading your sheet…' : 'No cards yet.')
+    const newRun = `<button class="mode ${inProgress ? '' : 'primary'} ${S.confirmNew === 'startrun' ? 'confirm' : ''} ${ready ? '' : 'waiting'}" data-p="startrun" ${ready ? '' : 'disabled'}><b>${S.confirmNew === 'startrun' ? 'Tap again to replace your game' : inProgress ? 'New run' : 'Play'}</b></button>`;
+    const note = !ready ? (st.status === 'loading' ? '' : 'No cards yet.')
       : offline ? 'Your sheet could not be reached, so only the design sample is here. Reload when you are online.'
-      : st.source === 'cache' ? 'Offline: using the copy of your sheet this browser saved last time.' : '';
+      : st.source === 'cache' && st.status === 'offline' ? 'Offline: using the copy of your sheet this browser saved last time.' : '';
     return `<div class="home">${libLink}<div class="homegrid">${heroHTML()}
       <div class="homemenu">
         <h1 class="logo"><span class="l1">Dig Dig</span><span class="l2">BOOM!<i>✦</i></span></h1>
@@ -2785,8 +2799,13 @@ const AI = (() => {
       body = `<div class="tallyrow" ${stage < 6 ? 'data-p="skiptally"' : ''}><div class="tallymain">${eq}${packBtn}</div>${gemChart(lvl, stage >= 6, stage === 5 ? pr.geodes + pr.monsters : null)}</div>`;
     } else if (step === 'escape') body = '';
     else if (step === 'pack') {
+      // The same layout the cards will be dealt into: the Keep places on top and, in the middle of the row below, the closed pack. It tears open right there.
       const info = Run.packInfo(run), col = (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a', plus = /\+$/.test(info.name);
-      body = `<button class="pack" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>`;
+      const need = Math.min(info.keep, info.draw), W = Math.min(innerWidth, 1180) - 48, avail = innerHeight - 32 - 150 - 92 - 30 - 20;
+      const ss = Math.min(.6, fitCards(need, .6, W, avail * .46)), sh = 350 * ss, ps = Math.min(.8, fitCards(info.draw, .8, W, avail - sh - 14, 12));
+      const slots = Array.from({ length: need }, (_, i) => `<div class="kslot empty" data-i="${i}" style="width:${250 * ss}px;height:${sh}px"><span class="kplus">keep</span></div>`).join('');
+      body = `<div class="kitbar"><b>${A.esc(info.name)} Pack</b><span class="count" aria-label="0 of ${need} chosen">Keep 0 of ${need}</span></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool closedpack" style="height:${350 * ps}px"><button class="pack" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button></div>`;
+      foot = `<button class="btn" data-p="keepgo" disabled>Keep</button>`;          // (already there, so nothing moves when the cards are dealt)
     } else if (step === 'keep') {
       const need = Run.keepCount(run);
       const fxKey = `${run.round}:${pr.offer.map(c => c.uid).join()}`, first = S.fxPack !== fxKey; S.fxPack = fxKey;       // the pack tears open once, the first time these cards are drawn
@@ -2796,7 +2815,7 @@ const AI = (() => {
       const chosen = pr.picked.map(id => pr.offer.find(c => c.uid === id)).filter(Boolean), hand = pr.offer.filter(c => !pr.picked.includes(c.uid));
       const ps = Math.min(.8, fitCards(hand.length, .8, W, avail - sh - 14, 12));
       const slots = Array.from({ length: need }, (_, i) => { const c = chosen[i]; return `<div class="kslot ${c ? '' : 'empty'}" data-i="${i}" style="width:${250 * ss}px;height:${sh}px">${c ? pcard(c, ss, { act: 'pick', sel: true, badge: i + 1, kslot: true }) : '<span class="kplus">keep</span>'}</div>`; }).join('');
-      body = `${first ? tearHTML(pr.pack) : ''}<div class="kitbar"><b>${A.esc(pr.pack.name)} Pack</b><span class="count" aria-label="${pr.picked.length} of ${need} chosen">Keep ${pr.picked.length} of ${need}</span></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool">${hand.map((c, i) => pcard(c, ps, { act: 'pick', i: pr.offer.indexOf(c), deal: first, dx: ((pr.offer.length - 1) / 2 - pr.offer.indexOf(c)) * (250 * ps + 14) })).join('')}</div>`;
+      body = `<div class="kitbar"><b>${A.esc(pr.pack.name)} Pack</b><span class="count" aria-label="${pr.picked.length} of ${need} chosen">Keep ${pr.picked.length} of ${need}</span></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool">${first ? tearHTML(pr.pack) : ''}${hand.map((c, i) => pcard(c, ps, { act: 'pick', i: pr.offer.indexOf(c), deal: first, dx: ((pr.offer.length - 1) / 2 - pr.offer.indexOf(c)) * (250 * ps + 14) })).join('')}</div>`;
       foot = `<button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'}>Keep</button>`;
     } else if (step === 'reveal') {            // a Mystery Box: the other cards go away, the next card of the deck is dealt and turned over; nothing moves on until you say so
       const kept = pr.offer.filter(c => pr.picked.includes(c.uid)), rest = pr.offer.filter(c => !pr.picked.includes(c.uid)), sc = cardScale(kept.length + pr.extra.length, .95, .4), w = 250 * sc;
@@ -2825,7 +2844,7 @@ const AI = (() => {
       body = `${sweep}<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${n} of ${pr.kitMax} chosen">${n} of ${pr.kitMax}</span></div><div class="krow"><div class="kslots ${first ? 'kfirst' : ''}">${slots}</div><p class="kdef">${say}</p></div><div class="poolhead">Your cards</div><div class="cards pool ${first ? 'kfirst' : ''}">${hand.map((c, i) => pcard(c, ps, { act: 'kitpick', i, ...tagOf2(c) })).join('') || '<span class="note">Everything you own is in your Starter Kit.</span>'}</div>`;
       foot = `<button class="btn" data-p="startround">Start round ${run.round}${run.round === run.rounds ? ' · final' : ''}</button>`;
     }
-    const stage = step === 'kit' || step === 'keep' || step === 'reveal' ? body : `<div class="prepstage">${body}</div>`;
+    const stage = step === 'kit' || step === 'keep' || step === 'reveal' || (step === 'pack' && !pr.banked) ? body : `<div class="prepstage">${body}</div>`;
     return `<div class="panel setup prep"><div class="scroll" id="setupScroll">${stage}</div>${foot ? `<div class="foot">${foot}</div>` : ''}</div>`;
   }
   function doneHTML() {
@@ -3125,7 +3144,7 @@ const AI = (() => {
   document.addEventListener('ddb-cards', () => { restore(); render(); }); document.addEventListener('ddb-mode', render);
   window.addEventListener('resize', () => { if (document.body.dataset.mode === 'play') fitHero(); });
   window.DigDigBoomPlay = { S, render, act: (a, d) => act(a, { dataset: d || {} }), tick: aiTick };
-  render();
+  restore(); render();          // the saved copy of your cards is already in: the real menu (Continue and all) shows on the first frame
 })();
 </script>
 </body>

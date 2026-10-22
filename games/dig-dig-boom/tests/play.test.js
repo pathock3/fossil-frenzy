@@ -763,3 +763,22 @@ test('menu: opening the game from the shelf shows the main menu with Continue (n
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
+
+test('the main menu is the real one on the first frame: with a saved copy of the cards it shows at once while the sheet is read in the background, and a changed sheet is picked up quietly', SKIP, async () => {
+  const browser = await chromium.launch(exe ? { executablePath: exe } : {});
+  const page = await (await browser.newContext({ viewport: { width: 1180, height: 820 }, hasTouch: true })).newPage();
+  let delay = 0, body = csv;
+  await page.route('**/docs.google.com/**', async r => { if (delay) await new Promise(x => setTimeout(x, delay)); r.fulfill({ status: 200, contentType: 'text/csv', body }); });
+  try {
+    await page.goto(FILE); await page.waitForSelector('#play [data-p=startrun]:not([disabled])');            // the first visit: no saved copy yet
+    delay = 2500; body = csv + '\nZZ-99,Test Pup,Power,4,Booster,1,+1 {heart}\n';
+    const t = Date.now(); await page.goto(FILE); await page.waitForSelector('#play .home');
+    assert.ok(Date.now() - t < 1500, 'the menu shows without waiting for the sheet: ' + (Date.now() - t) + ' ms');
+    assert.equal(await page.locator('#play [data-p=startrun]').isDisabled(), false, 'Play is ready on the first frame');
+    assert.equal(await page.locator('#play .homenote').count(), 0, 'no "Reading your sheet" placeholder');
+    const before = await page.evaluate(() => window.DigDigBoomUI.state.all.length);
+    await page.waitForFunction(() => window.DigDigBoomUI.state.source === 'sheet', null, { timeout: 8000 });
+    assert.equal(await page.evaluate(() => window.DigDigBoomUI.state.all.length), before + 1, 'the sheet changed: the new card is in');
+    assert.equal(await page.locator('#play .homenote').count(), 0);
+  } finally { await browser.close(); }
+});
