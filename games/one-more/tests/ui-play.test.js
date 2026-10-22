@@ -376,7 +376,7 @@ test('save: a boom showing survives a reload and still waits for a tap; so does 
     let s = await state(page);
     assert.equal(s.phase, 'boomed');
     assert.match(await page.locator('#banner').innerText(), /BOOM/);
-    assert.match(await page.locator('#banner').innerText(), /lose 1 gem\b/);
+    assert.match(await page.locator('#banner').innerText(), /loses? 1 gem\b/);
     assert.equal(await page.locator('.card.lost').count(), 1);
     await page.waitForTimeout(500);
     await page.tap('.ztable');

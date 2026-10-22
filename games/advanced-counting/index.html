@@ -316,8 +316,8 @@ const GAME_DATA = {
       'While counting, the Flip button stays out of sight (it has nothing to do); in practice it reads Start whenever the cards are face up. Cards you have turned correctly keep a soft gold edge, and the card you got wrong glows red for a moment; neither says what comes next.',
       'The results appear as soon as the last card is turned. Times are shown as 7.3s, 1:05.3 or 1:02:05.',
       'There is no mid-round save: closing the page returns you to the main menu.',
-      'Tapping a card while the Menu is open only closes the Menu. Tapping a card that is already face up does nothing.',
-      'Sound is synthesised (no files). The speaker icon in the main menu corner turns it off; it is remembered on this device.',
+      'Tapping a card while the Menu is open only closes the Menu. While counting, tapping a card that is already face up does nothing.',
+      'Sound is synthesised (no files). Sound can be switched off under Settings on the main menu; it is remembered on this device.',
     ],
   },
 
@@ -921,11 +921,11 @@ const Sound = (() => {
       case 'wrong': {
         sfx('miss'); sfx('riffle', 1, 140);
         el.classList.add('wrong');
+        syncCards(E.waveDelays(r.def.rows, r.def.cols, pos));          // (turning the tapped card clears its animation classes, so the shake goes on after)
         if (!reduced()) {
           const l = el.firstElementChild; l.classList.remove('pulse', 'pulse2', 'pop'); void l.offsetWidth; l.classList.add('nope');
           boardEl.classList.remove('shake'); void boardEl.offsetWidth; boardEl.classList.add('shake');
         }
-        syncCards(E.waveDelays(r.def.rows, r.def.cols, pos));
         syncDock();
         break;
       }

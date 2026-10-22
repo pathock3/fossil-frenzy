@@ -332,8 +332,6 @@ const GAME_DATA = {
     tagline: 'Push your luck. Dig for just one more…',
     hintDig: 'Tap the pile to dig.',
     hintMore: 'Dig again — or tap your gems to save.',
-    hintBoom: 'Tap anywhere to go on.',
-    hintWait: 'Tap anywhere to go on.',
     judgments: [
       'Who starts: the seat order is shuffled at random when a game begins (the rulebook says "randomly determine a turn order"). A rematch uses the rulebook’s order instead: fewest gems first, then second fewest, and so on; in a two-player game the loser goes first (after a tie, the one who went second).',
       'Refresh when only booms remain: the rulebook lets you refresh when you notice every card left is a boom. Here it happens by itself at that moment, because declining is never better. The gems you have at risk stay on the table and are not shuffled in; it only happens if the shuffle brings at least one gem back.',
@@ -805,7 +803,7 @@ const Sound = (() => {
   const saveSetup = () => pref.set(SETUP_KEY, JSON.stringify(ui.setup));
 
   const ui = { screen: 'home', setup: loadSetup(), seats: [], st: null, hold: null, botBusy: false, botTimer: null,
-               menu: null, help: false, settings: false, showOver: false, overHandled: false, shown: [], countTimers: [], zc: 0,
+               menu: null, help: false, settings: false, showOver: false, overHandled: false, shown: [], countTimers: [], fxTimers: [], zc: 0,
                boomAt: -1e9, fxBoom: -1, built: null, bannerKey: '', ovSig: null, pace: Object.assign({}, D.pace), cw: 100, ch: 140, notice: '', gameNo: 0 };
   ui.sound = pref.get(SOUND_KEY) !== 'off';
   ui.hand = pref.get(HAND_KEY) === 'left' ? 'left' : 'right';           // which side the draw pile sits on (right-handed by default)
@@ -816,7 +814,7 @@ const Sound = (() => {
   const audio = Sound.create({ data: D.sound, AudioContext: window.AudioContext || window.webkitAudioContext });
   audio.setEnabled(ui.sound);
   // (sounds can follow an action after a short gap: the card's tick, then its glint)
-  const sfx = (name, opts, afterMs = 0) => { const go = () => { try { audio.play(name, opts); } catch (e) { /* sound is never allowed to break the game */ } }; if (afterMs) setTimeout(go, afterMs); else go(); };
+  const sfx = (name, opts, afterMs = 0) => { const go = () => { try { audio.play(name, opts); } catch (e) { /* sound is never allowed to break the game */ } }; if (afterMs) ui.fxTimers.push(setTimeout(go, afterMs)); else go(); };
   const runRate = k => { const sc = D.sound.run.scale; return Math.pow(2, sc[Math.min(k, sc.length - 1)] / 12); };
   document.addEventListener('visibilitychange', () => { if (document.hidden) audio.suspend(); });
 
@@ -1151,7 +1149,7 @@ const Sound = (() => {
       }
       setTimeout(() => { flash.remove(); sparks.forEach(s => s.remove()); }, 1000);
     };
-    if (reduced()) go(); else setTimeout(go, 250);
+    if (reduced()) go(); else ui.fxTimers.push(setTimeout(go, 250));
   }
   function riffle() {
     sfx('refresh', {}, 120);
@@ -1165,7 +1163,7 @@ const Sound = (() => {
     const st = ui.st;
     if (!st || st.over) return '';
     if (st.phase === 'boomed' && st.lastBoom) {
-      const who = ui.seats[st.current], lost = st.lastBoom.lost.length, you = !isBot(st.current);
+      const who = ui.seats[st.current], lost = st.lastBoom.lost.length, you = !isBot(st.current) && (/^you$/i.test(who.name) || ui.seats.filter((x, i) => !isBot(i)).length === 1);          // "You lose" only for the seat called You, or the one human
       const line = lost ? `${you ? 'You lose' : esc(who.name) + ' loses'} ${lost} ${lost === 1 ? 'gem' : 'gems'}` : (you ? 'Nothing lost' : esc(who.name) + ' loses nothing');
       return `<div class="big">BOOM!</div><div class="lostn">${line}</div><div class="go">Tap to go on</div>`;
     }
@@ -1228,6 +1226,7 @@ const Sound = (() => {
     clearTimeout(ui.botTimer); ui.botTimer = null; ui.botBusy = false;
     clearTimeout(ui.overTimer); ui.overTimer = null;
     ui.countTimers.forEach(clearTimeout); ui.countTimers = [];
+    ui.fxTimers.forEach(clearTimeout); ui.fxTimers = [];          // a boom's sound and flash, a save's clink: none may land on the next game
   }
   function settleScores() {                              // show the true scores now (a tap skips the counting-up)
     ui.countTimers.forEach(clearTimeout); ui.countTimers = [];
@@ -1266,7 +1265,8 @@ const Sound = (() => {
     ui.overHandled = true;
     pref.set(DONE_KEY, (+pref.get(DONE_KEY) || 0) + 1);
     const r = ui.st.result, humanWon = r.winners.some(i => !isBot(i));
-    const show = () => { ui.showOver = true; sfx(humanWon ? (r.tie ? 'tie' : 'win') : (r.tie ? 'tie' : 'lose')); };
+    ui.overSound = r.tie ? 'tie' : humanWon ? 'win' : 'lose';          // the same sound whether the wait runs out or a tap skips it
+    const show = () => { ui.showOver = true; sfx(ui.overSound); };
     if (reduced()) show(); else ui.overTimer = setTimeout(() => { show(); render(); }, ui.pace.overDelay + (ui.lastSaved || 0) * ui.pace.countStep);   // let the last gems land first
   }
 
@@ -1359,7 +1359,7 @@ const Sound = (() => {
   function tableTap(kind) {
     const st = ui.st;
     if (!st) return;
-    if (st.over) { if (!ui.showOver) { clearTimeout(ui.overTimer); settleScores(); ui.showOver = true; sfx(st.result.winners.some(i => !isBot(i)) ? 'win' : 'lose'); render(); } return; }
+    if (st.over) { if (!ui.showOver) { clearTimeout(ui.overTimer); settleScores(); ui.showOver = true; sfx(ui.overSound || 'lose'); render(); } return; }
     if (ui.botBusy) { skipBot(); return; }
     if (st.phase === 'boomed') { if (nowMs() - ui.boomAt >= ui.pace.boomGuardMs) { settleScores(); passAfterBoom(); } return; }
     if (ui.hold) { ui.hold = null; settleScores(); render(); startTurnFlow(ui.pace.botStart); return; }
