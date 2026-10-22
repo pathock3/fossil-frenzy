@@ -3299,7 +3299,7 @@ const AI = (() => {
         const r = from && from[c.uid] ? from[c.uid] : { x: innerWidth / 2 - 63 + (i - (rest.length - 1) / 2) * 130, y: innerHeight * .34, w: 125, h: 175 };
         return `<span class="sweepcard" style="--i:${i};left:${Math.round(r.x)}px;top:${Math.round(r.y)}px;width:${Math.round(r.w)}px;height:${Math.round(r.h)}px;--tx:${-Math.round(r.x + r.w + 120)}px;--ty:${-Math.round(r.y + r.h + 100)}px">${A.playCard(c, r.w / 250)}</span>`;
       }).join('')}</div>` : '';
-      body = `${sweep}<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${n} of ${pr.kitMax} chosen">${n} of ${pr.kitMax}</span></div><div class="krow"><div class="kslots ${first ? 'kfirst' : ''}">${slots}</div><p class="kdef">${say}<small>Any place you leave empty gets a ${ic('gem')} gem instead.</small></p></div><div class="poolhead">Your cards</div><div class="cards pool ${first ? 'kfirst' : ''}" style="min-height:${Math.round(350 * ps) + 24}px">${hand.map((c, i) => pcard(c, ps, { act: 'kitpick', i, ...tagOf2(c) })).join('')}</div>`;
+      body = `${sweep}<div class="kitbar"><b>Starter Kit</b></div><div class="krow"><div class="kslots ${first ? 'kfirst' : ''}">${slots}</div><p class="kdef">${say}<small>Any place you leave empty gets a ${ic('gem')} gem instead.</small></p></div><div class="poolhead">Your cards</div><div class="cards pool ${first ? 'kfirst' : ''}" style="min-height:${Math.round(350 * ps) + 24}px">${hand.map((c, i) => pcard(c, ps, { act: 'kitpick', i, ...tagOf2(c) })).join('')}</div>`;
       foot = `<button class="btn" data-p="startround">Start round ${run.round}${run.round === run.rounds ? ' · final' : ''}</button>`;
     }
     const stage = step === 'kit' || step === 'keep' || step === 'reveal' || (step === 'pack' && !pr.banked) ? body : `<div class="prepstage">${body}</div>`;
@@ -3675,7 +3675,8 @@ const AI = (() => {
   window.addEventListener('pointermove', e => {
     if (!drag) return;
     if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > 12) {
-      drag.moved = true; const r = drag.el.getBoundingClientRect(), g = drag.el.cloneNode(true); g.removeAttribute('data-p'); g.classList.add('dragghost'); g.style.cssText += `;position:fixed;left:0;top:0;width:${r.width}px;height:${r.height}px;z-index:40;pointer-events:none;margin:0`; document.body.appendChild(g); drag.ghost = g; drag.w = r.width; drag.h = r.height; drag.el.classList.add('dragging');
+      drag.moved = true; const r = drag.el.getBoundingClientRect(), g = drag.el.cloneNode(true); g.removeAttribute('data-p'); g.classList.remove('deal'); g.querySelectorAll('.dback').forEach(x => x.remove()); g.style.animation = 'none'; g.querySelectorAll('*').forEach(x => { x.style.animation = 'none'; }); g.classList.add('dragghost');          // (a copy of a card that was just dealt must not replay the deal: its turn-over made the drag flicker between the card's back and its face)
+      g.style.cssText += `;position:fixed;left:0;top:0;width:${r.width}px;height:${r.height}px;z-index:40;pointer-events:none;margin:0`; document.body.appendChild(g); drag.ghost = g; drag.w = r.width; drag.h = r.height; drag.el.classList.add('dragging');
     }
     if (drag.moved) {
       drag.ghost.style.transform = `translate(${e.clientX - drag.w / 2}px, ${e.clientY - drag.h * .6}px) rotate(-3deg) scale(1.05)`;
