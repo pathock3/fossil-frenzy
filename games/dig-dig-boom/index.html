@@ -849,6 +849,16 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .ownedpanel .ocard { position: relative; display: block; flex: none; }
 #play .ownedpanel .closehint { margin-top: 10px; color: var(--dim); font-size: 15px; }
 #play .takedmg.waitroll { visibility: hidden; pointer-events: none; }          /* no "take the damage" until the die has landed */
+/* The die sits on the Mine: you tap the Mine to roll, and the result lands in the same spot. It never takes a tap itself (the Mine underneath does). */
+#play .stack { position: relative; }
+#play .deckdie { position: absolute; z-index: 4; left: 0; top: 0; width: calc(250px * var(--ca)); height: calc(350px * var(--ca)); display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+#play .deckdie .d10 { width: calc(250px * var(--ca) * .74); height: calc(250px * var(--ca) * .74); filter: drop-shadow(0 6px 0 rgba(0,0,0,.5)); }
+#play .deckdie .tapword { margin-top: 6px; font-size: 20px; font-weight: 900; white-space: nowrap; background: var(--accent); color: #1c1410; padding: 6px 16px; border-radius: 99px; letter-spacing: .04em; }
+#play .deckdie .dieb { width: auto; height: auto; filter: none; }
+#play .deck.rolling { opacity: 1; }
+#play .deck.rolling .cw { opacity: .45; }
+#play .action .astack .takedmg { width: fit-content; min-width: 150px; min-height: 60px; padding: 8px 20px; font-size: 26px; line-height: 1.15; }
+#play .action .astack .takedmg.sure { font-size: 16px; width: 210px; padding: 8px 12px; }
 /* Prep is one screen: it never scrolls (the pack's rays and sparks reach past the edges, which used to let it scroll) */
 #play .panel.prep #setupScroll, #play .panel.prep .scroll { overflow: hidden; overscroll-behavior: none; }
 #play .kitbar + .kslots, #play .kitbar + .krow { margin-top: 20px; }          /* the chosen card's outline and number badge reach above its place: keep them clear of the title */
@@ -1183,12 +1193,17 @@ const DDB = {
       ['gainPer',   "^\\+(\\d+) \\{(heart|reroll)\\} (?:for each|per) (.+)$"],
       ['ifNoOther', "^If (?:no other card triggers|this is the only card you trigger), (.+)$"],
       ['ifHeart',   "^If you have (\\d+) \\{heart\\} or less, (.+)$"],
+      ['ifDmg',     "^If this Monster's \\{damage\\} is (\\d+) or less, (.+)$"],
+      ['nextHalve', "^Your next Monster deals half \\{damage\\}, rounded down$"],
+      ['nextNone',  "^Your next Monster deals no \\{damage\\}$"],
+      ['stepBack',  "^Move every Monster set back one step on its damage ladder$"],
+      ['trapdoor',  "^Move the next Monster in your Mine to the bottom$"],
       ['block',     "^Block (\\d+) \\{damage\\}$"],
       ['block',     "^Deal (\\d+) \\{damage\\} to the Monster$"],
       ['raise',     "^\\+(\\d+) to your result$"],          // slide the die up: upright cards it now reaches fire too (a chain), the Pet included          // the same thing, as the rules now say it: that many damage markers go on the Monster
       ['survive1',  "^If this Monster would make you BOOM, survive with (\\d+) \\{heart\\}$"],
       ['halve',     "^This Monster deals half \\{damage\\}, rounded down$"],
-      ['defeat',    "^Defeat the Monster$"],
+      ['defeat',    "^[Dd]efeat (?:the Monster|it)$"],
       ['noDamage',  "^You take no \\{damage\\}$"],
       ['echo',      "^Do the effect of the top Immediate card in your discard pile$"],
       ['burnout',   "^(.+), then move this card up (\\d+) \\(max (\\d+)\\)$"],                // a Burnout card: it moves UP the line right after it triggers, and stops at its max (10)
@@ -1233,6 +1248,14 @@ const DDB = {
       ['cowcatcher', "^Your first Monster each Dig deals no \\{damage\\}$"],
       ['panic',      "^The first time a roll would make you BOOM, take an Extra Roll, then this card breaks$"],
       ['thorned',    "^At any time, you may lose (\\d+) \\{heart\\} to take an Extra Roll$"],
+      ['capDamage',  "^Monsters deal at most (\\d+) \\{damage\\}$"],
+      ['ignoreSmall', "^Monsters with (\\d+) or less \\{damage\\} deal no \\{damage\\}$"],
+      ['everyNth',   "^Every (\\d+)(?:st|nd|rd|th) Monster you dig deals no \\{damage\\}$"],
+      ['keepHigher', "^Your Extra Rolls keep the higher die$"],
+      ['firstFree',  "^The first Extra Roll you take each Dig costs nothing$"],
+      ['phoenix',    "^The first time a Monster would make you BOOM, set your \\{heart\\} to (\\d+) instead, then this card breaks$"],
+      ['modPerReroll', "^\\+(\\d+) to your rolls for each Extra Roll you have, up to \\+(\\d+)$"],
+      ['modHigh',    "^While you have (\\d+) \\{heart\\} or more, \\+(\\d+) to your rolls$"],
     ],
     events: [                                            // what comes after "Whenever"
       ['gainHeart',   "^you gain \\{heart\\}$"],
@@ -1240,8 +1263,12 @@ const DDB = {
       ['digMonster',  "^you dig a Monster with (\\d+)\\+ \\{damage\\}$"],
       ['takeDamage',  "^you take (?:(\\d+)\\+ )?\\{damage\\}$"],
       ['defeat',      "^you defeat a Monster$"],
-      ['spendReroll', "^you spend a \\{reroll\\}$"],
+      ['spendReroll', "^you spend an? (?:\\{reroll\\}|Extra Roll)$"],
       ['triggers',    "^(\\d+)\\+ cards trigger on one roll$"],
+      ['rollExact',   "^you roll an? (\\d+)$"],
+      ['overflow',    "^you gain an Extra Roll you have no room for$"],
+      ['faceLow',     "^you face a Monster with a result of (\\d+) or less$"],
+      ['faceHigh',    "^you face a Monster with a result of (\\d+) or more$"],
     ],
     reactions: [                                         // what a "Whenever ..." card does
       ['gainMore', "^gain (\\d+) more$"],
@@ -1366,11 +1393,12 @@ const Dig = (() => {
     switch (h.op) {
       case 'list': return { op: 'list', items: listItems(s) };
       case 'whenKept': { const k = match(PH.kept, s); return k ? { op: 'whenKept', kept: k.op } : null; }
-      case 'gainHalf': case 'gainDmg': case 'block': case 'raise': case 'survive1': case 'halve': case 'defeat': case 'noDamage': case 'echo': case 'slide': case 'fill': case 'rewind': case 'shoo':
+      case 'gainHalf': case 'gainDmg': case 'block': case 'raise': case 'survive1': case 'halve': case 'defeat': case 'noDamage': case 'echo': case 'slide': case 'fill': case 'rewind': case 'shoo': case 'nextHalve': case 'nextNone': case 'stepBack': case 'trapdoor':
         return { op: h.op, n: m[1] ? Number(m[1]) : undefined };
       case 'gainPer': { const per = match(PH.per, m[3]); return per ? { op: 'gainPer', n: Number(m[1]), res: m[2], per: per.op } : null; }
       case 'ifNoOther': { const t = parseSentence(m[1]); return t ? { op: 'if', cond: { noOther: true }, then: t } : null; }
       case 'ifHeart': { const t = parseSentence(m[2]); return t ? { op: 'if', cond: { heartAtMost: Number(m[1]) }, then: t } : null; }
+      case 'ifDmg': { const t = parseSentence(m[2]); return t ? { op: 'if', cond: { dmgAtMost: Number(m[1]) }, then: t } : null; }
       case 'burnout': { const t = parseSentence(m[1]); return t ? { op: 'seq', list: [t, { op: 'burnout', n: Number(m[2]), max: Math.min(R.line.max, Number(m[3])) }] } : null; }
       case 'look': return { op: 'look', n: Number(m[1]) };
       case 'setHeart': return { op: 'setHeart', n: Number(m[1]) };
@@ -1421,6 +1449,14 @@ const Dig = (() => {
       case 'cowcatcher': o.flags.cowcatcher = true; break;
       case 'panic': o.flags.panic = true; break;
       case 'thorned': o.flags.thorned = n(1); break;
+      case 'capDamage': o.flags.capDamage = n(1); break;
+      case 'ignoreSmall': o.flags.ignoreSmall = n(1); break;
+      case 'everyNth': o.flags.everyNth = n(1); break;
+      case 'keepHigher': o.flags.keepHigher = true; break;
+      case 'firstFree': o.flags.firstFree = true; break;
+      case 'phoenix': o.flags.phoenix = n(1); break;
+      case 'modPerReroll': o.mods.push({ plus: n(1), perReroll: true, cap: n(2) }); break;
+      case 'modHigh': o.mods.push({ plus: n(2), heartAtLeast: n(1) }); break;
     }
     return o;
   }
@@ -1487,6 +1523,7 @@ const Dig = (() => {
     const before = st[res], cap = R.caps[res]; st[res] = Math.min(cap, before + want); const got = st[res] - before;
     log(st, 'effect', `${src}: +${n}${bonus ? ' (+' + bonus + ' more)' : ''} {${res}}${got < want ? ' (the track is full at ' + cap + ')' : ''}`);
     if ((got > 0 || RL.gainAtCapFires) && depth < R.maxChain && res === 'heart') fire(st, 'gainHeart', { n: got }, depth + 1);
+    if (got < want && depth < R.maxChain && res === 'reroll') fire(st, 'overflow', {}, depth + 1);          // an Extra Roll with no room for it
   }
   function lose(st, n, src) {
     if (over(st) || n <= 0) return;
@@ -1502,8 +1539,8 @@ const Dig = (() => {
     for (const o of st.ongoing.slice()) {
       for (const w of compile(o).ongoing.watchers) {
         if (w.ev !== ev) continue;
-        const v = ev === 'takeDamage' ? data.n : ev === 'digMonster' ? data.damage : ev === 'triggers' ? data.n : 1;
-        if (ev === 'triggers' ? v !== w.min : v < w.min) continue;
+        const v = ev === 'takeDamage' ? data.n : ev === 'digMonster' ? data.damage : ev === 'triggers' ? data.n : ev === 'rollExact' ? data.die : ev === 'faceLow' || ev === 'faceHigh' ? data.r : 1;
+        if (ev === 'triggers' || ev === 'rollExact' ? v !== w.min : ev === 'faceLow' ? v > w.min : v < w.min) continue;
         for (let k = 0; k < times(st, o); k++) run(st, [w.react], { src: o, depth });
       }
     }
@@ -1539,7 +1576,7 @@ const Dig = (() => {
       case 'gainDmg': gain(st, 'heart', f ? f.damage : 0, src, depth); break;
       case 'gainPer': gain(st, e.res, e.n * per(st, e.per, ctx), src, depth); break;
       case 'if': {
-        const ok = e.cond.noOther ? (ctx.trig ? triggered(st, ctx.trig).size : 1) <= 1 : e.cond.heartAtMost !== undefined ? st.heart <= e.cond.heartAtMost : true;
+        const ok = e.cond.noOther ? (ctx.trig ? triggered(st, ctx.trig).size : 1) <= 1 : e.cond.heartAtMost !== undefined ? st.heart <= e.cond.heartAtMost : e.cond.dmgAtMost !== undefined ? !!f && f.damage <= e.cond.dmgAtMost : true;
         if (ok) apply(st, e.then, ctx); else log(st, 'effect', `${src}: its condition is not met`);
         break;
       }
@@ -1635,6 +1672,18 @@ const Dig = (() => {
         if (!c) { log(st, 'effect', `${src}: your Mine is empty`); break; }
         log(st, 'dig', `${src}: digs ${c.name}`); resolveDug(st, c, depth + 1, { autoDefeat: true }); break;
       }
+      case 'nextHalve': st.flags.nextHalve = true; log(st, 'effect', `${src}: your next Monster deals half {damage}`); break;
+      case 'nextNone': st.flags.nextNone = true; log(st, 'effect', `${src}: your next Monster deals no {damage}`); break;
+      case 'stepBack': {
+        let n = 0; for (const k of Object.keys(st.setCount)) if (st.setCount[k] > 0) { st.setCount[k]--; n++; }
+        log(st, 'effect', `${src}: ${n ? n + ' Monster set' + (n === 1 ? '' : 's') + ' moved back one step' : 'no Monster set has started its ladder'}`); break;
+      }
+      case 'trapdoor': {
+        const i = st.mine.findIndex(c => c.type === 'Monster');
+        if (i < 0) { log(st, 'effect', `${src}: no Monster in your Mine`); break; }
+        const [c] = st.mine.splice(i, 1); st.mine.push(c); if (i < st.known) st.known--;
+        log(st, 'effect', `${src}: a Monster falls to the bottom of your Mine`); break;
+      }
       case 'clone': break;                                // an Ongoing card; handled when placed
       case 'whenKept': break;                             // only matters in Prep (Booster Pack)
     }
@@ -1692,8 +1741,10 @@ const Dig = (() => {
     const dmg = m.bonus ? m.damageNow : lad[Math.min(n, lad.length) - 1];
     const prev = st.fight;                                    // a Monster dug by Sneak Attack while another is being faced must not replace it
     const f = st.fight = { monster: m, damage: dmg, step: m.bonus ? undefined : Math.min(n, lad.length), phase: 'before', die: null, first: st.monstersDug === 1, fixed: null,
-      block: 0, halve: false, noDamage: false, defeat: false, surviveAt: null, sparkUsed: false, rolls: 0, trig: [], deferred: [], used: [] };
+      block: 0, halve: false, noDamage: false, defeat: false, surviveAt: null, sparkUsed: false, rolls: 0, trig: [], deferred: [], used: [], n: st.monstersDug };
     log(st, 'dig', `${m.name}${m.bonus ? '' : ' #' + n} — deals ${dmg} {damage}`);
+    if (st.flags.nextHalve) { f.halve = true; delete st.flags.nextHalve; log(st, 'effect', `This Monster deals half {damage}`); }
+    if (st.flags.nextNone) { f.noDamage = true; delete st.flags.nextNone; log(st, 'effect', `This Monster deals no {damage}`); }
     if (opt.autoDefeat) { fire(st, 'digMonster', { damage: dmg }, 1); f.defeat = true; log(st, 'effect', `The Monster is defeated without a roll`); if (!over(st)) finishFight(st, true); st.fight = over(st) ? null : prev; return; }
     fire(st, 'digMonster', { damage: dmg }, 1);
     if (over(st)) return;
@@ -1704,10 +1755,12 @@ const Dig = (() => {
     for (const o of st.ongoing) for (const m of compile(o).ongoing.mods) {
       if (m.vsDamage !== undefined && !(f.damage >= m.vsDamage)) continue;
       if (m.heartAtMost !== undefined && !(st.heart <= m.heartAtMost)) continue;
+      if (m.heartAtLeast !== undefined && !(st.heart >= m.heartAtLeast)) continue;
       if (m.lethal && !(f.damage >= st.heart)) continue;                       // the Monster's damage would take you to 0: you are at the brink
       let v = m.plus;
       if (m.perSurvived) v = m.plus * Math.floor(st.survived / m.perSurvived);
       if (m.perImmediate) v = Math.min(m.cap, m.plus * st.discard.filter(c => c.type === 'Immediate').length);
+      if (m.perReroll) v = Math.min(m.cap, m.plus * st.reroll);
       t += v * times(st, o);
     }
     return t;
@@ -1735,23 +1788,30 @@ const Dig = (() => {
   const resultTotal = st => { const r = result(st); return r ? r.total : 0; };
   function afterDie(st) {                                   // a die was just rolled: free rerolls from Ongoing cards
     const f = st.fight, lim = flag(st, 'sparkLow');
-    if (lim !== undefined && !f.sparkUsed) { const r = result(st); if ((r.raw === undefined ? r.total : r.raw) <= lim) { f.sparkUsed = true; log(st, 'roll', `Your result is ${lim} or less — a free Extra Roll`); f.die = rollDie(st); f.rolls++; log(st, 'roll', `Extra Roll: ${f.die} → ${resultTotal(st)}`); } }
+    if (lim !== undefined && !f.sparkUsed) { const r = result(st); if ((r.raw === undefined ? r.total : r.raw) <= lim) { f.sparkUsed = true; log(st, 'roll', `Your result is ${lim} or less — a free Extra Roll`); extraRoll(st, f); } }
+  }
+  // An Extra Roll: it replaces your result (a card may let you keep the higher die). Cards that look at the die you rolled hear about it.
+  function extraRoll(st, f) {
+    const nd = rollDie(st), keep = flag(st, 'keepHigher') && f.die !== null && f.die > nd;
+    f.die = keep ? f.die : nd; f.rolls++;
+    log(st, 'roll', `Extra Roll: ${nd}${keep ? ` (you keep the ${f.die})` : ''} → ${resultTotal(st)}`);
+    fire(st, 'rollExact', { die: nd }, 1);
   }
   function roll(st) {
     if (!can(st).roll) return false;
     const f = st.fight; f.die = rollDie(st); f.rolls++; f.phase = 'after';
     log(st, 'roll', `You roll ${f.die} → ${resultTotal(st)}`);
+    fire(st, 'rollExact', { die: f.die }, 1);
     afterDie(st); return true;
   }
+  const freeSpin = st => !!flag(st, 'firstFree') && !st.flags.freeUsed;
   function reroll(st, opt = {}) {
     const c = can(st); if (!c.reroll) return false;
-    const f = st.fight, th = flag(st, 'thorned'), useHealth = !!th && (opt.withHealth || st.reroll <= 0);
-    if (useHealth) { lose(st, th, 'Thorned Gadget'); if (over(st)) return true; } else st.reroll -= R.rerollCost;
-    const nd = rollDie(st);
-    f.die = nd;          // an Extra Roll replaces your result: the cards you have already used stay used, and the new result may reach different cards
-    f.rolls++;
-    log(st, 'roll', `Extra Roll: ${nd} → ${resultTotal(st)}`);
-    if (!useHealth) fire(st, 'spendReroll', {}, 1);
+    const f = st.fight, th = flag(st, 'thorned'), spin = freeSpin(st), useHealth = !spin && !!th && (opt.withHealth || st.reroll <= 0);          // the first Extra Roll of a Dig may cost nothing
+    if (spin) { st.flags.freeUsed = true; log(st, 'effect', `${st.ongoing.find(o => compile(o).ongoing.flags.firstFree).name}: this Extra Roll costs nothing`); }
+    else if (useHealth) { lose(st, th, 'Thorned Gadget'); if (over(st)) return true; } else st.reroll -= R.rerollCost;
+    extraRoll(st, f);          // an Extra Roll replaces your result: the cards you have already used stay used, and the new result may reach different cards
+    if (!useHealth && !spin) fire(st, 'spendReroll', {}, 1);
     afterDie(st); return true;
   }
 
@@ -1775,6 +1835,7 @@ const Dig = (() => {
   function pointless(st, entry) {
     const f = st.fight, effs = flatOps(compile(entry.card).effects), ops = effs.map(e => e.op);
     if (!ops.length) return false;
+    if (effs.every(e => e.op === 'if' && e.cond.dmgAtMost !== undefined && f.damage > e.cond.dmgAtMost)) return true;          // "If this Monster's damage is 3 or less": it is not
     if (st.heart >= R.caps.heart && effs.every(heals)) return true;
     if (f.defeat) return ops.every(o => ['block', 'halve', 'noDamage', 'survive1', 'defeat'].includes(o));
     return previewDamage(st) === 0 && ops.every(o => ['block', 'halve', 'noDamage', 'survive1'].includes(o));
@@ -1827,20 +1888,23 @@ const Dig = (() => {
   }
   // The most the next card you dig could do to you: the next Monster of each set you still have in the Mine (their numbers are on the table), or, with the Mine known on top, only that card; at the bottom, the Bonus Monster.
   function maxNextDamage(st) {
-    if (!st.mine.length) return peekBonus(st).damageNow;
+    if (!st.mine.length) { const b = peekBonus(st).damageNow, cap = flag(st, 'capDamage'); return cap !== undefined ? Math.min(b, cap) : b; }
     let d = 0;
     for (const c of (st.known > 0 ? [st.mine[0]] : st.mine)) {
       if (c.type !== 'Monster') continue;
       const lad = compile(c).ladder; if (!lad) continue;
       d = Math.max(d, lad[Math.min((st.setCount[c.id] || 0) + 1, lad.length) - 1]);
     }
-    return d;
+    const cap = flag(st, 'capDamage'); return cap !== undefined ? Math.min(d, cap) : d;
   }
   function previewDamage(st) {
     const f = st.fight; if (f.defeat || f.noDamage) return 0;
     if (f.first && anyFlag(st, 'cowcatcher')) return 0;
+    const nth = flag(st, 'everyNth'), small = flag(st, 'ignoreSmall'), cap = flag(st, 'capDamage');
+    if (nth && f.n % nth === 0) return 0;                       // every 3rd Monster you dig is harmless
+    if (small !== undefined && f.damage <= small) return 0;
     const bump = flag(st, 'bumper') || 0;
-    let d = f.damage;
+    let d = cap !== undefined ? Math.min(f.damage, cap) : f.damage;
     if (RL.damageOrder === 'halveThenBlock') { if (f.halve) d = Math.floor(d / 2); d = Math.max(0, d - f.block - bump); }
     else { d = Math.max(0, d - f.block - bump); if (f.halve) d = Math.floor(d / 2); }
     return d;
@@ -1850,11 +1914,11 @@ const Dig = (() => {
     if (!can(st).face) return false;
     const f = st.fight;
     runDeferred(st); if (over(st)) return true;
+    if (!f.faced && !f.defeat) { f.faced = true; const r = resultTotal(st); fire(st, 'faceLow', { r }, 1); fire(st, 'faceHigh', { r }, 1); if (over(st)) return true; }          // "Whenever you face a Monster with a result of ...": once per Monster, as you decide to take it
     let dmg = previewDamage(st);
     if (!f.defeat && dmg >= st.heart && f.surviveAt === null && flag(st, 'panic') && !st.panicUsed && f.fixed === null) {
       st.panicUsed = true; log(st, 'effect', `${st.ongoing.find(o => compile(o).ongoing.flags.panic).name}: this would BOOM you — a free Extra Roll, and the card breaks (face down until the end of the Dig)`);
-      f.die = rollDie(st); f.rolls++;
-      log(st, 'roll', `Extra Roll: ${f.die} → ${resultTotal(st)}`);
+      extraRoll(st, f);
       if (eligible(st).length) return true;          // the new result may reach upright cards: fire them (used cards stay used), then face it
       dmg = previewDamage(st);
     }
@@ -1880,6 +1944,11 @@ const Dig = (() => {
     if (dmg >= st.heart && dmg > 0 && f.surviveAt === null) { const lc = eligible(st, true).find(autoOnly); if (lc) trigger(st, lc, true); }          // Lucky Cricket: it would have been BOOM, so it works (no tap)
     if (dmg > 0) {
       take = dmg;
+      const ph = flag(st, 'phoenix');
+      if (take >= st.heart && f.surviveAt === null && ph !== undefined && !st.flags.phoenixUsed) {
+        st.flags.phoenixUsed = true; st.heart = Math.min(R.caps.heart, ph); log(st, 'effect', `${st.ongoing.find(o => compile(o).ongoing.flags.phoenix).name}: this would BOOM you — your {heart} is set to ${st.heart} instead, and the card breaks (face down until the end of the Dig)`);
+        st.survived++; st.monsterGems += m.bonus ? R.beyond.gems : R.survivedGems; st.fight = null; log(st, 'effect', `You survive ${m.name}. Monsters survived: ${st.survived}`); return;
+      }
       if (take >= st.heart && f.surviveAt !== null) { take = st.heart - f.surviveAt; log(st, 'effect', `Lucky save: you survive with ${f.surviveAt} {heart}`); }
       st.heart -= take; log(st, 'damage', `You take ${take} {damage} (${f.damage}${f.halve ? ', halved' : ''}${f.block || flag(st, 'bumper') ? ', blocked ' + (f.block + (flag(st, 'bumper') || 0)) : ''})`);
       if (st.heart <= 0) { st.heart = 0; st.fight = null; boom(st, `${m.name} took your last {heart}`); return; }
@@ -1951,6 +2020,7 @@ const Dig = (() => {
     for (const m of (b.ongoing ? b.ongoing.mods : [])) {
       if (m.perSurvived) return `+${m.plus * Math.floor(st.survived / m.perSurvived)} to your rolls`;
       if (m.perImmediate) return `+${Math.min(m.cap, m.plus * imm)} to your rolls`;
+      if (m.perReroll) return `+${Math.min(m.cap, m.plus * st.reroll)} to your rolls`;
     }
     return null;
   }
@@ -1978,13 +2048,13 @@ const Dig = (() => {
       dig: idle,
       bank: idle && !(st.board && st.board.final) && (RL.bankWhen === 'anytime' || st.survived >= 1) && (st.pledge === null || st.survived >= st.pledge),       // the final round is a race: nobody banks
       roll: !!f && !st.over && f.phase === 'before',
-      reroll: !!f && !st.over && f.phase === 'after' && f.fixed === null && (st.reroll >= R.rerollCost || (!!flag(st, 'thorned') && st.heart > flag(st, 'thorned'))),
+      reroll: !!f && !st.over && f.phase === 'after' && f.fixed === null && (st.reroll >= R.rerollCost || freeSpin(st) || (!!flag(st, 'thorned') && st.heart > flag(st, 'thorned'))),
       face: !!f && !st.over && f.phase === 'after',
       trigger: !!f && !st.over && f.phase === 'after' && eligible(st).length > 0,
       choose: !!st.pending && !st.over,
     };
   }
-  return { save, load, compile, supported, parseEffects, parseOngoing, start, clone, can, pledge, canPledge, dig, roll, reroll, face, autoFace, eligible, mayUse, useMod, unmetFor, trigger, triggerFully, triggerAll, bank, chooseClone, cloneTargets, peekBonus, maxNextDamage, dynamic, hold, score, result, makeRng, shuffle, flag, previewDamage };
+  return { freeSpin, save, load, compile, supported, parseEffects, parseOngoing, start, clone, can, pledge, canPledge, dig, roll, reroll, face, autoFace, eligible, mayUse, useMod, unmetFor, trigger, triggerFully, triggerAll, bank, chooseClone, cloneTargets, peekBonus, maxNextDamage, dynamic, hold, score, result, makeRng, shuffle, flag, previewDamage };
 })();
 </script>
 
@@ -3171,8 +3241,8 @@ const AI = (() => {
   // The roll, played out: numbers flick past on the die and settle on the real result (already decided; this is only for the eye).
   function playDice() {
     $.querySelectorAll('.d10.fx-tumble .dnum[data-final]').forEach(el => {
-      const fast = !!el.closest('.action, .piles'), steps = fast ? 8 : 11, ms = fast ? 55 : 70;        // the roll in a fight happens a lot: quick; the Escape Bonus is a moment: slower
-      let n = 0; const fin = el.dataset.final, iv = setInterval(() => { n++; if (n >= steps || !el.isConnected) { clearInterval(iv); el.textContent = fin; if (el.closest('.piles')) $.querySelectorAll('.waitroll').forEach(b => b.classList.remove('waitroll')); return; } el.textContent = 1 + Math.floor(Math.random() * 10); }, ms);
+      const fast = !!el.closest('.deckdie, .action'), steps = fast ? 8 : 11, ms = fast ? 55 : 70;        // the roll in a fight happens a lot: quick; the Escape Bonus is a moment: slower
+      let n = 0; const fin = el.dataset.final, iv = setInterval(() => { n++; if (n >= steps || !el.isConnected) { clearInterval(iv); el.textContent = fin; if (el.closest('.deckdie')) $.querySelectorAll('.waitroll').forEach(b => b.classList.remove('waitroll')); return; } el.textContent = 1 + Math.floor(Math.random() * 10); }, ms);
     });
   }
   const tagOf = (run, p) => p.id === run.me ? 'You' : (p.tag || p.name);
@@ -3489,7 +3559,7 @@ const AI = (() => {
     const nCards = cards.length;
     const pickO = o => st.pending && st.pending.kind === 'clone' && o !== st.pending.card;
     const buried = new Set(Object.values(st.under).flat());          // a Cloning Machine lies under the card it clones: it is drawn there, not in the Ongoing area
-    const broke = o => st.panicUsed && Dig.compile(o).ongoing.flags.panic;          // a broken card lies face down until the end of the Dig
+    const broke = o => (st.panicUsed && Dig.compile(o).ongoing.flags.panic) || (st.flags.phoenixUsed && Dig.compile(o).ongoing.flags.phoenix !== undefined);          // a broken card lies face down until the end of the Dig
     const ong = st.ongoing.filter(o => !buried.has(o) && o !== held).map(o => `<button class="tcard inplay ${broke(o) ? 'broken' : ''} ${usable.includes(o) ? 'elig' : ''} ${isNew(o) ? 'arrive' : ''} ${pickO(o) ? 'pick' : ''} ${(st.under[o.uid] || []).length ? 'hasunder' : ''}" data-p="${pickO(o) ? 'card' : usable.includes(o) ? 'usemod' : 'zoom'}" data-uid="${o.uid}" data-id="${A.esc(o.id)}" aria-label="${A.esc(o.name)}, Ongoing${broke(o) ? ', broken' : ''}">${underOf(o)}${broke(o) ? cw('<span class="cardback"></span>', 'cb') : cw(A.playCard(o, 1), 'cb')}${st.cloned.includes(o.uid) ? '<span class="tg">×2</span>' : ''}</button>`);
     S.tabSeen = nowSeen;
     return `<section class="tableau" data-n="${nCards + ong.length}">${cards.join('')}${ong.length ? '<span class="tsep"></span>' : ''}${ong.join('')}</section>`;
@@ -3525,11 +3595,11 @@ const AI = (() => {
       const dmg = Dig.previewDamage(st), savers = [elig.length > 0 || Dig.mayUse(st).length > 0 ? 'use cards' : '', can.reroll && dmg >= st.heart ? (st.reroll > 0 ? 'use an Extra Roll' : 'spend Health on an Extra Roll') : ''].filter(Boolean), sure = savers.length > 0 && S.confirmFace;          // you can still use cards: the first tap on "take damage" only asks
       // Extra Rolls: spend one any time in the battle; your best roll stays (a button, while you have one)
       const open = can.reroll;
-      const rr = open ? `<button class="rerollbtn" data-p="reroll" aria-label="Extra Roll">${ic('reroll')}<span>Extra Roll</span><small>${st.reroll} left</small></button>` : '';
-      const die = `<div class="dieb rollbtn still">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}<span class="tapword" aria-hidden="true" style="visibility:hidden">Tap to roll</span></div>`;          // (the hidden word keeps the die exactly where the Roll button was)
-      const take = f.defeat ? '' : `<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''} ${sure ? 'sure' : ''} ${fresh ? 'waitroll' : ''}" data-p="face">${sure ? `You can still ${savers.join(' or ')}.<br>Tap again to ${f.defeat ? 'move on' : dmg ? `take ${dmg} ${ic('damage')}` : 'carry on'}` : f.defeat ? 'Monster defeated: continue' : dmg ? `Take ${dmg} ${ic('damage')}` : `Take 0 ${ic('damage')}`}</button>`;          // (it sits in the right-hand column, above the die: where your hand already is)
-      return { die, take, html: `<div class="action">${elig.length > 1 ? `<div class="aprompt"><button class="chip" data-p="triggerall">Use all ${elig.length}</button></div>` : ''}
-        <div class="astack">${calc}${rr}</div></div>` };
+      const rr = open ? `<button class="rerollbtn" data-p="reroll" aria-label="Extra Roll">${ic('reroll')}<span>Extra Roll</span><small>${Dig.freeSpin(st) ? 'free' : st.reroll + ' left'}</small></button>` : '';
+      const die = `<span class="deckdie"><span class="dieb rollbtn still">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}</span></span>`;
+      const take = f.defeat ? '' : `<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''} ${sure ? 'sure' : ''} ${fresh ? 'waitroll' : ''}" data-p="face">${sure ? `You can still ${savers.join(' or ')}.<br>Tap again to ${f.defeat ? 'move on' : dmg ? `take ${dmg} ${ic('damage')}` : 'carry on'}` : f.defeat ? 'Monster defeated: continue' : dmg ? `Take ${dmg} ${ic('damage')}` : `Take 0 ${ic('damage')}`}</button>`;
+      return { die, html: `<div class="action">${elig.length > 1 ? `<div class="aprompt"><button class="chip" data-p="triggerall">Use all ${elig.length}</button></div>` : ''}
+        <div class="astack">${take}${calc}${rr}</div></div>` };
     }
     if (st.pending) return { html: `<div class="action"><div class="aprompt">${A.esc(st.pending.card.name)}: tap a Power card</div></div>`, die: '' };
     if (st.over) return { html: '', die: '' };
@@ -3561,15 +3631,15 @@ const AI = (() => {
     const gems = st.geodeGems + st.monsterGems, live = can.dig || won, bankLive = can.bank || (won && !finalR);
     const kn = st.mine.slice(0, st.known), up = kn[0];
     // the Mine: a deck of cards, the same size as the cards you dig. Cards you can see coming are on top, face up.
-    const deck = `<div class="stack"><button class="deck ${live ? 'live' : ''}" data-p="dig" ${live ? '' : 'disabled'} aria-label="Mine, ${st.mine.length} cards">${st.mine.length ? `<span class="cw" style="--s:var(--ca)"><span class="cs">${up ? A.playCard(up, 1) : '<span class="cardback"></span>'}</span></span>` : `<span class="cw" style="--s:var(--ca)"><span class="cs">${A.playCard(Dig.peekBonus(st), 1)}</span></span>`}<span class="cnt">${st.mine.length}</span></button></div>`;
+    const preRollNow = !!f && f.phase === 'before' && !st.over;          // a Monster is in front of you: the Mine is where you tap to roll (the die sits on it)
+    const dz = diceHTML(st, can), deckDie = preRollNow ? `<span class="deckdie" aria-hidden="true"><span class="dieb">${d10('', 'idle')}</span><span class="tapword">Tap to roll</span></span>` : won ? '' : dz.die;          // the die sits on the Mine: you tap the Mine to roll, and the result lands in the same place
+    const deck = `<div class="stack"><button class="deck ${live || preRollNow ? 'live' : ''} ${preRollNow ? 'rolling' : ''}" data-p="${preRollNow ? 'roll' : 'dig'}" ${live || preRollNow ? '' : 'disabled'} aria-label="${preRollNow ? 'Roll the die' : `Mine, ${st.mine.length} cards`}">${st.mine.length ? `<span class="cw" style="--s:var(--ca)"><span class="cs">${up ? A.playCard(up, 1) : '<span class="cardback"></span>'}</span></span>` : `<span class="cw" style="--s:var(--ca)"><span class="cs">${A.playCard(Dig.peekBonus(st), 1)}</span></span>`}<span class="cnt">${st.mine.length}</span></button>${deckDie}</div>`;
     // There is no separate discard pile: the cards you flip land in one spot beside the Mine, and the ones before it are stacked underneath. (Monsters move on to the Monster pile above.)
     const piles = `<div class="piles"><button class="pile bankp ${bankLive ? 'live' : ''}" data-p="bank" ${bankLive ? '' : 'disabled'}><span class="bword">Bank</span><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span></button></div>`;
-    const preRoll = !!f && f.phase === 'before' && !st.over, finalRound = !!(S.run && st.board && st.board.final);          // the last round: nobody banks, so there is no Bank and no gem count
-    const dz = diceHTML(st, can), rolled = dz.die ? (dz.take || '') + dz.die : '';
-    const rollBtn = preRoll ? `<button class="dieb live rollbtn" data-p="roll" aria-label="Roll the die">${d10('', 'idle')}<span class="tapword">Tap to roll</span></button>` : rolled;
-    const rollCol = finalRound ? (rollBtn ? `<div class="piles">${rollBtn}</div>` : '') : piles.replace('<div class="piles">', `<div class="piles">${rollBtn}`);
+    const finalRound = !!(S.run && st.board && st.board.final);          // the last round: nobody banks, so there is no Bank and no gem count
+    const rollCol = finalRound ? '' : piles;
     const dug = `<div class="dugz"><div class="slot ${st.discard.length ? 'stacked' : ''}">${dugHTML(st)}</div></div>`;
-    const action = `<div class="dicez">${dz.html}</div>`;
+    const action = `<div class="dicez">${dz.html}</div>`;          // (the Take button is in it, beside the die and never on the Mine, so a quick tap on the Mine cannot take the damage)
     const s = st.over ? Dig.score(st) : null;
     let over = '';
     const ovFx = st.over && st.over !== fx.over ? 'fx' : '';

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — roll by tapping the Mine:** when a Monster is in front of you the die sits on the Mine ("Tap to roll"); the result lands on the same spot. Take damage is in the action area beside the Monster, never on the Mine, so a quick tap cannot take the damage. The Bank column holds only the Bank.
+
+- **Dig Dig BOOM! — new card mechanics and 32 proposed Booster cards** (`NEW-BOOSTERS.csv`, not on the sheet yet; the game already understands them): Powers that raise the die (chains), Powers that defeat small Monsters, cards that react to the number rolled or the result you face with, damage caps / ignores / every-3rd-Monster, Extra Roll rules (keep the higher die, first one free, bonus per Extra Roll, overflow), a one-shot Phoenix Feather, and Immediates that move Monsters in the Mine or on their ladders. Tests in `tests/newcards.test.js`.
+
 - **Dig Dig BOOM! — Extra Rolls stop at 4** (a Monster gets at most 5 rolls: the first and 4 Extra Rolls); Repair Kit counts Monsters you have **survived** this Dig (the sheet row is updated).
 
 - **Dig Dig BOOM! — the Leaderboard replay is slower, with nothing to tap:** it plays by itself, lingers on each bank or BOOM (the piece stays, with its gem or starburst), and Fast forward runs through it. Take damage only asks about an Extra Roll when the damage would BOOM you.

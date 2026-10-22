@@ -163,9 +163,10 @@ test('table: dig a Geode, then a Monster — tap the die, reroll, face it; the D
     assert.equal(await page.locator('#play .slot.stacked').count(), 1, 'the cards flipped before are stacked under the flip spot');
     assert.ok(await page.evaluate(() => { const m = document.querySelector('#play .mat').getBoundingClientRect(), t = document.querySelector('#play .tableau').getBoundingClientRect(); return t.bottom <= m.top + 1; }), 'the cards you are drawing are in front of you (below); Power and Ongoing cards are above them');
     assert.equal(await page.locator('#play [data-p=face]').count(), 0, 'the Monster is not a button');
-    assert.ok(await page.locator('#play .ptable.await-roll').count() === 1 && await page.locator('#play .deck').isDisabled(), 'before the roll the rest of the table dims and waits: only the die can be tapped');
-    assert.ok(await page.locator('#play [data-p=roll]').isEnabled());
-    assert.match(await page.locator('#play [data-p=roll]').innerText(), /Tap/i, 'the die says Tap, nothing more');
+    assert.ok(await page.locator('#play .ptable.await-roll').count() === 1, 'before the roll the rest of the table dims and waits: only the Mine (with the die on it) can be tapped');
+    assert.ok(await page.locator('#play .deck[data-p=roll]').isEnabled(), 'the Mine is where you tap to roll');
+    assert.match(await page.locator('#play .deckdie').innerText(), /Tap/i, 'the die on the Mine says Tap, nothing more');
+    assert.equal(await page.locator('#play .piles [data-p=roll], #play .piles .dieb').count(), 0, 'no die or roll button in the Bank column');
     assert.equal(await page.locator('#play .mset:has(.mb:text-is("A")) .lad i.met').count(), 1, 'Monster A is in front of you and counts');
     await page.click('#play [data-p=roll]'); await dieShows(page, '#play .dieb', 2);
     assert.equal(await page.locator('#play .tcard.off').count(), 1, 'the Pet (10) is beyond the result of 2 and dims');
