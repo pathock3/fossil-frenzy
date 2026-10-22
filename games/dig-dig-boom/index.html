@@ -3221,7 +3221,7 @@ const AI = (() => {
       const need = Math.min(info.keep, info.draw), W = Math.min(innerWidth, 1180) - 48, avail = innerHeight - 32 - 150 - 92 - 30 - 20;
       const ss = Math.min(.6, fitCards(need, .6, W, avail * .46)), sh = 350 * ss, ps = Math.min(.8, fitCards(info.draw, .8, W, avail - sh - 14, 12));
       const slots = Array.from({ length: need }, (_, i) => `<div class="kslot empty" data-i="${i}" style="width:${250 * ss}px;height:${sh}px"><span class="kplus">keep</span></div>`).join('');
-      body = `<div class="kitbar"><b>${A.esc(info.name)} Pack</b><span class="count" aria-label="0 of ${need} chosen">Keep 0 of ${need}</span></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool closedpack" style="height:${350 * ps}px"><button class="pack" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack">${packArt(info.name, info.draw, info.keep)}</button></div>`;
+      body = `<div class="kitbar"><b>${A.esc(info.name)} Pack</b></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool closedpack" style="height:${350 * ps}px"><button class="pack" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack">${packArt(info.name, info.draw, info.keep)}</button></div>`;
       foot = `<button class="btn" data-p="keepgo" disabled>Keep</button>`;          // (already there, so nothing moves when the cards are dealt)
     } else if (step === 'keep') {
       const need = Run.keepCount(run);
@@ -3232,7 +3232,7 @@ const AI = (() => {
       const chosen = pr.picked.map(id => pr.offer.find(c => c.uid === id)).filter(Boolean), hand = pr.offer.filter(c => !pr.picked.includes(c.uid));
       const ps = Math.min(.8, fitCards(hand.length, .8, W, avail - sh - 14, 12));
       const slots = Array.from({ length: need }, (_, i) => { const c = chosen[i]; return `<div class="kslot ${c ? '' : 'empty'}" data-i="${i}" style="width:${250 * ss}px;height:${sh}px">${c ? pcard(c, ss, { act: 'pick', sel: true, badge: i + 1, kslot: true }) : '<span class="kplus">keep</span>'}</div>`; }).join('');
-      body = `<div class="kitbar"><b>${A.esc(pr.pack.name)} Pack</b><span class="count" aria-label="${pr.picked.length} of ${need} chosen">Keep ${pr.picked.length} of ${need}</span></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool ${first && S.packFrom ? 'fly' : ''}">${first ? tearHTML(pr.pack) : ''}${first && S.packFrom ? flyPackHTML(pr.pack) : ''}${hand.map((c, i) => pcard(c, ps, { act: 'pick', i: pr.offer.indexOf(c), deal: first, dx: ((pr.offer.length - 1) / 2 - pr.offer.indexOf(c)) * (250 * ps + 14) })).join('')}</div>`;
+      body = `<div class="kitbar"><b>${A.esc(pr.pack.name)} Pack</b></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool ${first && S.packFrom ? 'fly' : ''}">${first ? tearHTML(pr.pack) : ''}${first && S.packFrom ? flyPackHTML(pr.pack) : ''}${hand.map((c, i) => pcard(c, ps, { act: 'pick', i: pr.offer.indexOf(c), deal: first, dx: ((pr.offer.length - 1) / 2 - pr.offer.indexOf(c)) * (250 * ps + 14) })).join('')}</div>`;
       foot = `${run.owned.length ? `<button class="btn alt ownedbtn" data-p="owned">Your cards (${run.owned.length})</button>` : ''}<button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'}>Keep</button>`;
     } else if (step === 'reveal') {            // a Mystery Box: the same screen as the pack. The cards you did not keep fly away, then the next card of the deck is dealt face down in the row and turns over; nothing moves on until you say so
       const key = `${run.round}:reveal`, first = S.fxReveal !== key; S.fxReveal = key;
@@ -3246,7 +3246,7 @@ const AI = (() => {
         return `<span class="sweepcard" style="--i:${i};left:${Math.round(r.x)}px;top:${Math.round(r.y)}px;width:${Math.round(r.w)}px;height:${Math.round(r.h)}px;--tx:${-Math.round(r.x + r.w + 120)}px;--ty:${-Math.round(r.y + r.h + 100)}px">${A.playCard(c, r.w / 250)}</span>`;
       }).join('')}</div>` : '';
       const flip = (c, i) => `<span class="flipcard ${first ? '' : 'still'}" style="--i:${i};width:${250 * ps}px;height:${350 * ps}px"><span class="fback"><span class="cardback"></span></span><span class="ffront">${A.playCard(c, ps)}</span></span>`;
-      body = `${sweep}<div class="kitbar"><b>${A.esc(pr.pack.name)} Pack</b><span class="count">Keep ${need} of ${need}</span></div><div class="kslots">${slots}</div><div class="poolhead">You also keep the next card of the deck</div><div class="cards pool revealpool" style="height:${350 * ps}px">${pr.extra.map((c, i) => flip(c, i)).join('')}</div>`;
+      body = `${sweep}<div class="kitbar"><b>${A.esc(pr.pack.name)} Pack</b></div><div class="kslots">${slots}</div><div class="poolhead">You also keep the next card of the deck</div><div class="cards pool revealpool" style="height:${350 * ps}px">${pr.extra.map((c, i) => flip(c, i)).join('')}</div>`;
       foot = `<button class="btn" data-p="continuereveal">Choose your Starter Kit</button>`;
     } else {            // the Starter Kit: your places on top (last round's kit is already in them), the rest of your cards below
       const key = `${run.round}:kit`, first = S.fxKit !== key; S.fxKit = key;
