@@ -470,7 +470,7 @@ const Engine = (() => {
     emit(s, { type: 'reveal', actor: s.current, tid, cell: t.cell, value: t.value, gem: t.gem, step });
   }
 
-  // First tap: a private peek at any fossil. It does not use up the turn (you may still bank instead).
+  // First tap: a private peek at any fossil. After it you must flip (banking is only possible before a peek).
   function peek(s, tid) {
     if (s.phase !== 'action') fail('cannot peek now');
     if (!unmatched(s, tid)) fail('cannot peek at ' + tid);
@@ -623,7 +623,7 @@ const Engine = (() => {
       tokens: s.tokens.map(t => ({ id: t.id, cell: t.cell, matched: t.matched })),
       tokensLeft: s.tokens.length - s.matchedCount,
       revealed: s.turn.revealed.map(tid => ({ tid, value: seen.get(tid), gem: s.tokens[tid].gem })),
-      T: s.turn.T,
+      T: idx === s.current ? s.turn.T : null,          // another seat's peeked fossil stays private
       F: s.turn.F,
       peeked: idx === s.current && s.turn.peeked !== null ? { tid: s.turn.peeked, value: s.tokens[s.turn.peeked].value, gem: s.tokens[s.turn.peeked].gem } : null,
       players: s.players.map(p => ({ idx: p.idx, sets: p.sets.map(x => ({ value: x.value, gem: x.gem, size: x.size })), points: p.points })),
@@ -879,7 +879,7 @@ const Bots = (() => {
           const learned = base.singles.concat([{ x: k.value, c: Math.max(0, ck - 1), key: k.key }]);
           if (Un < 2) { eu += pi * U({ ...base, singles: learned }, X.sets, pubPairs); continue; }
           for (const k2 of KINDS) {
-            const c2 = X.c[k.key === k2.key ? k2.key : k2.key] - (k2.key === k.key ? 1 : 0);
+            const c2 = X.c[k2.key] - (k2.key === k.key ? 1 : 0);
             if (c2 <= 0) continue;
             const pj = c2 / (Un - 1);
             let st = { ...base, singles: learned }, setsAfter = X.sets, pubLeft = pubPairs;
@@ -888,7 +888,7 @@ const Bots = (() => {
             } else if (knownN(k2) >= k2.size - 1 && k2.key !== k.key) {                      // the flip completes a set I knew about: it becomes public, and the next player can take it
               pubLeft = pubPairs.concat([k2.value]);
             }
-            eu += pi * pj * (U(st, setsAfter, pubLeft) - (pubLeft.length > pubPairs.length ? 0 : 0));
+            eu += pi * pj * (U(st, setsAfter, pubLeft));
           }
         }
         out.push({ kind: 'explore', u: eu });
@@ -1298,14 +1298,15 @@ const Campaign = (() => {
     else if (a.type === 'bank') sfx('bank');
     else if (a.type === 'flipOther' || a.type === 'flipSecond') {
       let T = null; for (let j = 0; j < k; j++) if (ui.steps[j].a.type === 'peek') T = ui.steps[j].a.tid;
-      sfx('flip'); const o = flipOutcome(T, a.tid); if (o) sfx(o, 110);
+      sfx('flip'); const o = flipOutcome(T, a.tid, a.type === 'flipSecond'); if (o) sfx(o, 110);
     }
   }
   // After a public flip of `f` with my peeked fossil `t`: which sound follows the flip.
-  function flipOutcome(t, f) {
+  // Two gems are silent until the third one lands: the chime would tell the table that the fossil you peeked is a gem, even if you then stop.
+  function flipOutcome(t, f, third) {
     if (t === null || t === undefined) return '';
     const A = ui.st.tokens[t], B = ui.st.tokens[f];
-    if (A.gem && B.gem) return 'gem';
+    if (A.gem && B.gem) return third ? 'gem' : '';
     return !A.gem && !B.gem && A.value === B.value ? 'match' : 'miss';
   }
   function stepMs(a) { const P = D.pace; return a.type === 'peek' ? P.peek : a.type === 'bank' ? P.bank : P.flip; }
@@ -1430,7 +1431,7 @@ const Campaign = (() => {
     else if (st.phase !== phase0 && phase0 !== 'action') {                        // a public flip happened
       sfx('flip');
       const popped = st.matchedCount > pop0, gems = st.turn.T !== null && st.tokens[st.turn.T].gem && st.tokens[st.turn.F].gem;
-      sfx(popped ? (gems ? 'gem' : 'match') : gems ? 'gem' : 'miss', 110);
+      if (popped || !gems) sfx(popped ? (gems ? 'gem' : 'match') : 'miss', 110);          // (two gems without the third stay silent: see flipOutcome)
     }
     render();
   }
@@ -1748,8 +1749,8 @@ const Campaign = (() => {
         <div class="tiles lostrow">${p.sets.slice().sort((a, b) => b.value - a.value).map(s => tileHTML(s, 'lost')).join('') || '<span class="dim">none</span>'}</div>
       </div>`;
     }).join('');
-    // Celebrate a win in the campaign where you can't miss it: a big card (and confetti) above the results.
-    const celebrate = campaign && o && (o.completed || o.newlyUnlocked)
+    // Celebrate a win in the campaign where you can't miss it: a big card (and confetti) above the results (nothing is newly unlocked when everything already is).
+    const celebrate = campaign && o && (o.completed || (o.newlyUnlocked && !(UNLOCK_ALL || ui.unlockAll)))
       ? `<p class="unlock">${o.completed ? '🏆 Every opponent beaten' : `🔓 ${esc(o.newlyUnlocked)} unlocked`}</p>${confettiHTML()}` : '';
     // The choices: after a win, on to the next level; after a loss (or a pass & play game), play again — and always the main menu.
     const nextBtn = campaign && o && o.won && ui.levelIdx + 1 < LV.length && unlocked(ui.levelIdx + 1);
@@ -1771,7 +1772,7 @@ const Campaign = (() => {
   const JUDGMENTS = [
     'The board is a hexagon of 31 spaces, one fossil on each. There are no pieces and no movement: you can peek at any fossil.',
     'Your first tap is a private peek (the board shows you the number — hold the device toward yourself); your second tap is a public flip. Fossils that do not match flip back at the end of your turn.',
-    'A peek does not use up your turn: you may bank instead of flipping.',
+    'After a peek you must flip another fossil: you cannot bank once you have peeked.',
     'Matches are pairs (a set of three for the gems). Only the fossil you peeked can be matched, against the one you flipped.',
     `Banking takes one set of your choice, worth the number on its fossil (a gem is ${GEM_VALUE}). Sets you never bank are worth nothing.`,
     'Banking is your whole turn, so it ends the moment you tap the set — there is no End turn tap afterwards.',
@@ -1846,7 +1847,7 @@ const Campaign = (() => {
     if (ui.screen === 'play' && ui.st && ui.st.over && !animating() && !ui.endSounded) {      // the end screen appears now: its sound goes with it
       ui.endSounded = true;
       const o = ui.outcome;
-      sfx(ui.mode === 'campaign' && o ? (o.won ? (o.completed || o.newlyUnlocked ? 'unlock' : 'win') : 'lose') : 'win', 200);
+      sfx(ui.mode === 'campaign' && o ? (o.won ? (o.completed || (o.newlyUnlocked && !(UNLOCK_ALL || ui.unlockAll)) ? 'unlock' : 'win') : 'lose') : 'win', 200);
     }
     const html = { home: homeHTML, pass: passHTML, campaign: campaignHTML, play: gameHTML }[ui.screen]();
     root.innerHTML = html + (ui.help ? helpHTML() : '') + (ui.fossils && ui.st ? fossilsHTML() : '') + (ui.settings ? settingsHTML() : '');
