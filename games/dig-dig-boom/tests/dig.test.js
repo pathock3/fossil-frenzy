@@ -50,9 +50,9 @@ test('a new Dig: Mine of 30 (21 Geodes, 9 Monsters in three sets: A 1-3-5-7, B 2
   assert.notDeepEqual(Dig.start(cards, [], { seed: 6 }).mine.map(c => c.id), st.mine.map(c => c.id));
 });
 
-test('the Drill by the rules: a d10, Health 0-10 starting at 10, Extra Rolls 0-10 starting at 0 — and no Grit track at all', () => {
+test('the Drill by the rules: a d10, Health 0-10 starting at 10, Extra Rolls 0-4 starting at 0 — and no Grit track at all', () => {
   assert.equal(DDB.rules.die, 10);
-  assert.deepEqual(DDB.rules.caps, { heart: 10, reroll: 10 });
+  assert.deepEqual(DDB.rules.caps, { heart: 10, reroll: 4 });
   assert.deepEqual(DDB.rules.start, { heart: 10, reroll: 0 });
   const st = Dig.start(cards, [], { seed: 3 });
   assert.deepEqual([st.heart, st.reroll], [10, 0]);
@@ -63,7 +63,7 @@ test('the Drill by the rules: a d10, Health 0-10 starting at 10, Extra Rolls 0-1
   const seen = new Set(); for (let i = 1; i <= 400; i++) { const g = Dig.start(cards, [], { seed: i }); g.mine = [{ ...by('MO-01'), uid: 1 }]; Dig.dig(g); Dig.roll(g); seen.add(g.fight.die); }
   assert.deepEqual([Math.min(...seen), Math.max(...seen), seen.size], [1, 10, 10], 'every face of a d10 comes up');
   const h = game({ mine: ['IM-13'], start: { heart: 8 } }); Dig.dig(h); assert.equal(h.heart, 10, 'Health stops at 10');
-  const r = game({ mine: ['IM-11'], start: { reroll: 9 } }); Dig.dig(r); assert.equal(r.reroll, 10, 'Extra Rolls stop at 10');
+  const r = game({ mine: ['IM-11'], start: { reroll: 3 } }); Dig.dig(r); assert.equal(r.reroll, 4, 'Extra Rolls stop at 4: a Monster gets at most 5 rolls');
   const c = Dig.can(game({ mine: ['MO-01'] })); assert.ok(!('grit' in c) && !('refund' in c) && !('bonus' in c));
 });
 
@@ -187,7 +187,7 @@ test('Power cards: resource gains, caps, Lose then gain', () => {
   const st = game({ mine: ['MO-01'], power: [lg, 'PW-17', 'PW-27'], start: { heart: 6, reroll: 2 }, dice: [7] });
   fight(st);                                               // result 7: the test card (1) loses 1 heart then +2 rerolls; Dodo (7) +1; Owl (9) needs 9
   assert.equal(st.heart, 6 - 1 - 1, 'lose 1, then the Monster\'s 1 damage');
-  assert.equal(st.reroll, 2 + 2 + 1, 'the test card +2, Dodo +1');
+  assert.equal(st.reroll, 4, 'the test card +2, Dodo +1: 5 would be too many, Extra Rolls stop at 4');
   const low = game({ mine: ['MO-01'], power: ['PW-17', 'PW-27'], start: { reroll: 0 }, dice: [9] }); fight(low);
   assert.equal(low.reroll, 3, 'Dodo +1 and Owl +2');
 });
@@ -292,7 +292,7 @@ test('Immediate cards happen when dug, then go to the discard pile', () => {
 
 test('Immediate cards can BOOM you (Risky Shortcut at 2 Health); All In sets Health to 1 and fills Rerolls; Reset Button sets Health to 7', () => {
   const st = game({ mine: ['IM-23'], start: { heart: 2 } }); Dig.dig(st); assert.equal(st.over.kind, 'boom');
-  const a = game({ mine: ['IM-01', 'IM-21'], start: { heart: 9 } }); Dig.dig(a); assert.deepEqual([a.heart, a.reroll], [1, 10]); Dig.dig(a); assert.equal(a.heart, 7);
+  const a = game({ mine: ['IM-01', 'IM-21'], start: { heart: 9 } }); Dig.dig(a); assert.deepEqual([a.heart, a.reroll], [1, 4]); Dig.dig(a); assert.equal(a.heart, 7);
 });
 
 test('count-based Immediates: Duct Tape (Ongoing cards), Scrap Heap (Immediates in discard, including itself), Second Wind and Repair Kit', () => {
@@ -300,9 +300,9 @@ test('count-based Immediates: Duct Tape (Ongoing cards), Scrap Heap (Immediates 
   Dig.dig(st); assert.equal(st.heart, 4, '+1 for each of 2 Ongoing cards');
   const s2 = game({ mine: ['IM-13', 'IM-25'], start: { heart: 1 } }); Dig.dig(s2); Dig.dig(s2); assert.equal(s2.heart, 5 + 2, 'Med Kit +4, then 2 Immediates (itself included) = +2');
   const s3 = game({ mine: ['MO-01', 'IM-26', 'IM-20'], start: { heart: 6 }, dice: [6] });
-  fight(s3); Dig.dig(s3); assert.equal(s3.heart, 5 + 1); Dig.dig(s3); assert.equal(s3.reroll, 0, 'nothing defeated');
+  fight(s3); Dig.dig(s3); assert.equal(s3.heart, 5 + 1); Dig.dig(s3); assert.equal(s3.reroll, 1, 'one Monster survived (it hurt you, but you survived it): +1 Extra Roll');
   const s4 = game({ mine: ['MO-01', 'IM-20'], start: { heart: 6 }, dice: [10] });
-  fight(s4); Dig.dig(s4); assert.equal(s4.reroll, 1, 'one Monster defeated: +1 Reroll');
+  fight(s4); Dig.dig(s4); assert.equal(s4.reroll, 1, 'one Monster survived (defeated): +1 Extra Roll');
 });
 
 test('Four-Leaf Clover: your next Monster is a 10 without a roll (the Pet defeats it)', () => {

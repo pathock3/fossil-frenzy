@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — Extra Rolls stop at 4** (a Monster gets at most 5 rolls: the first and 4 Extra Rolls); Repair Kit counts Monsters you have **survived** this Dig (the sheet row is updated).
+
 - **Dig Dig BOOM! — the Leaderboard replay is slower, with nothing to tap:** it plays by itself, lingers on each bank or BOOM (the piece stays, with its gem or starburst), and Fast forward runs through it. Take damage only asks about an Extra Roll when the damage would BOOM you.
 
 - **Dig Dig BOOM! — the drag glitch (really found), the Leaderboard, and a batch from your notes:**

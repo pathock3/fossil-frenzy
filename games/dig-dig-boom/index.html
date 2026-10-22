@@ -1086,7 +1086,7 @@ const DDB = {
   // ---- The rules of a Dig (v2.7 Rules tab). Numbers here are the rules; the engine (script "dig") only does what they say. ----
   rules: {
     die: 10,                                             // sides of the die (owner: a d10)
-    caps: { heart: 10, reroll: 10 },                     // Drill tracks: Health 0-10, Extra Rolls 0-10 (owner; the card text and the data say {reroll} / reroll: that is the Extra Roll)
+    caps: { heart: 10, reroll: 4 },                      // Drill tracks: Health 0-10, Extra Rolls 0-4 (owner: a Monster gets at most 5 rolls, the first and 4 Extra Rolls; the card text and the data say {reroll} / reroll: that is the Extra Roll)
     start: { heart: 10, reroll: 0 },                     // each track's reset space at the start of a round (owner)
     rerollCost: 1,
     pet: { at: 9 },                                      // the Pet (the Starting Power card) sits on the Power line at 9 (owner): it triggers on a roll of 9 or more, whatever number the sheet still prints
