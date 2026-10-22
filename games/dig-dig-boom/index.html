@@ -344,8 +344,8 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .tableau { flex: 1; min-height: 0; display: flex; align-items: flex-start; justify-content: center; gap: 10px; padding: 6px 4px 0; }
 #play .tcard { position: relative; display: block; flex: none; border-radius: 12px; transition: transform .12s; }
 #play .tableau > * + .tcard { margin-left: var(--ov); }
-#play .tcard.off { opacity: .4; filter: grayscale(.6); }
-#play .tcard.done { opacity: .55; }
+#play .tcard.off { opacity: .85; filter: grayscale(.3) brightness(.72); }          /* a card you cannot use on this roll is dimmed, never faded out: it is still there */
+#play .tcard.done { opacity: .7; }
 #play .tcard.elig { outline: 4px solid var(--accent); outline-offset: 3px; animation: pulse 1.2s ease-in-out infinite; transform: translateY(-8px); }
 #play .tcard.pick { outline: 4px solid var(--accent); outline-offset: 3px; animation: pulse 1.2s ease-in-out infinite; }
 #play .tcard .tg { position: absolute; left: 6px; bottom: 6px; z-index: 3; font-size: 12px; font-weight: 800; background: #1d1712; color: #fff; border-radius: 6px; padding: 2px 7px; }
@@ -712,12 +712,53 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .cards.pool { position: relative; }
 #play .cards.pool.closedpack { display: flex; align-items: center; justify-content: center; }
 #play .cards.pool .tear { inset: 0; }
+/* A Cloning Machine lies under the card it clones, peeking out above it */
+#play .tcard { position: relative; isolation: isolate; }
+#play .tcard .underc { position: absolute; left: 0; top: 0; z-index: -1; transform: translate(-12px, calc(-40px - var(--k) * 14px)) rotate(-2deg); filter: brightness(.82) drop-shadow(0 3px 4px rgba(0,0,0,.5)); pointer-events: none; }
+#play .tableau:has(.hasunder) { padding-top: 44px; }
+#play .takedmg.sure { font-size: 20px; line-height: 1.2; background: linear-gradient(180deg, #ffd45e, #e8920f); border-color: #fff0b8; color: #2a1700; animation: none; }
+#play .pack.ghostpack { visibility: hidden; pointer-events: none; }
+/* the pack flies from the tally to the card row, then the tear begins (everything in the tear waits for it) */
+#play .flypack { position: absolute; left: 50%; top: 50%; margin: -130px 0 0 -95px; z-index: 7; pointer-events: none; animation: packfly .48s cubic-bezier(.3,.7,.3,1) both; }
+@keyframes packfly { 0% { transform: translate(var(--fx, 0), var(--fy, 0)); opacity: 1; } 92% { transform: none; opacity: 1; } 100% { transform: none; opacity: 0; } }
+#play .pool.fly .tear .tpack, #play .pool.fly .tear .pk, #play .pool.fly .tear .tflash, #play .pool.fly .tear .rays { animation-delay: .46s; }
+#play .pool.fly .tear .shock { animation-delay: .91s; }
+#play .pool.fly .tear .sparks i { animation-delay: .96s; }
+#play .pool.fly .pcard.deal { animation-delay: calc(1.08s + var(--i) * .2s); }
+#play .pool.fly .pcard.deal::after { animation-delay: calc(1.76s + var(--i) * .2s); }
+/* the bottom of the Mine */
+#play .mnote-back { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: rgba(10,6,3,.62); }
+#play .mnote { width: min(560px, calc(100vw - 48px)); padding: 26px 30px 24px; border-radius: 22px; background: linear-gradient(180deg, #3a2a1d, #2a1f18); border: 3px solid #e7b866; box-shadow: 0 18px 50px rgba(0,0,0,.6); text-align: center; }
+#play .mnote h3 { margin: 0 0 12px; font-size: 28px; font-weight: 900; color: #ffd45e; }
+#play .mnote p { margin: 0 0 20px; font-size: 21px; line-height: 1.35; color: var(--text); }
+#play .mnote p b { color: #fff; }
+/* the Leaderboard: columns of stacked spots; the top spot goes to whoever got there first; the foot button sits bottom right like the others */
+#play .bigboard .foot { display: flex; justify-content: flex-end; }
+#play .bstack .bgrid { display: grid; gap: 5px; }
+#play .bstack .bcol { display: flex; flex-direction: column; gap: 5px; }
+#play .bstack .bhead { height: 56px; border-radius: 10px; background: #ead9b7; border: 2px solid #8a6c3c; display: flex; align-items: center; justify-content: center; gap: 4px; font-family: Georgia, serif; font-weight: 700; font-size: 22px; color: #5a3d17; position: relative; }
+#play .bstack .bcol.free .bhead { background: #f0d68e; }
+#play .bstack .blabels .bhead { background: transparent; border: 0; }
+#play .bstack .bspot { height: 64px; border-radius: 10px; background: #ead9b7; border: 2px solid #8a6c3c; box-shadow: inset 0 3px 6px rgba(70,42,12,.45); display: flex; align-items: center; justify-content: center; }
+#play .bstack .bcol.free .bspot { background: #f0d68e; }
+#play .bstack .bspot.top { box-shadow: inset 0 3px 6px rgba(70,42,12,.45), 0 0 0 3px rgba(255,200,70,.55); }
+#play .bstack .bspot.lab { background: transparent; border: 0; box-shadow: none; color: #5a3d17; font-weight: 800; font-size: 17px; justify-content: flex-end; padding-right: 8px; }
+#play .bstack .bcrown { position: static; background: none; inset: auto; font-size: 28px; color: #b27d10; width: auto; }
+#play .bstack .bdisc b { color: #fff; font-size: 20px; font-weight: 900; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+#play .bstack .bdisc { display: flex; align-items: center; justify-content: center; }
+#play .blegend { display: flex; justify-content: center; gap: 28px; margin: 14px 0 0; font-size: 20px; font-weight: 800; color: var(--text); }
+#play .blegend .bleg i { display: inline-block; width: 16px; height: 16px; border-radius: 50%; margin-right: 8px; vertical-align: -2px; }
+#play .revealpool { display: flex; justify-content: center; align-items: center; gap: 14px; }
+#play .flipcard.still .fback { animation: none; opacity: 0; } #play .flipcard.still .ffront { animation: none; } #play .flipcard.still { animation: none; }
+/* Card backs: a cross-section of the earth, deep underground (soil, clay, rock, the dark below), with the drill at work and crystals glinting in the deep */
+#play .cardback { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 234 334' preserveAspectRatio='none'%3E%0A%3Cdefs%3E%0A%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2394603a'/%3E%3Cstop offset='.2' stop-color='%2374492a'/%3E%3Cstop offset='.4' stop-color='%2355403a'/%3E%3Cstop offset='.64' stop-color='%2334303f'/%3E%3Cstop offset='1' stop-color='%2316111e'/%3E%3C/linearGradient%3E%0A%3CradialGradient id='w' cx='.5' cy='.5' r='.5'%3E%3Cstop offset='0' stop-color='%23ffd98a' stop-opacity='.7'/%3E%3Cstop offset='1' stop-color='%23ffd98a' stop-opacity='0'/%3E%3C/radialGradient%3E%0A%3ClinearGradient id='m' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%238d96a3'/%3E%3Cstop offset='.5' stop-color='%23e5ebf2'/%3E%3Cstop offset='1' stop-color='%2379828f'/%3E%3C/linearGradient%3E%0A%3CclipPath id='c'%3E%3Cpolygon points='91,134 143,134 117,214'/%3E%3C/clipPath%3E%0A%3C/defs%3E%0A%3Crect width='234' height='334' fill='url(%23g)'/%3E%0A%3Cg fill='none' stroke-linecap='round'%3E%0A%3Cpath d='M0 62 Q40 52 80 64 T160 60 T234 66' stroke='%23000' stroke-opacity='.28' stroke-width='3'/%3E%0A%3Cpath d='M0 66 Q40 56 80 68 T160 64 T234 70' stroke='%23ffd9a0' stroke-opacity='.12' stroke-width='2'/%3E%0A%3Cpath d='M0 116 Q50 106 100 120 T234 112' stroke='%23000' stroke-opacity='.3' stroke-width='3'/%3E%0A%3Cpath d='M0 120 Q50 110 100 124 T234 116' stroke='%23ffd9a0' stroke-opacity='.1' stroke-width='2'/%3E%0A%3Cpath d='M0 214 Q60 204 120 218 T234 210' stroke='%23000' stroke-opacity='.34' stroke-width='3'/%3E%0A%3Cpath d='M0 262 Q70 252 130 266 T234 258' stroke='%23000' stroke-opacity='.4' stroke-width='3'/%3E%0A%3Cpath d='M30 0 L26 24 L34 40 M196 20 L204 46 L196 70' stroke='%23000' stroke-opacity='.3' stroke-width='2'/%3E%0A%3C/g%3E%0A%3Cg%3E%0A%3Cellipse cx='30' cy='36' rx='9' ry='6' fill='%23b88a57'/%3E%3Cellipse cx='198' cy='30' rx='7' ry='5' fill='%23a07848'/%3E%3Cellipse cx='52' cy='92' rx='6' ry='4' fill='%238d6a45'/%3E%3Cellipse cx='190' cy='96' rx='10' ry='6' fill='%23a8845a'/%3E%0A%3Cellipse cx='24' cy='152' rx='8' ry='5' fill='%236d6460'/%3E%3Cellipse cx='206' cy='160' rx='9' ry='6' fill='%237a706c'/%3E%3Cellipse cx='40' cy='196' rx='6' ry='4' fill='%235c5552'/%3E%3Cellipse cx='196' cy='200' rx='7' ry='5' fill='%236a625f'/%3E%0A%3Cg transform='translate(30 232) rotate(-18)' fill='%23e8dcc0' opacity='.85'%3E%3Crect x='0' y='0' width='34' height='7' rx='3.5'/%3E%3Ccircle cx='0' cy='3.5' r='6'/%3E%3Ccircle cx='34' cy='3.5' r='6'/%3E%3C/g%3E%0A%3Cg transform='translate(178 80) rotate(24)' fill='%23e8dcc0' opacity='.7'%3E%3Crect x='0' y='0' width='26' height='6' rx='3'/%3E%3Ccircle cx='0' cy='3' r='5'/%3E%3Ccircle cx='26' cy='3' r='5'/%3E%3C/g%3E%0A%3C/g%3E%0A%3Ccircle cx='117' cy='168' r='96' fill='url(%23w)'/%3E%0A%3Ccircle cx='117' cy='168' r='66' fill='%231d1712' stroke='%23e7b866' stroke-width='5'/%3E%0A%3Ccircle cx='117' cy='168' r='58' fill='none' stroke='%23e7b866' stroke-opacity='.45' stroke-width='1.5' stroke-dasharray='3 5'/%3E%0A%3Crect x='108' y='104' width='18' height='30' rx='3' fill='url(%23m)'/%3E%3Crect x='102' y='128' width='30' height='8' rx='3' fill='%23c9a24a'/%3E%0A%3Cpolygon points='91,134 143,134 117,214' fill='url(%23m)'/%3E%0A%3Cg clip-path='url(%23c)' stroke='%234a525e' stroke-width='5'%3E%3Cpath d='M84 148 L150 136'/%3E%3Cpath d='M84 166 L150 154'/%3E%3Cpath d='M84 184 L150 172'/%3E%3Cpath d='M84 202 L150 190'/%3E%3C/g%3E%0A%3Cpolygon points='91,134 143,134 117,214' fill='none' stroke='%232a2f38' stroke-width='2' stroke-linejoin='round'/%3E%0A%3Cg fill='%23e7b866'%3E%3Cpolygon points='78,214 88,206 86,218'/%3E%3Cpolygon points='156,210 148,203 147,216'/%3E%3Cpolygon points='106,226 112,220 113,230'/%3E%3Cpolygon points='128,228 134,222 136,231'/%3E%3Ccircle cx='96' cy='228' r='2.5'/%3E%3Ccircle cx='142' cy='226' r='2.5'/%3E%3C/g%3E%0A%3Cg%3E%3Cpolygon points='14,334 20,290 32,300 38,334' fill='%238a4fe0'/%3E%3Cpolygon points='26,334 34,304 44,334' fill='%23b88aff'/%3E%3Cpolygon points='196,334 204,296 216,308 222,334' fill='%2326b5c9'/%3E%3Cpolygon points='208,334 214,310 226,334' fill='%237ee8f5'/%3E%3Cpolygon points='118,334 124,312 134,334' fill='%23e0a43a'/%3E%3C/g%3E%0A%3C/svg%3E") center / 100% 100% no-repeat, #2e2a38; border-color: #e7b866; }
+#play .cardback::after { content: none; }
 /* The Bank is a button, not a place for cards: a raised gold key at the right edge, bottom-aligned, that presses down */
 #play .piles { width: auto; height: auto; align-self: flex-end; margin-left: 0; flex: none; }
 #play .pile.bankp, #play .pile.bankp.live { flex: none; width: 210px; height: auto; min-height: 96px; padding: 10px 24px; flex-direction: row; gap: 14px; border-radius: 24px; border: 3px solid #fff0b8; color: #2a1700; font-size: 34px; font-weight: 900; letter-spacing: .02em; background: linear-gradient(180deg, #ffd45e, #e8920f); box-shadow: 0 8px 0 #8a4f06, 0 16px 24px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.55); overflow: visible; transition: transform .08s, box-shadow .08s; }
 #play .pile.bankp .gemline { display: inline-flex; align-items: center; gap: 6px; font-size: 34px; color: inherit; }
 #play .pile.bankp .gemline svg { width: 36px; height: 36px; }
-#play .pile.bankp > span:last-child { text-transform: uppercase; }
+#play .pile.bankp .bword { text-transform: uppercase; }
 #play .pile.bankp:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 3px 0 #8a4f06, 0 6px 12px rgba(0,0,0,.4), inset 0 2px 0 rgba(255,255,255,.4); }
 #play .pile.bankp.live { animation: none; }
 #play .pile.bankp:disabled, #play .pile.bankp.live:disabled { opacity: 1; filter: none; color: #cdbb8e; border-color: #8f7a4c; background: linear-gradient(180deg, #6f5d3a, #4d3f26); box-shadow: 0 5px 0 #2a2012, 0 10px 16px rgba(0,0,0,.35); }
@@ -820,7 +861,7 @@ const DDB = {
     line: { min: 1, max: 10 },
     startingDeck: 'Starting',                            // the Deck column value for the Mine's cards and the Pet
     survivedGems: 1, geodeGems: 1,
-    beyond: { firstDamage: 8, gems: 2 },                 // Monsters after the Mine runs out: 8, 9, ... and worth 2 gems
+    beyond: { firstDamage: 8, maxDamage: 19, gems: 2 },  // Monsters after the Mine runs out: 8, 9, ... up to 19 (there is a Bonus Monster card for each), and worth 2 gems
     kitSizes: [1, 2, 2, 3, 3],                           // Round tracker: Starter Kit cards per round; 4 rounds use the first four (owner: five rounds = 1, 2, 2, 3, 3)
     pledges: false,                                      // owner: the app has no pledging; your live marker simply follows every Monster you survive (the engine still knows pledges)
     soloKit: 3,                                          // Starter Kit size offered in the solo prototype (the round tracker's round 1 is 1)                              // Round tracker: Starter Kit cards per round (testing)
@@ -840,7 +881,10 @@ const DDB = {
     bankAtHealth: 3,                                     // it banks as soon as its Health is this low (it has survived at least one Monster)
     confidentHealth: 6,                                  // ...and also banks to take the lead, unless its Health is at least this much: then it is confident it can go further
     maxRolls: 3,                                         // rolls per Monster (the first plus rerolls)
-    paceMs: 1100, fastMs: 60,                            // it digs on its own clock, one card per paceMs; Fast forward shortens it once you are done
+    fastMs: 60,                                          // Fast forward: one card per fastMs, once you are done
+    pace: {                                              // it digs on its own clock at the speed of a person who knows the game well (about 1.5 s a card; a Monster takes a few seconds more)
+      startMs: 2500, cardMs: 1500, monsterMs: 3000, actionMs: 900, bankMs: 1700, jitter: 0.25,     // before its first card; per card; extra for a Monster (roll, look, take the damage); per card it triggers or reroll; thinking before it banks; random +/- on every wait
+    },
     think: {                                             // how the thinking AI works (see the script "ai"); every number here is a tuning knob
       rolls: 40, idleRolls: 80, quickRolls: 12, quickIdleRolls: 24,   // playouts per option at a decision; the "quick" numbers are for Fast forward
       bankAt: [1, 2, 3, 4, 5, 6, 8],                     // at "dig on or bank?" it also tries "play on until this many Monsters have been survived, then bank"
@@ -856,8 +900,9 @@ const DDB = {
   // ---- A run: rounds of Dig + Prep, the Leaderboard and the Crown Jewel (v2.7 Rules tab), for one player ----
   run: {
     rounds: 4, roundChoices: [2, 3, 4, 5, 6, 7],            // chosen in Settings
-    crownStart: 3,                                       // the Crown tracker starts at 3
+    crownStart: 2,                                       // the Crown tracker starts at 2 (owner): reaching 3 Monsters is enough to claim the Crown Jewel
     boosterDeck: 'Booster',                              // the Deck column value of the Booster Deck
+    boosterBan: ['\\{gem\\}'],                            // (owner) no Booster cards that boost gems: a card whose text matches one of these stays out of the Booster Deck
     // Reward ladder (owner): gems -> draw : keep. The pack names are placeholders (QUESTIONS #21).
     ladder: [
       { at: 0,  name: 'Bronze',   draw: 3, keep: 1, color: '#b8743a' },
@@ -885,7 +930,7 @@ const DDB = {
       ['cave',    "^Keep digging until you dig a Monster\\. Put it back on top of your Mine, face up$"],
       ['sneak',   "^Dig a card\\. If it's a Monster, defeat it$"],
       ['reveal',  "^Reveal cards from your Mine until you find (?:a|an) (Power or Ongoing|Immediate) card\\. (?:Play it and|Do it, then) shuffle the rest back$"],
-      ['clone',   "^Place under one of your Power cards\\. That card triggers twice$"],
+      ['clone',   "^Place under one of your Power(?: or Ongoing)? cards\\. That card triggers twice$"],
     ],
     sentence: [                                          // one sentence of an Immediate or Power card (also the part after "When dug,")
       ['list',      "^(?:Lose \\d+ \\{heart\\}|\\+\\d+ \\{(?:heart|reroll)\\})(?:(?:, then |, and |, | and )(?:Lose \\d+ \\{heart\\}|\\+\\d+ \\{(?:heart|reroll)\\}))*$"],
@@ -1152,7 +1197,7 @@ const Dig = (() => {
   function start(allCards, kit = [], opts = {}) {
     const seed = opts.seed === undefined || opts.seed === null ? null : opts.seed >>> 0;                  // no seed: the secure random source
     const st = { seed, rng: makeRng(seed), dice: opts.dice ? opts.dice.slice() : null, log: [], over: null, fight: null, pending: null, flags: {}, known: 0,
-      mine: [], discard: [], monsterPile: [], line: [], ongoing: [], setCount: {}, beyond: 0,
+      mine: [], discard: [], monsterPile: [], line: [], ongoing: [], cloned: [], under: {}, setCount: {}, beyond: 0,
       digs: 0, monstersDug: 0, survived: 0, defeated: 0, geodeGems: 0, monsterGems: 0, panicUsed: false,
       heart: 0, reroll: 0, rules: { ...R.start, ...(opts.start || {}) }, kit: [], board: opts.board || null, pledge: null };
     st.heart = st.rules.heart; st.reroll = st.rules.reroll;
@@ -1175,7 +1220,9 @@ const Dig = (() => {
     return st;
   }
   function log(st, kind, text, extra) { st.log.push({ kind, text, ...(extra || {}) }); }
-  const flag = (st, name) => { let v; for (const o of st.ongoing) { const f = compile(o).ongoing.flags[name]; if (f !== undefined && (v === undefined || f > v || f === true)) v = f; } return v; };
+  // An Ongoing card with a Cloning Machine under it does everything it does twice.
+  const times = (st, o) => (st.cloned.includes(o.uid) ? 2 : 1);
+  const flag = (st, name) => { let v; for (const o of st.ongoing) { let f = compile(o).ongoing.flags[name]; if (name === 'bumper' && typeof f === 'number') f *= times(st, o); if (f !== undefined && (v === undefined || f > v || f === true)) v = f; } return v; };
   const anyFlag = (st, name) => st.ongoing.some(o => compile(o).ongoing.flags[name] !== undefined);
   function refreshPet(st) {
     const e = st.line.find(x => x.pet); if (!e) return;
@@ -1184,7 +1231,7 @@ const Dig = (() => {
   const over = st => !!st.over;
 
   // ---------------- resources ----------------
-  function amplifier(st, res) { let n = 0; for (const o of st.ongoing) n += compile(o).ongoing.flags['amp_' + res] || 0; return n; }
+  function amplifier(st, res) { let n = 0; for (const o of st.ongoing) n += (compile(o).ongoing.flags['amp_' + res] || 0) * times(st, o); return n; }
   function gain(st, res, n, src, depth = 0) {
     if (over(st) || n <= 0) return;
     const bonus = depth >= R.maxChain ? 0 : amplifier(st, res); const want = n + bonus;
@@ -1207,7 +1254,7 @@ const Dig = (() => {
         if (w.ev !== ev) continue;
         const v = ev === 'takeDamage' ? data.n : ev === 'digMonster' ? data.damage : ev === 'triggers' ? data.n : 1;
         if (ev === 'triggers' ? v !== w.min : v < w.min) continue;
-        run(st, [w.react], { src: o, depth });
+        for (let k = 0; k < times(st, o); k++) run(st, [w.react], { src: o, depth });
       }
     }
   }
@@ -1345,7 +1392,7 @@ const Dig = (() => {
     if (c.type === 'Power' && b.dug.length) run(st, b.dug, { src: c, depth });
     if (c.type === 'Ongoing') {
       refreshPet(st);
-      if (c.fromKit && st.monstersDug === 0 && !over(st)) for (const e of b.ongoing.startDig) run(st, [e], { src: c, depth });     // "at the start of each Dig": your kit is how a Dig starts
+      if (c.fromKit && st.monstersDug === 0 && !over(st)) for (const e of b.ongoing.startDig) for (let k = 0; k < times(st, c); k++) run(st, [e], { src: c, depth });     // "at the start of each Dig": your kit is how a Dig starts
     }
   }
   function playImmediate(st, c, depth, revealed = false) {
@@ -1355,10 +1402,10 @@ const Dig = (() => {
     if (!ctx.moved) st.discard.push(c);
     if (!revealed) fire(st, 'digImmediate', {}, depth + 1);
   }
-  function bonusMonster(st) {
-    const dmg = R.beyond.firstDamage + st.beyond++;
-    return { id: 'BONUS', name: 'Bonus Monster', type: 'Monster', number: null, deck: '', count: 1, text: `{damage} ${dmg}`, bonus: true, uid: uid++, damageNow: dmg };
-  }
+  // The Bonus Monster from beyond the Mine: damage 8, then 9, ... (never more than the highest card, 19). It is known before you dig it: it lies face up on the empty Mine.
+  const bonusCard = dmg => ({ id: 'BONUS', name: 'Bonus Monster', type: 'Monster', number: null, deck: '', count: 1, text: `{damage} ${dmg}`, bonus: true, uid: uid++, damageNow: dmg });
+  const bonusDamage = st => Math.min(R.beyond.maxDamage, R.beyond.firstDamage + st.beyond);
+  function peekBonus(st) { const dmg = bonusDamage(st); if (!st.bonusNext || st.bonusNext.damageNow !== dmg) st.bonusNext = bonusCard(dmg); return st.bonusNext; }
   function resolveDug(st, c, depth = 0, opt = {}) {
     if (over(st)) return;
     const b = compile(c);
@@ -1372,7 +1419,7 @@ const Dig = (() => {
     if (!can(st).dig) return false;
     st.digs++;
     delete st.flags.lastOutcome; let c = st.mine.shift(); st.known = Math.max(0, st.known - 1);
-    if (!c) { c = bonusMonster(st); log(st, 'dig', `Your Mine is empty — a ${c.name} appears`); }
+    if (!c) { c = peekBonus(st); st.bonusNext = null; st.beyond++; log(st, 'dig', `Your Mine is empty — a ${c.name} appears`); }
     else log(st, 'dig', `You dig ${c.name}`);
     st.last = c;
     resolveDug(st, c);
@@ -1403,15 +1450,15 @@ const Dig = (() => {
       let v = m.plus;
       if (m.perSurvived) v = m.plus * Math.floor(st.survived / m.perSurvived);
       if (m.perImmediate) v = Math.min(m.cap, m.plus * st.discard.filter(c => c.type === 'Immediate').length);
-      t += v;
+      t += v * times(st, o);
     }
     return t;
   }
   function transform(st, f, r) {
-    const ts = []; for (const o of st.ongoing) ts.push(...compile(o).ongoing.transforms);
+    const ts = []; for (const o of st.ongoing) for (const t of compile(o).ongoing.transforms) ts.push({ ...t, n: times(st, o) });
     for (const kind of RL.transformOrder) for (const t of ts) {
       if (t.kind !== kind) continue;
-      if (kind === 'double' && f.first) r *= 2;
+      if (kind === 'double' && f.first) r *= 2 ** t.n;
       else if (kind === 'becomes' && r === t.from) r = t.to;
       else if (kind === 'floor' && r < t.below) r = t.to;
     }
@@ -1453,10 +1500,21 @@ const Dig = (() => {
 
   // ---------------- facing the Monster: trigger the line, then take damage ----------------
   // After the roll you choose which eligible Power cards to trigger, and in which order (owner). Damage is the last thing that happens.
+  // A card is only offered (highlighted) when the roll reaches it AND everything it asks for is true right now: "If you have 4 {heart} or less, ..." does nothing at 7 {heart}.
+  const needHeart = (st, effs) => {                                   // the most {heart} you may have for this card to do anything, or null when it asks nothing of the kind (or is met)
+    let need = null;
+    for (const e of effs) {
+      if (e.op === 'seq') { const n = needHeart(st, e.list); if (n === null) return null; need = n; continue; }
+      if (e.op === 'if' && e.cond && e.cond.heartAtMost !== undefined && st.heart > e.cond.heartAtMost) { need = e.cond.heartAtMost; continue; }
+      return null;                                                    // some effect has no such condition: the card does something
+    }
+    return need;
+  };
+  const unmetFor = (st, entry) => needHeart(st, compile(entry.card).effects);
   function eligible(st) {
     const f = st.fight; if (!f || f.phase !== 'after' || over(st)) return [];
     const r = resultTotal(st);
-    return st.line.filter(e => e.at <= r && f.trig.filter(x => x === e).length < (e.cloned ? 2 : 1)).sort((a, b) => b.at - a.at);
+    return st.line.filter(e => e.at <= r && f.trig.filter(x => x === e).length < (e.cloned ? 2 : 1) && unmetFor(st, e) === null).sort((a, b) => b.at - a.at);
   }
   // Effects that need to know which OTHER cards triggered ("for each other card that triggers", "if no other card triggers") wait until you have chosen.
   const needsFinal = effs => effs.some(e => (e.op === 'gainPer' && e.per === 'otherTriggers') || (e.op === 'if' && e.cond && e.cond.noOther) || (e.op === 'seq' && needsFinal(e.list)));
@@ -1469,6 +1527,12 @@ const Dig = (() => {
     if (!over(st)) fire(st, 'triggers', { n: new Set(f.trig.map(e => e.card)).size }, 1);
     if (!hold && st.fight === f && !over(st) && f.deferred.length && !eligible(st).length) runDeferred(st);          // no other card can trigger any more: "if no other card triggers" is settled, so it happens now
     return true;
+  }
+  // Tap a card once: it does everything it can this roll (a card with a Cloning Machine under it triggers twice, one tap).
+  function triggerFully(st, entry, hold) {
+    let did = false;
+    for (let n = 0; n < 2 && eligible(st).includes(entry); n++) { if (trigger(st, entry, hold)) did = true; else break; }
+    return did;
   }
   function triggerAll(st) {                                // the order a hurried player would use: highest number first
     const f = st.fight;
@@ -1532,16 +1596,21 @@ const Dig = (() => {
   }
 
   // ---------------- other actions ----------------
-  function chooseClone(st, entry) {
+  // The Cloning Machine goes under one of your Power cards (a line entry) or one of your Ongoing cards (the card itself): it does its thing twice.
+  function chooseClone(st, target) {
     if (!st.pending || st.pending.kind !== 'clone') return false;
-    const e = st.line.find(x => x === entry); if (!e) return false;
-    e.cloned = true; log(st, 'effect', `${st.pending.card.name} is placed under ${e.card.name}: it triggers twice`); st.pending = null; return true;
+    const e = st.line.find(x => x === target);
+    const bury = (card, machine) => { st.under[card.uid] = [...(st.under[card.uid] || []), machine]; };          // the Machine lies under the card it clones (it is still one of your Ongoing cards, but it is shown there)
+    if (e) { e.cloned = true; bury(e.card, st.pending.card); log(st, 'effect', `${st.pending.card.name} is placed under ${e.card.name}: it triggers twice`); st.pending = null; return true; }
+    const o = st.ongoing.find(x => x === target && x !== st.pending.card); if (!o) return false;
+    st.cloned.push(o.uid); bury(o, st.pending.card); log(st, 'effect', `${st.pending.card.name} is placed under ${o.name}: it works twice`); st.pending = null; return true;
   }
+  const cloneTargets = st => [...st.line, ...st.ongoing.filter(o => !st.pending || o !== st.pending.card)];
   // ---------------- saving and resuming (iPad Safari may reload the page; a Dig must survive that) ----------------
   const refOf = c => (c ? (c.id === 'BONUS' ? { ...c } : { id: c.id, uid: c.uid }) : c);
   function save(st) {
     return { v: 1, seed: st.seed, rng: st.rng.state(), dice: st.dice, log: st.log, over: st.over, flags: st.flags, known: st.known,
-      mine: st.mine.map(refOf), discard: st.discard.map(refOf), monsterPile: st.monsterPile.map(refOf), ongoing: st.ongoing.map(refOf), kit: st.kit.map(refOf), pet: refOf(st.pet), last: refOf(st.last),
+      mine: st.mine.map(refOf), discard: st.discard.map(refOf), monsterPile: st.monsterPile.map(refOf), ongoing: st.ongoing.map(refOf), cloned: st.cloned, under: Object.fromEntries(Object.entries(st.under).map(([k, cs]) => [k, cs.map(refOf)])), kit: st.kit.map(refOf), pet: refOf(st.pet), last: refOf(st.last),
       line: st.line.map(e => ({ card: refOf(e.card), at: e.at, base: e.base, pet: !!e.pet, cloned: !!e.cloned })),
       pending: st.pending && { kind: st.pending.kind, card: refOf(st.pending.card) },
       fight: st.fight && { ...st.fight, monster: refOf(st.fight.monster), trig: (st.fight.trig || []).map(e => e.card.uid), deferred: (st.fight.deferred || []).map(e => e.card.uid) },
@@ -1559,7 +1628,7 @@ const Dig = (() => {
     };
     const rng = makeRng(d.seed); rng.restore(d.rng);
     const st = { seed: d.seed, rng, dice: d.dice, log: d.log, over: d.over, flags: d.flags, known: d.known,
-      mine: d.mine.map(deref), discard: d.discard.map(deref), monsterPile: (d.monsterPile || []).map(deref), ongoing: d.ongoing.map(deref), kit: d.kit.map(deref), pet: deref(d.pet), last: deref(d.last),
+      mine: d.mine.map(deref), discard: d.discard.map(deref), monsterPile: (d.monsterPile || []).map(deref), ongoing: d.ongoing.map(deref), cloned: d.cloned || [], under: Object.fromEntries(Object.entries(d.under || {}).map(([k, cs]) => [k, cs.map(deref)])), kit: d.kit.map(deref), pet: deref(d.pet), last: deref(d.last),
       line: d.line.map(e => ({ card: deref(e.card), at: e.at, base: e.base, ...(e.pet ? { pet: true } : {}), ...(e.cloned ? { cloned: true } : {}) })),
       pending: d.pending && { kind: d.pending.kind, card: deref(d.pending.card) },
       fight: null,
@@ -1570,10 +1639,10 @@ const Dig = (() => {
     return st;
   }
   // A copy of a Dig to try things on (the AI thinks ahead on copies). Cards never change, so they are shared; everything that does change is copied. Its own random numbers (a seed), and no log.
-  function clone(st, seed) {
+  function clone(st, seed) {          // (bonusNext is a card that never changes, so it is shared)
     const lineMap = new Map(), line = st.line.map(e => { const n = { ...e }; lineMap.set(e, n); return n; }), remap = list => (list || []).map(e => lineMap.get(e) || e);
     return { ...st, seed: null, rng: makeRng(seed === undefined ? 1 : seed), dice: null, log: [], over: st.over && { ...st.over }, flags: { ...st.flags },
-      mine: st.mine.slice(), discard: st.discard.slice(), monsterPile: st.monsterPile.slice(), ongoing: st.ongoing.slice(), kit: st.kit, line,
+      mine: st.mine.slice(), discard: st.discard.slice(), monsterPile: st.monsterPile.slice(), ongoing: st.ongoing.slice(), cloned: st.cloned.slice(), under: Object.fromEntries(Object.entries(st.under).map(([k, cs]) => [k, cs.slice()])), kit: st.kit, line,
       pending: st.pending && { ...st.pending }, fight: st.fight && { ...st.fight, trig: remap(st.fight.trig), deferred: remap(st.fight.deferred) },
       setCount: { ...st.setCount }, board: st.board && { ...st.board }, rules: st.rules };
   }
@@ -1605,7 +1674,7 @@ const Dig = (() => {
       choose: !!st.pending && !st.over,
     };
   }
-  return { save, load, compile, supported, parseEffects, parseOngoing, start, clone, can, pledge, canPledge, dig, roll, reroll, face, autoFace, eligible, trigger, triggerAll, bank, chooseClone, hold, score, result, makeRng, shuffle, flag, previewDamage };
+  return { save, load, compile, supported, parseEffects, parseOngoing, start, clone, can, pledge, canPledge, dig, roll, reroll, face, autoFace, eligible, unmetFor, trigger, triggerFully, triggerAll, bank, chooseClone, cloneTargets, peekBonus, hold, score, result, makeRng, shuffle, flag, previewDamage };
 })();
 </script>
 
@@ -1739,8 +1808,9 @@ const Run = (() => {
   }
   // all: every card of the sheet. opts: { rounds, seed, dice }
   // The Booster Deck: every Booster card by its count, shuffled.
+  const boosted = c => RN.boosterBan.some(re => new RegExp(re).test(c.text));          // a card that boosts gems
   function makeDeck(all, rng) {
-    const deck = []; for (const c of all) if (c.deck === RN.boosterDeck && Dig.supported(c)) for (let i = 0; i < (c.count || 1); i++) deck.push(copy(c));          // cards whose text the game cannot play yet (Grit is cut: see QUESTIONS.md) wait outside the deck
+    const deck = []; for (const c of all) if (c.deck === RN.boosterDeck && Dig.supported(c) && !boosted(c)) for (let i = 0; i < (c.count || 1); i++) deck.push(copy(c));          // cards whose text the game cannot play yet (Grit is cut: see QUESTIONS.md) wait outside the deck
     return Dig.shuffle({ rng }, deck);
   }
   // opts.shared = { board, deck, trash }: several players (see Match) share one Leaderboard, one Booster Deck and one Trash.
@@ -1979,13 +2049,15 @@ const Match = (() => {
   // The AI digs one card (and plays out any Monster it finds). It does this on its own clock (see the game screen), not when you tap.
   function aiStep(m) {
     const ai = bot(m); if (!ai.dig || ai.dig.over || ai.phase !== 'dig') return false;
-    const st = ai.dig, before = st.digs;
+    const st = ai.dig, before = st.digs, mon0 = st.monstersDug; let acts = 0;
     for (let n = 0; n < 80 && !st.over; n++) {
       if (!brain(m).act(ai)) break;
+      acts++;
       Run.checkOver(ai);
       if (st.digs > before && !st.fight && !st.pending) break;
     }
     if (!st.over) Run.refresh(ai);
+    m.aiLast = { cards: st.digs - before, monsters: st.monstersDug - mon0, acts, banked: !!st.over && st.over.kind === 'bank' };          // what it just did: the game screen waits as long as a person would
     finalCheck(m); m.aiDug++; return true;
   }
   // The final round: when everyone but the leader is out, the leader's Dig simply ends.
@@ -2010,11 +2082,26 @@ const Match = (() => {
     if (!opts.defer) brain(m).prep(bot(m)); return true;
   }
   function prepAI(m) { const ai = bot(m); if (ai.prep && ai.prep.step !== 'kit') brain(m).prep(ai); return !!ai.prep && ai.prep.step === 'kit'; }
+  // The same, but in small slices (about `sliceMs` of thinking, then a breath for the screen), so an animation that is playing never stalls. done() is called when it has chosen.
+  // beginRound finishes whatever is left at once, should you be quicker than the AI.
+  function prepAIAsync(m, done, sliceMs = 8) {
+    const ai = bot(m), b = brain(m); if (!ai.prep || m.aiJob) return;
+    if (!b.prepSteps) { prepAI(m); if (done) done(); return; }
+    const g = m.aiJob = b.prepSteps(ai);
+    const slice = () => {
+      if (m.aiJob !== g) return;                                      // finished early by beginRound
+      const t = Date.now(); let r;
+      do { r = g.next(); } while (!r.done && Date.now() - t < sliceMs);
+      if (r.done) { m.aiJob = null; if (done) done(); } else setTimeout(slice, 0);
+    };
+    setTimeout(slice, 0);
+  }
   // Both players begin the round (the AI finishes its Prep if it has not).
   function beginRound(m) {
     const me = human(m), ai = bot(m);
     if (!me.prep || me.prep.step !== 'kit') return false;
     if (!Run.beginDig(me)) return false;                         // yours first: before round 1 the card you chose leaves the deck, so the AI cannot take it
+    if (m.aiJob) { const g = m.aiJob; m.aiJob = null; while (!g.next().done); }          // it is still thinking: let it finish now
     brain(m).prep(ai);                                           // (does nothing if it has already chosen)
     return Run.beginDig(ai);
   }
@@ -2048,7 +2135,7 @@ const Match = (() => {
     m.runs[HUMAN] = Run.load(all, d.runs[HUMAN], shared); m.runs[BOT] = Run.load(all, d.runs[BOT], shared);
     return m;
   }
-  return { start, aiStep, settle, finalCheck, rollEscape, openPack, prepAI, beginRound, finishRound, save, load, human, bot, HUMAN, BOT };
+  return { start, aiStep, settle, finalCheck, rollEscape, openPack, prepAI, prepAIAsync, beginRound, finishRound, save, load, human, bot, HUMAN, BOT };
 })();
 </script>
 
@@ -2133,7 +2220,7 @@ const AI = (() => {
       for (let i = 0; i < idx.length; i++) { out.push(idx.filter((_, k) => k !== i)); out.push([idx[i]]); }
       return out;
     }
-    function applyPlan(c, plan) { for (const i of plan) { if (!Dig.trigger(c, c.line[i])) break; } Dig.face(c); }
+    function applyPlan(c, plan) { for (const i of plan) { if (!Dig.triggerFully(c, c.line[i])) break; } Dig.face(c); }
     const sig = c => [c.over && c.over.kind, c.heart, c.reroll, c.survived, c.fight ? 'f' : '', c.line.map(e => e.at).join('.'), c.ongoing.length, c.mine.length, c.geodeGems + c.monsterGems].join('|');
     function argmax(opts, score) { let best = null, bv = -Infinity; for (const o of opts) { const v = score(o); if (v > bv + 1e-9) { bv = v; best = o; } } return best; }
 
@@ -2144,7 +2231,7 @@ const AI = (() => {
       const q = opts.quick, rolls = q ? P.quickRolls : P.rolls, idleRolls = q ? P.quickIdleRolls : P.idleRolls;
       const ctx = context(run), c = Dig.can(st), f = st.fight;
       if ((P.basicFight && f) || (P.basicIdle && !f && !c.choose)) return Basic.act(run);          // (for experiments: use the old rules of thumb for part of the Dig)
-      if (c.choose) { const i = argmax(st.line.map((e, k) => k), k => evaluate(st, ctx, x => Dig.chooseClone(x, x.line[k]), rolls, 99)); Dig.chooseClone(st, st.line[i]); return true; }
+      if (c.choose) { const k = argmax(Dig.cloneTargets(st).map((t, i) => i), i => evaluate(st, ctx, x => Dig.chooseClone(x, Dig.cloneTargets(x)[i]), rolls, 99)); Dig.chooseClone(st, Dig.cloneTargets(st)[k]); return true; }
       if (f) {
         if (f.phase === 'before') { Dig.roll(st); return true; }
         const options = [], seen = new Set();
@@ -2181,9 +2268,10 @@ const AI = (() => {
       const final = run.round === run.rounds, fake = { dig: { board: { final, leadN: final ? Board.leadN(run.board, run.me) : 99 } }, board: run.board, me: run.me, rounds: run.rounds, round: run.round };
       const ctx = context(fake); ctx.T = Math.max(ctx.crown, ctx.bo) + 1; return ctx;
     }
-    function evalDeck(run, ctx, kit, rest, n, seed0, kitMax) {
+    function* evalDeck(run, ctx, kit, rest, n, seed0, kitMax) {
       let sum = 0; const empty = kitMax - kit.length;
       for (let j = 0; j < n; j++) {
+        if (j && j % 10 === 0) yield;                       // (a breath for the screen every few Digs)
         const st = Dig.start(run.all, kit, { seed: seed0 + j * 104729, extra: rest, gems: empty * RN.startGems, board: { crown: ctx.crown, final: ctx.final, leadN: ctx.leadN } });
         for (let i = 0; i < 500 && !st.over; i++) { if (st.digs > P.digCap) { st.over = { kind: 'boom' }; break; } if (!baseAct(st, ctx, ctx.T)) break; }
         sum += valueOf(st, ctx);
@@ -2193,26 +2281,27 @@ const AI = (() => {
     const perms = a => a.length <= 1 ? [a] : a.flatMap((x, i) => perms(a.slice(0, i).concat(a.slice(i + 1))).map(r => [x].concat(r)));
     const combos = (a, k) => k === 0 ? [[]] : a.length < k ? [] : combos(a.slice(1), k - 1).map(r => [a[0]].concat(r)).concat(combos(a.slice(1), k));
     // The best Starter Kit from the cards you own: add the card that helps most, again and again, then try every order.
-    function chooseKit(run, owned, kitMax, n, seed0) {
+    // (These are generators: after each deck they have judged they hand control back, so the game screen can keep moving while the AI thinks. `prep` just runs one to the end.)
+    function* chooseKit(run, owned, kitMax, n, seed0) {
       const ctx = prepContext(run), val = kit => evalDeck(run, ctx, kit, owned.filter(c => !kit.includes(c)), n, seed0, kitMax);
-      let kit = [], best = val(kit);
+      let kit = [], best = yield* val(kit);
       for (let step = 0; step < kitMax; step++) {
         let pick = null, pv = best + P.kitMargin;
-        for (const c of owned) { if (kit.includes(c)) continue; const v = val(kit.concat(c)); if (v > pv) { pv = v; pick = c; } }
+        for (const c of owned) { if (kit.includes(c)) continue; const v = yield* val(kit.concat(c)); if (v > pv) { pv = v; pick = c; } }
         if (!pick) break; kit = kit.concat(pick); best = pv;
       }
-      if (kit.length > 1 && kit.length <= 3) { let bo = kit, bv = best; for (const o of perms(kit)) { const v = val(o); if (v > bv + 1e-9) { bv = v; bo = o; } } kit = bo; best = bv; }
+      if (kit.length > 1 && kit.length <= 3) { let bo = kit, bv = best; for (const o of perms(kit)) { const v = yield* val(o); if (v > bv + 1e-9) { bv = v; bo = o; } } kit = bo; best = bv; }
       return { kit, value: best };
     }
     // A quick look at a set of kept cards: the best of a few ways of putting them into your current best Kit.
-    function screen(run, ctx, owned, set, kit0, kitMax, n, seed0) {
+    function* screen(run, ctx, owned, set, kit0, kitMax, n, seed0) {
       const all = owned.concat(set), tries = [kit0];
       for (const c of set) { if (kit0.length < kitMax) tries.push(kit0.concat(c)); else for (let j = 0; j < kit0.length; j++) tries.push(kit0.map((x, i) => (i === j ? c : x))); }
       let best = -Infinity;
-      for (const kit of tries) best = Math.max(best, evalDeck(run, ctx, kit, all.filter(c => !kit.includes(c)), n, seed0, kitMax));
+      for (const kit of tries) best = Math.max(best, yield* evalDeck(run, ctx, kit, all.filter(c => !kit.includes(c)), n, seed0, kitMax));
       return best;
     }
-    function prep(run) {
+    function* prepSteps(run) {
       const pr = run.prep; if (!pr || pr.aiDone) return;                       // (once it has chosen, asking again changes nothing)
       if (pr.step === 'pack') Run.openPack(run);
       const n = P.prepSims, seed0 = P.prepSeed;
@@ -2220,22 +2309,24 @@ const AI = (() => {
         const k = Run.keepCount(run), sets = combos(run.prep.offer, k);
         let bestSet = sets[0];
         if (sets.length > 1) {
-          const kitMax = run.prep.kitMax, ctx = prepContext(run), kit0 = chooseKit(run, run.owned, kitMax, n, seed0).kit;
-          const scored = sets.map(set => ({ set, v: screen(run, ctx, run.owned, set, kit0, kitMax, P.screenSims, seed0) })).sort((x, y) => y.v - x.v).slice(0, P.finalists);
+          const kitMax = run.prep.kitMax, ctx = prepContext(run), kit0 = (yield* chooseKit(run, run.owned, kitMax, n, seed0)).kit, scored = [];
+          for (const set of sets) scored.push({ set, v: yield* screen(run, ctx, run.owned, set, kit0, kitMax, P.screenSims, seed0) });
+          scored.sort((x, y) => y.v - x.v);
           let bv = -Infinity;
-          for (const f of scored) { const v = chooseKit(run, run.owned.concat(f.set), kitMax, n, seed0).value; if (v > bv + 1e-9) { bv = v; bestSet = f.set; } }
+          for (const f of scored.slice(0, P.finalists)) { const v = (yield* chooseKit(run, run.owned.concat(f.set), kitMax, n, seed0)).value; if (v > bv + 1e-9) { bv = v; bestSet = f.set; } }
         }
         for (const c of bestSet) Run.toggleKeep(run, c.uid);
         Run.confirmKeep(run);
       }
       if (run.prep.step === 'reveal') Run.continueReveal(run);
       if (run.prep.step === 'kit') {
-        const { kit } = chooseKit(run, run.owned, run.prep.kitMax, n * 2, seed0);
+        const { kit } = yield* chooseKit(run, run.owned, run.prep.kitMax, n * 2, seed0);
         run.prep.kitPick = []; for (const c of kit) Run.toggleKit(run, c.uid);
         run.prep.aiDone = true;
       }
     }
-    return { act, prep, P, phi, valueOf, context, idleArms };
+    function prep(run) { const g = prepSteps(run); while (!g.next().done); }
+    return { act, prep, prepSteps, P, phi, valueOf, context, idleArms };
   }
   return { ...make(), make, basic: Basic };
 })();
@@ -2429,7 +2520,8 @@ const AI = (() => {
     const pool = state.all.filter(c => c.type !== 'Monster' && c.type !== 'Treasure' && Dig.supported(c));
     const b = R2.textBox(); let tw = 44;
     for (const c of pool) tw = Math.min(tw, fitFont(textHTML(c.text), b.w, b.h));
-    const order = Object.keys(D.types), list = state.all.filter(c => Dig.supported(c) && (state.filter === 'all' || c.type === state.filter)).sort((a, b2) => order.indexOf(a.type) - order.indexOf(b2.type));
+    const BY = D.rules.beyond, bonus = Array.from({ length: BY.maxDamage - BY.firstDamage + 1 }, (_, i) => ({ id: 'BONUS-' + (BY.firstDamage + i), name: 'Bonus Monster', type: 'Monster', number: null, deck: 'Bonus', count: 1, text: `{damage} ${BY.firstDamage + i}`, bonus: true, damageNow: BY.firstDamage + i, uid: -(BY.firstDamage + i) }));          // the Monsters from beyond the Mine: one card for each damage
+    const order = Object.keys(D.types), list = state.all.filter(c => Dig.supported(c) && (state.filter === 'all' || c.type === state.filter)).sort((a, b2) => order.indexOf(a.type) - order.indexOf(b2.type)).concat(state.filter === 'all' || state.filter === 'Monster' ? bonus : []);
     const cells = list.flatMap(c => c.type === 'Treasure' ? D.gems.map((g, i) => `<div class="cell">${r2Card(c, tw, 'compact', statFor(c), scale, undefined, i)}<span class="cap">${esc(c.id)} · ${esc(c.name)} · ${esc(g.name)} ×${Math.round(c.count / D.gems.length)}</span></div>`) : [`<div class="cell">${r2Card(c, tw, 'compact', statFor(c), scale)}<span class="cap">${esc(c.id)} · ${esc(c.name)}${c.count > 1 ? ' ×' + c.count : ''}</span></div>`]).join('');
     return `<section class="dir" id="deck" data-round="deck"><h2>The whole deck</h2>
       <p class="sub">Coloured border and header with the name, type and Power number; no art slot, so the rules text gets the whole card. A Geode is one giant count-and-gem on a brown card, and every Geode is a different gem (six colours and cuts, three of each), so a flip is a little surprise. Monsters: art, then the damage ladder in big tiles, with the gems a survived Monster is worth. Rules text is <b>${E.formatSize(tw)}</b> on every card. ${list.length} cards, live from your sheet.</p>
@@ -2740,6 +2832,11 @@ const AI = (() => {
   };
   const pcard = (c, scale, o = {}) => `<button class="pcard ${o.sel ? 'sel' : ''} ${o.deal ? 'deal' : ''} ${o.kept ? 'kept' : ''}" data-p="${o.act}" data-uid="${c.uid}" style="width:${250 * scale}px;height:${350 * scale}px;--i:${o.i || 0};--dx:${Math.round(o.dx || 0)}px;--tc:${(D.types[c.type] || {}).color || '#fff'}" aria-label="${A.esc(c.name)}">${o.badge ? `<span class="badge">${o.badge}</span>` : ''}${o.tag ? `<span class="ctag ${o.tagCls || ''}">${o.tag}</span>` : ''}${o.deal ? `<span class="dback"><span class="cardback"></span></span><span class="pface">${A.playCard(c, scale)}</span>` : A.playCard(c, scale)}</button>`;
   const dots = (n, on) => `<span class="pips2" role="img" aria-label="${on} of ${n}">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</span>`;
+  // The pack you tapped in the tally flies to the middle of the row where your cards will be dealt, and tears open there.
+  function flyPackHTML(pack) {
+    const col = (D.run.ladder.find(l => l.name === pack.name) || {}).color || '#b8743a', plus = /\+$/.test(pack.name);
+    return `<span class="pack flypack" aria-hidden="true" style="--pc:${col}"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(pack.name.replace('+', ''))}</b><span>Draw ${pack.draw} · Keep ${pack.keep}</span></span>`;
+  }
   // The pack, torn open: the top strip rips off and the cards come out of it (decoration only: the cards can be tapped at once).
   function tearHTML(pack) {
     const col = (D.run.ladder.find(l => l.name === pack.name) || {}).color || '#b8743a', plus = /\+$/.test(pack.name);
@@ -2748,22 +2845,29 @@ const AI = (() => {
   }
   // The Leaderboard, full screen, between the end of the Dig and the gems being added up: one row per player with their marker, and the Crown Jewel's tracker above.
   function boardHTML() {
+    // The real Leaderboard: one column for each number, with spots stacked in it. Whoever reaches a number first takes the top spot; whoever reaches it later slots into
+    // the highest spot still free. Level on a number, the one higher up the column is ahead. (Not one track for each player.)
     const run = S.run, bd = run.board, tr = Board.tracker(bd), holder = Board.holder(bd), players = bd.players;
-    const marks = players.map(p => ({ p, m: Board.marker(bd, p.id, 'best') }));
-    const max = Math.max(8, tr + 2, ...marks.map(x => (x.m ? x.m.n + 1 : 0)));
-    const head = Array.from({ length: max + 1 }, (_, n) => `<div class="bc ${n <= tr ? 'free' : ''}"><span class="bn">${n === 0 ? 'Start' : n}</span>${n === tr ? `<b class="bcrown ${holder ? 'held' : ''}">♛</b>` : ''}</div>`).join('');
-    const rows = marks.map(({ p, m }, ri) => `<div class="brow"><span class="bname" style="--pc:${p.color}"><i></i>${A.esc(p.id === run.me ? 'You' : p.name)}</span><div class="bcells" style="grid-template-columns:repeat(${max + 1},minmax(0,1fr))">${Array.from({ length: max + 1 }, (_, n) => `<div class="bc ${n <= tr ? 'free' : ''}">${m && m.n === n ? `<i class="bdisc" style="--pc:${p.color};--d:${(.5 + ri * .6).toFixed(1)}s"></i>` : ''}</div>`).join('')}</div><b class="bscore">${m ? m.n : 0}</b></div>`).join('');
+    const marks = players.map(p => ({ p, m: Board.marker(bd, p.id, 'best') })).filter(x => x.m);
+    const max = Math.max(8, tr + 2, ...marks.map(x => x.m.n + 1)), nSpots = Math.max(2, players.length * 2);
+    const ord = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
+    const labels = `<div class="bcol blabels"><div class="bhead"></div>${Array.from({ length: nSpots }, (_, i) => `<div class="bspot lab">${ord[i] || i + 1 + 'th'}</div>`).join('')}</div>`;
+    const cols = Array.from({ length: max + 1 }, (_, n) => `<div class="bcol ${n <= tr ? 'free' : ''}"><div class="bhead"><span class="bn">${n === 0 ? 'Start' : n}</span>${n === tr ? `<b class="bcrown ${holder ? 'held' : ''}">♛</b>` : ''}</div>${Array.from({ length: nSpots }, (_, i) => {
+      const x = marks.find(k => k.m.n === n && k.m.rank === i + 1);
+      return `<div class="bspot ${i === 0 ? 'top' : ''}">${x ? `<i class="bdisc" style="--pc:${x.p.color};--d:${(.4 + (x.m.t || 0) % 7 * .12 + i * .15).toFixed(2)}s" title="${A.esc(x.p.id === run.me ? 'You' : x.p.name)}"><b>${A.esc((x.p.id === run.me ? 'You' : x.p.name).charAt(0))}</b></i>` : ''}</div>`;
+    }).join('')}</div>`).join('');
+    const legend = players.map(p => `<span class="bleg"><i style="background:${p.color}"></i>${A.esc(p.id === run.me ? 'You' : p.name)} <b>${(Board.marker(bd, p.id, 'best') || { n: 0 }).n}</b></span>`).join('');
     const final = run.phase === 'done';
     const who = holder ? (holder === run.me ? 'You hold the Crown Jewel' : `${A.esc(nameOf(run, holder))} holds the Crown Jewel`) : `Nobody has the Crown Jewel yet: it is at ${tr}`;
-    return `<div class="panel setup bigboard"><div class="scroll"><h2 class="steptitle">Leaderboard</h2><div class="bbwrap"><div class="brow crow"><span class="bname"><b>♛</b>Crown</span><div class="bcells" style="grid-template-columns:repeat(${max + 1},minmax(0,1fr))">${head}</div><b class="bscore">${tr}</b></div>${rows}</div><p class="bnote">${who}</p></div><div class="foot"><button class="btn" data-p="boardgo">${final ? 'See the result' : 'Add up your gems'}</button></div></div>`;
+    return `<div class="panel setup bigboard"><div class="scroll"><h2 class="steptitle">Leaderboard</h2><div class="bbwrap bstack"><div class="bgrid" style="grid-template-columns:70px repeat(${max + 1},minmax(0,1fr))">${labels}${cols}</div></div><div class="blegend">${legend}</div><p class="bnote">${who}</p></div><div class="foot"><button class="btn" data-p="boardgo">${final ? 'See the result' : 'Add up your gems'}</button></div></div>`;
   }
   // The tally after a bank, shown one piece at a time while a thermometer fills up beside it: Treasure, a pause, Monsters, a pause, then you tap the die; and only when the die has landed does the pack appear.
   const TP = () => window.DDB_TALLY_PACE || 1;                         // tests speed this up
-  function tallyStage(run, pr) {                                       // 0 nothing yet · 1 Treasure · 2 Monsters · 3 the die waits for you · 4 the die rolls · 5 it is added: the total and the thermometer rise together · 6 the pack
+  function tallyStage(run, pr) {                                       // 0 nothing yet · 1 Treasure · 2 Monsters · 3 (not used: the die appears already rolling) · 4 the die rolls · 5 it is added: the total and the thermometer rise together · 6 the pack
     if (!S.tally || S.tally.run !== run || S.tally.key !== run.round) {
       const t = S.tally = { run, key: run.round, stage: pr.escape !== null ? 6 : 0, shown: 0 };
       const go = (n, ms) => setTimeout(() => { if (S.tally === t && t.stage < n) { t.stage = n; if (S.panel === 'prep' && S.run === run) render(); } }, ms * TP());
-      if (t.stage < 3) { go(1, 500); go(2, 2200); go(3, 3300); setTimeout(() => escapeRoll(t), 3900 * TP()); }
+      if (t.stage < 3) { go(1, 500); go(2, 2200); setTimeout(() => escapeRoll(t), 3300 * TP()); }          // the die appears already rolling
     }
     return S.tally.stage;
   }
@@ -2793,10 +2897,11 @@ const AI = (() => {
       const stage = tallyStage(run, pr), lvl = stage < 1 ? 0 : stage < 2 ? pr.geodes : stage < 5 ? pr.geodes + pr.monsters : pr.gems;
       // Every piece has its place from the start (hidden until it is its turn), so nothing moves when the next one appears.
       const cl = n => stage >= n ? 'pop' : 'ghost';
-      const eq = `<div class="eq"><span class="t ${cl(1)}" title="Treasure">${ico('Treasure')}${pr.geodes}</span><span class="op ${cl(2)}">+</span><span class="t ${cl(2)}" title="Monsters survived">${ico('Monster')}${pr.monsters}</span><span class="op ${cl(3)}">+</span><span class="t die ${cl(3)}" title="Escape Bonus">${rolled ? d10(tumble ? '' : pr.escape, tumble ? 'fx-tumble' : '', pr.escape) : d10('?', 'idle')}</span><span class="op ${cl(5)}">=</span><span class="t sum ${cl(5)}" title="Gems"><b class="cnt" ${stage >= 5 ? `data-cf="${pr.geodes + pr.monsters}" data-ct="${pr.gems}"` : ''}>${stage >= 5 ? pr.gems : pr.geodes + pr.monsters}</b>${ic('gem')}</span></div>`;
+      const eq = `<div class="eq"><span class="t ${cl(1)}" title="Treasure">${ico('Treasure')}${pr.geodes}</span><span class="op ${cl(2)}">+</span><span class="t ${cl(2)}" title="Monsters survived">${ico('Monster')}${pr.monsters}</span><span class="op ${cl(3)}">+</span><span class="t die ${cl(3)}" title="Escape Bonus">${rolled ? d10(tumble ? '' : pr.escape, tumble ? 'fx-tumble' : '', pr.escape) : d10('', 'idle')}</span><span class="op ${cl(5)}">=</span><span class="t sum ${cl(5)}" title="Gems"><b class="cnt" ${stage >= 5 ? `data-cf="${pr.geodes + pr.monsters}" data-ct="${pr.gems}"` : ''}>${stage >= 5 ? pr.gems : pr.geodes + pr.monsters}</b>${ic('gem')}</span></div>`;
       const info = rolled ? Run.packInfo(run) : null, col = info ? (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a' : '', plus = info && /\+$/.test(info.name);
       const packBtn = stage >= 6 ? `<button class="pack pop" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>` : '';
-      body = `<div class="tallyrow" ${stage < 6 ? 'data-p="skiptally"' : ''}><div class="tallymain">${eq}${packBtn}</div>${gemChart(lvl, stage >= 6, stage === 5 ? pr.geodes + pr.monsters : null)}</div>`;
+      const packRoom = stage >= 6 ? packBtn : `<span class="pack ghostpack" aria-hidden="true"></span>`;          // the pack's place is kept from the start, so nothing moves when it appears
+      body = `<div class="tallyrow" ${stage < 6 ? 'data-p="skiptally"' : ''}><div class="tallymain">${eq}${packRoom}</div>${gemChart(lvl, stage >= 6, stage === 5 ? pr.geodes + pr.monsters : null)}</div>`;
     } else if (step === 'escape') body = '';
     else if (step === 'pack') {
       // The same layout the cards will be dealt into: the Keep places on top and, in the middle of the row below, the closed pack. It tears open right there.
@@ -2815,13 +2920,21 @@ const AI = (() => {
       const chosen = pr.picked.map(id => pr.offer.find(c => c.uid === id)).filter(Boolean), hand = pr.offer.filter(c => !pr.picked.includes(c.uid));
       const ps = Math.min(.8, fitCards(hand.length, .8, W, avail - sh - 14, 12));
       const slots = Array.from({ length: need }, (_, i) => { const c = chosen[i]; return `<div class="kslot ${c ? '' : 'empty'}" data-i="${i}" style="width:${250 * ss}px;height:${sh}px">${c ? pcard(c, ss, { act: 'pick', sel: true, badge: i + 1, kslot: true }) : '<span class="kplus">keep</span>'}</div>`; }).join('');
-      body = `<div class="kitbar"><b>${A.esc(pr.pack.name)} Pack</b><span class="count" aria-label="${pr.picked.length} of ${need} chosen">Keep ${pr.picked.length} of ${need}</span></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool">${first ? tearHTML(pr.pack) : ''}${hand.map((c, i) => pcard(c, ps, { act: 'pick', i: pr.offer.indexOf(c), deal: first, dx: ((pr.offer.length - 1) / 2 - pr.offer.indexOf(c)) * (250 * ps + 14) })).join('')}</div>`;
+      body = `<div class="kitbar"><b>${A.esc(pr.pack.name)} Pack</b><span class="count" aria-label="${pr.picked.length} of ${need} chosen">Keep ${pr.picked.length} of ${need}</span></div><div class="kslots">${slots}</div><div class="poolhead">Your cards</div><div class="cards pool ${first && S.packFrom ? 'fly' : ''}">${first ? tearHTML(pr.pack) : ''}${first && S.packFrom ? flyPackHTML(pr.pack) : ''}${hand.map((c, i) => pcard(c, ps, { act: 'pick', i: pr.offer.indexOf(c), deal: first, dx: ((pr.offer.length - 1) / 2 - pr.offer.indexOf(c)) * (250 * ps + 14) })).join('')}</div>`;
       foot = `<button class="btn" data-p="keepgo" ${pr.picked.length === need ? '' : 'disabled'}>Keep</button>`;
-    } else if (step === 'reveal') {            // a Mystery Box: the other cards go away, the next card of the deck is dealt and turned over; nothing moves on until you say so
-      const kept = pr.offer.filter(c => pr.picked.includes(c.uid)), rest = pr.offer.filter(c => !pr.picked.includes(c.uid)), sc = cardScale(kept.length + pr.extra.length, .95, .4), w = 250 * sc;
-      const ghosts = rest.map((c, i) => `<span class="ghostcard" style="--i:${i};--gx:${Math.round((i - (rest.length - 1) / 2) * (w + 14))}px;width:${w}px;height:${350 * sc}px">${A.playCard(c, sc)}</span>`).join('');
-      const flip = (c, i) => `<span class="flipcard" style="--i:${i};width:${w}px;height:${350 * sc}px"><span class="fback"><span class="cardback"></span></span><span class="ffront">${A.playCard(c, sc)}</span></span>`;
-      body = `<div class="kitbar"><b>${A.esc(kept.map(c => c.name).join(', '))}</b></div><p class="keepsay">You also keep the next card of the deck</p><div class="revealrow">${ghosts}${kept.map((c, i) => `<span class="keptcard" style="width:${w}px;height:${350 * sc}px">${A.playCard(c, sc)}</span>`).join('')}${pr.extra.map((c, i) => flip(c, i)).join('')}</div>`;
+    } else if (step === 'reveal') {            // a Mystery Box: the same screen as the pack. The cards you did not keep fly away, then the next card of the deck is dealt face down in the row and turns over; nothing moves on until you say so
+      const key = `${run.round}:reveal`, first = S.fxReveal !== key; S.fxReveal = key;
+      const kept = pr.offer.filter(c => pr.picked.includes(c.uid)), rest = pr.offer.filter(c => !pr.picked.includes(c.uid)), need = kept.length;
+      const W = Math.min(innerWidth, 1180) - 48, avail = innerHeight - 32 - 150 - 92 - 30 - 20;
+      const ss = Math.min(.6, fitCards(need, .6, W, avail * .46)), sh = 350 * ss, ps = Math.min(.8, fitCards(rest.length, .8, W, avail - sh - 14, 12));          // (the same sizes as on the pack screen)
+      const slots = kept.map((c, i) => `<div class="kslot" data-i="${i}" style="width:${250 * ss}px;height:${sh}px">${pcard(c, ss, { act: 'noop', sel: true, badge: i + 1, kslot: true })}</div>`).join('');
+      const from = first ? S.keepFrom : null;
+      const sweep = first && rest.length ? `<div class="sweep" aria-hidden="true">${rest.map((c, i) => {
+        const r = from && from[c.uid] ? from[c.uid] : { x: innerWidth / 2 - 63 + (i - (rest.length - 1) / 2) * 130, y: innerHeight * .5, w: 125, h: 175 };
+        return `<span class="sweepcard" style="--i:${i};left:${Math.round(r.x)}px;top:${Math.round(r.y)}px;width:${Math.round(r.w)}px;height:${Math.round(r.h)}px;--tx:${-Math.round(r.x + r.w + 120)}px;--ty:${-Math.round(r.y + r.h + 100)}px">${A.playCard(c, r.w / 250)}</span>`;
+      }).join('')}</div>` : '';
+      const flip = (c, i) => `<span class="flipcard ${first ? '' : 'still'}" style="--i:${i};width:${250 * ps}px;height:${350 * ps}px"><span class="fback"><span class="cardback"></span></span><span class="ffront">${A.playCard(c, ps)}</span></span>`;
+      body = `${sweep}<div class="kitbar"><b>${A.esc(pr.pack.name)} Pack</b><span class="count">Keep ${need} of ${need}</span></div><div class="kslots">${slots}</div><div class="poolhead">You also keep the next card of the deck</div><div class="cards pool revealpool" style="height:${350 * ps}px">${pr.extra.map((c, i) => flip(c, i)).join('')}</div>`;
       foot = `<button class="btn" data-p="continuereveal">Choose your Starter Kit</button>`;
     } else {            // the Starter Kit: your places on top (last round's kit is already in them), the rest of your cards below
       const key = `${run.round}:kit`, first = S.fxKit !== key; S.fxKit = key;
@@ -2884,14 +2997,22 @@ const AI = (() => {
   function tableauHTML(st, freshUid) {
     const f = st.fight, after = f && f.phase === 'after', total = after ? Dig.result(st).total : null;
     const elig = after ? Dig.eligible(st) : [];
-    const power = st.line.map((e, i) => ({ e, i })).sort((a, b) => a.e.at - b.e.at || a.i - b.i).map(x => x.e);
+    const underOf = c => (st.under[c.uid] || []).map((m, i) => `<span class="underc" style="--k:${i}">${cw(A.playCard(m, 1), 'cb')}</span>`).join('');
+    const held = st.last && !st.over && !f && (st.last.type === 'Power' || st.last.type === 'Ongoing') ? st.last : null;          // still lying in the dug pile: it moves up when you dig the next card
+    if (S.tabDig !== st) { S.tabDig = st; S.tabSeen = null; }          // a new Dig: nothing arrives, everything is simply there
+    const seen = S.tabSeen || null, nowSeen = new Set(), isNew = c => { nowSeen.add(c.uid); return !!seen && !seen.has(c.uid); };
+    const power = st.line.filter(e => e.card !== held).map((e, i) => ({ e, i })).sort((a, b) => a.e.at - b.e.at || a.i - b.i).map(x => x.e);
     const cards = power.map(e => {
       const done = f ? f.trig.filter(x => x === e).length : 0, can = elig.includes(e);
-      const cls = ['tcard', e.card.uid === freshUid ? 'arrive' : '', st.pending && st.pending.kind === 'clone' ? 'pick' : '', can ? 'elig' : '', done && !can ? 'done' : '', total !== null && e.at > total && !done ? 'off' : ''].join(' ');
-      const tag = (done ? '✓ ' : '') + (e.pet ? 'PET' : e.cloned ? '×2' : e.at < e.base ? '↓' + e.base : '') + (f && f.deferred.includes(e) ? ' waits' : '');
-      return `<button class="${cls}" data-p="card" data-uid="${e.card.uid}" data-id="${A.esc(e.card.id)}" aria-label="${A.esc(e.card.name)}, Power ${e.at}">${cw(A.playCard({ ...e.card, number: e.at }, 1), 'cb')}${tag ? `<span class="tg">${A.esc(tag)}</span>` : ''}</button>`;
+      const need = after && !done ? Dig.unmetFor(st, e) : null;          // reached by the roll, but not everything it asks for is true
+      const cls = ['tcard', isNew(e.card) ? 'arrive' : '', st.pending && st.pending.kind === 'clone' ? 'pick' : '', can ? 'elig' : '', done && !can ? 'done' : '', (total !== null && e.at > total && !done) || need !== null ? 'off' : ''].join(' ');
+      const tag = (done ? '✓ ' : '') + (e.pet ? 'PET' : e.cloned ? '×2' : e.at < e.base ? '↓' + e.base : '') + (f && f.deferred.includes(e) ? ' waits' : '') + (need !== null ? `needs ≤${need} ♥` : '');
+      return `<button class="${cls} ${(st.under[e.card.uid] || []).length ? 'hasunder' : ''}" data-p="card" data-uid="${e.card.uid}" data-id="${A.esc(e.card.id)}" aria-label="${A.esc(e.card.name)}, Power ${e.at}">${underOf(e.card)}${cw(A.playCard({ ...e.card, number: e.at }, 1), 'cb')}${tag ? `<span class="tg">${A.esc(tag)}</span>` : ''}</button>`;
     });
-    const ong = st.ongoing.map(o => `<button class="tcard inplay ${o.uid === freshUid ? 'arrive' : ''}" data-p="zoom" data-uid="${o.uid}" data-id="${A.esc(o.id)}" aria-label="${A.esc(o.name)}, Ongoing">${cw(A.playCard(o, 1), 'cb')}</button>`);
+    const pickO = o => st.pending && st.pending.kind === 'clone' && o !== st.pending.card;
+    const buried = new Set(Object.values(st.under).flat());          // a Cloning Machine lies under the card it clones: it is drawn there, not in the Ongoing area
+    const ong = st.ongoing.filter(o => !buried.has(o) && o !== held).map(o => `<button class="tcard inplay ${isNew(o) ? 'arrive' : ''} ${pickO(o) ? 'pick' : ''} ${(st.under[o.uid] || []).length ? 'hasunder' : ''}" data-p="${pickO(o) ? 'card' : 'zoom'}" data-uid="${o.uid}" data-id="${A.esc(o.id)}" aria-label="${A.esc(o.name)}, Ongoing">${underOf(o)}${cw(A.playCard(o, 1), 'cb')}${st.cloned.includes(o.uid) ? '<span class="tg">×2</span>' : ''}</button>`);
+    S.tabSeen = nowSeen;
     return `<section class="tableau" data-n="${cards.length + ong.length}">${cards.join('')}${ong.length ? '<span class="tsep"></span>' : ''}${ong.join('')}</section>`;
   }
   // The card you just dug always lands in the same spot, right beside the Mine.
@@ -2903,11 +3024,11 @@ const AI = (() => {
     const under = c => c ? `<span class="under">${cw(A.playCard(c, 1), 'ca')}</span>` : '';
     if (f) S.dugShown = f.monster;
     if (f) return `<div class="mcard" aria-label="${A.esc(f.monster.name)}"><span class="flipwrap ${f.monster.uid !== fx.mon ? 'landing' : ''}">${f.monster.uid !== fx.mon ? under(before) + drawn(cw(A.playCard(f.monster, 1, { step: f.step }), 'ca'), backOf('var(--ca)')) : cw(A.playCard(f.monster, 1, { step: f.step }), 'ca')}</span></div>`;       // the Monster is not a button: you leave the fight by tapping the Mine (dig on) or the Bank (stop)
-    // A Power or Ongoing card goes straight up to the others: it is not shown here as well. The spot keeps showing the last card that stays here (the discard pile's top).
-    const goesUp = st.last && (st.last.type === 'Power' || st.last.type === 'Ongoing'), show = goesUp ? st.discard[st.discard.length - 1] : st.last;
+    // Every card you dig lands here, face up. A Power or Ongoing card stays here until you dig the next card; then it moves up to the others (see tableauHTML).
+    const show = st.last;
     S.dugShown = show || null;
     if (!show) return '';
-    const fresh = !goesUp && st.last.uid !== fx.last, oc = show === st.last && show.type === 'Monster' && !st.over ? st.flags.lastOutcome : null;
+    const fresh = st.last.uid !== fx.last, oc = show === st.last && show.type === 'Monster' && !st.over ? st.flags.lastOutcome : null;
     return `<button class="mcard" data-p="zoom" data-uid="${show.uid}" aria-label="${A.esc(show.name)}${oc ? ', ' + oc : ''}"><span class="flipwrap">${fresh ? under(before) + drawn(cw(A.playCard(show, 1), 'ca'), backOf('var(--ca)')) : cw(A.playCard(show, 1), 'ca')}${fresh && show.type === 'Treasure' ? burstHTML(10) : ''}${oc ? `<span class="stamp ${oc}">${oc === 'defeated' ? 'Defeated' : 'Survived'}</span>` : ''}</span></button>`;
   }
   // The action zone, bottom right: the die, the button that takes the damage, and one line saying what the game is waiting for.
@@ -2919,18 +3040,20 @@ const AI = (() => {
       if (!after) return `<div class="action"><button class="dieb live" data-p="roll" aria-label="Roll the die">${d10('', 'idle')}<span class="tapword">Tap to roll</span></button></div>`;
       // the die says the roll; only when cards changed it does one line add up: 7 +1 = 8
       const calc = res.parts.length > 1 ? `<div class="calc">${res.parts.map((p, i) => i === 0 ? p.v : p.set ? `→ ${p.v}` : `${p.v >= 0 ? '+' : '−'}${Math.abs(p.v)}`).join(' ')} = <b>${res.total}</b></div>` : '';
-      const dmg = Dig.previewDamage(st);
+      const dmg = Dig.previewDamage(st), sure = elig.length > 0 && S.confirmFace;          // you can still use cards: the first tap on "take damage" only asks
       // Rerolls: until you use a card the roll is open (an open padlock and a Reroll button); the first card you use locks it in (a closed padlock, the button gone)
       const hasRR = st.reroll >= R.rerollCost || can.reroll, open = can.reroll, locked = !open && hasRR && f.fixed === null && f.trig.length > 0;
       const lock = open || locked ? `<span class="dlock ${open ? 'open' : 'shut'}" title="${open ? 'You can still reroll' : 'Locked in'}"><svg viewBox="0 0 24 24" aria-hidden="true">${open ? '<path d="M8 11V7.5a4 4 0 0 1 7.6-1.7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>' : '<path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>'}<rect x="4.5" y="11" width="15" height="10.5" rx="2.6" fill="currentColor"/></svg></span>` : '';
       const rr = open ? `<button class="rerollbtn" data-p="reroll" aria-label="Reroll">${ic('reroll')}<span>Reroll</span><small>${st.reroll} left</small></button>` : locked ? '<div class="lockednote">Locked in</div>' : '';
       return `<div class="action">${elig.length > 1 ? `<div class="aprompt"><button class="chip" data-p="triggerall">Use all ${elig.length}</button></div>` : ''}
         <div class="arow"><div class="dieb">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}${lock}</div>
-          <div class="astack">${calc}${rr}<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''}" data-p="face">${f.defeat ? 'Monster defeated: continue' : dmg ? `Take ${dmg} damage` : 'Take no damage'}</button></div></div></div>`;
+          <div class="astack">${calc}${rr}<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''} ${sure ? 'sure' : ''}" data-p="face">${sure ? `You can still use cards.<br>Tap again to ${f.defeat ? 'move on' : dmg ? `take ${dmg} damage` : 'carry on'}` : f.defeat ? 'Monster defeated: continue' : dmg ? `Take ${dmg} damage` : 'Take no damage'}</button></div></div></div>`;
     }
     if (st.pending) return `<div class="action"><div class="aprompt">${A.esc(st.pending.card.name)}: tap a Power card</div></div>`;
     if (st.over) return '';
-    return `<div class="action"><div class="aprompt">${can.bank ? 'Tap the Mine to dig, or the Bank to keep your gems' : 'Tap the Mine to dig'}</div></div>`;
+    // The last round is a race: nobody banks. Say so, and say what to do: keep digging until you lead; once you lead, wait (digging on only risks the lead).
+    const lastRound = !!(S.run && st.board && st.board.final), say = lastRound ? (st.board.lead ? 'You are in the lead. Wait for your opponent: if they pass you, dig again.' : 'The last round: nobody banks. Dig until you are in the lead.') : can.bank ? 'Tap the Mine to dig, or the Bank to keep your gems' : 'Tap the Mine to dig';
+    return `<div class="action"><div class="aprompt">${say}</div></div>`;
   }
   // ----- little things that pop. What is new since the last drawing is remembered, so each flourish plays once, on the thing that just happened. -----
   const fxOf = st => st ? { last: st.last ? st.last.uid : null, mon: st.fight ? st.fight.monster.uid : null, roll: st.fight && st.fight.phase === 'after' ? `${st.digs}:${st.fight.rolls}:${st.fight.die}` : null, gems: st.geodeGems + st.monsterGems, over: st.over } : { last: null, mon: null, roll: null, gems: 0, over: null };
@@ -2943,9 +3066,9 @@ const AI = (() => {
     const gems = st.geodeGems + st.monsterGems, live = can.dig, bankLive = can.bank;
     const kn = st.mine.slice(0, st.known), up = kn[0];
     // the Mine: a deck of cards, the same size as the cards you dig. Cards you can see coming are on top, face up.
-    const deck = `<div class="stack"><button class="deck ${live ? 'live' : ''}" data-p="dig" ${live ? '' : 'disabled'} aria-label="Mine, ${st.mine.length} cards">${st.mine.length ? `<span class="cw" style="--s:var(--ca)"><span class="cs">${up ? A.playCard(up, 1) : '<span class="cardback"></span>'}</span></span>` : '<span class="cw" style="--s:var(--ca)"><span class="cs"><span class="cardback none"></span></span></span>'}<span class="cnt">${st.mine.length}</span></button></div>`;
+    const deck = `<div class="stack"><button class="deck ${live ? 'live' : ''}" data-p="dig" ${live ? '' : 'disabled'} aria-label="Mine, ${st.mine.length} cards">${st.mine.length ? `<span class="cw" style="--s:var(--ca)"><span class="cs">${up ? A.playCard(up, 1) : '<span class="cardback"></span>'}</span></span>` : `<span class="cw" style="--s:var(--ca)"><span class="cs">${A.playCard(Dig.peekBonus(st), 1)}</span></span>`}<span class="cnt">${st.mine.length}</span></button></div>`;
     // There is no separate discard pile: the cards you flip land in one spot beside the Mine, and the ones before it are stacked underneath. (Monsters move on to the Monster pile above.)
-    const piles = `<div class="piles"><button class="pile bankp ${bankLive ? 'live' : ''}" data-p="bank" ${bankLive ? '' : 'disabled'}><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span><span>Bank</span></button></div>`;
+    const piles = `<div class="piles"><button class="pile bankp ${bankLive ? 'live' : ''}" data-p="bank" ${bankLive ? '' : 'disabled'}><span class="bword">Bank</span><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span></button></div>`;
     const dug = `<div class="dugz"><div class="slot ${st.discard.length ? 'stacked' : ''}">${dugHTML(st)}</div></div>`;
     const action = `<div class="dicez">${diceHTML(st, can)}</div>`;
     const s = st.over ? Dig.score(st) : null;
@@ -3011,9 +3134,12 @@ const AI = (() => {
     else if (S.panel === 'setup' || !S.st) body = setupHTML();
     else body = `<div class="pmain"><div class="ptable ${S.st.fight && S.st.fight.phase === 'before' && !S.st.over ? 'await-roll' : ''}" data-step="${S.st.over ? 'over' : S.st.fight ? (S.st.fight.phase === 'before' ? 'roll' : 'damage') : 'dig'}">${tableHTML()}</div></div>`;       // a Monster is in front of you and nothing else matters until you roll: the rest of the table dims
     const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, Math.min(1.35, (innerHeight - 70) / 350))}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}<div class="closehint">tap anywhere to close</div></div>` : '';
-    $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z;
+    const bottom = S.panel === 'dig' && S.st && !S.st.mine.length && !S.st.over && !S.st.fight && !S.st.pending && S.emptySeen !== S.st && !S.help;          // you dug the last card of your Mine: say what happens next, once
+    const B = D.rules.beyond, note = bottom ? `<div class="mnote-back"><div class="mnote" role="dialog" aria-label="The bottom of your Mine"><h3>That was the bottom of your Mine</h3><p>From now on, every card you dig is a <b>Bonus Monster</b>. The next one is face up on the Mine: it deals <b>${B.firstDamage}</b> damage, the one after <b>${B.firstDamage + 1}</b>, and so on. Survive one and it is worth <b>${B.gems}</b> gems. You can still bank any time.</p><button class="btn" data-p="emptyok">Got it</button></div></div>` : '';
+    $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z + note;
     const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
     fitHero(); heroPlay(); fitTable(); playDice();
+    if (S.packFrom) { const fp = $.querySelector('.flypack'); if (fp) { const r = fp.getBoundingClientRect(); fp.style.setProperty('--fx', Math.round(S.packFrom.x - (r.left + r.width / 2)) + 'px'); fp.style.setProperty('--fy', Math.round(S.packFrom.y - (r.top + r.height / 2)) + 'px'); } S.packFrom = null; }
     if (S.keepFrom && $.querySelector('.pcard.kept')) {          // the cards you kept slide from where they were to their places; the others are dealt in after them
       $.querySelectorAll('.pcard.kept').forEach(el => {
         const o = S.keepFrom[el.dataset.uid], n = el.getBoundingClientRect(); if (!o || !n.width) return;
@@ -3029,16 +3155,23 @@ const AI = (() => {
   }
 
   // ----- the AI's clock -----
-  // The AI digs on its own, one card per D.ai.paceMs, whether or not you tap. Once you are done, Fast forward makes it D.ai.fastMs.
+  // The AI digs on its own, at a person's pace (D.ai.pace), whether or not you tap. Once you are done, Fast forward makes it D.ai.fastMs.
   // While you are still playing only the Leaderboard is redrawn, so a tick never swallows a tap on the table.
   let aiTimer = null;
   const aiDigging = () => { const ai = S.match && S.run && S.run.phase === 'dig' ? Match.bot(S.match) : null; return !!(ai && ai.dig && !ai.dig.over); };
-  const pace = () => S.ff ? D.ai.fastMs : (window.DDB_AI_PACE || D.ai.paceMs);
+  // How long a person would take over what the AI just did: a card, a Monster (roll, look at the line, trigger cards, take the damage), a decision to bank; never the same twice.
+  const humanWait = last => {
+    const P = D.ai.pace; let ms = P.cardMs * Math.max(1, last ? last.cards : 1);
+    if (last && last.monsters) ms += P.monsterMs + P.actionMs * Math.max(0, last.acts - 2);
+    if (last && last.banked) ms += P.bankMs;
+    return Math.round(ms * (1 + (Math.random() * 2 - 1) * P.jitter));
+  };
+  const pace = () => S.ff ? D.ai.fastMs : (window.DDB_AI_PACE || S.aiDelay || D.ai.pace.cardMs);
   function scheduleAI() { if (!aiDigging()) { S.ff = false; return; } if (!aiTimer) aiTimer = setTimeout(aiTick, pace()); }
   function aiTick() {
     clearTimeout(aiTimer); aiTimer = null;
     if (!aiDigging()) return;
-    Match.aiStep(S.match); if (S.run.dig && !S.run.dig.over) Run.refresh(S.run); persist();
+    Match.aiStep(S.match); S.aiDelay = humanWait(S.match.aiLast); if (S.run.dig && !S.run.dig.over) Run.refresh(S.run); persist();
     const lb = $.querySelector('section.lb');
     if (S.panel === 'dig' && !S.help && !S.zoom && lb && aiDigging()) { lb.outerHTML = lbHTML(S.run, S.st); scheduleAI(); }
     else if (S.panel === 'dig' && !S.help && !S.zoom) render();
@@ -3051,10 +3184,11 @@ const AI = (() => {
     const inp = $.querySelector('#seedIn'); if (inp) S.seed = inp.value.trim() === '' ? undefined : Number(inp.value) >>> 0;
     S.st = Dig.start(cards(), S.kit.map(by).filter(Boolean), { start: S.start, seed: S.seed }); S.panel = 'dig'; S.zoom = null;
   }
-  function startRound() { if (S.match ? Match.beginRound(S.match) : Run.beginDig(S.run)) { S.st = S.run.dig; S.panel = 'dig'; S.ff = false; } }
+  function startRound() { if (S.match ? Match.beginRound(S.match) : Run.beginDig(S.run)) { S.st = S.run.dig; S.panel = 'dig'; S.ff = false; S.aiDelay = D.ai.pace.startMs; } }
   function act(a, el) {
     const st = S.st, f = st && st.fight, ds = el.dataset; 
     if (a !== 'startrun' && a !== 'practice') S.confirmNew = null;
+    if (a !== 'face') S.confirmFace = false;
     switch (a) {
       case 'menu': if (S.panel !== 'menu' && S.panel !== 'more') S.back = S.panel; S.panel = 'menu'; S.help = false; S.gmenu = false; break;
       case 'more': S.panel = 'more'; break;
@@ -3065,7 +3199,7 @@ const AI = (() => {
       case 'practice': if (resumable() && S.confirmNew !== 'practice') { S.confirmNew = 'practice'; break; } S.confirmNew = null; S.run = null; S.match = null; S.st = null; S.panel = 'setup'; S.back = null; break;
       case 'rounds': S.rounds = Number(ds.v); break;
       case 'startrun': { if (resumable() && S.confirmNew !== 'startrun') { S.confirmNew = 'startrun'; break; } S.confirmNew = null; if (S.opp) { S.match = Match.start(cards(), { rounds: S.rounds }); S.run = Match.human(S.match); } else { S.match = null; S.run = Run.start(cards(), { rounds: S.rounds }); } S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
-      case 'openpack': if (S.match) { Match.openPack(S.match, { defer: true }); setTimeout(() => { if (S.match) { Match.prepAI(S.match); persist(); } }, 900); } else Run.openPack(S.run); break;
+      case 'openpack': { const pk = $.querySelector('[data-p=openpack]'); if (pk && pk.closest('.tallymain')) { const r = pk.getBoundingClientRect(); S.packFrom = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; } } if (S.match) { Match.openPack(S.match, { defer: true }); setTimeout(() => { if (S.match) Match.prepAIAsync(S.match, persist); }, 400); } else Run.openPack(S.run); break;
       case 'pick': {                       // tap a card to choose it, tap it again to put it back; once you have chosen all you may, you must put one back before choosing another
         const uid = Number(ds.uid), pr = S.run.prep;
         Run.toggleKeep(S.run, uid); break;                  // (the engine refuses a card beyond the limit)
@@ -3074,7 +3208,7 @@ const AI = (() => {
         S.keepFrom = {}; $.querySelectorAll('.pcard[data-p=pick]').forEach(el => { const r = el.getBoundingClientRect(); S.keepFrom[el.dataset.uid] = { x: r.left, y: r.top, w: r.width, h: r.height }; });
         Run.confirmKeep(S.run); break;
       }
-      case 'continuereveal': S.keepFrom = null; Run.continueReveal(S.run); break;
+      case 'continuereveal': S.keepFrom = null;  S.keepFrom = null; Run.continueReveal(S.run); break;
       case 'skiptally': if (S.tally) { if (S.tally.stage >= 4) S.tally.stage = 6; else { S.tally.stage = 3; escapeRoll(S.tally); } } break;          // the tally plays out on its own; a tap anywhere on it skips ahead
       case 'kitpick': {                    // tap to choose, in the order you want them on top; tap a chosen one to take it back; a full Kit takes no more
         const uid = Number(ds.uid), pr = S.run.prep;
@@ -3097,13 +3231,14 @@ const AI = (() => {
       case 'closehelp': S.help = false; break;
       case 'cards': S.help = false; UI.setMode('cards'); return;
       case 'unzoom': S.zoom = null; break;
+      case 'emptyok': S.emptySeen = S.st; break;
       case 'zoom': S.zoom = findCard(ds.uid); break;
-      case 'card': { const c = findCard(ds.uid), e = st && st.line.find(x => x.card === c); if (st && st.pending && e) Dig.chooseClone(st, e); else if (e && f && f.phase === 'after' && Dig.eligible(st).includes(e)) Dig.trigger(st, e); else S.zoom = c; break; }
+      case 'card': { const c = findCard(ds.uid), e = st && st.line.find(x => x.card === c); if (st && st.pending && (e || st.ongoing.includes(c))) Dig.chooseClone(st, e || c); else if (e && f && f.phase === 'after' && Dig.eligible(st).includes(e)) Dig.triggerFully(st, e); else S.zoom = c; break; }
       case 'triggerall': if (st) Dig.triggerAll(st); break;
       case 'dig': if (st) Dig.dig(st); break;
       case 'roll': Dig.roll(st); break;
       case 'reroll': if (f && f.phase === 'after') Dig.reroll(st); break;
-      case 'face': Dig.face(st); break;
+      case 'face': if (st && Dig.eligible(st).length && !S.confirmFace) { S.confirmFace = true; break; } S.confirmFace = false; Dig.face(st); break;
       case 'bank': if (S.run) Run.bank(S.run); else Dig.bank(st); break;
       case 'heart': break;
     }

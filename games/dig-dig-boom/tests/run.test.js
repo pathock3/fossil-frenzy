@@ -7,7 +7,7 @@ const cards = Engine.cards(Engine.parseCSV(fs.readFileSync(path.join(__dirname, 
 const by = id => cards.find(c => c.id === id);
 const RN = DDB.run;
 // The Booster Deck is every Booster card the game can play, by its count (Grit cards wait outside it).
-const deckCards = cards.filter(c => c.deck === 'Booster' && Dig.supported(c));
+const deckCards = cards.filter(c => c.deck === 'Booster' && Dig.supported(c) && !RN.boosterBan.some(re => new RegExp(re).test(c.text)));          // (and not the ones that boost gems)
 const deckSize = deckCards.reduce((a, c) => a + c.count, 0);
 // A Burnout card made up for the tests (the fixture is never edited).
 const burn = { id: 'XX-B', name: 'Test Burnout', type: 'Power', number: 2, deck: 'Booster', count: 1, text: '+1 {reroll}, then move this card up 2 (max 10)', uid: 8801 };
@@ -39,7 +39,7 @@ function play(run, mine, plan, die = 1) {
 
 test('a run starts with the Booster Deck (every Booster card the game can play, by its count) and a Bronze Pack to open before round 1', () => {
   const run = Run.start(cards, { seed: 1 });
-  assert.equal(run.deck.length, deckSize); assert.equal(run.round, 1); assert.equal(run.rounds, RN.rounds); assert.deepEqual(run.crown, { tracker: 3, holder: false });
+  assert.equal(run.deck.length, deckSize); assert.equal(run.round, 1); assert.equal(run.rounds, RN.rounds); assert.deepEqual(run.crown, { tracker: RN.crownStart, holder: false });
   assert.equal(run.prep.step, 'pack'); assert.deepEqual(Run.packInfo(run), { name: 'Bronze', draw: 3, keep: 1 });
   assert.ok(run.deck.every(c => c.deck === 'Booster' && Dig.supported(c)), 'cards the game cannot play (every Grit card) are not in the deck');
   assert.ok(!run.deck.some(c => /\{grit\}/.test(c.text)));
@@ -150,21 +150,21 @@ test('the reward ladder (the owner\'s): gems -> draw:keep, in steps of 5', () =>
     ['3:1', '3:1', '4:1', '4:1', '4:2', '4:2', '5:2', '5:2', '5:3', '5:3', '6:3', '6:3', '6:4', '6:4', '7:4', '7:4']);
 });
 
-test('Leaderboard and Crown Jewel: the tracker starts at 3; banking above it takes the Crown and moves the tracker; BOOM locks in nothing', () => {
+test('Leaderboard and Crown Jewel: the tracker starts at 2; banking above it (3 is enough) takes the Crown and moves the tracker; BOOM locks in nothing', () => {
   const run = firstRound({ keepIds: ['PW-02'] }); Run.beginDig(run, { seed: 8 });
   run.dig.heart = 10;
-  play(run, ['MO-01', 'MO-02', 'MO-01', 'TR-01'], ['dig', 'dig', 'dig', 'bank'], 10);          // three Monsters, each beaten by the Pet: survived 3, not more than 3
+  play(run, ['MO-01', 'MO-02', 'TR-01'], ['dig', 'dig', 'bank'], 10);          // two Monsters, each beaten by the Pet: survived 2, not more than 2
   Run.finishDig(run);
-  assert.deepEqual([run.best, run.crown.tracker, run.crown.holder], [3, 3, false], 'matching the Crown is not the lead');
+  assert.deepEqual([run.best, run.crown.tracker, run.crown.holder], [2, 2, false], 'matching the Crown is not the lead');
   run.prep.step = 'kit'; Run.beginDig(run, { seed: 9 });
-  play(run, ['MO-01', 'MO-02', 'MO-01', 'MO-02'], ['dig', 'dig', 'dig', 'dig', 'bank'], 10);
+  play(run, ['MO-01', 'MO-02', 'MO-01'], ['dig', 'dig', 'dig', 'bank'], 10);
   Run.finishDig(run);
-  assert.deepEqual([run.best, run.crown.tracker, run.crown.holder], [4, 4, true]);
+  assert.deepEqual([run.best, run.crown.tracker, run.crown.holder], [3, 3, true], 'reaching 3 is enough to claim it');
   run.prep.step = 'kit'; Run.beginDig(run, { seed: 10 });
   run.dig.heart = 1; play(run, ['MO-01', 'MO-01', 'MO-01'], ['dig'], 1);                      // die 1: the Pet does not trigger, 1 damage at 1 Health: BOOM
   assert.equal(run.dig.over.kind, 'boom'); Run.finishDig(run);
-  assert.deepEqual([run.best, run.crown.tracker, run.crown.holder], [4, 4, true], 'BOOM leaves your best and the Crown alone');
-  assert.deepEqual(run.history.map(h => [h.round, h.kind, h.survived, h.stoleCrown]), [[1, 'bank', 3, false], [2, 'bank', 4, true], [3, 'boom', 0, false]]);
+  assert.deepEqual([run.best, run.crown.tracker, run.crown.holder], [3, 3, true], 'BOOM leaves your best and the Crown alone');
+  assert.deepEqual(run.history.map(h => [h.round, h.kind, h.survived, h.stoleCrown]), [[1, 'bank', 2, false], [2, 'bank', 3, true], [3, 'boom', 0, false]]);
 });
 
 test('Pledge: only once you have survived as many Monsters as the Crown tracker, and only your current number or 1 more; you cannot bank below it; BOOM removes it', () => withPledges(() => {
@@ -198,12 +198,12 @@ test('the final round is a race: nobody banks; alone at the table you are in the
   st.mine = ['TR-01', 'MO-01', 'MO-02', 'MO-01', 'MO-02', 'TR-01'].map((id, i) => ({ ...by(id), uid: 9100 + i })); st.dice = Array(30).fill(10);
   const step = () => { Dig.dig(st); if (st.fight) { Dig.roll(st); Dig.autoFace(st); } Run.finalCheck([run]); };
   step(); assert.ok(!Dig.can(st).bank, 'no banking in the final round, not even after a Geode');
-  for (let i = 0; i < 3; i++) step();
-  assert.equal(st.survived, 3); assert.ok(!st.over, '3 only ties the Crown tracker: keep digging'); assert.ok(!st.board.lead && !Dig.can(st).bank);
+  for (let i = 0; i < 2; i++) step();
+  assert.equal(st.survived, 2); assert.ok(!st.over, '2 only ties the Crown tracker: keep digging'); assert.ok(!st.board.lead && !Dig.can(st).bank);
   step();
   assert.ok(st.over && st.over.kind === 'bank' && st.over.held, 'past the tracker and nobody left to race: the Dig ends by itself');
   Run.finishDig(run);
-  assert.equal(run.phase, 'done'); assert.deepEqual(run.result, { crown: true, best: 4, tracker: 4 });
+  assert.equal(run.phase, 'done'); assert.deepEqual(run.result, { crown: true, best: 3, tracker: 3 });
 });
 
 test('the final round against another player: the leader may wait, everyone else must keep digging; the round ends when only the leader is left', () => {
@@ -318,7 +318,7 @@ test('the Dig\'s copy of the Leaderboard is refreshed from the live Board before
   const first = run.dig; Dig.bank(first); Run.checkOver(run); Run.finishDig(run);
   run.dice = [3]; Run.rollEscape(run); Run.openPack(run); for (const c of run.prep.offer.slice(0, Run.keepCount(run))) Run.toggleKeep(run, c.uid); Run.confirmKeep(run); Run.beginDig(run, { seed: 2 });
   const st = run.dig; st.mine = Array.from({ length: 9 }, (_, i) => ({ ...by(i % 2 ? 'MO-02' : 'MO-01'), uid: 9600 + i })); st.dice = Array(40).fill(10);
-  assert.equal(st.board.leadN, 4);
+  assert.equal(st.board.leadN, RN.crownStart + 1);
   Board.lockIn(run.board, 'ai', 7);                       // the AI banks 7 while I am digging
   Run.refresh(run); assert.equal(st.board.leadN, 8); assert.equal(st.board.crown, 7);
   for (let i = 0; i < 7; i++) { Dig.dig(st); Dig.roll(st); Dig.autoFace(st); }

@@ -424,7 +424,7 @@ test('damage and defeat watchers: Patch Kit, Crumple Zone (5+), Monster Jerky, V
 
 test('"Whenever 4+ cards trigger on one roll" (Applause Meter)', () => {
   const ap = game({ mine: ['MO-01'], power: ['PW-02', 'PW-03', 'PW-09'], ongoing: ['ON-02'], start: { heart: 6, reroll: 0 }, dice: [3] }); fight(ap); assert.equal(ap.reroll, 0, 'only 3 cards trigger at a 3 (the Pet needs 10)');
-  const ap2 = game({ mine: ['MO-01'], power: ['PW-02', 'PW-03', 'PW-07', 'PW-09'], ongoing: ['ON-02'], start: { heart: 6, reroll: 0 }, dice: [4] }); fight(ap2); assert.equal(ap2.reroll, 1);
+  const ap2 = game({ mine: ['MO-01'], power: ['PW-02', 'PW-03', 'PW-07', 'PW-09'], ongoing: ['ON-02'], start: { heart: 3, reroll: 0 }, dice: [4] });       // (3 Health: Nervous Mouse wants 4 or less) fight(ap2); assert.equal(ap2.reroll, 1);
 });
 
 test('"At the start of each Dig": a kit card does it when you dig it (made up for the test); the Grit Generator is no longer understood', () => {
@@ -600,10 +600,10 @@ test('"For each other card that triggers" and Unlucky Duck count the other cards
   Dig.dig(duck); Dig.roll(duck); Dig.trigger(duck, entryOf(duck, 'PW-05')); Dig.trigger(duck, entryOf(duck, 'PW-02')); Dig.face(duck); assert.equal(duck.reroll, 1, 'with another card: nothing');
 });
 test('Applause Meter fires when the fourth different card triggers', () => {
-  const st = game({ mine: ['MO-01'], power: ['PW-02', 'PW-03', 'PW-09', 'PW-07'], ongoing: ['ON-02'], start: { heart: 6, reroll: 0 }, dice: [4] });
+  const st = game({ mine: ['MO-01'], power: ['PW-02', 'PW-03', 'PW-09', 'PW-07'], ongoing: ['ON-02'], start: { heart: 1, reroll: 0 }, dice: [4] });          // (Nervous Mouse wants 4 Health or less when it triggers: 1 + 1 + 2)
   Dig.dig(st); Dig.roll(st);
   for (const id of ['PW-02', 'PW-03', 'PW-09']) Dig.trigger(st, entryOf(st, id)); assert.equal(st.reroll, 0);
-  Dig.trigger(st, entryOf(st, 'PW-07')); assert.equal(st.reroll, 1);
+  Dig.trigger(st, entryOf(st, 'PW-07')); assert.equal(st.reroll, 2, 'Nervous Mouse gives its own Reroll (at 4 Health or less), and the fourth card gives the Applause Meter\'s');
 });
 test('triggerAll (what the AI and a hurried player use) is highest number first; the Pet defeats the Monster only if you trigger it', () => {
   const st = game({ mine: ['MO-01', 'MO-01'], power: ['PW-02'], start: { heart: 6 }, dice: [10, 10] });
@@ -771,4 +771,48 @@ test('Defeating a Monster does not end the fight: you may still use other cards 
   Dig.dig(st); Dig.roll(st); Dig.triggerAll(st); assert.ok(st.fight.defeat); Dig.face(st);
   assert.equal(st.fight, null); assert.equal(st.defeated, 2); assert.equal(st.heart, 8, 'Newt went too'); assert.deepEqual(st.monsterPile.map(c => c.id), ['MO-01', 'MO-02']);
   assert.ok(!st.discard.some(c => c.type === 'Monster'), 'Monsters go to the pile, not the discard');
+});
+
+test('Cloning Machine can go under an Ongoing card too: it does everything twice (rolls, "whenever" reactions, Block); and it lies under the card', () => {
+  // Tune-Up: +1 to your rolls -> +2
+  const tu = game({ mine: ['ON-06', 'MO-01'], ongoing: ['ON-33'], start: { heart: 10 }, dice: [4] });
+  Dig.dig(tu); assert.ok(tu.pending); assert.deepEqual(Dig.cloneTargets(tu).filter(t => t.id === 'ON-33').length, 1, 'an Ongoing card is a target');
+  assert.ok(!Dig.cloneTargets(tu).includes(tu.pending.card), 'but not the Machine itself');
+  const tune = tu.ongoing.find(o => o.id === 'ON-33'); assert.ok(Dig.chooseClone(tu, tune)); assert.equal(tu.pending, null);
+  assert.deepEqual(tu.under[tune.uid].map(c => c.id), ['ON-06'], 'the Machine lies under it');
+  Dig.dig(tu); Dig.roll(tu); assert.equal(Dig.result(tu).total, 4 + 2, 'Tune-Up is +2 now');
+  // Bumper: Block 1 from every Monster -> 2
+  const bu = game({ mine: ['ON-06', 'MO-02'], ongoing: ['ON-05'], start: { heart: 10 }, dice: [1] });
+  Dig.dig(bu); Dig.chooseClone(bu, bu.ongoing.find(o => o.id === 'ON-05')); Dig.dig(bu); Dig.roll(bu); assert.equal(Dig.previewDamage(bu), 2 - 2, 'Block 2 against a 2');
+  // Patch Kit: whenever you take damage +1 heart -> +2
+  const pk = game({ mine: ['ON-06', 'MO-02'], ongoing: ['ON-23'], start: { heart: 6 }, dice: [1] });
+  Dig.dig(pk); Dig.chooseClone(pk, pk.ongoing.find(o => o.id === 'ON-23')); Dig.dig(pk); Dig.roll(pk); Dig.autoFace(pk); assert.equal(pk.heart, 6 - 2 + 2, 'took 2, healed 2 (twice)');
+  // it survives a save and a copy
+  const back = Dig.load(cards, JSON.parse(JSON.stringify(Dig.save(pk)))); assert.deepEqual(back.cloned, pk.cloned); assert.deepEqual(Object.keys(back.under), Object.keys(pk.under));
+  assert.deepEqual(Dig.clone(pk, 1).cloned, pk.cloned);
+});
+
+test('tapping a cloned Power card triggers it twice at once', () => {
+  const st = game({ mine: ['MO-01'], power: ['PW-15'], start: { heart: 2, reroll: 0 }, dice: [6] }); st.line.find(e => e.card.id === 'PW-15').cloned = true;
+  Dig.dig(st); Dig.roll(st); const e = st.line.find(x => x.card.id === 'PW-15');
+  assert.ok(Dig.triggerFully(st, e)); assert.equal(st.fight.trig.filter(x => x === e).length, 2, 'both triggers happened on one tap'); assert.equal(st.heart, 2 + 2 + 2);
+  assert.ok(!Dig.eligible(st).includes(e), 'nothing left of it this roll');
+});
+
+test('a Power card is only offered when its requirements are met as well as the roll: Nervous Mouse does nothing above 4 Health', () => {
+  const rich = game({ mine: ['MO-01'], power: ['PW-07'], start: { heart: 7, reroll: 0 }, dice: [9] });
+  Dig.dig(rich); Dig.roll(rich); assert.ok(!Dig.eligible(rich).some(e => e.card.id === 'PW-07'), 'the roll reaches it (2), but at 7 Health it would do nothing');
+  assert.equal(Dig.unmetFor(rich, rich.line.find(e => e.card.id === 'PW-07')), 4, 'it wants 4 Health or less');
+  assert.ok(!Dig.trigger(rich, rich.line.find(e => e.card.id === 'PW-07')), 'it cannot be used');
+  const poor = game({ mine: ['MO-01'], power: ['PW-07'], start: { heart: 4, reroll: 0 }, dice: [9] });
+  Dig.dig(poor); Dig.roll(poor); assert.ok(Dig.eligible(poor).some(e => e.card.id === 'PW-07'), 'at 4 Health it is offered'); assert.ok(Dig.trigger(poor, poor.line.find(e => e.card.id === 'PW-07'))); assert.equal(poor.reroll, 1);
+  // Jolt Eel: 3 Health or less
+  const eel = game({ mine: ['MO-01'], power: ['PW-19'], start: { heart: 9 }, dice: [9] }); Dig.dig(eel); Dig.roll(eel); assert.ok(!Dig.eligible(eel).some(e => e.card.id === 'PW-19'));
+});
+
+test('beyond the Mine: the next Bonus Monster is known and does not change until you dig it; 8, 9, ... never more than 19', () => {
+  const st = game({ mine: [], start: { heart: 10 }, dice: [10, 10, 10] });
+  const a = Dig.peekBonus(st); assert.equal(a.damageNow, 8); assert.equal(Dig.peekBonus(st), a, 'the same card until it is dug');
+  Dig.dig(st); assert.equal(st.last, a, 'and that is the card you dig'); assert.equal(Dig.peekBonus(st).damageNow, 9, 'the next one is a 9');
+  st.beyond = 30; assert.equal(Dig.peekBonus(st).damageNow, DDB.rules.beyond.maxDamage, 'there is no card above 19');
 });

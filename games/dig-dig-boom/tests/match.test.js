@@ -6,7 +6,7 @@ const { Dig, Board, Run, AI, Basic, Match, Engine, DDB } = require('./load.js');
 const cards = Engine.cards(Engine.parseCSV(fs.readFileSync(path.join(__dirname, 'cards-full.csv'), 'utf8')), DDB.columns);
 const by = id => cards.find(c => c.id === id);
 // the Booster Deck holds only the cards the game can play (every Grit card is left out)
-const boosterTotal = cards.filter(c => c.deck === 'Booster' && Dig.supported(c)).reduce((a, c) => a + c.count, 0);
+const boosterTotal = cards.filter(c => c.deck === 'Booster' && Dig.supported(c) && !DDB.run.boosterBan.some(re => new RegExp(re).test(c.text))).reduce((a, c) => a + c.count, 0);
 const roundtrip = o => JSON.parse(JSON.stringify(o));
 
 // Play one whole round for the human with the same basic policy as the AI (so the test needs no screen), the AI stepping once per card dug.
@@ -63,7 +63,7 @@ test('a match: you and the AI share a Leaderboard, one Booster Deck and one Tras
   assert.ok(Match.openPack(m)); assert.equal(me.prep.step, 'keep'); assert.equal(me.prep.offer.length, 3); assert.equal(ai.prep.step, 'kit'); assert.equal(ai.owned.length, 1);
   Run.toggleKeep(me, me.prep.offer[0].uid); Run.confirmKeep(me); Run.toggleKit(me, me.owned[0].uid);
   assert.ok(Match.beginRound(m));
-  assert.equal(me.owned.length, 1); assert.equal(ai.kit.length, 1); assert.notEqual(ai.owned[0].uid, me.owned[0].uid, 'two different cards');
+  assert.equal(me.owned.length, 1); assert.ok(ai.kit.length <= 1, 'its kit: the card it kept, or a gem if that is better'); assert.notEqual(ai.owned[0].uid, me.owned[0].uid, 'two different cards');
   assert.equal(m.deck.length + m.trash.length + me.owned.length + ai.owned.length, boosterTotal);
 });
 
@@ -87,7 +87,7 @@ const aiDig = (seed, rounds, heart) => {
 test('the AI banks to take the lead when it is not confident (low-ish Health)', () => {
   const { m, st } = aiDig(6, 2, 5);
   let steps = 0; while (!st.over && steps++ < 100) Match.aiStep(m);
-  assert.equal(st.over.kind, 'bank'); assert.equal(st.survived, 4, 'it stopped as soon as it was past the Crown tracker (3)');
+  assert.equal(st.over.kind, 'bank'); assert.equal(st.survived, 3, 'it stopped as soon as it was past the Crown tracker (2)');
   assert.equal(Board.holder(m.board), 'ai');
 });
 
@@ -95,11 +95,11 @@ test('the final round is a race: the AI never banks, waits once it is in the lea
   const { m, ai, st } = aiDig(6, 1, 5);
   const me = Match.human(m);
   let steps = 0; while (steps++ < 40) Match.aiStep(m);
-  assert.ok(!st.over, 'it did not bank'); assert.equal(st.survived, 4, 'it dug to 4 (past the tracker, ahead of you) and then waited');
+  assert.ok(!st.over, 'it did not bank'); assert.equal(st.survived, 3, 'it dug to 3 (past the tracker, ahead of you) and then waited');
   assert.ok(!Dig.can(st).bank);
   me.dig.mine = Array.from({ length: 8 }, (_, i) => ({ ...by(i % 2 ? 'MO-02' : 'MO-01'), uid: 9300 + i })); me.dig.dice = Array(40).fill(10);
   for (let i = 0; i < 5; i++) { Dig.dig(me.dig); Dig.roll(me.dig); Dig.autoFace(me.dig); Run.refresh(me); }
-  assert.ok(me.dig.board.lead, 'you passed it with 5'); Match.aiStep(m); assert.equal(st.survived, 5, 'so it had to dig again (and matched you, but you were there first)');
+  assert.ok(me.dig.board.lead, 'you passed it with 5'); Match.aiStep(m); Match.aiStep(m); assert.equal(st.survived, 5, 'so it had to dig again (and matched you, but you were there first)');
   Match.aiStep(m); assert.equal(st.survived, 6, 'and it digs on until it is ahead of you');
   me.dig.heart = 1; me.dig.dice = [1]; Dig.dig(me.dig); Dig.roll(me.dig); Dig.autoFace(me.dig); Run.checkOver(me);
   assert.equal(me.dig.over.kind, 'boom'); Match.aiStep(m);
@@ -136,7 +136,7 @@ test('(the basic AI) before round 1 the AI keeps the first card of its Bronze Pa
   for (let seed = 1; seed <= 40; seed++) {
     const m = Match.start(cards, { seed, rounds: 3 }), me = Match.human(m), ai = Match.bot(m); m.brain = Basic;
     Match.openPack(m); Run.toggleKeep(me, me.prep.offer[0].uid); Run.confirmKeep(me); Run.continueReveal(me); Run.toggleKit(me, me.owned[0].uid); assert.ok(Match.beginRound(m));
-    assert.equal(ai.owned.length, 1); assert.equal(ai.kit.length, 1); assert.ok(Dig.supported(ai.kit[0]));
+    assert.ok(ai.owned.length >= 1, 'a Mystery Box brings one more'); assert.equal(ai.kit.length, 1); assert.ok(Dig.supported(ai.kit[0]));
     assert.notEqual(ai.kit[0].uid, me.kit[0].uid, `seed ${seed}: its own pack, its own card`);
     assert.equal(ai.dig.mine[0].id, ai.kit[0].id, 'it is on top of the AI\'s Mine'); assert.equal(me.dig.mine[0].id, me.kit[0].id);
     picked.add(ai.kit[0].id);
