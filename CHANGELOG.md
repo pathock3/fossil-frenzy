@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — the pack really rips:** tapping a Booster Pack no longer cuts to two jagged halves; the pack stays whole, shakes, and its top strip peels away from left to right along one tear line before the cards come out.
+
 - **Tabletop Library:** an **About Patrick** section under the shelf (who he is, that Claude Code built the app, and the address to write to about his designs).
 - **Dig Dig BOOM! — the Leaderboard tells the final round too:** the replay now runs after the last round as well; each player's second piece starts on 0, walks up the numbers as they dig, and when their Dig ends it goes (a BOOM blows it up; a bank shows the gems it earned and floats away). The top row is labelled **Best · locked in** and the rows below **This round · not banked**.
 
