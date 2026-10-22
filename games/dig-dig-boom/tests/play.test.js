@@ -696,6 +696,7 @@ test('ai: when your Dig ends you wait for the AI (or tap Fast forward); the Esca
     assert.equal(esc[0], 6); assert.ok(esc[1] === 6 || esc[1] === null, 'the AI got the same roll when it banked');
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.match.runs.ai.prep.step), 'pack', 'its Escape Bonus is read; its pack is still closed');
     await page.click('#play [data-p=openpack]');
+    await page.waitForFunction(() => window.DigDigBoomPlay.S.match.runs.ai.prep.step === 'kit', null, { timeout: 8000 });          // it thinks a moment after your pack starts opening, so the screen is not held up
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.match.runs.ai.prep.step), 'kit', 'the AI opened its pack with you');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }

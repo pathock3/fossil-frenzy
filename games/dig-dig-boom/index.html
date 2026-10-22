@@ -2000,16 +2000,18 @@ const Match = (() => {
     m.escape = v; return v;
   }
   // Prep happens at the same time: when you open your Booster Pack, so does the AI (yours is drawn first), and it makes its choices without seeing yours.
-  function openPack(m) {
+  // opts.defer: do not make the AI's Prep decisions now (the screen is busy opening your pack); call prepAI a moment later (beginRound does it anyway if you have not).
+  function openPack(m, opts = {}) {
     const me = human(m); if (!Run.openPack(me)) return false;
-    brain(m).prep(bot(m)); return true;
+    if (!opts.defer) brain(m).prep(bot(m)); return true;
   }
+  function prepAI(m) { const ai = bot(m); if (ai.prep && ai.prep.step !== 'kit') brain(m).prep(ai); return !!ai.prep && ai.prep.step === 'kit'; }
   // Both players begin the round (the AI finishes its Prep if it has not).
   function beginRound(m) {
     const me = human(m), ai = bot(m);
     if (!me.prep || me.prep.step !== 'kit') return false;
     if (!Run.beginDig(me)) return false;                         // yours first: before round 1 the card you chose leaves the deck, so the AI cannot take it
-    brain(m).prep(ai);
+    brain(m).prep(ai);                                           // (does nothing if it has already chosen)
     return Run.beginDig(ai);
   }
   // Tap "To Prep": the round is over for both. The Board has already changed; now the Preps (or the end of the run).
@@ -2042,7 +2044,7 @@ const Match = (() => {
     m.runs[HUMAN] = Run.load(all, d.runs[HUMAN], shared); m.runs[BOT] = Run.load(all, d.runs[BOT], shared);
     return m;
   }
-  return { start, aiStep, settle, finalCheck, rollEscape, openPack, beginRound, finishRound, save, load, human, bot, HUMAN, BOT };
+  return { start, aiStep, settle, finalCheck, rollEscape, openPack, prepAI, beginRound, finishRound, save, load, human, bot, HUMAN, BOT };
 })();
 </script>
 
@@ -2207,7 +2209,7 @@ const AI = (() => {
       return best;
     }
     function prep(run) {
-      const pr = run.prep; if (!pr) return;
+      const pr = run.prep; if (!pr || pr.aiDone) return;                       // (once it has chosen, asking again changes nothing)
       if (pr.step === 'pack') Run.openPack(run);
       const n = P.prepSims, seed0 = P.prepSeed;
       if (run.prep.step === 'keep') {
@@ -2226,6 +2228,7 @@ const AI = (() => {
       if (run.prep.step === 'kit') {
         const { kit } = chooseKit(run, run.owned, run.prep.kitMax, n * 2, seed0);
         run.prep.kitPick = []; for (const c of kit) Run.toggleKit(run, c.uid);
+        run.prep.aiDone = true;
       }
     }
     return { act, prep, P, phi, valueOf, context, idleArms };
@@ -3043,7 +3046,7 @@ const AI = (() => {
       case 'practice': if (resumable() && S.confirmNew !== 'practice') { S.confirmNew = 'practice'; break; } S.confirmNew = null; S.run = null; S.match = null; S.st = null; S.panel = 'setup'; S.back = null; break;
       case 'rounds': S.rounds = Number(ds.v); break;
       case 'startrun': { if (resumable() && S.confirmNew !== 'startrun') { S.confirmNew = 'startrun'; break; } S.confirmNew = null; if (S.opp) { S.match = Match.start(cards(), { rounds: S.rounds }); S.run = Match.human(S.match); } else { S.match = null; S.run = Run.start(cards(), { rounds: S.rounds }); } S.st = null; S.panel = 'prep'; S.back = null; S.zoom = null; break; }
-      case 'openpack': if (S.match) Match.openPack(S.match); else Run.openPack(S.run); break;
+      case 'openpack': if (S.match) { Match.openPack(S.match, { defer: true }); setTimeout(() => { if (S.match) { Match.prepAI(S.match); persist(); } }, 900); } else Run.openPack(S.run); break;
       case 'pick': {                       // tap a card to choose it, tap it again to put it back; once you have chosen all you may, you must put one back before choosing another
         const uid = Number(ds.uid), pr = S.run.prep;
         Run.toggleKeep(S.run, uid); break;                  // (the engine refuses a card beyond the limit)

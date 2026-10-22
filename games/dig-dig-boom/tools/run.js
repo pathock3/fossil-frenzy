@@ -8,6 +8,10 @@ function brainFrom(spec) {
   const b = require('./brain.js').makeBrain(over);
   if (m[1] === 'smartprep') return { act: G.Basic.act, prep: b.prep };      // the shipped Dig play, the new Prep
   if (m[1] === 'rolldig') return { act: b.act, prep: G.Basic.prep };        // the new Dig play, the shipped Prep
+  if (m[1] === 'finaldig') {                                             // like smartprep, but in the last round the leader keeps digging instead of waiting (until it would be safe: nobody else alive)
+    const sp = require('./brain.js').makeBrain().prep;
+    return { prep: sp, act(run) { const st = run.dig; if (st && !st.over && !st.fight && !st.pending && st.board && st.board.final) { G.Run.refresh(run); if (st.board.lead && G.Dig.can(st).dig && st.survived >= (over.minSurvived || 0)) { G.Dig.dig(st); return true; } } return G.Basic.act(run); } };
+  }
   if (m[1] === 'rollact') return { act: b.act, prep: require('./brain.js').makeBrain().prep };   // the new Dig play with the default new Prep (to compare with "smartprep": only the Dig play differs)
   return b;                                                              // "rollout": both
 }
