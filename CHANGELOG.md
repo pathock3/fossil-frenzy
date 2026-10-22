@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — Leaderboard 0 to 9, tap to enlarge; the Booster Pack tally explains itself; new card:** the Leaderboard now runs 0 to 9 by default (9 Monsters in the Mine) while you dig and after; it grows only when someone goes past 9. Tap the small Leaderboard while you dig and the full-size one opens (the opponents keep going behind it); tap again to go back. The tally after a bank is titled **Booster Pack**, and you can tap each part of the sum (Geode cards, Monster cards, the Escape Bonus die, the total) for a line saying what it is; the "N more for Diamond" note is gone. The dotted die line through your Power cards is gone (the glow already says what you can use). The Pet is just called Pet (no PET label). New Immediate card **Surprise Package**: when kept, also keep the next Immediate card of the Booster Deck; when dug, shuffle the top Immediate card of your discard pile back into your Mine.
+
 - **Dig Dig BOOM! — fixes from your iPad:** a card dragged out of a pack is placed under your finger before it appears and no longer glides in from the top-left corner; the glow around a card you can use now only fades in and out (it used to repaint the card every frame, which is the likely cause of the Venom Spider's left half flickering on the iPad: please check it); the Leaderboard is drawn at whatever size fits the screen, so it never scrolls, and your blue piece says "You"; the Escape Bonus roll and what follows it are a little quicker.
 
 - **Dig Dig BOOM! — the pack really rips:** tapping a Booster Pack no longer cuts to two jagged halves; the pack stays whole, shakes, and its top strip peels away from left to right along one tear line before the cards come out.

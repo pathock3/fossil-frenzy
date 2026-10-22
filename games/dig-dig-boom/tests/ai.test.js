@@ -71,7 +71,7 @@ test('the AI plays whole matches (3 and 4 rounds), every Dig ends, and fast-forw
       if (me.prep.step === 'escape') Match.rollEscape(m);
       Match.openPack(m); AI.prep(me); assert.ok(Match.beginRound(m));
       let guard = 0;
-      while (!me.dig.over && guard++ < 3000) { const st = me.dig, b = st.digs; if (!AI.act(me)) { if (Match.finalCheck(m)) continue; if (!Match.aiStep(m)) break; continue; } Run.checkOver(me); Match.finalCheck(m); if (st.digs > b && !me.dig.over) Match.aiStep(m); }
+      while (!me.dig.over && guard++ < 3000) { const st = me.dig, b = st.digs; if (!AI.act(me)) { if (Match.finalCheck(m)) continue; if (me.dig.board && me.dig.board.allOut && Dig.hold(me.dig)) { Run.checkOver(me); continue; } if (!Match.aiStep(m)) break; continue; } Run.checkOver(me); Match.finalCheck(m); if (st.digs > b && !me.dig.over) Match.aiStep(m); }
       assert.ok(me.dig.over, `seed ${seed} round ${r}: the Dig ended`);
       Match.finishRound(m);
     }

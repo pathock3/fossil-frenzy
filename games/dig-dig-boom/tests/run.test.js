@@ -241,6 +241,15 @@ test('Mystery Box: when kept from a Booster Pack, also keep the top card of the 
   assert.equal(run.owned.length, 2); assert.equal(run.prep.extra.length, 1); assert.equal(run.deck.length, deckSize - 3 - 1, '3 drawn for the pack (the test swaps them for chosen ones) and 1 more taken from the top');
 });
 
+test('Surprise Package: when kept, also keep the next Immediate card of the Booster Deck (cards above it stay in the deck)', () => {
+  const run = Run.start(cards, { seed: 11 }); Run.openPack(run);
+  run.prep.offer = ['IM-35', 'PW-02', 'PW-03'].map((id, i) => ({ ...by(id), uid: 7000 + i })); Run.toggleKeep(run, 7000);
+  const before = run.deck.slice(), firstImm = before.find(c => c.type === 'Immediate'); Run.confirmKeep(run);
+  assert.equal(run.prep.step, 'reveal', 'you see the extra card'); assert.equal(run.prep.extra.length, 1); assert.equal(run.prep.extra[0].uid, firstImm.uid); assert.equal(run.prep.extra[0].type, 'Immediate');
+  assert.ok(!run.deck.some(c => c.uid === firstImm.uid), 'it left the deck'); assert.equal(run.deck.length, before.length - 1);
+  const skipped = before.slice(0, before.indexOf(firstImm)); assert.deepEqual(run.deck.slice(0, skipped.length).map(c => c.uid), skipped.map(c => c.uid), 'the cards above it are still on top');
+});
+
 test('random runs of 5 rounds always finish, never lose or duplicate a Booster card, and the Dig screen always has a legal move', () => {
   const total = deckSize;
   for (let seed = 1; seed <= 60; seed++) {

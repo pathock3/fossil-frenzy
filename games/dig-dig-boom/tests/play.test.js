@@ -980,6 +980,21 @@ test('leaderboard: a bank keeps its piece with a blue gem showing what it earned
   } finally { await browser.close(); }
 });
 
+test('leaderboard: 0 to 9 by default; tap the small one while you dig for the full-size board, which keeps up with the opponents; tap it to go back', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await startRun(page, { opp: true, rounds: 3 });
+    assert.equal(await page.locator('#play section.lb .lbc').count(), 10, 'the small board runs 0 to 9');
+    await page.click('#play section.lb'); await page.waitForSelector('#play .lbfull');
+    assert.equal(await page.locator('#play .lbfull .bcol').count(), 11, 'the full-size board: a column for each number 0 to 9 (and the labels)');
+    assert.equal(await page.locator('#play .lbfull .bdisc').count(), 4, 'every player digging has a piece on it');
+    await page.evaluate(() => window.DigDigBoomPlay.tick());
+    assert.equal(await page.locator('#play .lbfull').count(), 1, 'the opponents move behind it and it stays open');
+    await page.click('#play .lbfull'); assert.equal(await page.locator('#play .lbfull').count(), 0, 'a tap goes back to the Dig');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
 test('leaderboard: nothing scrolls at any iPad size (the whole screen is drawn smaller to fit), and your piece says You', SKIP, async () => {
   for (const viewport of [{ width: 1180, height: 820 }, { width: 1024, height: 700 }, { width: 820, height: 1180 }, { width: 1180, height: 600 }]) {
     const { browser, page, errors } = await open({ viewport, menu: true });

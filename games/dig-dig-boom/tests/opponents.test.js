@@ -10,7 +10,7 @@ function playRound(m) {
   const me = Match.human(m); let guard = 0;
   while (!me.dig.over && guard++ < 4000) {
     const st = me.dig, before = st.digs;
-    if (!AI.act(me)) { if (Match.finalCheck(m)) continue; if (!Match.botIds(m).some(id => Match.aiStep(m, id))) throw new Error('stuck'); continue; }
+    if (!AI.act(me)) { if (Match.finalCheck(m)) continue; if (me.dig.board && me.dig.board.allOut && Dig.hold(me.dig)) { Run.checkOver(me); continue; } if (!Match.botIds(m).some(id => Match.aiStep(m, id))) throw new Error('stuck'); continue; }
     Run.checkOver(me); Match.finalCheck(m);
     if (st.digs > before && !me.dig.over) for (const id of Match.botIds(m)) Match.aiStep(m, id);
   }

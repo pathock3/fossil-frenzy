@@ -29,7 +29,7 @@ function fight(st) { assert.ok(Dig.dig(st)); assert.ok(Dig.roll(st)); if (st.fig
 const UNSUPPORTED = ["PW-04", "PW-06", "PW-08", "PW-10", "PW-11", "PW-13", "PW-18", "PW-23", "PW-25", "PW-26", "PW-29", "PW-30", "ON-01", "ON-07", "ON-10", "ON-13", "ON-16", "ON-18", "ON-24", "ON-25", "ON-26", "ON-28", "ON-30", "ON-32", "ON-36", "IM-02", "IM-09", "IM-10", "IM-12", "IM-15", "IM-18", "IM-19", "IM-27", "IM-29", "IM-31", "IM-34"];
 test('the rules are data: nothing the engine needs is missing from DDB.rules; every card text is understood except the Grit cards and the two player-chosen moves, which are cut', () => {
   for (const k of ['die', 'caps', 'start', 'pet', 'beyond', 'rulings']) assert.ok(DDB.rules[k] !== undefined, k);
-  assert.equal(cards.length, 106, 'the sheet\'s 108 cards (with Monster C), less the Lucky Coin and Twin Drill (taken out of the game)');
+  assert.equal(cards.length, 107, 'the sheet\'s 108 cards (with Monster C), less the Lucky Coin and Twin Drill (taken out of the game), plus the Surprise Package (new)');
   const bad = cards.filter(c => !Dig.supported(c)).map(c => c.id);
   assert.deepEqual(bad.slice().sort(), UNSUPPORTED.slice().sort(), 'exactly these cards are unsupported — everything else is understood');
   assert.equal(bad.length, 36);
@@ -44,7 +44,7 @@ test('a new Dig: Mine of 30 (21 Geodes, 9 Monsters in three sets: A 1-3-5-7, B 2
   assert.equal(st.mine.filter(c => c.type === 'Monster').length, 9);
   assert.equal(st.mine.filter(c => c.id === 'MO-03').length, 2, 'Monster C: two cards (3, then 5)');
   assert.deepEqual(st.mine.map(c => c.id).filter(i => i === 'MO-01').length, 4);
-  assert.equal(st.line.length, 1); assert.equal(st.line[0].card.name, 'Drill Pup'); assert.equal(st.line[0].at, 9, 'the Pet triggers on a 9 or more'); assert.ok(st.line[0].pet);
+  assert.equal(st.line.length, 1); assert.equal(st.line[0].card.name, 'Pet'); assert.equal(st.line[0].at, 9, 'the Pet triggers on a 9 or more'); assert.ok(st.line[0].pet);
   assert.deepEqual([st.heart, st.reroll], [DDB.rules.start.heart, DDB.rules.start.reroll]);
   assert.deepEqual(Dig.start(cards, [], { seed: 5 }).mine.map(c => c.id), st.mine.map(c => c.id), 'same seed, same Mine');
   assert.notDeepEqual(Dig.start(cards, [], { seed: 6 }).mine.map(c => c.id), st.mine.map(c => c.id));
@@ -322,6 +322,11 @@ test('Cave Scout digs until a Monster and puts it back on top, face up; Old Map 
   const k = game({ mine: ['IM-17', 'TR-01', 'MO-01'] }); Dig.dig(k); assert.deepEqual(k.mine.map(c => c.id), ['TR-01', 'MO-01']);
 });
 
+test('Surprise Package (when dug): shuffles the top Immediate card of your discard pile back into your Mine; its keep-from-a-pack line does nothing in a Dig', () => {
+  const sp = game({ mine: ['IM-13', 'IM-35'] }); Dig.dig(sp); assert.equal(sp.discard.length, 1); Dig.dig(sp);
+  assert.equal(sp.mine.length, 1, 'the Med Kit is back in the Mine'); assert.deepEqual(sp.discard.map(c => c.id), ['IM-35'], 'the Package itself is in the discard pile');
+  const none = game({ mine: ['IM-35', 'MO-01'] }); Dig.dig(none); assert.equal(none.mine.length, 1, 'nothing to shuffle: nothing happens'); assert.ok(Dig.supported(by('IM-35')));
+});
 test('Stink Bomb, Crystal Ball, Fuzzy Radar, Rewind Tape, Wishing Well; Look, Shoo and Slide texts (cards made up for the test)', () => {
   const sb = game({ mine: ['IM-30', 'MO-01', 'TR-01', 'MO-02', 'TR-01'] }); Dig.dig(sb);
   assert.deepEqual(sb.mine.map(c => c.id), ['TR-01', 'TR-01', 'MO-01', 'MO-02']);
@@ -385,7 +390,7 @@ test('the Lucky Coin is out of the game (the sheet may still list it), and the P
   const roll = (heart, die, id = 'MO-01') => { const st = game({ mine: [id], start: { heart }, dice: [die] }); Dig.dig(st); Dig.roll(st); return st; };
   assert.equal(Dig.result(roll(1, 4)).total, 4, 'no bonus to the roll at the brink any more');
   const nine = roll(1, 9); assert.deepEqual(Dig.eligible(nine).map(e => e.pet), [true], 'a 9 reaches the Pet');
-  Dig.autoFace(nine); assert.ok(!nine.over, 'the Drill Pup saved you'); assert.equal(nine.survived, 1);
+  Dig.autoFace(nine); assert.ok(!nine.over, 'the Pet saved you'); assert.equal(nine.survived, 1);
   assert.deepEqual(Dig.eligible(roll(1, 8)).map(e => e.pet), [], 'an 8 does not');
 });
 
