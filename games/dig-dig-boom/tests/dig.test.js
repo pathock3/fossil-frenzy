@@ -37,10 +37,10 @@ test('the rules are data: nothing the engine needs is missing from DDB.rules; ev
   assert.ok(cards.filter(c => c.deck === 'Booster' && Dig.supported(c)).length > 60, 'the Booster Deck is the supported cards only');
 });
 
-test('a new Dig: Mine of 27 (18 Geodes, 9 Monsters in three sets: A 1-3-5-7, B 2-4-6, C 3-5), the Pet on the line at 9, Health and Rerolls at their starting spaces', () => {
+test('a new Dig: Mine of 30 (21 Geodes, 9 Monsters in three sets: A 1-3-5-7, B 2-4-6, C 3-5), the Pet on the line at 9, Health and Rerolls at their starting spaces', () => {
   const st = Dig.start(cards, [], { seed: 5 });
-  assert.equal(st.mine.length, 27);
-  assert.equal(st.mine.filter(c => c.type === 'Treasure').length, 18);
+  assert.equal(st.mine.length, 30);
+  assert.equal(st.mine.filter(c => c.type === 'Treasure').length, 21);
   assert.equal(st.mine.filter(c => c.type === 'Monster').length, 9);
   assert.equal(st.mine.filter(c => c.id === 'MO-03').length, 2, 'Monster C: two cards (3, then 5)');
   assert.deepEqual(st.mine.map(c => c.id).filter(i => i === 'MO-01').length, 4);
@@ -69,7 +69,7 @@ test('the Drill by the rules: a d10, Health 0-10 starting at 10, Rerolls 0-3 sta
 
 test('Starter Kit: every kit card goes on top of the Mine, face up, in the order chosen; nothing else is in play at the start', () => {
   const st = Dig.start(cards, ['PW-02', 'ON-33', 'IM-13'].map(by), { seed: 1 });
-  assert.equal(st.line.length, 1, 'only the Pet'); assert.deepEqual(st.ongoing.map(c => c.id), [], 'and no Ongoing card: the Lucky Coin is out of the game'); assert.equal(st.mine.length, 30);
+  assert.equal(st.line.length, 1, 'only the Pet'); assert.deepEqual(st.ongoing.map(c => c.id), [], 'and no Ongoing card: the Lucky Coin is out of the game'); assert.equal(st.mine.length, 33);
   assert.deepEqual(st.mine.slice(0, 3).map(c => c.id), ['PW-02', 'ON-33', 'IM-13']); assert.equal(st.known, 3);
   const two = Dig.start(cards, ['IM-13', 'IM-11'].map(by), { seed: 1, start: { heart: 2 } }); Dig.dig(two); Dig.dig(two);
   assert.deepEqual([two.heart, two.reroll], [6, 2], 'both kit Immediates were the first two cards you dug');
@@ -78,12 +78,12 @@ test('Starter Kit: every kit card goes on top of the Mine, face up, in the order
   const rev = Dig.start(cards, ['ON-33', 'PW-02'].map(by), { seed: 1 }); assert.deepEqual(rev.mine.slice(0, 2).map(c => c.id), ['ON-33', 'PW-02'], 'the order you chose');
 });
 
-test('the Starter Kit goes on top of the Mine, face up, in the order chosen; every other card you own is shuffled into the Mine with the 27 Starting cards', () => {
+test('the Starter Kit goes on top of the Mine, face up, in the order chosen; every other card you own is shuffled into the Mine with the 30 Starting cards', () => {
   const kit = ['PW-02', 'ON-33'].map(by), extra = ['IM-13', 'IM-11', 'PW-28', 'ON-05'].map(by);
   const orders = new Set();
   for (let seed = 1; seed <= 40; seed++) {
     const st = Dig.start(cards, kit, { seed, extra });
-    assert.equal(st.mine.length, 27 + 2 + 4);
+    assert.equal(st.mine.length, 30 + 2 + 4);
     assert.deepEqual(st.mine.slice(0, 2).map(c => c.id), ['PW-02', 'ON-33'], 'the kit, in the order chosen');
     assert.equal(st.known, 2, 'only the kit is face up');
     assert.deepEqual(st.mine.slice(2).filter(c => extra.some(e => e.id === c.id)).map(c => c.id).sort(), extra.map(c => c.id).sort(), 'every other card you own is somewhere below');

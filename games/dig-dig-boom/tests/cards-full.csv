@@ -1,6 +1,6 @@
 ID,Name,Type,Number,Deck,Count,Card Text
 PW-01,Drill Pup,Power,10,Starting,1,Defeat the Monster. You take no {damage}.
-TR-01,Geode,Treasure,,Starting,18,1 {gem}
+TR-01,Geode,Treasure,,Starting,21,1 {gem}
 MO-01,Monster A,Monster,,Starting,4,{damage} 1 → 3 → 5 → 7
 MO-02,Monster B,Monster,,Starting,3,{damage} 2 → 4 → 6
 MO-03,Monster C,Monster,,Starting,2,{damage} 3 → 5

@@ -831,9 +831,6 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .zoom .zdyn { margin-top: 14px; padding: 10px 24px; border-radius: 99px; background: #2a1f18; border: 3px solid #ffb13b; font-size: 26px; font-weight: 800; color: var(--text); text-align: center; }
 #play .zoom .zdyn b { color: #ffd45e; }
 /* a quick warning, outside the table so a redraw does not remove it; it goes by itself */
-.dangertoast { position: fixed; z-index: 40; left: 50%; top: max(70px, calc(env(safe-area-inset-top) + 62px)); transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 12px 22px; border-radius: 99px; background: #b81d12; border: 3px solid #ffd9d3; color: #fff; font: 800 19px/1.2 system-ui, -apple-system, sans-serif; box-shadow: 0 8px 22px rgba(0,0,0,.5); pointer-events: none; animation: dangerpop 2.6s ease-out both; }
-.dangertoast .ic { width: 1.3em; height: 1.3em; flex: none; }
-@keyframes dangerpop { 0% { opacity: 0; transform: translate(-50%, -14px) scale(.92); } 10%, 80% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -6px); } }
 /* the Leaderboard: poker chips for each player's best (gold trim, their colour), plain markers for their live position, the players named underneath */
 #play .bstack .bhead { height: 118px; flex-direction: column; justify-content: flex-start; padding-top: 6px; overflow: visible; }
 #play .bstack .bhead .bn { display: flex; align-items: center; gap: 2px; line-height: 1; }
@@ -864,6 +861,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .mset .mb { width: 24px; height: 24px; font-size: 14px; }
 #play .mset .lad i { min-width: 24px; height: 24px; font-size: 14px; border-radius: 6px; }
 #play .mset .lad { gap: 3px; }
+#play .mnote .ic { width: 1.15em; height: 1.15em; vertical-align: -.22em; }
 /* The Bank is a button, not a place for cards: a raised gold key at the right edge, bottom-aligned, that presses down */
 #play .piles { width: auto; height: auto; align-self: flex-end; margin-left: 0; flex: none; }
 #play .pile.bankp, #play .pile.bankp.live { flex: none; width: 210px; height: auto; min-height: 96px; padding: 10px 24px; flex-direction: row; gap: 14px; border-radius: 24px; border: 3px solid #fff0b8; color: #2a1700; font-size: 34px; font-weight: 900; letter-spacing: .02em; background: linear-gradient(180deg, #ffd45e, #e8920f); box-shadow: 0 8px 0 #8a4f06, 0 16px 24px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.55); overflow: visible; transition: transform .08s, box-shadow .08s; }
@@ -2075,7 +2073,7 @@ const Run = (() => {
     if (to < k.length) k[to] = id; else k.push(id);
     return true;
   }
-  // 5-6. Reset and ready: a fresh Drill, a Mine of the 25 starting cards plus every card you own that is not in the kit.
+  // 5-6. Reset and ready: a fresh Drill, a Mine of the 30 starting cards plus every card you own that is not in the kit.
   function beginDig(run, opts = {}) {
     const pr = run.prep; if (!pr || pr.step !== 'kit') return false;
     run.kit = pr.kitPick.map(id => run.owned.find(c => c.uid === id)).filter(Boolean);       // in the order you chose
@@ -2910,7 +2908,7 @@ const AI = (() => {
     const mon = l => all.find(c => c.type === 'Monster' && c.deck === D.rules.startingDeck && new RegExp('\\s' + l + '$').test(c.name));
     const $$ = sel => root.querySelector(sel), cellsEl = [...root.querySelectorAll('.hc')];
     const card = (c, o) => `<span class="cw hcard" style="--s:.8"><span class="cs">${A.playCard(c, 1, o)}</span></span>`;
-    const deckN = all.filter(c => c.deck === D.rules.startingDeck && c.type !== 'Power' && c.type !== 'Ongoing').reduce((a, c) => a + (c.count || 1), 0) || 25;          // the whole Mine, as in the game
+    const deckN = all.filter(c => c.deck === D.rules.startingDeck && c.type !== 'Power' && c.type !== 'Ongoing').reduce((a, c) => a + (c.count || 1), 0) || 30;          // the whole Mine, as in the game
     let li = 0, ci = 0, hp = R.start.heart, gems = 0, met = 0, timer = null;
     const deckView = n => { $$('.hcnt').textContent = n; const k = Math.max(1, Math.ceil(n / 3)); $$('.hlayers').innerHTML = Array.from({ length: k }, (_, i) => `<i style="transform:translate(${((k - 1 - i) * 1.5).toFixed(1)}px,${((k - 1 - i) * 1.7).toFixed(1)}px)"></i>`).join(''); };
     const setHealth = () => cellsEl.forEach(c => { const n = Number(c.dataset.n); c.className = 'hc' + (n === hp ? ' now' : n < hp ? ' lit' : ''); });
@@ -3388,20 +3386,18 @@ const AI = (() => {
         <li>Easy, Medium and Hard dig on their own clocks (the harder, the quicker: whoever reaches a number first takes the better spot); tap Fast-forward when you are done and they are not.</li></ul></details>
     </div></div>`;
   }
-  // When the next card you dig could be a Monster that would put you out (its damage is at least your Health), a quick note says so: once each time you come into that danger (not again for each card while it lasts, but
-  // again if you get out of it and back in). It fades by itself and never gets in the way of a tap.
-  function dangerAlert() {
+  // When the next card you dig could be a Monster that would put you out (its damage is at least your Health), a "Careful" note comes up in the middle of the screen and has to be dismissed before you go on:
+  // once each time you come into that danger (not again for each card while it lasts, but again if you get out of it and back in).
+  function dangerCheck() {
     const st = S.st;
-    if (S.panel !== 'dig' || !st || st.over || st.fight || st.pending || S.help || S.zoom || finalNote()) return;
+    if (window.DDB_NO_DANGER || S.panel !== 'dig' || !st || st.over || st.fight || st.pending || S.help || S.zoom || finalNote()) return;          // (DDB_NO_DANGER: the tests that script a low Health turn the note off)
     if (!Dig.can(st).dig) return;
     const danger = Dig.maxNextDamage(st) >= st.heart;
     if (!danger) { if (S.danger && S.danger.st === st) S.danger.on = false; return; }
     if (S.danger && S.danger.st === st && S.danger.on) return;
-    S.danger = { st, on: true };
-    const el = document.createElement('div'); el.className = 'dangertoast'; el.setAttribute('role', 'status');
-    el.innerHTML = `${ic('damage')} <span>Careful: the next Monster could knock you out</span>`;
-    $.parentNode.appendChild(el); setTimeout(() => el.remove(), 2600);
+    S.danger = { st, on: true }; S.dangerNote = true;
   }
+  const dangerHTML = () => { const st = S.st; if (!S.dangerNote || S.panel !== 'dig' || !st) return ''; return `<div class="mnote-back"><div class="mnote" role="alertdialog" aria-label="Careful"><h3>Careful!</h3><p>You have <b>${st.heart}</b> ${ic('heart')} and the next Monster could deal up to <b>${Dig.maxNextDamage(st)}</b> ${ic('damage')}. It could knock you out.</p><button class="btn" data-p="dangerok">Got it</button></div></div>`; };
   function render() {
     if (document.body.dataset.mode !== 'play') return;
     const keep = $.querySelector('#setupScroll'), ks = keep ? keep.scrollTop : 0;
@@ -3409,6 +3405,7 @@ const AI = (() => {
     const bar = S.panel === 'dig'
       ? `<div class="pbar">${S.run ? lbHTML(S.run, S.st) : '<span class="pgrow"></span>'}<button class="chip" data-p="gmenu">Menu</button></div>`
       : `<div class="pbar slim"><button class="chip" data-p="gmenu">Menu</button></div>`;
+    dangerCheck();
     let body;
     if (S.panel === 'menu') body = homeHTML();
     else if (S.panel === 'more') body = moreHTML();
@@ -3433,9 +3430,9 @@ const AI = (() => {
       const list = S.run.owned, sc = Math.min(.55, fitCards(list.length, .55, Math.min(innerWidth, 1180) - 80, innerHeight - 190, 12)), inKit = new Set((S.run.kit || []).map(c => c.uid));
       ownedP = `<div class="ownedback" data-p="ownedclose"><div class="ownedpanel" role="dialog" aria-label="Your cards"><h3>Your cards</h3><div class="cards">${list.map(c => `<span class="ocard" style="width:${250 * sc}px;height:${350 * sc}px">${A.playCard(c, sc)}${inKit.has(c.uid) ? '<span class="ctag last">In your kit</span>' : ''}</span>`).join('') || '<span class="note">You do not own any cards yet.</span>'}</div></div></div>`;
     }
-    $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z + note + fin + ownedP;
+    $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z + note + fin + dangerHTML() + ownedP;
     const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
-    fitHero(); heroPlay(); fitTable(); playDice(); dangerAlert(); boardAnimate();
+    fitHero(); heroPlay(); fitTable(); playDice(); boardAnimate();
     if (S.packFrom) { const fp = $.querySelector('.flypack'); if (fp) { const r = fp.getBoundingClientRect(); fp.style.setProperty('--fx', Math.round(S.packFrom.x - (r.left + r.width / 2)) + 'px'); fp.style.setProperty('--fy', Math.round(S.packFrom.y - (r.top + r.height / 2)) + 'px'); } S.packFrom = null; }
     if (S.keepFrom && $.querySelector('.pcard.kept')) {          // the cards you kept slide from where they were to their places; the others are dealt in after them
       $.querySelectorAll('.pcard.kept').forEach(el => {
@@ -3509,6 +3506,7 @@ const AI = (() => {
       case 'more': S.panel = 'more'; break;
       case 'gmenu': S.gmenu = true; break;
       case 'gmenuclose': S.gmenu = false; break;
+      case 'dangerok': S.dangerNote = false; break;
       case 'mainmenu': if (S.panel !== 'menu' && S.panel !== 'more') S.back = S.panel; S.panel = 'menu'; S.gmenu = false; S.help = false; break;
       case 'resume': S.panel = S.back || 'menu'; break;
       case 'practice': if (resumable() && S.confirmNew !== 'practice') { S.confirmNew = 'practice'; break; } S.confirmNew = null; S.run = null; S.match = null; S.st = null; S.panel = 'setup'; S.back = null; break;

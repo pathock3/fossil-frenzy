@@ -93,14 +93,14 @@ test("Starter Kit: last round's kit is already in your kit; cards can be dragged
   Run.beginDig(run, { seed: 5 }); assert.deepEqual(run.dig.mine.slice(0, 2).map(c => c.id), ['PW-09', 'ON-33'], 'the kit goes on top in the order you set');
 });
 
-test('Starter Kit: up to the round tracker (1, 2, 2, 3); the Mine is the 27 starting cards plus every card you own that is not in the kit', () => {
+test('Starter Kit: up to the round tracker (1, 2, 2, 3); the Mine is the 30 starting cards plus every card you own that is not in the kit', () => {
   assert.deepEqual([1, 2, 3, 4, 5, 6].map(r => Run.kitSize({}, r)), [1, 2, 2, 3, 3, 3]);
   const run = firstRound({ keepIds: ['PW-28'] });
   assert.ok(!Run.toggleKit(run, 12345), 'only cards you own'); assert.ok(Run.toggleKit(run, run.owned[0].uid));
   Run.beginDig(run, { seed: 3 });
-  assert.equal(run.phase, 'dig'); assert.equal(run.dig.line.length, 1, 'the Pet'); assert.equal(run.dig.mine.length, 28, 'the kit card is on top of the Mine'); assert.equal(run.dig.mine[0].id, 'PW-28');
+  assert.equal(run.phase, 'dig'); assert.equal(run.dig.line.length, 1, 'the Pet'); assert.equal(run.dig.mine.length, 31, 'the kit card is on top of the Mine'); assert.equal(run.dig.mine[0].id, 'PW-28');
   const r2 = firstRound({ keepIds: ['PW-28'] }); Run.beginDig(r2, { seed: 3 });   // no kit chosen: the card is shuffled into the Mine with the Starting cards
-  assert.equal(r2.dig.mine.length, 29, '28 cards and the gem for the empty place'); assert.equal(r2.dig.line.length, 1); assert.ok(r2.dig.mine.some(c => c.id === 'PW-28')); assert.equal(r2.dig.known, 1, 'only the gem on top is known');
+  assert.equal(r2.dig.mine.length, 32, '31 cards and the gem for the empty place'); assert.equal(r2.dig.line.length, 1); assert.ok(r2.dig.mine.some(c => c.id === 'PW-28')); assert.equal(r2.dig.known, 1, 'only the gem on top is known');
 });
 
 test('after a Dig the Mine is rebuilt from scratch: Drill reset, Power cards back at their numbers, everything shuffled in', () => {
@@ -109,7 +109,7 @@ test('after a Dig the Mine is rebuilt from scratch: Drill reset, Power cards bac
   Run.finishDig(run); run.prep.step = 'kit';
   Run.beginDig(run, { seed: 5 });
   assert.equal(run.dig.heart, DDB.rules.start.heart); assert.ok(!('grit' in run.dig)); assert.equal(run.dig.reroll, 0);
-  assert.equal(run.dig.mine.length + run.dig.kit.length, 28 + 2, '28 cards, plus a gem for each empty Kit place (none chosen: two places)');
+  assert.equal(run.dig.mine.length + run.dig.kit.length, 31 + 2, '31 cards, plus a gem for each empty Kit place (none chosen: two places)');
 });
 
 test('a Burnout card climbs the Power line during a Dig and starts the next round back at its printed number', () => {
