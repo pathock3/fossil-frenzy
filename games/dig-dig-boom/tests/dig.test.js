@@ -830,3 +830,19 @@ test('a card whose power depends on the game can say what it is worth right now 
   assert.equal(Dig.dynamic(st, cards.find(c => c.id === 'ON-15')), '+2 to your rolls', 'Flywheel: +1 for each Immediate in the discard pile');
   assert.equal(Dig.dynamic(st, cards.find(c => c.id === 'IM-13')), null, 'Med Kit does not depend on anything');
 });
+
+test('review fixes: a Monster whose text is no damage ladder deals nothing instead of crashing the Dig', () => {
+  const odd = { id: 'XX-odd', name: 'Odd', type: 'Monster', number: null, deck: 'Starting', count: 1, text: '{damage} X' };
+  const st = game({ mine: [odd], start: { heart: 5 }, dice: [3] });
+  assert.doesNotThrow(() => { Dig.dig(st); Dig.roll(st); Dig.autoFace(st); });
+  assert.equal(st.heart, 5, 'it dealt no damage');
+});
+
+test('review fixes: "N+ cards trigger on one roll" fires when the Nth card triggers, not again when a cloned card triggers a second time', () => {
+  const a = card('+1 {heart}', { number: 3, name: 'A' }), b = card('+1 {heart}', { number: 4, name: 'B' });
+  const watcher = card('Whenever 2+ cards trigger on one roll, +1 {reroll}', { type: 'Ongoing', number: null, name: 'Watcher' });
+  const st = game({ mine: ['MO-01'], power: [a, b], ongoing: [watcher], start: { heart: 10, reroll: 0 }, dice: [6] });
+  entryOf(st, a.id).cloned = true;
+  fight(st);
+  assert.equal(st.reroll, 1);
+});

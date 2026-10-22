@@ -703,7 +703,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .bscore { font-size: 34px; font-weight: 900; text-align: right; color: #3a2a18; font-family: "Iowan Old Style", Georgia, serif; }
 #play .bnote { text-align: center; font-size: 24px; font-weight: 800; margin: 18px 0 0; }
 #play .bigboard { position: relative; }
-#play .eq .ghost { visibility: hidden; }
+#play .eq .unseen { visibility: hidden; }
 #play .eq .t.sum { min-width: 118px; }
 #play .krow { display: flex; align-items: center; justify-content: center; gap: 30px; }
 #play .kdef { margin: 0; max-width: 240px; font-size: 22px; font-weight: 800; line-height: 1.25; color: var(--text); }
@@ -863,7 +863,7 @@ const DDB = {
     id: '1cKcNNs38CydvvhW7rUJIc4DWHgEvT-deluLdhrIpk04',
     tabs: { cards: 2, rules: 3 },                      // gid of "v2.7 Draft" (the cards) and "v2.7 Rules"
     published: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT9Dj7h1xNJd67s2p8OoqN2pHYIuj4rNi5TmivT6gtkgdR8Sl_igL_icc9uYsxwwgA92IraLkDpHmi3/pub',   // "Publish to web" link (browsers may read it)
-    urls: [                                            // tried in order; the first that answers wins
+    urls: [                                            // all asked at once (see fetchTab); the first good answer wins
       (id, gid) => `${DDB.sheet.published}?gid=${gid}&single=true&output=csv`,
       (id, gid) => `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`,
       (id, gid) => `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`,
@@ -1096,9 +1096,9 @@ const Engine = (() => {
   function cards(rows, cols) {
     const RU = DDB.rules;          // the owner's rulings come first: removed cards are not read at all, and the Pet's number is the rules' number
     return table(rows).filter(r => r[cols.id] && r[cols.name] && !RU.removedCards.includes(r[cols.id].trim())).map(r => ({
-      id: r[cols.id].trim(), name: r[cols.name].trim(), type: r[cols.type].trim(),
-      number: r[cols.number] === '' || r[cols.number] === undefined ? null : Number(r[cols.number]),
-      deck: r[cols.deck].trim(), count: Number(r[cols.count]) || 1, text: r[cols.text].trim(),
+      id: r[cols.id].trim(), name: r[cols.name].trim(), type: (r[cols.type] || '').trim(),
+      number: r[cols.number] === '' || r[cols.number] === undefined || !Number.isFinite(Number(r[cols.number])) ? null : Number(r[cols.number]),
+      deck: (r[cols.deck] || '').trim(), count: Number(r[cols.count]) || 1, text: (r[cols.text] || '').trim(),
       trigger: (r[cols.trigger] || '').trim(), note: (r[cols.notes] || '').trim(), raw: r,
     })).map(c => (c.deck === RU.startingDeck && c.type === 'Power' ? { ...c, number: RU.pet.at } : c));
   }
@@ -1277,7 +1277,7 @@ const Dig = (() => {
     if (gemCards.length) log(st, 'sys', `${gemCards.length} {gem} face up on top of your Mine.`);
     return st;
   }
-  function log(st, kind, text, extra) { st.log.push({ kind, text, ...(extra || {}) }); }
+  function log(st, kind, text, extra) { if (st.quiet) return; st.log.push({ kind, text, ...(extra || {}) }); }
   // An Ongoing card with a Cloning Machine under it does everything it does twice.
   const times = (st, o) => (st.cloned.includes(o.uid) ? 2 : 1);
   const flag = (st, name) => { let v; for (const o of st.ongoing) { let f = compile(o).ongoing.flags[name]; if (name === 'bumper' && typeof f === 'number') f *= times(st, o); if (f !== undefined && (v === undefined || f > v || f === true)) v = f; } return v; };
@@ -1476,7 +1476,7 @@ const Dig = (() => {
   function dig(st) {
     if (!can(st).dig) return false;
     st.digs++;
-    delete st.flags.lastOutcome; let c = st.mine.shift(); st.known = Math.max(0, st.known - 1);
+    st.flags.lastOutcome = undefined; let c = st.mine.shift(); st.known = Math.max(0, st.known - 1);
     if (!c) { c = peekBonus(st); st.bonusNext = null; st.beyond++; log(st, 'dig', `Your Mine is empty — a ${c.name} appears`); }
     else log(st, 'dig', `You dig ${c.name}`);
     st.last = c;
@@ -1488,10 +1488,10 @@ const Dig = (() => {
   function rollDie(st) { if (st.dice && st.dice.length) return st.dice.shift(); return 1 + st.rng.int(R.die); }
   function startFight(st, m, opt = {}) {
     st.monstersDug++;
-    const set = m.id, n = st.setCount[set] = (st.setCount[set] || 0) + 1, b = compile(m);
-    const dmg = m.bonus ? m.damageNow : b.ladder[Math.min(n, b.ladder.length) - 1];
+    const set = m.id, n = st.setCount[set] = (st.setCount[set] || 0) + 1, b = compile(m), lad = b.ladder || [0];          // (a Monster whose text is no damage ladder, e.g. after a sheet edit, deals nothing rather than crash)
+    const dmg = m.bonus ? m.damageNow : lad[Math.min(n, lad.length) - 1];
     const prev = st.fight;                                    // a Monster dug by Sneak Attack while another is being faced must not replace it
-    const f = st.fight = { monster: m, damage: dmg, step: m.bonus ? undefined : Math.min(n, b.ladder.length), phase: 'before', die: null, first: st.monstersDug === 1, fixed: null,
+    const f = st.fight = { monster: m, damage: dmg, step: m.bonus ? undefined : Math.min(n, lad.length), phase: 'before', die: null, first: st.monstersDug === 1, fixed: null,
       block: 0, halve: false, noDamage: false, defeat: false, surviveAt: null, sparkUsed: false, rolls: 0, trig: [], deferred: [] };
     log(st, 'dig', `${m.name}${m.bonus ? '' : ' #' + n} — deals ${dmg} {damage}`);
     if (opt.autoDefeat) { fire(st, 'digMonster', { damage: dmg }, 1); f.defeat = true; log(st, 'effect', `The Monster is defeated without a roll`); if (!over(st)) finishFight(st, true); st.fight = over(st) ? null : prev; return; }
@@ -1578,11 +1578,12 @@ const Dig = (() => {
   const needsFinal = effs => effs.some(e => (e.op === 'gainPer' && e.per === 'otherTriggers') || (e.op === 'if' && e.cond && e.cond.noOther) || (e.op === 'seq' && needsFinal(e.list)));
   function trigger(st, entry, hold) {
     const f = st.fight; if (!f || over(st) || !eligible(st).includes(entry)) return false;
+    const firstTime = !f.trig.some(e => e.card === entry.card);          // a cloned card triggering again is still one card
     f.trig.push(entry);
     const effs = compile(entry.card).effects;
     log(st, 'roll', `You trigger ${entry.card.name}${needsFinal(effs) ? ' (it counts the other cards once you have chosen)' : ''}`);
     if (needsFinal(effs)) f.deferred.push(entry); else run(st, effs, { src: entry.card, result: resultTotal(st), trig: f.trig, depth: 0 });
-    if (!over(st)) fire(st, 'triggers', { n: new Set(f.trig.map(e => e.card)).size }, 1);
+    if (!over(st) && firstTime) fire(st, 'triggers', { n: new Set(f.trig.map(e => e.card)).size }, 1);
     if (!hold && st.fight === f && !over(st) && f.deferred.length && !eligible(st).length) runDeferred(st);          // no other card can trigger any more: "if no other card triggers" is settled, so it happens now
     return true;
   }
@@ -1697,9 +1698,9 @@ const Dig = (() => {
     return st;
   }
   // A copy of a Dig to try things on (the AI thinks ahead on copies). Cards never change, so they are shared; everything that does change is copied. Its own random numbers (a seed), and no log.
-  function clone(st, seed) {          // (bonusNext is a card that never changes, so it is shared)
+  function clone(st, seed) {          // (bonusNext is a card that never changes, so it is shared; a copy is for the AI to play out, so it keeps no log)
     const lineMap = new Map(), line = st.line.map(e => { const n = { ...e }; lineMap.set(e, n); return n; }), remap = list => (list || []).map(e => lineMap.get(e) || e);
-    return { ...st, seed: null, rng: makeRng(seed === undefined ? 1 : seed), dice: null, log: [], over: st.over && { ...st.over }, flags: { ...st.flags },
+    return { ...st, seed: null, rng: makeRng(seed === undefined ? 1 : seed), dice: null, log: [], quiet: true, over: st.over && { ...st.over }, flags: { ...st.flags },
       mine: st.mine.slice(), discard: st.discard.slice(), monsterPile: st.monsterPile.slice(), ongoing: st.ongoing.slice(), cloned: st.cloned.slice(), under: Object.fromEntries(Object.entries(st.under).map(([k, cs]) => [k, cs.slice()])), kit: st.kit, line,
       pending: st.pending && { ...st.pending }, fight: st.fight && { ...st.fight, trig: remap(st.fight.trig), deferred: remap(st.fight.deferred) },
       setCount: { ...st.setCount }, board: st.board && { ...st.board }, rules: st.rules };
@@ -2331,7 +2332,7 @@ const AI = (() => {
     }
     // What each choice at "dig on or bank?" is worth (also for looking at what the AI is thinking: tools/).
     function idleArms(st, ctx, idleRolls) {
-      return [{ bank: true, value: valueOf(Object.assign(Dig.clone(st, 1), { over: { kind: 'bank' } }), ctx) }].concat(P.bankAt.filter(t => t > st.survived).map(t => ({ T: t, value: evaluate(st, ctx, () => {}, idleRolls, t) })));
+      return [{ bank: true, value: valueOf(Object.assign(Dig.clone(st, 1), { over: { kind: 'bank' } }), ctx) }].concat(P.bankAt.concat(99).filter(t => t > st.survived).map(t => ({ T: t, value: evaluate(st, ctx, () => {}, idleRolls, t) })));
     }
 
     // ---- Prep ----
@@ -2440,7 +2441,7 @@ const AI = (() => {
   // The page opens at once from the copy this browser kept the last time it read your sheet, then reads the sheet in the background; only if the sheet has changed
   // does the game hear about it. (The very first visit has no copy yet: the menu is there, and Play lights up when the cards arrive.)
   async function load(force) {
-    const saved = savedCopy();
+    const saved = savedCopy(), status0 = state.status;
     if (saved && !force && !state.all.length) { state.all = E.cards(E.parseCSV(saved.text), D.columns); state.source = 'cache'; state.status = 'ok'; state.cachedAt = saved.t; state.fresh = false; }
     else if (!state.all.length || force) { state.status = 'loading'; render(); }
     let changed = true;
@@ -2455,7 +2456,7 @@ const AI = (() => {
       if (saved) { if (!state.all.length) state.all = E.cards(E.parseCSV(saved.text), D.columns); state.source = 'cache'; state.status = 'offline'; state.error = e.message; state.cachedAt = saved.t; changed = force || false; }
       else { state.all = E.cards(E.parseCSV(DDB_SAMPLE_CSV), D.columns); state.source = 'sample'; state.status = 'offline'; state.error = e.message; }
     }
-    render(); if (changed || force) document.dispatchEvent(new Event('ddb-cards'));
+    render(); if (changed || force || state.status !== status0) document.dispatchEvent(new Event('ddb-cards'));          // (a changed status too: the menu says when it is on the saved copy)
   }
   const setMode = m => { document.body.dataset.mode = m; if (m === 'cards') render(); else document.dispatchEvent(new Event('ddb-mode')); };
   window.DigDigBoomUI = { state, load, render: () => render(), setMode, build: BUILD, api: {} };
@@ -2806,7 +2807,8 @@ const AI = (() => {
           const g = $$('.hgems'); g.classList.remove('bump'); void g.offsetWidth; g.classList.add('bump');
           timer = setTimeout(step, 1100 * HP());
         } else {
-          const m = mon(c[0]), dmg = L.end === 'boom' ? [3, 4, 5][met] : ((Engine.damageSteps(m.text) || [])[c[1] - 1] || c[1]);
+          const m = mon(c[0]); if (!m) return;          // (a sheet without the starting Monsters: no picture, but no crash)
+          const dmg = L.end === 'boom' ? [3, 4, 5][met] : ((Engine.damageSteps(m.text) || [])[c[1] - 1] || c[1]);
           const prevM = $$('.hslot .drface'); const underM = prevM ? `<span class="under">${prevM.innerHTML}</span>` : '';
           $$('.hslot').innerHTML = underM + `<span class="landing">${drawn(card(m, { step: c[1] }), `<span class="cw hcard" style="--s:.8"><span class="cs"><span class="cardback"></span></span></span>`)}</span>`;
           timer = setTimeout(() => hit(dmg), 1000 * HP());                      // about three gems' worth of time in all
@@ -2972,8 +2974,8 @@ const AI = (() => {
     if (pr.banked && (step === 'escape' || step === 'pack')) {
       const stage = tallyStage(run, pr), lvl = stage < 1 ? 0 : stage < 2 ? pr.geodes : stage < 5 ? pr.geodes + pr.monsters : pr.gems;
       // Every piece has its place from the start (hidden until it is its turn), so nothing moves when the next one appears.
-      const cl = n => stage >= n ? 'pop' : 'ghost';
-      const eq = `<div class="eq"><span class="t ${cl(1)}" title="Treasure">${ico('Treasure')}${pr.geodes}</span><span class="op ${cl(2)}">+</span><span class="t ${cl(2)}" title="Monsters survived">${ico('Monster')}${pr.monsters}</span><span class="op ${cl(3)}">+</span><span class="t die ${cl(3)}" title="Escape Bonus">${rolled ? d10(tumble ? '' : pr.escape, tumble ? 'fx-tumble' : '', pr.escape) : d10('', 'idle')}</span><span class="op ${cl(5)}">=</span><span class="t sum ${cl(5)}" title="Gems"><b class="cnt" ${stage >= 5 ? `data-cf="${pr.geodes + pr.monsters}" data-ct="${pr.gems}"` : ''}>${stage >= 5 ? pr.gems : pr.geodes + pr.monsters}</b>${ic('gem')}</span></div>`;
+      const cl = n => stage >= n ? 'pop' : 'unseen';
+      const eq = `<div class="eq"><span class="t ${cl(1)}" title="Treasure">${ico('Treasure')}${pr.geodes}</span><span class="op ${cl(2)}">+</span><span class="t ${cl(2)}" title="Monsters survived">${ico('Monster')}${pr.monsters}</span><span class="op ${cl(3)}">+</span><span class="t die ${cl(3)}" title="Escape Bonus">${rolled ? d10(tumble ? '' : pr.escape, tumble ? 'fx-tumble' : '', pr.escape) : d10('', 'idle')}</span><span class="op ${cl(5)}">=</span><span class="t sum ${cl(5)}" title="Gems"><b class="cnt" ${stage === 5 ? `data-cf="${pr.geodes + pr.monsters}" data-ct="${pr.gems}"` : ''}>${stage >= 5 ? pr.gems : pr.geodes + pr.monsters}</b>${ic('gem')}</span></div>`;
       const info = rolled ? Run.packInfo(run) : null, col = info ? (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a' : '', plus = info && /\+$/.test(info.name);
       const packBtn = stage >= 6 ? `<button class="pack pop" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(info.name)} Pack"><span class="star">${plus ? '★★' : '★'}</span><b>${A.esc(info.name.replace('+', ''))}</b><span>Draw ${info.draw} · Keep ${info.keep}</span></button>` : '';
       const packRoom = stage >= 6 ? packBtn : `<span class="pack ghostpack" aria-hidden="true"></span>`;          // the pack's place is kept from the start, so nothing moves when it appears
@@ -3257,7 +3259,8 @@ const AI = (() => {
   // While you are still playing only the Leaderboard is redrawn, so a tick never swallows a tap on the table.
   let aiTimer = null;
   // The final round is announced before anyone digs (and the AI waits for you to read it).
-  const finalNote = () => !!(S.panel === 'dig' && S.run && S.st && S.run.round === S.run.rounds && S.st.digs === 0 && !S.st.over && S.finalSeen !== S.st);
+  const finalPending = () => !!(S.run && S.st && S.run.round === S.run.rounds && S.st.digs === 0 && !S.st.over && S.finalSeen !== S.st);          // not read yet: the AI waits, wherever you are (the menu too)
+  const finalNote = () => S.panel === 'dig' && finalPending();
   const aiDigging = () => { const ai = S.match && S.run && S.run.phase === 'dig' ? Match.bot(S.match) : null; return !!(ai && ai.dig && !ai.dig.over); };
   // How long a person would take over what the AI just did: a card, a Monster (roll, look at the line, trigger cards, take the damage), a decision to bank; never the same twice.
   const humanWait = last => {
@@ -3267,7 +3270,7 @@ const AI = (() => {
     return Math.round(ms * (1 + (Math.random() * 2 - 1) * P.jitter));
   };
   const pace = () => S.ff ? D.ai.fastMs : (window.DDB_AI_PACE || S.aiDelay || D.ai.pace.cardMs);
-  function scheduleAI() { if (!aiDigging()) { S.ff = false; return; } if (finalNote()) return; if (!aiTimer) aiTimer = setTimeout(aiTick, pace()); }
+  function scheduleAI() { if (!aiDigging()) { S.ff = false; return; } if (finalPending()) return; if (!aiTimer) aiTimer = setTimeout(aiTick, pace()); }
   function aiTick() {
     clearTimeout(aiTimer); aiTimer = null;
     if (!aiDigging()) return;
@@ -3384,7 +3387,13 @@ const AI = (() => {
   window.addEventListener('pointerup', e => endDrag(e, true)); window.addEventListener('pointercancel', e => endDrag(e, false));
   $.addEventListener('click', e => { if (S.noClick) { e.preventDefault(); return; } const el = e.target.closest('[data-p]'); if (!el || el.disabled) return; e.preventDefault(); act(el.dataset.p, el); });
   document.addEventListener('ddb-cards', () => { restore(); render(); }); document.addEventListener('ddb-mode', render);
-  window.addEventListener('resize', () => { if (document.body.dataset.mode === 'play') fitHero(); });
+  let sized = innerWidth + 'x' + innerHeight, sizeTimer = null;
+  window.addEventListener('resize', () => {
+    if (document.body.dataset.mode !== 'play') return;
+    fitHero();
+    clearTimeout(sizeTimer);          // turning the iPad changes the size the table and the cards are drawn for: draw them again
+    sizeTimer = setTimeout(() => { const now = innerWidth + 'x' + innerHeight; if (now !== sized) { sized = now; if (!drag) render(); } }, 150);
+  });
   window.DigDigBoomPlay = { S, render, act: (a, d) => act(a, { dataset: d || {} }), tick: aiTick };
   restore(); render();          // the saved copy of your cards is already in: the real menu (Continue and all) shows on the first frame
 })();

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Code review pass (all games):** *Dig Dig BOOM!* — the opponent now waits for you to read the Final Round card even if you open the menu; the Escape Bonus tally no longer shifts as its pieces appear and its count-up plays once; turning the iPad redraws the table at the new size; the menu says when it is using the saved copy of your sheet; "N+ cards trigger" no longer fires twice for a cloned card; a Monster with unreadable damage text deals nothing instead of crashing; the AI can now choose to keep digging past six Monsters; AI playouts keep no log (a little faster). *Fossil Frenzy* — no gem chime is heard before the third gem (it gave away your peeked fossil); no "unlocked!" fanfare when everything is already unlocked; help text no longer says you can bank after a peek. *One More* — the same end-of-game sound whether you wait or tap; no stray boom sounds after Restart; "Player 2 loses 3 gems" instead of "You lose" in games with several people. *Advanced Counting* — help text matches the Settings sound switch; a wrong tap shakes the card again. *Build* — refuses to empty the repo or its parent folders.
+
 - **Dig Dig BOOM! — rules:** the **Lucky Coin is out of the game** and the **Pet triggers on a roll of 9 or more** (both are rulings in the data block — `DDB.rules.removedCards` and `DDB.rules.pet` — so they hold even while the sheet still lists the Lucky Coin and prints a 10 on the Pet).
 
 - **Dig Dig BOOM! — cards that depend on the game:** tap a card like Duct Tape, Scrap Heap, Second Wind, Depth Gauge or Flywheel and it says what it is worth **right now** ("Right now: +3 ♥").
