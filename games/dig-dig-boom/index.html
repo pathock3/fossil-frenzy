@@ -986,7 +986,7 @@ const DDB = {
   // ---- The rules of a Dig (v2.7 Rules tab). Numbers here are the rules; the engine (script "dig") only does what they say. ----
   rules: {
     die: 10,                                             // sides of the die (owner: a d10)
-    caps: { heart: 10, reroll: 3 },                      // Drill tracks: Health 0-10, Rerolls 0-3 (owner; Grit is cut)
+    caps: { heart: 10, reroll: 10 },                     // Drill tracks: Health 0-10, Extra Rolls 0-10 (owner; the card text and the data say {reroll} / reroll: that is the Extra Roll)
     start: { heart: 10, reroll: 0 },                     // each track's reset space at the start of a round (owner)
     rerollCost: 1,
     pet: { at: 9 },                                      // the Pet (the Starting Power card) sits on the Power line at 9 (owner): it triggers on a roll of 9 or more, whatever number the sheet still prints
@@ -1004,7 +1004,6 @@ const DDB = {
       damageOrder: 'halveThenBlock',                     // #2
       bankWhen: 'anytime',                               // #6  between cards (not mid-fight); there is no Pledge in a solo Dig
       gainAtCapFires: false,                             // #13 "Whenever you gain" needs the track to actually move
-      panicRetriggers: true,                             // #10 a free reroll triggers the line again
       kitImmediates: 'top',                              // #14 an Immediate Starter Kit card is on top of your Mine: you dig it first and it does its thing then
     },
   },
@@ -1634,7 +1633,7 @@ const Dig = (() => {
   const resultTotal = st => { const r = result(st); return r ? r.total : 0; };
   function afterDie(st) {                                   // a die was just rolled: free rerolls from Ongoing cards
     const f = st.fight, lim = flag(st, 'sparkLow');
-    if (lim !== undefined && !f.sparkUsed) { const r = result(st); if ((r.raw === undefined ? r.total : r.raw) <= lim) { f.sparkUsed = true; log(st, 'roll', `Your result is ${lim} or less — a free reroll`); f.die = rollDie(st); f.rolls++; log(st, 'roll', `Rerolled: ${f.die} → ${resultTotal(st)}`); } }
+    if (lim !== undefined && !f.sparkUsed) { const r = result(st); if ((r.raw === undefined ? r.total : r.raw) <= lim) { f.sparkUsed = true; log(st, 'roll', `Your result is ${lim} or less — a free Extra Roll`); f.die = Math.max(f.die, rollDie(st)); f.rolls++; log(st, 'roll', `Extra Roll: your best is ${f.die} → ${resultTotal(st)}`); } }
   }
   function roll(st) {
     if (!can(st).roll) return false;
@@ -1647,10 +1646,9 @@ const Dig = (() => {
     const f = st.fight, th = flag(st, 'thorned'), useHealth = !!th && (opt.withHealth || st.reroll <= 0);
     if (useHealth) { lose(st, th, 'Thorned Gadget'); if (over(st)) return true; } else st.reroll -= R.rerollCost;
     const old = f.die, nd = rollDie(st);
-    f.die = nd;
-    if (flag(st, 'twinDrill') && !useHealth) { const rNew = resultTotal(st); f.die = old; const rOld = resultTotal(st); f.die = rNew >= rOld ? nd : old; }
+    f.die = Math.max(old, nd);          // an Extra Roll can only help: your earlier rolls still count, so the die stays on your best
     f.rolls++;
-    log(st, 'roll', `Reroll: ${nd}${f.die !== nd ? ' (keeps the higher result: ' + resultTotal(st) + ')' : ''} → ${resultTotal(st)}`);
+    log(st, 'roll', `Extra Roll: ${nd}${f.die !== nd ? ' (your best stays: ' + f.die + ')' : ''} → ${resultTotal(st)}`);
     if (!useHealth) fire(st, 'spendReroll', {}, 1);
     afterDie(st); return true;
   }
@@ -1750,10 +1748,10 @@ const Dig = (() => {
     runDeferred(st); if (over(st)) return true;
     let dmg = previewDamage(st);
     if (!f.defeat && dmg >= st.heart && f.surviveAt === null && flag(st, 'panic') && !st.panicUsed && f.fixed === null) {
-      st.panicUsed = true; log(st, 'effect', `${st.ongoing.find(o => compile(o).ongoing.flags.panic).name}: this would BOOM you — a free reroll`);
-      f.die = rollDie(st); f.rolls++;
-      log(st, 'roll', `Rerolled: ${f.die} → ${resultTotal(st)}`);
-      if (RL.panicRetriggers) { f.trig = []; f.deferred = []; f.block = 0; f.halve = false; f.noDamage = false; f.defeat = false; f.surviveAt = null; log(st, 'roll', `Choose which cards to trigger again`); return true; }
+      st.panicUsed = true; log(st, 'effect', `${st.ongoing.find(o => compile(o).ongoing.flags.panic).name}: this would BOOM you — a free Extra Roll`);
+      const before = f.die; f.die = Math.max(f.die, rollDie(st)); f.rolls++;
+      log(st, 'roll', `Extra Roll: your best is ${f.die} → ${resultTotal(st)}`);
+      if (f.die > before) return true;          // a better roll may reach more upright cards: fire them (tapped cards stay tapped), then face it
       dmg = previewDamage(st);
     }
     finishFight(st, false, dmg); return true;
@@ -1873,7 +1871,7 @@ const Dig = (() => {
       dig: idle,
       bank: idle && !(st.board && st.board.final) && (RL.bankWhen === 'anytime' || st.survived >= 1) && (st.pledge === null || st.survived >= st.pledge),       // the final round is a race: nobody banks
       roll: !!f && !st.over && f.phase === 'before',
-      reroll: !!f && !st.over && f.phase === 'after' && f.fixed === null && !f.trig.length && !(f.used && f.used.length) && (st.reroll >= R.rerollCost || (!!flag(st, 'thorned') && st.heart > flag(st, 'thorned'))),
+      reroll: !!f && !st.over && f.phase === 'after' && f.fixed === null && (st.reroll >= R.rerollCost || (!!flag(st, 'thorned') && st.heart > flag(st, 'thorned'))),
       face: !!f && !st.over && f.phase === 'after',
       trigger: !!f && !st.over && f.phase === 'after' && eligible(st).length > 0,
       choose: !!st.pending && !st.over,
@@ -2827,7 +2825,7 @@ const AI = (() => {
 <script id="solo">
 /* =====================================================================
    PLAY — the solo Dig on screen. Reads the table from the Dig engine; every tap is one action of the engine.
-   The table is the UI: tap the Mine to dig, the die to roll, the Rerolls to reroll, the Monster to face it.
+   The table is the UI: tap the Mine to dig, the die to roll, the Extra Rolls to roll again, the Monster to face it.
    ===================================================================== */
 (() => {
   'use strict';
@@ -2904,9 +2902,9 @@ const AI = (() => {
       </div>
       <div class="grid">${shown.map(c => piece(c, { act: 'kit', cls: (S.kit.includes(c.id) ? 'sel' : '') + (Dig.supported(c) ? '' : ' off'), tag: S.kit.includes(c.id) ? '✓ in kit' : (Dig.supported(c) ? '' : 'not built yet') })).join('') || '<p class="note">No cards of this type in the sheet.</p>'}</div>
       <details style="margin-top:12px"><summary>Testing options — where your tracks start</summary>
-        <p class="note">By the rules a Dig starts at Health ${R.start.heart}, Rerolls ${R.start.reroll}. Change them here only to try things out.</p>
+        <p class="note">By the rules a Dig starts at Health ${R.start.heart}, Extra Rolls ${R.start.reroll}. Change them here only to try things out.</p>
         <p>${ic('heart', ' style="width:26px;height:26px;vertical-align:middle"')} Health ${stepper('stat', S.start.heart).replace(/data-p="stat"/g, 'data-p="stat" data-r="heart"')}
-        &nbsp; ${ic('reroll', ' style="width:26px;height:26px;vertical-align:middle"')} Rerolls ${stepper('stat', S.start.reroll).replace(/data-p="stat"/g, 'data-p="stat" data-r="reroll"')}</p>
+        &nbsp; ${ic('reroll', ' style="width:26px;height:26px;vertical-align:middle"')} Extra Rolls ${stepper('stat', S.start.reroll).replace(/data-p="stat"/g, 'data-p="stat" data-r="reroll"')}</p>
         <p class="note">Seed (a number; leave empty for a random Dig; the same seed gives the same Mine and dice): <input id="seedIn" inputmode="numeric" pattern="[0-9]*" value="${S.seed === undefined ? '' : S.seed}" style="width:130px;min-height:40px;border-radius:10px;border:2px solid var(--line);background:var(--panel);color:var(--text);padding:0 10px;font-size:16px"></p>
       </details>
     </div>
@@ -3345,11 +3343,10 @@ const AI = (() => {
       // the die says the roll; only when cards changed it does one line add up: 7 +1 = 8
       const calc = res.parts.length > 1 ? `<div class="calc">${res.parts.map((p, i) => i === 0 ? p.v : p.set ? `→ ${p.v}` : `${p.v >= 0 ? '+' : '−'}${Math.abs(p.v)}`).join(' ')} = <b>${res.total}</b></div>` : '';
       const dmg = Dig.previewDamage(st), sure = (elig.length > 0 || Dig.mayUse(st).length > 0) && S.confirmFace;          // you can still use cards: the first tap on "take damage" only asks
-      // Rerolls: until you use a card the roll is open (an open padlock and a Reroll button); the first card you use locks it in (a closed padlock, the button gone)
-      const hasRR = st.reroll >= R.rerollCost || can.reroll, open = can.reroll, locked = !open && hasRR && f.fixed === null && f.trig.length > 0;
-      const lock = open || locked ? `<span class="dlock ${open ? 'open' : 'shut'}" title="${open ? 'You can still reroll' : 'Locked in'}"><svg viewBox="0 0 24 24" aria-hidden="true">${open ? '<path d="M8 11V7.5a4 4 0 0 1 7.6-1.7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>' : '<path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>'}<rect x="4.5" y="11" width="15" height="10.5" rx="2.6" fill="currentColor"/></svg></span>` : '';
-      const rr = open ? `<button class="rerollbtn" data-p="reroll" aria-label="Reroll">${ic('reroll')}<span>Reroll</span><small>${st.reroll} left</small></button>` : locked ? '<div class="lockednote">Locked in</div>' : '';
-      const die = `<div class="dieb rollbtn still">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}${lock}<span class="tapword" aria-hidden="true" style="visibility:hidden">Tap to roll</span></div>`;          // (the hidden word keeps the die exactly where the Roll button was)
+      // Extra Rolls: spend one any time in the battle; your best roll stays (a button, while you have one)
+      const open = can.reroll;
+      const rr = open ? `<button class="rerollbtn" data-p="reroll" aria-label="Extra Roll">${ic('reroll')}<span>Extra Roll</span><small>${st.reroll} left</small></button>` : '';
+      const die = `<div class="dieb rollbtn still">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}<span class="tapword" aria-hidden="true" style="visibility:hidden">Tap to roll</span></div>`;          // (the hidden word keeps the die exactly where the Roll button was)
       const take = `<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''} ${sure ? 'sure' : ''} ${fresh ? 'waitroll' : ''}" data-p="face">${sure ? `You can still use cards.<br>Tap again to ${f.defeat ? 'move on' : dmg ? `take ${dmg} damage` : 'carry on'}` : f.defeat ? 'Monster defeated: continue' : dmg ? `Take ${dmg} damage` : 'Take no damage'}</button>`;          // (it sits in the right-hand column, above the die: where your hand already is)
       return { die, take, html: `<div class="action">${elig.length > 1 ? `<div class="aprompt"><button class="chip" data-p="triggerall">Use all ${elig.length}</button></div>` : ''}
         <div class="astack">${calc}${rr}</div></div>` };
@@ -3417,7 +3414,7 @@ const AI = (() => {
       </div>
       <p class="hline">${ic('heart')} <b>Win rounds</b> to open Booster Packs and build a better Mine. Be in the lead when the last round ends.</p>
       <details class="fine"><summary>The fine print</summary><ul>
-        <li>The die is a d${R.die}; Health starts at ${R.start.heart}, Rerolls ${R.start.reroll}.</li>
+        <li>The die is a d${R.die}; Health starts at ${R.start.heart}, Extra Rolls ${R.start.reroll} (up to ${R.caps.reroll}).</li>
         <li>Cards you use resolve highest number first; damage is halved before Block is taken off.</li>
         <li>Result changes apply in order: bonuses, then double, then "becomes", then "less than".</li>
         <li>"Whenever you gain" only counts when the track actually moves.</li>

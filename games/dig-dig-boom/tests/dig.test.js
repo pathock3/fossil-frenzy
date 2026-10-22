@@ -50,9 +50,9 @@ test('a new Dig: Mine of 30 (21 Geodes, 9 Monsters in three sets: A 1-3-5-7, B 2
   assert.notDeepEqual(Dig.start(cards, [], { seed: 6 }).mine.map(c => c.id), st.mine.map(c => c.id));
 });
 
-test('the Drill by the rules: a d10, Health 0-10 starting at 10, Rerolls 0-3 starting at 0 — and no Grit track at all', () => {
+test('the Drill by the rules: a d10, Health 0-10 starting at 10, Extra Rolls 0-10 starting at 0 — and no Grit track at all', () => {
   assert.equal(DDB.rules.die, 10);
-  assert.deepEqual(DDB.rules.caps, { heart: 10, reroll: 3 });
+  assert.deepEqual(DDB.rules.caps, { heart: 10, reroll: 10 });
   assert.deepEqual(DDB.rules.start, { heart: 10, reroll: 0 });
   const st = Dig.start(cards, [], { seed: 3 });
   assert.deepEqual([st.heart, st.reroll], [10, 0]);
@@ -63,7 +63,7 @@ test('the Drill by the rules: a d10, Health 0-10 starting at 10, Rerolls 0-3 sta
   const seen = new Set(); for (let i = 1; i <= 400; i++) { const g = Dig.start(cards, [], { seed: i }); g.mine = [{ ...by('MO-01'), uid: 1 }]; Dig.dig(g); Dig.roll(g); seen.add(g.fight.die); }
   assert.deepEqual([Math.min(...seen), Math.max(...seen), seen.size], [1, 10, 10], 'every face of a d10 comes up');
   const h = game({ mine: ['IM-13'], start: { heart: 8 } }); Dig.dig(h); assert.equal(h.heart, 10, 'Health stops at 10');
-  const r = game({ mine: ['IM-11'], start: { reroll: 2 } }); Dig.dig(r); assert.equal(r.reroll, 3, 'Rerolls stop at 3');
+  const r = game({ mine: ['IM-11'], start: { reroll: 9 } }); Dig.dig(r); assert.equal(r.reroll, 10, 'Extra Rolls stop at 10');
   const c = Dig.can(game({ mine: ['MO-01'] })); assert.ok(!('grit' in c) && !('refund' in c) && !('bonus' in c));
 });
 
@@ -187,7 +187,7 @@ test('Power cards: resource gains, caps, Lose then gain', () => {
   const st = game({ mine: ['MO-01'], power: [lg, 'PW-17', 'PW-27'], start: { heart: 6, reroll: 2 }, dice: [7] });
   fight(st);                                               // result 7: the test card (1) loses 1 heart then +2 rerolls; Dodo (7) +1; Owl (9) needs 9
   assert.equal(st.heart, 6 - 1 - 1, 'lose 1, then the Monster\'s 1 damage');
-  assert.equal(st.reroll, 3, 'capped at 3');
+  assert.equal(st.reroll, 2 + 2 + 1, 'the test card +2, Dodo +1');
   const low = game({ mine: ['MO-01'], power: ['PW-17', 'PW-27'], start: { reroll: 0 }, dice: [9] }); fight(low);
   assert.equal(low.reroll, 3, 'Dodo +1 and Owl +2');
 });
@@ -287,7 +287,7 @@ test('Immediate cards happen when dug, then go to the discard pile', () => {
 
 test('Immediate cards can BOOM you (Risky Shortcut at 2 Health); All In sets Health to 1 and fills Rerolls; Reset Button sets Health to 7', () => {
   const st = game({ mine: ['IM-23'], start: { heart: 2 } }); Dig.dig(st); assert.equal(st.over.kind, 'boom');
-  const a = game({ mine: ['IM-01', 'IM-21'], start: { heart: 9 } }); Dig.dig(a); assert.deepEqual([a.heart, a.reroll], [1, 3]); Dig.dig(a); assert.equal(a.heart, 7);
+  const a = game({ mine: ['IM-01', 'IM-21'], start: { heart: 9 } }); Dig.dig(a); assert.deepEqual([a.heart, a.reroll], [1, 10]); Dig.dig(a); assert.equal(a.heart, 7);
 });
 
 test('count-based Immediates: Duct Tape (Ongoing cards), Scrap Heap (Immediates in discard, including itself), Second Wind and Repair Kit', () => {
@@ -365,7 +365,7 @@ test('result changes: Floor Jack (below 4 becomes 4), Backfire (you may make a 1
   const bf = game({ mine: ['MO-01'], ongoing: ['ON-03'], dice: [1, 4], start: { reroll: 1 } }); Dig.dig(bf); Dig.roll(bf);
   assert.equal(Dig.result(bf).total, 1, 'Backfire is a choice: until you use it the result is still 1'); assert.deepEqual(Dig.mayUse(bf).map(o => o.id), ['ON-03']);
   assert.equal(Dig.can(bf).reroll, true); assert.ok(Dig.useMod(bf, Dig.mayUse(bf)[0])); assert.equal(Dig.result(bf).total, 10); assert.deepEqual(Dig.mayUse(bf), [], 'once');
-  assert.equal(Dig.can(bf).reroll, false, 'using a card locks the roll in');
+  assert.equal(Dig.can(bf).reroll, true, 'an Extra Roll can still follow (your best roll stays)');
   const nb = game({ mine: ['MO-01'], ongoing: ['ON-03'], dice: [5] }); Dig.dig(nb); Dig.roll(nb); assert.deepEqual(Dig.mayUse(nb), [], 'not on any other number');
   const hurry = game({ mine: ['MO-01'], ongoing: ['ON-03'], power: ['PW-01'], start: { heart: 3 }, dice: [1] }); Dig.dig(hurry); Dig.roll(hurry); Dig.autoFace(hurry); assert.equal(hurry.heart, 3, 'a hurried player (and the AI) uses it, and the Pet then triggers on the 10');
   const wb = game({ mine: ['MO-01', 'MO-01'], ongoing: ['ON-37'], start: { heart: 12 }, dice: [3, 3] });
@@ -441,7 +441,7 @@ test('"At the start of each Dig": a kit card does it when you dig it (made up fo
 test('Panic Button: the first time each Dig a roll would BOOM you, a free reroll (once); Second Spark: a result of 3 or less rerolls free', () => {
   const st = game({ mine: ['MO-02', 'MO-02', 'MO-02'], ongoing: ['ON-22'], start: { heart: 2 }, dice: [1, 6] });
   Dig.dig(st); Dig.roll(st); Dig.autoFace(st);                 // 2 damage at 2 heart: reroll to 6 (no triggers beyond Pet) -> still 2 damage... BOOM anyway
-  assert.ok(st.panicUsed && /free reroll/.test(text(st)));
+  assert.ok(st.panicUsed && /free Extra Roll/.test(text(st)));
   const saved = game({ mine: ['MO-01', 'MO-01'], power: ['PW-15'], ongoing: ['ON-22'], start: { heart: 1 }, dice: [1, 6] });
   Dig.dig(saved); Dig.roll(saved); Dig.autoFace(saved); assert.equal(saved.over, null, 'rerolled into 6: Moss Sloth heals 2 before the damage');
   const ss = game({ mine: ['MO-01'], ongoing: ['ON-29'], dice: [2, 5, 6] }); Dig.dig(ss); Dig.roll(ss); assert.equal(Dig.result(ss).total, 5, 'free reroll from 2'); 
@@ -507,12 +507,12 @@ test('audit: Cave Scout digging a card that slides back into the Mine (or Echo a
   const a = game({ mine: ['IM-03', slide, 'TR-01', 'MO-01'] }); Dig.dig(a); assert.ok(!a.over);
   const b = game({ mine: ['IM-03', 'IM-06', 'MO-01'] }); b.discard.push(put('IM-22')); Dig.dig(b); assert.ok(!b.over);
 });
-test('audit: Twin Drill keeps the higher RESULT (Backfire, used, turns a 1 into a 10), and not when a Thorned Gadget paid Health instead of a Reroll', () => {
+test('audit: Backfire (used) turns a 1 into a 10; the best roll stays with or without Twin Drill, whatever paid for the Extra Roll', () => {
   const st = game({ mine: ['MO-01'], ongoing: ['ON-34', 'ON-03'], start: { reroll: 1 }, dice: [1, 5] });
-  Dig.dig(st); Dig.roll(st); Dig.useMod(st, Dig.mayUse(st)[0]); assert.equal(Dig.result(st).total, 10); assert.equal(Dig.can(st).reroll, false, 'using Backfire locks the roll in: no reroll after it');
+  Dig.dig(st); Dig.roll(st); Dig.useMod(st, Dig.mayUse(st)[0]); assert.equal(Dig.result(st).total, 10); assert.equal(Dig.can(st).reroll, true, 'an Extra Roll can still follow Backfire: the die only ever goes up');
   const tw = game({ mine: ['MO-01'], ongoing: ['ON-34'], start: { reroll: 1 }, dice: [6, 2] }); Dig.dig(tw); Dig.roll(tw); Dig.reroll(tw); assert.equal(Dig.result(tw).total, 6, 'Twin Drill keeps the higher result');
   const th = game({ mine: ['MO-01'], ongoing: ['ON-34', 'ON-31'], start: { reroll: 0, heart: 8 }, dice: [6, 2] });
-  Dig.dig(th); Dig.roll(th); Dig.reroll(th); assert.equal(Dig.result(th).total, 2, 'Twin Drill only applies when you spend a Reroll');
+  Dig.dig(th); Dig.roll(th); Dig.reroll(th); assert.equal(Dig.result(th).total, 6, 'your best roll always stays now (Twin Drill has nothing left to add)');
 });
 test('audit: damage watchers see the damage actually taken (Lucky Cricket saves you, so Patch Kit and Crumple Zone do not fire for what was saved)', () => {
   const st = game({ mine: ['MO-01'], power: ['PW-14'], ongoing: ['ON-23'], start: { heart: 1 }, dice: [6] });
@@ -577,12 +577,13 @@ test('skipping every trigger is allowed — you just take the damage', () => {
   Dig.dig(st); Dig.roll(st); assert.ok(Dig.can(st).trigger); Dig.face(st);
   assert.equal(st.heart, 5); assert.equal(st.survived, 1);
 });
-test('once you start triggering, Rerolls are over for this roll', () => {
-  const st = game({ mine: ['MO-01'], power: ['PW-02'], start: { heart: 6, reroll: 2 }, dice: [5, 6] });
-  Dig.dig(st); Dig.roll(st); assert.ok(Dig.can(st).reroll);
-  Dig.trigger(st, entryOf(st, 'PW-02')); assert.ok(!Dig.can(st).reroll);
-});
-test('the order you choose does not matter for Block: it waits for the damage whatever the order', () => {
+test('Extra Rolls can be spent at any time in a battle, even after cards have fired: your best roll stays, tapped cards stay tapped, and a better roll reaches more cards', () => {
+  const st = game({ mine: ['MO-01'], power: ['PW-02', 'PW-17'], start: { heart: 6, reroll: 2 }, dice: [3, 7, 2] });
+  Dig.dig(st); Dig.roll(st); assert.deepEqual(Dig.eligible(st).map(e => e.card.id), ['PW-02']);        // 3: Newt (1) is upright and at or below the die; Dodo (7) is out of reach
+  Dig.trigger(st, entryOf(st, 'PW-02')); assert.ok(Dig.can(st).reroll, 'still allowed after a card fired');
+  Dig.reroll(st); assert.equal(Dig.result(st).total, 7, 'a 7: the die slides up'); assert.deepEqual(Dig.eligible(st).map(e => e.card.id), ['PW-17'], 'Newt is tapped; Dodo is now reached');
+  Dig.reroll(st); assert.equal(Dig.result(st).total, 7, 'a 2 cannot make it worse: your earlier rolls still count'); assert.equal(st.reroll, 0);
+});test('the order you choose does not matter for Block: it waits for the damage whatever the order', () => {
   const a = game({ mine: ['MO-01', 'MO-01'], power: ['PW-09', 'PW-02'], start: { heart: 5 }, dice: [6, 6] });
   Dig.dig(a); Dig.roll(a); Dig.trigger(a, entryOf(a, 'PW-09')); Dig.trigger(a, entryOf(a, 'PW-02')); Dig.face(a);
   assert.equal(a.heart, 6, 'Newt +1, Block 1 stopped the 1 damage');
@@ -616,14 +617,14 @@ test('triggerAll (what the AI and a hurried player use) is highest number first;
   Dig.dig(st); Dig.roll(st); Dig.triggerAll(st);
   assert.ok(st.fight.defeat); Dig.face(st); assert.equal(st.defeated, 1); assert.equal(st.fight, null, 'everything was triggered, then you continued'); assert.equal(st.heart, 5 + 1, 'Newt went too, and the second Monster dealt no damage');
 });
-test('Panic Button: the free reroll sends you back to choose your triggers again', () => {
-  const st = game({ mine: ['MO-01'], power: ['PW-15'], ongoing: ['ON-22'], start: { heart: 1 }, dice: [6, 6] });
-  Dig.dig(st); Dig.roll(st); Dig.trigger(st, entryOf(st, 'PW-15'));            // +2 heart (3), then 1 damage cannot BOOM... make it BOOM:
-  st.heart = 1;
+test('Panic Button: the free Extra Roll keeps tapped cards tapped, and a better roll lets more upright cards fire before the damage', () => {
+  const st = game({ mine: ['MO-01'], power: ['PW-15', 'PW-17'], ongoing: ['ON-22'], start: { heart: 1 }, dice: [6, 8] });
+  Dig.dig(st); Dig.roll(st); Dig.trigger(st, entryOf(st, 'PW-15'));            // 6: Moss Sloth +2 heart (3)
+  st.heart = 1;                                                               // ...make the 1 damage a BOOM
   Dig.face(st);
-  assert.ok(st.fight, 'still facing the Monster'); assert.ok(st.panicUsed); assert.deepEqual(st.fight.trig, []); assert.ok(Dig.can(st).trigger);
-});
-test('a Dig saved in the middle of choosing triggers resumes with the same choices made', () => {
+  assert.ok(st.fight, 'still facing the Monster'); assert.ok(st.panicUsed); assert.equal(st.fight.trig.length, 1, 'Moss Sloth stays tapped'); assert.equal(Dig.result(st).total, 8);
+  assert.deepEqual(Dig.eligible(st).map(e => e.card.id), ['PW-17'], 'the better roll reached Do-Over Dodo');
+});test('a Dig saved in the middle of choosing triggers resumes with the same choices made', () => {
   const st = game({ mine: ['MO-01'], power: ['PW-02', 'PW-09'], start: { heart: 6 }, dice: [6] });
   Dig.dig(st); Dig.roll(st); Dig.trigger(st, entryOf(st, 'PW-09'));
   const back = Dig.load(cards, JSON.parse(JSON.stringify(Dig.save(st))));

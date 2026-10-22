@@ -432,7 +432,7 @@ test('look: every Geode is a different gem (six colours and cuts, three of each)
     assert.equal(new Set(seen.map(x => x.cut)).size, 6, 'and six different cuts, so colour is never the only clue');
     const cells = await page.evaluate(() => [...document.querySelectorAll('#play .track')].map(t => [...t.querySelectorAll('.tc')].map(c => { const r = c.getBoundingClientRect(); return [Math.round(r.left * 10) / 10, Math.round(r.width * 10) / 10]; })));
     const [heart, reroll] = cells;
-    assert.equal(heart.length, 11); assert.equal(reroll.length, 4);
+    assert.equal(heart.length, 11); assert.equal(reroll.length, 11, "Extra Rolls go up to 10");
     reroll.forEach((c, i) => { assert.ok(Math.abs(c[0] - heart[i][0]) < 0.6 && Math.abs(c[1] - heart[i][1]) < 0.6, `square ${i} lines up with Health's: ${c} vs ${heart[i]}`); });
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
