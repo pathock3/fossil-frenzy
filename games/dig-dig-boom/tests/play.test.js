@@ -95,9 +95,8 @@ test('menu: Play, How to play and Settings and nothing else — no text under th
     assert.equal(await page.locator('#play .pbar').count(), 0, 'no second Menu on the Settings screen');
     assert.equal(await page.locator('#play [data-p=gmenu]').count(), 0);
     const menu = await page.locator('#play .settings').innerText();
-    assert.match(menu, /Settings[\s\S]*Rounds[\s\S]*The cards[\s\S]*Playtest/); assert.doesNotMatch(menu, /[Tt]rash|Nobody|Opponent|[Pp]rint/);
-    assert.deepEqual((await page.locator('#play .seg button').allInnerTexts()).map(t => t.trim()), ['2', '3', '4', '5', '6', '7']);
-    await page.click('#play .seg button:has-text("7")'); assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.rounds), 7);
+    assert.match(menu, /Settings[\s\S]*The cards[\s\S]*Playtest/); assert.doesNotMatch(menu, /[Tt]rash|Nobody|Opponent|[Pp]rint|Rounds/);
+    assert.equal(await page.locator('#play .seg button').count(), 0, 'no choice of rounds');
     await page.click('#play [data-p=menu]'); await page.waitForSelector('#play .homemenu');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -561,7 +560,7 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     assert.match(await page.locator('#play .over').innerText(), /In the lead![\s\S]*Everyone else is out/);
     await page.click('#play [data-p=prep]');                                             // the last round: straight to the end, which is the Leaderboard
     assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown Jewel!/);
-    assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'the result is shown on the Leaderboard'); assert.equal(await page.locator('#play .bdisc.crowned .cjewel').count(), 1, 'the Crown Jewel is on your token');
+    assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'the result is shown on the Leaderboard'); assert.equal(await page.locator('#play .bpl.me .cjewel').count(), 1, 'the Crown Jewel is on your name, at the bottom'); assert.equal(await page.locator('#play .bcrown').count(), 0, 'and no longer on the board');
     await page.click('#play [data-p=roundlog]'); assert.equal(await page.locator('#play .rrow').count(), 2, 'one row for each round'); assert.match(await page.locator('#play .panel').innerText(), /Banked|BOOM/);
     await page.click('#play [data-p=enddone]'); assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown Jewel!/, 'and back to the Leaderboard');
     await page.click('#play [data-p=owned]'); assert.ok(await page.locator('#play .ownedpanel .ocard').count() >= 1, 'the cards you built'); await page.click('#play [data-p=ownedclose]', { position: { x: 5, y: 5 } });
@@ -733,10 +732,10 @@ test('ai: a run shares one Leaderboard with the AI; it digs on its own clock (no
   const { browser, page, errors } = await open({ menu: true });
   try {
     await startRun(page, { opp: true });
-    assert.match(await page.locator('#play .lbhead').innerText(), /you\s*●?\s*ai/i);
+    assert.match(await page.locator('#play .lbhead').innerText(), /you[\s\S]*easy[\s\S]*med[\s\S]*hard/i);
     assert.equal(await page.locator('#play .ailine').count(), 0, 'nothing to read: you watch its marker');
     await script(page, { mine: ['MO-01', 'MO-02', 'MO-01', 'MO-02'], dice: Array(30).fill(10) });
-    const aiDigs = () => stOf(page, () => window.DigDigBoomPlay.S.match.runs.ai.dig.digs);
+    const aiDigs = () => stOf(page, () => window.DigDigBoomPlay.S.match.runs.easy.dig.digs);
     const before = await aiDigs();
     await page.click('#play [data-p=dig]'); assert.equal(await aiDigs(), before, 'your dig does not move the AI');
     await page.click('#play [data-p=roll]'); await faceIt(page);
@@ -755,7 +754,7 @@ test('ai: its clock really runs on its own, a tick redraws only the Leaderboard 
     await page.reload(); await page.waitForSelector('#play .home');
     await startRun(page, { opp: true });
     const mine = await page.locator('#play [data-p=dig]').elementHandle();
-    await page.waitForFunction(() => window.DigDigBoomPlay.S.match.runs.ai.dig.digs >= 2 || window.DigDigBoomPlay.S.match.runs.ai.dig.over, null, { timeout: 15000 });
+    await page.waitForFunction(() => window.DigDigBoomPlay.S.match.runs.easy.dig.digs >= 2 || window.DigDigBoomPlay.S.match.runs.easy.dig.over, null, { timeout: 15000 });
     assert.equal(await page.evaluate(h => h.isConnected, mine), true, 'the Mine button you might be pressing was not replaced');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -767,22 +766,22 @@ test('ai: when your Dig ends you wait for the AI (or tap Fast forward); the Esca
     await startRun(page, { opp: true, rounds: 2 });
     await script(page, { mine: ['TR-01', 'TR-01'] });
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=bank]');
-    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.match.runs.ai.dig.over), null, 'the AI is not done: it plays at its own pace');
-    assert.match(await page.locator('#play .over').innerText(), /Fast-forward the AI/); assert.match(await page.locator('#play .over').innerText(), /opponent is still digging/i); assert.equal(await page.locator('#play .over [data-p=prep]').count(), 0, 'Prep waits for the AI');
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.match.runs.easy.dig.over), null, 'the AI is not done: it plays at its own pace');
+    assert.match(await page.locator('#play .over').innerText(), /Fast-forward them/); assert.match(await page.locator('#play .over').innerText(), /opponents are still digging/i); assert.equal(await page.locator('#play .over [data-p=prep]').count(), 0, 'Prep waits for the AI');
     await page.click('#play .over [data-p=ff]');
     await page.waitForSelector('#play .over [data-p=prep]', { timeout: 20000 });
     assert.equal(await page.locator('#play .over [data-p=ff]').count(), 0);
     await page.click('#play [data-p=prep]');
-    assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'the Leaderboard first: columns of stacked spots'); { const toks = (await page.locator('#play .bigboard .bdisc').allInnerTexts()).map(t => t.replace(/[^A-Za-z]/g, '')); assert.ok(toks.includes('You') && toks.every(t => t === 'You' || t === 'AI'), 'the tokens say who they are (no colour legend needed): ' + toks); } assert.equal(await page.locator('#play .bigboard .blegend').count(), 0);
+    assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'the Leaderboard first: columns of stacked spots'); { const toks = (await page.locator('#play .bigboard .bgrid .pchip').allInnerTexts()).map(t => t.replace(/[^A-Za-z]/g, '')); assert.deepEqual(toks.slice().sort(), ['Easy', 'Hard', 'Med', 'You'], 'one chip for each player: ' + toks); assert.equal((await page.locator('#play .bplayers .bpl').allInnerTexts()).map(t => t.replace(/[^A-Za-z ]/g, '').trim()).join('|'), 'You|Easy AI|Medium AI|Hard AI', 'the players are named at the bottom'); } assert.equal(await page.locator('#play .bigboard .blegend').count(), 0);
     await page.evaluate(() => { window.DigDigBoomPlay.S.match.dice = [6]; }); await page.click('#play [data-p=boardgo]');
-    assert.ok(['escape', 'pack'].includes(await stOf(page, () => window.DigDigBoomPlay.S.match.runs.ai.prep.step)), 'the AI has not opened a pack: it does that when you open yours');
+    assert.ok(['escape', 'pack'].includes(await stOf(page, () => window.DigDigBoomPlay.S.match.runs.easy.prep.step)), 'the AI has not opened a pack: it does that when you open yours');
     await page.waitForSelector('#play .eq .t.die.pop'); await dieShows(page, '#play .eq .t.die', 6);
-    const esc = await stOf(page, () => [window.DigDigBoomPlay.S.match.runs.me.prep.escape, window.DigDigBoomPlay.S.match.runs.ai.prep.escape]);
+    const esc = await stOf(page, () => [window.DigDigBoomPlay.S.match.runs.me.prep.escape, window.DigDigBoomPlay.S.match.runs.easy.prep.escape]);
     assert.equal(esc[0], 6); assert.ok(esc[1] === 6 || esc[1] === null, 'the AI got the same roll when it banked');
-    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.match.runs.ai.prep.step), 'pack', 'its Escape Bonus is read; its pack is still closed');
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.match.runs.easy.prep.step), 'pack', 'its Escape Bonus is read; its pack is still closed');
     await page.click('#play [data-p=openpack]');
-    await page.waitForFunction(() => window.DigDigBoomPlay.S.match.runs.ai.prep.step === 'kit', null, { timeout: 8000 });          // it thinks a moment after your pack starts opening, so the screen is not held up
-    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.match.runs.ai.prep.step), 'kit', 'the AI opened its pack with you');
+    await page.waitForFunction(() => window.DigDigBoomPlay.S.match.runs.easy.prep.step === 'kit', null, { timeout: 8000 });          // it thinks a moment after your pack starts opening, so the screen is not held up
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.match.runs.easy.prep.step), 'kit', 'the AI opened its pack with you');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -793,7 +792,7 @@ test('ai: a reload in the middle of a match puts you and the AI back exactly whe
     await startRun(page, { opp: true });
     for (let i = 0; i < 3; i++) { await page.click('#play [data-p=dig]'); if (await page.locator('#play [data-p=roll]').count()) { await page.click('#play [data-p=roll]'); await faceIt(page); } if (await page.locator('#play .over').count()) break; }
     await page.evaluate(() => window.DigDigBoomPlay.tick());
-    const snap = () => stOf(page, () => { const m = window.DigDigBoomPlay.S.match; return { me: m.runs.me.dig.digs, ai: m.runs.ai.dig.digs, aiLog: m.runs.ai.dig.log.length, board: JSON.stringify(m.board.spots) }; });
+    const snap = () => stOf(page, () => { const m = window.DigDigBoomPlay.S.match; return { me: m.runs.me.dig.digs, ai: m.runs.easy.dig.digs, aiLog: m.runs.easy.dig.log.length, board: JSON.stringify(m.board.spots) }; });
     const before = await snap();
     await page.reload(); await page.waitForSelector('#play .ptable');
     assert.deepEqual(await snap(), before);
@@ -938,7 +937,7 @@ test('the last round: when you are in the lead you can fast-forward the opponent
     assert.match(await page.locator('#play .ffbtn').innerText(), /Fast-forward/i, 'in the lead: the button is there');
     await page.click('#play [data-p=ff]');
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.ff), true); assert.match(await page.locator('#play .ffbtn').innerText(), /Fast-forwarding/);
-    await page.evaluate(() => { const P = window.DigDigBoomPlay, m = P.S.match; Board.track(m.board, 'ai', 7); P.tick(); });
+    await page.evaluate(() => { const P = window.DigDigBoomPlay, m = P.S.match; Board.track(m.board, 'easy', 7); P.tick(); });
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.ff), false, 'the opponent passed you: back to its own pace');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -969,6 +968,45 @@ test('table: a quick note warns once per Dig when the next Monster could put you
     await page.waitForFunction(() => !document.querySelector('.dangertoast'), null, { timeout: 5000 });
     await page.click('#play [data-p=dig]');
     assert.equal(await page.locator('.dangertoast').count(), 0, 'still only once');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('leaderboard: 0 instead of Start; a gold-trimmed chip for each player stacked on 0; the Crown waits on 3 and moves onto the holder\'s name; the players are named in their colours; New Best! when you improve', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await page.evaluate(() => { window.DigDigBoomPlay.S.opp = true; }); await page.click('#play [data-p=startrun]'); await page.waitForSelector('#play [data-p=openpack]');
+    await page.evaluate(() => { const P = window.DigDigBoomPlay; P.S.bests0 = { me: 0, easy: 0, medium: 0, hard: 0 }; P.S.panel = 'board'; P.render(); });
+    assert.deepEqual((await page.locator('#play .bigboard .bcol .bn').allInnerTexts()).slice(0, 4).map(t => t.replace(/\D/g, '')), ['0', '1', '2', '3'], 'numbers start at 0');
+    assert.equal(await page.locator('#play .bigboard .bn:has-text("Start")').count(), 0);
+    assert.equal(await page.locator('#play .bigboard .bgrid .bcol >> nth=1').locator('.pchip').count(), 4, 'all four chips are stacked on 0');
+    assert.equal(await page.locator('#play .bigboard .bcol:nth-child(5) .bcrown').count(), 1, 'the Crown Jewel waits on 3');
+    assert.equal(await page.locator('#play .bigboard .bspot:not(.lab)').count() % 4, 0); assert.equal(await page.locator('#play .bigboard .blabels .bspot').count(), 4, 'a row for each player');
+    const colors = await page.locator('#play .bplayers .bpl').evaluateAll(els => els.map(e => getComputedStyle(e).color));
+    assert.equal(new Set(colors).size, 4, 'each name in its own colour');
+    await page.evaluate(() => { const P = window.DigDigBoomPlay, m = P.S.match; for (const [id, n] of [['hard', 4], ['me', 5]]) { Board.track(m.board, id, n); Board.lockIn(m.board, id, n); } P.S.boardAnim = { from: P.S.bests0, newBest: true, played: false }; P.render(); });
+    assert.equal(await page.locator('#play .bcrown').count(), 0, 'once someone locks in 3 or more the Crown Jewel leaves the board...');
+    assert.equal(await page.locator('#play .bpl.me .cjewel').count(), 1, '...for their name');
+    assert.match(await page.locator('#play .newbest').innerText(), /New Best/i);
+    await page.evaluate(() => { const P = window.DigDigBoomPlay; Board.lockIn(P.S.match.board, 'easy', 6); P.S.boardAnim = null; P.render(); });
+    assert.equal(await page.locator('#play .bpl[data-pid=easy] .cjewel').count(), 1, 'a higher number steals the Crown Jewel');
+    assert.equal(await page.locator('#play .newbest').count(), 0);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('opponents: Easy, Medium and Hard each dig on their own clock, and the harder one is quicker (that decides who reaches a number first)', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await startRun(page, { opp: true });
+    const names = await stOf(page, () => window.DigDigBoomPlay.S.match.board.players.map(p => p.name)); assert.deepEqual(names, ['You', 'Easy AI', 'Medium AI', 'Hard AI']);
+    await page.evaluate(() => { const S = window.DigDigBoomPlay.S; if (S.panel !== 'dig') { /* in the dig already */ } });
+    const d = await stOf(page, () => window.DigDigBoomPlay.S.aiDelay);
+    assert.deepEqual(Object.keys(d).sort(), ['easy', 'hard', 'medium']);
+    assert.ok(d.easy > d.medium && d.medium > d.hard, 'Easy waits longest before its first card, Hard least: ' + JSON.stringify(d));
+    const before = await stOf(page, () => ['easy', 'medium', 'hard'].map(id => window.DigDigBoomPlay.S.match.runs[id].dig.digs));
+    await page.evaluate(() => window.DigDigBoomPlay.tick());
+    assert.deepEqual(await stOf(page, () => ['easy', 'medium', 'hard'].map(id => window.DigDigBoomPlay.S.match.runs[id].dig.digs)).then(a => a.map((n, i) => n - before[i])), [1, 1, 1], 'a tick moves each of them one card');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

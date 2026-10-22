@@ -841,7 +841,7 @@ test('review fixes: a Monster whose text is no damage ladder deals nothing inste
 test('review fixes: "N+ cards trigger on one roll" fires when the Nth card triggers, not again when a cloned card triggers a second time', () => {
   const a = card('+1 {heart}', { number: 3, name: 'A' }), b = card('+1 {heart}', { number: 4, name: 'B' });
   const watcher = card('Whenever 2+ cards trigger on one roll, +1 {reroll}', { type: 'Ongoing', number: null, name: 'Watcher' });
-  const st = game({ mine: ['MO-01'], power: [a, b], ongoing: [watcher], start: { heart: 10, reroll: 0 }, dice: [6] });
+  const st = game({ mine: ['MO-01'], power: [a, b], ongoing: [watcher], start: { heart: 5, reroll: 0 }, dice: [6] });
   entryOf(st, a.id).cloned = true;
   fight(st);
   assert.equal(st.reroll, 1);
@@ -867,4 +867,16 @@ test('maxNextDamage: the worst the next card could do — the next Monster of ea
   assert.equal(Dig.maxNextDamage(st), 2, 'a Geode was dug: both sets are still at their first Monster');
   const empty = game({ mine: [], start: { heart: 9 } });
   assert.equal(Dig.maxNextDamage(empty), DDB.rules.beyond.firstDamage, 'the Bonus Monster');
+});
+
+test('a card that only heals you is not offered at full Health (but is when you are hurt, and a card that does more still is)', () => {
+  const full = game({ mine: ['MO-01'], power: ['PW-02'], start: { heart: 10 }, dice: [6] });          // Nurse Newt: +1 Health
+  Dig.dig(full); Dig.roll(full);
+  assert.deepEqual(Dig.eligible(full).map(e => e.card.id), [], 'full Health: nothing to heal');
+  const hurt = game({ mine: ['MO-01'], power: ['PW-02'], start: { heart: 9 }, dice: [6] });
+  Dig.dig(hurt); Dig.roll(hurt);
+  assert.deepEqual(Dig.eligible(hurt).map(e => e.card.id), ['PW-02'], 'one Health down: it is offered');
+  const mixed = game({ mine: ['MO-01'], power: [card('+1 {heart}, +1 {reroll}', { number: 3 })], start: { heart: 10, reroll: 0 }, dice: [6] });
+  Dig.dig(mixed); Dig.roll(mixed);
+  assert.equal(Dig.eligible(mixed).length, 1, 'it also gives a Reroll, so it still does something');
 });
