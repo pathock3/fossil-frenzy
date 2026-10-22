@@ -2811,13 +2811,13 @@ const AI = (() => {
     if (stat === 1) {          // Monster: art on top, the damage ladder in big tiles, and a strip along the bottom for what it is worth
       s += artBox(28, 100, W - 56, 118, c);
       if (steps) {
-        if (c.bonus) s += stepTiles(steps, 31, 236, 213, 76, 56, step);          // a Bonus Monster has one number and no order to speak of
+        if (c.bonus) s += stepTiles(steps, 31, 232, 213, 108, 84, step);          // a Bonus Monster has one number, no order to speak of, and no gems to talk about: the number fills the card
         else {
           s += box(31, 226, 213, 22, 'typeword', `font-size:${u(13)};color:#7a1d1d;display:flex;align-items:center;gap:${u(6)}`, `${dmgIcon(18)} DAMAGE, IN ORDER`);
           s += stepTiles(steps, 31, 250, 213, 62, steps.length > 4 ? 34 : 46, step);
         }
       } else s += box(31, 226, 213, 90, 'stat', `font-size:${u(104)};display:flex;align-items:center;justify-content:center;gap:${u(10)};color:#1d1712`, `${gems}${gemIcon(90)}`);
-      s += box(31, 318, 213, 26, 'stat', `font-size:${u(18)};display:flex;align-items:center;justify-content:center;gap:${u(6)};background:#2b86d1;color:#fff;border-radius:${u(8)}`, `${gems}${gemIcon(18)} ${worthTxt}`);
+      if (!c.bonus) s += box(31, 318, 213, 26, 'stat', `font-size:${u(18)};display:flex;align-items:center;justify-content:center;gap:${u(6)};background:#2b86d1;color:#fff;border-radius:${u(8)}`, `${gems}${gemIcon(18)} ${worthTxt}`);
     } else {                   // two big tiles under a slim art strip
       s += artBox(28, 100, W - 56, 84, c);
       if (steps) {

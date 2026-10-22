@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — Bonus Monster cards** no longer mention gems: just the damage number, big.
+
 - **Dig Dig BOOM! — the reward ladder (yours), Bonus Monsters, and the screen flashing:** packs are now Bronze 0, Bronze+ 6, Silver 12, Silver+ 18, Gold 24, Gold+ 30 (Gold+ is the top; no Diamond), BOOM gets Bronze; Bonus Monsters are worth 0 gems. The banking screen is titled **Banking** (centred at the top), and tapping a part of the sum moves only that part (it swells and settles; nothing else redraws or animates). A pack answers the first tap at once (it swells, then opens on the next frame; extra taps meanwhile do nothing). The table no longer dims and undims every time a Monster appears and you roll (that was the flash), and the glow on the die and the Take damage button now breathes by fading a ring instead of repainting the button. Take damage shows the damage icon, not the word. Card effect text is sized card by card, as large as fits up to 32 (a long card no longer makes the rest small; Venom Spider and Monster Jerky are bigger).
 
 - **Dig Dig BOOM! — winning the last round:** when you tap See the result after everyone else has gone BOOM, there is no ribbon and no little message first: it goes straight to the Leaderboard replay and then the full-screen "You win!". The prompt just says "You won!". The sheet now has Monster C (the 3 → 5 set), 21 Geodes, the Pet, Backfire's "you may", Monster Scope at 5+, Picnic Ant on 3 and the new Surprise Package.
