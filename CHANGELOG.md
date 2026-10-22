@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — fixes from your iPad:** a card dragged out of a pack is placed under your finger before it appears and no longer glides in from the top-left corner; the glow around a card you can use now only fades in and out (it used to repaint the card every frame, which is the likely cause of the Venom Spider's left half flickering on the iPad: please check it); the Leaderboard is drawn at whatever size fits the screen, so it never scrolls, and your blue piece says "You"; the Escape Bonus roll and what follows it are a little quicker.
+
 - **Dig Dig BOOM! — the pack really rips:** tapping a Booster Pack no longer cuts to two jagged halves; the pack stays whole, shakes, and its top strip peels away from left to right along one tear line before the cards come out.
 
 - **Tabletop Library:** an **About Patrick** section under the shelf (who he is, that Claude Code built the app, and the address to write to about his designs).

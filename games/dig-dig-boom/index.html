@@ -204,7 +204,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .mcard { overflow: visible; }
 #play .fx-flip { animation: flipin .5s cubic-bezier(.2,.8,.3,1) both; }
 #play .fx-slam { animation: slam .55s cubic-bezier(.2,.8,.3,1) both; }
-#play .fx-tumble { animation: tumble 1.3s cubic-bezier(.2,.8,.3,1) both; }
+#play .fx-tumble { animation: tumble .9s cubic-bezier(.2,.8,.3,1) both; }
 #play .burst { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
 #play .burst i { position: absolute; left: 50%; top: 46%; width: 22px; height: 22px; margin: -11px 0 0 -11px; animation: burst .8s cubic-bezier(.15,.7,.3,1) both; }
 #play .burst svg { width: 22px; height: 22px; }
@@ -221,7 +221,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .d10 .dnum { fill: #1d1712; font-weight: 900; font-size: 34px; font-family: inherit; }
 #play .d10 .dnum.ten { font-size: 28px; }
 #play .d10.idle .dbody { fill: #f5ead2; }
-#play .d10.fx-tumble { animation: tumble 1.3s cubic-bezier(.2,.8,.3,1) both; }
+#play .d10.fx-tumble { animation: tumble .9s cubic-bezier(.2,.8,.3,1) both; }
 #play .tapword { font-size: 15px; font-weight: 800; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; text-align: center; }
 #play .mpile { width: 200px; flex: none; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
 #play .mpile h4 { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
@@ -384,8 +384,11 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .tcard.done { opacity: .8; transform: rotate(90deg) scale(.8); margin: 0 calc(var(--cb) * 15px); }          /* a card you have used lies on its side until the battle is over */
 #play .dline { flex: none; align-self: stretch; display: flex; align-items: center; justify-content: center; width: 44px; margin: 0; border-left: 3px dashed rgba(255,255,255,.55); border-right: 3px dashed rgba(255,255,255,.55); background: rgba(255,255,255,.05); border-radius: 8px; }
 #play .dline .d10 { width: 36px; height: 36px; filter: drop-shadow(0 3px 0 rgba(0,0,0,.4)); }
-#play .tcard.elig { outline: 4px solid var(--accent); outline-offset: 3px; animation: pulse 1.2s ease-in-out infinite; transform: translateY(-8px); }
-#play .tcard.pick { outline: 4px solid var(--accent); outline-offset: 3px; animation: pulse 1.2s ease-in-out infinite; }
+#play .tcard.elig { outline: 4px solid var(--accent); outline-offset: 3px; transform: translateY(-8px); }
+#play .tcard.pick { outline: 4px solid var(--accent); outline-offset: 3px; }
+/* the glow that breathes is a ring that only changes its opacity (the card itself is never repainted every frame: that made cards flicker on the iPad) */
+#play .tcard.elig::after, #play .tcard.pick::after { content: ""; position: absolute; inset: -7px; border-radius: 16px; box-shadow: 0 0 0 3px rgba(255,177,59,.55); opacity: 0; pointer-events: none; animation: ringpulse 1.2s ease-in-out infinite; }
+@keyframes ringpulse { 50% { opacity: 1; } }
 #play .tcard .tg { position: absolute; left: 6px; bottom: 6px; z-index: 3; font-size: 12px; font-weight: 800; background: #1d1712; color: #fff; border-radius: 6px; padding: 2px 7px; }
 #play .tsep { flex: none; width: 22px; }
 /* the Leaderboard lives in the title bar: quiet, compact */
@@ -871,6 +874,17 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .bpl .cjewel { position: absolute; left: 0; right: 0; bottom: 100%; margin-bottom: -4px; text-align: center; font-size: 30px; line-height: 1; color: #ffd13a; text-shadow: 0 2px 0 #8a5a00, 0 0 12px rgba(255,200,60,.8); animation: crownpop .6s ease-out both; }
 @keyframes crownpop { 0% { transform: translateY(-20px) scale(.4); opacity: 0; } 100% { transform: none; opacity: 1; } }
 #play .bcap { text-align: center; font-size: 28px; font-weight: 800; margin: 22px 0 0; color: var(--text); min-height: 74px; }
+#play .bigboard .scroll { overflow: hidden; overscroll-behavior: none; }
+#play .bigboard .steptitle { font-size: calc(42px * var(--bv, 1)); margin: calc(6px * var(--bv, 1)) 0 calc(10px * var(--bv, 1)); }
+#play .bigboard .bbwrap { padding: calc(14px * var(--bv, 1)) 18px calc(16px * var(--bv, 1)); gap: calc(10px * var(--bv, 1)); }
+#play .bstack .bhead { height: calc(118px * var(--bv, 1)); }
+#play .bstack .bhead .bn { font-size: calc(22px * var(--bv, 1)); }
+#play .bchips { height: calc(84px * var(--bv, 1)); }
+#play .bstack .bspot { height: calc(64px * var(--bv, 1)); }
+#play .bstack .bband { height: calc(20px * var(--bv, 1)); }
+#play .bstack .bdisc.me b { font-size: 11px; letter-spacing: 0; }
+#play .bplayers { margin: calc(40px * var(--bv, 1)) 0 0; font-size: calc(24px * var(--bv, 1)); }
+#play .bigboard .bcap { margin: calc(16px * var(--bv, 1)) 0 0; font-size: calc(28px * var(--bv, 1)); min-height: calc(74px * var(--bv, 1)); }
 #play .bcap small { display: block; margin-top: 6px; font-size: 17px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); animation: bcapblink 1.4s ease-in-out infinite; }
 @keyframes bcapblink { 50% { opacity: .45; } }
 #play .newbest { font-style: normal; font-size: 22px; font-weight: 900; padding: 3px 14px; margin-left: 6px; border-radius: 99px; background: linear-gradient(180deg, #ffe27a, #f0a81c); color: #3a2200; border: 2px solid #fff3c4; box-shadow: 0 3px 0 #8a5a00; animation: newbest .7s cubic-bezier(.3,1.6,.5,1) both; white-space: nowrap; display: inline-block; }
@@ -3117,7 +3131,7 @@ const AI = (() => {
   // The roll, played out: numbers flick past on the die and settle on the real result (already decided; this is only for the eye).
   function playDice() {
     $.querySelectorAll('.d10.fx-tumble .dnum[data-final]').forEach(el => {
-      const fast = !!el.closest('.action, .piles'), steps = fast ? 8 : 15, ms = fast ? 55 : 80;        // the roll in a fight happens a lot: quick; the Escape Bonus is a moment: slower
+      const fast = !!el.closest('.action, .piles'), steps = fast ? 8 : 11, ms = fast ? 55 : 70;        // the roll in a fight happens a lot: quick; the Escape Bonus is a moment: slower
       let n = 0; const fin = el.dataset.final, iv = setInterval(() => { n++; if (n >= steps || !el.isConnected) { clearInterval(iv); el.textContent = fin; if (el.closest('.piles')) $.querySelectorAll('.waitroll').forEach(b => b.classList.remove('waitroll')); return; } el.textContent = 1 + Math.floor(Math.random() * 10); }, ms);
     });
   }
@@ -3194,7 +3208,7 @@ const AI = (() => {
       const here = live.filter(x => x.m.n === n).sort((x, y) => x.m.rank - y.m.rank);
       return `<div class="bcol ${n <= tr ? 'free' : ''}"><div class="bhead"><span class="bn">${n}${!holder && n === crownCol ? '<span class="bcrown" aria-label="Crown Jewel">♛</span>' : ''}</span><span class="bchips">${chips}</span></div><div class="bband"></div>${Array.from({ length: rows }, (_, i) => {
         const x = here[i];
-        return `<div class="bspot ${i === 0 ? 'top' : ''}">${x ? `<i class="bdisc" data-pid="${x.p.id}" style="--pc:${x.p.color}" title="${A.esc(x.p.name)}${(rs ? x.going : Board.marker(bd, x.p.id, 'pledge')) ? ': this Dig' : ''}"></i>` : ''}</div>`;
+        return `<div class="bspot ${i === 0 ? 'top' : ''}">${x ? `<i class="bdisc ${x.p.id === run.me ? 'me' : ''}" data-pid="${x.p.id}" style="--pc:${x.p.color}" title="${A.esc(x.p.name)}${(rs ? x.going : Board.marker(bd, x.p.id, 'pledge')) ? ': this Dig' : ''}">${x.p.id === run.me ? '<b>You</b>' : ''}</i>` : ''}</div>`;
       }).join('')}</div>`;
     }).join('');
     const names = players.map(p => `<span class="bpl ${p.id === run.me ? 'me' : ''}" data-pid="${p.id}" style="--pc:${p.color}"><i class="pchip mini"></i><b>${A.esc(p.name)}${p.id === holder ? '<span class="cjewel" aria-label="holds the Crown Jewel">♛</span>' : ''}</b></span>`).join('');
@@ -3262,7 +3276,8 @@ const AI = (() => {
   function boardHTML() {
     const run = S.run, final = run.phase === 'done', an = S.boardAnim, more = !!an && an.k < an.events.length;
     const cap = !an ? '' : `<p class="bcap" role="status">${an.k === 0 ? `Round ${run.round - 1} is over.` : A.esc(boardText(run, an.events[an.k - 1], an.from)).replace('New Best!', '<em class="newbest">New Best!</em>')}${more && an.stop ? '<small>Tap to continue</small>' : ''}</p>`;
-    return `<div class="panel setup bigboard"><div class="scroll" ${more ? 'data-p="boardstep"' : ''}><h2 class="steptitle">Leaderboard</h2>${boardGrid(run, an)}${cap}</div><div class="foot"><button class="btn" data-p="boardgo">${final ? 'See the result' : 'Add up your gems'}</button></div></div>`;
+    const bv = Math.max(.5, Math.min(1, (innerHeight - 24) / 860)).toFixed(3);          // everything on this screen is drawn at this size, so it always fits: nothing here scrolls
+    return `<div class="panel setup bigboard" style="--bv:${bv}"><div class="scroll" ${more ? 'data-p="boardstep"' : ''}><h2 class="steptitle">Leaderboard</h2>${boardGrid(run, an)}${cap}</div><div class="foot"><button class="btn" data-p="boardgo">${final ? 'See the result' : 'Add up your gems'}</button></div></div>`;
   }
   // The tally after a bank, shown one piece at a time while a thermometer fills up beside it: Treasure, a pause, Monsters, a pause, then you tap the die; and only when the die has landed does the pack appear.
   const TP = () => window.DDB_TALLY_PACE || 1;                         // tests speed this up
@@ -3279,7 +3294,7 @@ const AI = (() => {
     const run = t.run; if (S.tally !== t || t.stage >= 4 || !run.prep || run.prep.step !== 'escape') return;
     if (S.match) Match.rollEscape(S.match); else Run.rollEscape(run);
     t.stage = 4; persist();
-    const up = n => ms => setTimeout(() => { if (S.tally === t && t.stage < n) { t.stage = n; if (S.panel === 'prep' && S.run === run) render(); } }, ms * TP()); up(5)(1700); up(6)(3300);
+    const up = n => ms => setTimeout(() => { if (S.tally === t && t.stage < n) { t.stage = n; if (S.panel === 'prep' && S.run === run) render(); } }, ms * TP()); up(5)(1200); up(6)(2500);
     if (S.panel === 'prep' && S.run === run) render();
   }
   // The reward ladder as a thermometer: the pack you would get at each number of gems, lit as the fill passes it.
@@ -3739,8 +3754,8 @@ const AI = (() => {
   window.addEventListener('pointermove', e => {
     if (!drag) return;
     if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > 12) {
-      drag.moved = true; const r = drag.el.getBoundingClientRect(), g = drag.el.cloneNode(true); g.removeAttribute('data-p'); g.classList.remove('deal'); g.querySelectorAll('.dback').forEach(x => x.remove()); g.style.animation = 'none'; g.querySelectorAll('*').forEach(x => { x.style.animation = 'none'; }); g.classList.add('dragghost');          // (a copy of a card that was just dealt must not replay the deal: its turn-over made the drag flicker between the card's back and its face)
-      g.style.cssText += `;position:fixed;left:0;top:0;width:${r.width}px;height:${r.height}px;z-index:40;pointer-events:none;margin:0`; document.body.appendChild(g); drag.ghost = g; drag.w = r.width; drag.h = r.height; drag.el.classList.add('dragging');
+      drag.moved = true; const r = drag.el.getBoundingClientRect(), g = drag.el.cloneNode(true); g.removeAttribute('data-p'); g.classList.remove('deal'); g.querySelectorAll('.dback').forEach(x => x.remove()); g.style.animation = 'none'; g.querySelectorAll('*').forEach(x => { x.style.animation = 'none'; }); g.classList.add('dragghost');          // (a copy of a card that was just dealt must not replay the deal: its turn-over made the drag flicker between the card's back and its face; it is placed under the finger before it is shown and has no transition, or it would glide in from the top-left corner and lag behind the finger)
+      g.style.cssText += `;position:fixed;left:0;top:0;width:${r.width}px;height:${r.height}px;z-index:40;pointer-events:none;margin:0;transition:none;will-change:transform;transform:translate(${e.clientX - r.width / 2}px, ${e.clientY - r.height * .6}px) rotate(-3deg) scale(1.05)`; document.body.appendChild(g); drag.ghost = g; drag.w = r.width; drag.h = r.height; drag.el.classList.add('dragging');
     }
     if (drag.moved) {
       drag.ghost.style.transform = `translate(${e.clientX - drag.w / 2}px, ${e.clientY - drag.h * .6}px) rotate(-3deg) scale(1.05)`;

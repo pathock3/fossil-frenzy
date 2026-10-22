@@ -961,6 +961,20 @@ test('the last round: when everyone else has gone BOOM you have won, but the Dig
   } finally { await browser.close(); }
 });
 
+test('leaderboard: nothing scrolls at any iPad size (the whole screen is drawn smaller to fit), and your piece says You', SKIP, async () => {
+  for (const viewport of [{ width: 1180, height: 820 }, { width: 1024, height: 700 }, { width: 820, height: 1180 }, { width: 1180, height: 600 }]) {
+    const { browser, page, errors } = await open({ viewport, menu: true });
+    try {
+      await page.evaluate(() => { window.DigDigBoomPlay.S.opp = true; }); await page.click('#play [data-p=startrun]'); await page.waitForSelector('#play [data-p=openpack]');
+      await page.evaluate(() => { const P = window.DigDigBoomPlay; P.S.bests0 = { me: 0, easy: 0, medium: 0, hard: 0 }; P.S.boardAnim = { from: P.S.bests0, newBest: true, events: [{ r: 1, id: 'me', k: 'move', n: 2 }, { r: 1, id: 'hard', k: 'move', n: 1 }], k: 1, stop: false, timer: null, rects: null, fx: null }; P.S.panel = 'board'; P.render(); });
+      const m = await page.evaluate(() => { const s = document.querySelector('#play .bigboard .scroll'), f = document.querySelector('#play .bigboard .foot').getBoundingClientRect(); return { sh: s.scrollHeight, ch: s.clientHeight, bottom: f.bottom, ih: innerHeight, you: document.querySelector('#play .bdisc.me') && document.querySelector('#play .bdisc.me').textContent }; });
+      assert.ok(m.sh <= m.ch + 1, `the board fits at ${viewport.width}x${viewport.height}: ${JSON.stringify(m)}`); assert.ok(m.bottom <= m.ih, 'and so does the button');
+      assert.equal(m.you, 'You', 'the blue piece is labelled');
+      assert.deepEqual(errors, []);
+    } finally { await browser.close(); }
+  }
+});
+
 test('tapping a card whose power depends on the game says what it is worth right now', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
