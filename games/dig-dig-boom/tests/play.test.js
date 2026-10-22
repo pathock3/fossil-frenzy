@@ -973,9 +973,8 @@ test('leaderboard: a bank keeps its piece with a blue gem showing what it earned
     assert.equal(await page.locator('#play .bgem').count(), 0, 'a tap: the gem goes');
     assert.equal(await page.locator('#play .bdisc[data-pid=hard]').count(), 0, 'with its piece');
     assert.equal(await page.locator('#play .bdisc.blown[data-pid=easy]').count(), 1, 'the piece that went BOOM is still there, in its starburst'); assert.equal(await page.locator('#play .bboom').count(), 1);
-    assert.match(await page.locator('#play .bcap').innerText(), /tap to continue/i, 'even the last result waits for a tap');
-    await page.click('#play .bigboard .scroll'); await page.waitForTimeout(100);
-    assert.equal(await page.locator('#play .bdisc[data-pid=easy]').count(), 0, 'and goes at the next tap');
+    assert.equal(await page.locator('#play .bcap small').count(), 0, 'the last result needs no tap: only the button is left');
+    assert.equal(await page.locator('#play .bigboard .scroll[data-p=boardstep]').count(), 0);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -1069,7 +1068,7 @@ test('leaderboard: 0 instead of Start; a gold-trimmed chip for each player stack
     await page.waitForSelector('#play .newbest');
     assert.equal(await page.locator('#play .bcrown').count(), 0, 'once someone locks in 3 or more the Crown Jewel leaves the board...');
     assert.equal(await page.locator('#play .bpl.me .cjewel').count(), 1, '...for their name');
-    assert.match(await page.locator('#play .bcap').innerText(), /You banked at 5 with 9 gems/); assert.equal(await page.locator('#play .bcap small').count(), 1, 'the last result waits for a tap too'); await page.click('#play .bigboard .scroll'); await page.waitForTimeout(100); assert.equal(await page.locator('#play .bcap small').count(), 0, 'and then that was the last');
+    assert.match(await page.locator('#play .bcap').innerText(), /You banked at 5 with 9 gems/); assert.equal(await page.locator('#play .bcap small').count(), 0, 'and that was the last result: no tap needed, only the button');
     await page.evaluate(() => { const P = window.DigDigBoomPlay; Board.lockIn(P.S.match.board, 'easy', 6); P.S.boardAnim = null; P.render(); });
     assert.equal(await page.locator('#play .bpl[data-pid=easy] .cjewel').count(), 1, 'a higher number steals the Crown Jewel');
     assert.equal(await page.locator('#play .newbest').count(), 0);

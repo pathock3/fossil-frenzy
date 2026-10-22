@@ -3293,10 +3293,7 @@ const AI = (() => {
   }
   function boardTap() {          // a tap: after a pause, go on; while it plays, skip to the next result
     const an = S.boardAnim; if (!an) return;
-    if (an.k >= an.events.length) {          // the last result was waiting for the tap: its piece goes, and that is the end
-      if (!an.stop) return;
-      const was = an.events[an.k - 1]; an.rects = boardRects(); an.stop = false; an.fx = was && (was.k === 'bank' || was.k === 'boom') ? { k: 'leave', id: was.id } : null; render(); return;
-    }
+    if (an.k >= an.events.length) return;
     clearTimeout(an.timer); an.timer = null;
     if (an.stop) { an.stop = false; boardNext(); return; }
     an.rects = boardRects(); while (an.k < an.events.length && an.events[an.k].k === 'move') an.k++;
@@ -3310,7 +3307,7 @@ const AI = (() => {
     return `<div class="lbfull bigboard" data-p="lbclose" style="--bv:${boardScale()}"><h2 class="steptitle">Leaderboard</h2>${boardGrid(run, null).replace(/<div class="bplayers">[\s\S]*$/, `<div class="bplayers">${names}</div>`)}<p class="bcap"><small>Tap to go back</small></p></div>`;
   }
   function boardHTML() {
-    const run = S.run, final = run.phase === 'done', an = S.boardAnim, more = !!an && (an.k < an.events.length || an.stop);
+    const run = S.run, final = run.phase === 'done', an = S.boardAnim, more = !!an && an.k < an.events.length;          // (the last result needs no tap: only the button is left)
     const cap = !an ? '' : `<p class="bcap" role="status">${an.k === 0 ? `Round ${run.round - 1} is over.` : A.esc(boardText(run, an.events[an.k - 1], an.from)).replace('New Best!', '<em class="newbest">New Best!</em>')}${more && an.stop ? '<small>Tap to continue</small>' : ''}</p>`;
     const bv = boardScale();          // everything on this screen is drawn at this size, so it always fits: nothing here scrolls
     return `<div class="panel setup bigboard" style="--bv:${bv}"><div class="scroll" ${more ? 'data-p="boardstep"' : ''}><h2 class="steptitle">Leaderboard</h2>${boardGrid(run, an)}${cap}</div><div class="foot"><button class="btn" data-p="boardgo">${final ? 'See the result' : 'Add up your gems'}</button></div></div>`;
