@@ -14,6 +14,7 @@ const sh = cmd => { try { return execSync(cmd, { cwd: root, stdio: ['ignore', 'p
 const sha = (process.env.WORKERS_CI_COMMIT_SHA || sh('git rev-parse HEAD') || '').slice(0, 7) || 'unknown';
 let branch = process.env.WORKERS_CI_BRANCH || sh('git rev-parse --abbrev-ref HEAD');
 if (branch === 'HEAD') branch = '';
+branch = branch.replace(/[<>"&]/g, '');          // goes into HTML
 const date = new Date().toISOString().slice(0, 10);
 const label = [sha, date, branch && branch !== 'main' ? 'preview: ' + branch : ''].filter(Boolean).join(' · ');
 
@@ -21,12 +22,15 @@ const gamesDir = path.join(root, 'games');
 const games = fs.existsSync(gamesDir) ? fs.readdirSync(gamesDir).filter(d => fs.existsSync(path.join(gamesDir, d, 'index.html'))).sort() : [];
 const pages = ['index.html', ...games.map(g => path.join('games', g, 'index.html'))];
 
+// the output folder is emptied first: never let that be the repo or one of its parents
+const rel0 = path.relative(out, root);
+if (rel0 === '' || !rel0.startsWith('..')) throw new Error('Refusing to build into ' + out + ': it is the repository or contains it');
 fs.rmSync(out, { recursive: true, force: true });
 for (const rel of pages) {
   const html = fs.readFileSync(path.join(root, rel), 'utf8');
   if (!html.includes('content="__BUILD__"')) throw new Error(rel + ' is missing the <meta name="build" content="__BUILD__"> placeholder');
   fs.mkdirSync(path.dirname(path.join(out, rel)), { recursive: true });
-  fs.writeFileSync(path.join(out, rel), html.replace('content="__BUILD__"', 'content="' + label.replace(/"/g, '') + '"'));
+  fs.writeFileSync(path.join(out, rel), html.replace('content="__BUILD__"', () => 'content="' + label + '"'));
 }
 // shared icons (Favorites / Home Screen) are published in assets/, the same place they sit in the repo; pages link to them, but still work without them
 const assets = path.join(root, 'assets');
