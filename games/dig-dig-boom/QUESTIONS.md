@@ -102,3 +102,4 @@ There are Bonus Monster cards for damage 8 to 19. If a Dig goes past 19 Bonus Mo
 - **Block cards** are unchanged numerically: "Block N" and "Deal N damage to the Monster" are the same effect (N markers). Reword them in the sheet when you like.
 - **Resolving order**: cards still fire when you tap them (or "Use all"); nothing fires by itself except what the AI and "Use all" do.
 - The Bonus Monster Loot is 1 (your latest ruling), not 2.
+- **Echo + Rewind Tape loop:** with both in your Mine, digging Rewind Tape puts Echo on top, Echo does Rewind Tape (which puts Rewind Tape on top), and so on: you dig for ever, and in the last round (no Bank) there is no way out. Say if one of them should change (for instance Echo "only copies cards that are not Rewind Tape", or Rewind Tape shuffles the card in).

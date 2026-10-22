@@ -14,7 +14,7 @@ function playRound(m, { humanPolicy = AI.act } = {}) {
   const me = Match.human(m); let guard = 0;
   while (!me.dig.over && guard++ < 2000) {
     const st = me.dig, before = st.digs;
-    if (!humanPolicy(me)) { if (Match.finalCheck(m)) continue; if (!Match.aiStep(m)) throw new Error('the human policy is stuck'); continue; }       // the final-round leader waits while the AI digs
+    if (!humanPolicy(me)) { if (Match.finalCheck(m)) continue; if (me.dig.board && me.dig.board.allOut && Dig.hold(me.dig)) { Run.checkOver(me); continue; } if (!Match.aiStep(m)) throw new Error('the human policy is stuck'); continue; }       // the final-round leader waits while the AI digs
     Run.checkOver(me); Match.finalCheck(m);
     if (st.digs > before && !me.dig.over) Match.aiStep(m);
   }

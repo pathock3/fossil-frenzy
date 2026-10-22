@@ -240,6 +240,11 @@ test('Block, Venom Spider (half damage, rounded down) and Lucky Cricket', () => 
   Dig.dig(cricket); Dig.roll(cricket); Dig.autoFace(cricket);  // 1 damage -> 2
   Dig.dig(cricket); Dig.roll(cricket); Dig.autoFace(cricket);  // 3 damage would BOOM at 2 -> survive with 1
   assert.equal(cricket.over, null); assert.equal(cricket.heart, 1);
+  const auto = game({ mine: ['MO-01', 'MO-01'], power: ['PW-14'], start: { heart: 2 }, dice: [6, 6] });
+  Dig.dig(auto); Dig.roll(auto); assert.equal(Dig.eligible(auto).length, 0, 'Lucky Cricket is never offered: there is nothing to tap');
+  Dig.face(auto); assert.equal(auto.over, null, 'it worked by itself, as the damage would have made you BOOM'); assert.equal(auto.heart, 1);
+  const calm = game({ mine: ['MO-01'], power: ['PW-14'], start: { heart: 6 }, dice: [6] });
+  Dig.dig(calm); Dig.roll(calm); Dig.face(calm); assert.equal(calm.heart, 5, 'no danger: it did nothing');
 });
 
 test('"When dug" effects happen the moment the card is dug, not when it triggers', () => {

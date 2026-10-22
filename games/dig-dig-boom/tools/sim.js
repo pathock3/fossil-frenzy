@@ -16,7 +16,7 @@ function playMatch(brains, seed, rounds, onRound) {
     let guard = 0;
     while (!me.dig.over && guard++ < 1500) {
       const st = me.dig, before = st.digs;
-      if (!brains.me.act(me)) { if (Match.finalCheck(m)) continue; if (!Match.aiStep(m)) throw new Error('stuck'); continue; }
+      if (!brains.me.act(me)) { if (Match.finalCheck(m)) continue; if (me.dig.board && me.dig.board.allOut && Dig.hold(me.dig)) { Run.checkOver(me); continue; } if (!Match.aiStep(m)) throw new Error('stuck'); continue; }
       Run.checkOver(me); Match.finalCheck(m);
       if (st.digs > before && !me.dig.over) Match.aiStep(m);
     }

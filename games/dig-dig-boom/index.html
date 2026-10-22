@@ -1034,7 +1034,7 @@ const DDB = {
     startingDeck: 'Starting',                            // the Deck column value for the Mine's cards and the Pet
     survivedGems: 1, geodeGems: 1,
     beyond: { firstDamage: 8, maxDamage: 19, gems: 1 },  // Monsters after the Mine runs out: 8, 9, ... up to 19 (there is a Bonus Monster card for each), and worth 1 gem (Loot) like every other Monster (owner)
-    kitSizes: [1, 2, 2, 3, 3],                           // Round tracker: Starter Kit cards per round; 4 rounds use the first four (owner: five rounds = 1, 2, 2, 3, 3)
+    kitSizes: [1, 2, 3, 4],                              // Round tracker: Starter Kit cards per round: the kit is as big as the round number (owner: 4 rounds)
     pledges: false,                                      // owner: the app has no pledging; your live marker simply follows every Monster you survive (the engine still knows pledges)
     soloKit: 3,                                          // Starter Kit size offered in the solo prototype (the round tracker's round 1 is 1)                              // Round tracker: Starter Kit cards per round (testing)
     maxChain: 6,                                         // safety limit on effects that trigger effects
@@ -1718,15 +1718,17 @@ const Dig = (() => {
     if (f.defeat) return ops.every(o => ['block', 'halve', 'noDamage', 'survive1', 'defeat'].includes(o));
     return previewDamage(st) === 0 && ops.every(o => ['block', 'halve', 'noDamage', 'survive1'].includes(o));
   }
-  function eligible(st) {
+  // A card that only saves you from BOOM (Lucky Cricket) is never tapped: it works by itself, at the moment the damage would knock you out.
+  const autoOnly = e => { const ops = flatOps(compile(e.card).effects).map(x => x.op); return ops.length > 0 && ops.every(o => o === 'survive1'); };
+  function eligible(st, withAuto) {
     const f = st.fight; if (!f || f.phase !== 'after' || over(st)) return [];
     const r = resultTotal(st);
-    return st.line.filter(e => e.at <= r && f.trig.filter(x => x === e).length < (e.cloned ? 2 : 1) && unmetFor(st, e) === null && !pointless(st, e)).sort((a, b) => b.at - a.at);
+    return st.line.filter(e => e.at <= r && f.trig.filter(x => x === e).length < (e.cloned ? 2 : 1) && unmetFor(st, e) === null && !pointless(st, e) && (withAuto || !autoOnly(e))).sort((a, b) => b.at - a.at);
   }
   // Effects that need to know which OTHER cards triggered ("for each other card that triggers", "if no other card triggers") wait until you have chosen.
   const needsFinal = effs => effs.some(e => (e.op === 'gainPer' && e.per === 'otherTriggers') || (e.op === 'if' && e.cond && e.cond.noOther) || (e.op === 'seq' && needsFinal(e.list)));
   function trigger(st, entry, hold) {
-    const f = st.fight; if (!f || over(st) || !eligible(st).includes(entry)) return false;
+    const f = st.fight; if (!f || over(st) || !eligible(st, true).includes(entry)) return false;
     const firstTime = !f.trig.some(e => e.card === entry.card);          // a cloned card triggering again is still one card
     f.trig.push(entry);
     const effs = compile(entry.card).effects;
@@ -1814,6 +1816,7 @@ const Dig = (() => {
       st.fight = null; fire(st, 'defeat', {}, 1); return;
     }
     let take = 0;
+    if (dmg >= st.heart && dmg > 0 && f.surviveAt === null) { const lc = eligible(st, true).find(autoOnly); if (lc) trigger(st, lc, true); }          // Lucky Cricket: it would have been BOOM, so it works (no tap)
     if (dmg > 0) {
       take = dmg;
       if (take >= st.heart && f.surviveAt !== null) { take = st.heart - f.surviveAt; log(st, 'effect', `Lucky save: you survive with ${f.surviveAt} {heart}`); }
@@ -2202,7 +2205,7 @@ const Run = (() => {
   function refresh(run) {
     const st = run.dig; if (!st || !st.board) return;
     if (!st.over && !st.boardApplied) { const n = Math.max(st.monstersDug, st.survived); if (Board.track(run.board, run.me, n)) Board.note(run.board, { r: run.round, id: run.me, k: 'move', n }); }      // the live marker moves the moment you ENCOUNTER a Monster (owner), before you have faced it
-    st.board.crown = Board.tracker(run.board); st.board.leadN = Board.leadN(run.board, run.me); st.board.lead = Board.inLead(run.board, run.me);
+    st.board.crown = Board.tracker(run.board); st.board.leadN = Board.leadN(run.board, run.me); st.board.lead = Board.inLead(run.board, run.me); st.board.leader = Board.finalLeader(run.board);
   }
   // The moment a Dig ends (bank or BOOM) the Board changes: a BOOM removes the Pledge marker, a bank locks the score in and may take the Crown right away.
   function checkOver(run) {
@@ -2227,7 +2230,10 @@ const Run = (() => {
     const alive = runs.filter(r => r.phase === 'dig' && r.dig && !r.dig.over);
     if (alive.length !== 1 || !alive[0].dig.board || !alive[0].dig.board.final) return false;
     const r = alive[0]; refresh(r);
-    if (!r.dig.board.lead || !Dig.hold(r.dig)) return false;
+    if (!r.dig.board.lead) return false;
+    const person = runs.length > 1 && !((r.board.players.find(p => p.id === r.me) || {}).ai);
+    if (person) { r.dig.board.allOut = true; return false; }          // you, at a table with opponents: you have won the round, but you may keep digging or go and see the result (the 'hold' tap)
+    if (!Dig.hold(r.dig)) return false;
     checkOver(r); return true;
   }
   const reserve = n => { uid = Math.max(uid, n + 1); };
@@ -3430,9 +3436,10 @@ const AI = (() => {
     if (st.pending) return { html: `<div class="action"><div class="aprompt">${A.esc(st.pending.card.name)}: tap a Power card</div></div>`, die: '' };
     if (st.over) return { html: '', die: '' };
     // The last round is a race: nobody banks. Say so, and say what to do: keep digging until you lead; once you lead, wait (digging on only risks the lead).
-    const lastRound = !!(S.run && st.board && st.board.final), say = lastRound ? (st.board.lead ? 'You are in the lead. Wait for your opponents: if one passes you, dig again.' : 'The last round: nobody banks. Dig until you are in the lead.') : can.bank ? 'Tap the Mine to dig, or the Bank to keep your gems' : 'Tap the Mine to dig';
+    const lastRound = !!(S.run && st.board && st.board.final), say = lastRound ? (st.board.allOut ? 'Everyone else went BOOM. You win the round! Keep digging to push your score higher, or see the result.' : st.board.lead ? `You are in the lead with ${(leaderLine() || {}).n}. Keep digging to push it higher, or wait to see if everyone else goes BOOM.` : leaderLine() ? `${leaderLine().name} ${leaderLine().is} in the lead with ${leaderLine().n}. Try to beat that score.` : 'The last round: nobody banks. Dig until you are in the lead.') : can.bank ? 'Tap the Mine to dig, or the Bank to keep your gems' : 'Tap the Mine to dig';
+    const holdBtn = lastRound && st.board.allOut ? `<button class="btn" data-p="hold">See the result</button>` : '';
     const ffBtn = lastRound && st.board.lead && aiDigging() ? `<button class="btn alt ffbtn" data-p="ff" ${S.ff ? 'disabled' : ''}>${S.ff ? 'Fast-forwarding…' : 'Fast-forward your opponents'}</button>` : '';          // you wait; this speeds the opponent up until they pass you or go BOOM
-    return { html: `<div class="action"><div class="aprompt">${say}</div>${ffBtn}</div>`, die: '' };
+    return { html: `<div class="action"><div class="aprompt">${say}</div>${ffBtn}${holdBtn}</div>`, die: '' };
   }
   // ----- little things that pop. What is new since the last drawing is remembered, so each flourish plays once, on the thing that just happened. -----
   const fxOf = st => st ? { last: st.last ? st.last.uid : null, mon: st.fight ? st.fight.monster.uid : null, roll: st.fight && st.fight.phase === 'after' ? `${st.digs}:${st.fight.rolls}:${st.fight.die}` : null, gems: st.geodeGems + st.monsterGems, over: st.over } : { last: null, mon: null, roll: null, gems: 0, over: null };
@@ -3513,6 +3520,12 @@ const AI = (() => {
   }
   // When the next card you dig could be a Monster that would put you out (its damage is at least your Health), a "Careful" note comes up in the middle of the screen and has to be dismissed before you go on:
   // once each time you come into that danger (not again for each card while it lasts, but again if you get out of it and back in).
+  // Who leads the final round and with what (their best, or the Dig they are in), for the lines that tell you.
+  function leaderLine() {
+    const st = S.st, ld = st && st.board && st.board.leader, run = S.run; if (!ld || !run) return null;
+    const me = ld.pid === run.me, p = run.board.players.find(x => x.id === ld.pid);
+    return { me, name: me ? 'You' : A.esc(p ? p.name : '?'), is: me ? 'are' : 'is', n: ld.n };
+  }
   function dangerCheck() {
     const st = S.st;
     if (window.DDB_NO_DANGER || S.panel !== 'dig' || !st || st.over || st.fight || st.pending || S.help || S.zoom || finalNote()) return;          // (DDB_NO_DANGER: the tests that script a low Health turn the note off)
@@ -3545,9 +3558,9 @@ const AI = (() => {
     const B = D.rules.beyond, note = bottom ? `<div class="mnote-back"><div class="mnote" role="dialog" aria-label="The bottom of your Mine"><h3>You've reached the bottom of your Mine</h3><p>Keep digging to face <b>Bonus Monsters</b>. They are face up, start at <b>${B.firstDamage}</b> damage and go up by <b>1</b> each time. You can still bank at any time.</p><button class="btn" data-p="emptyok">Got it</button></div></div>` : '';
     let fin = '';
     if (finalNote() && !S.help) {
-      const stt = S.st, lead = stt.board && stt.board.lead, need = stt.board ? stt.board.leadN : null, sub = S.run.rounds === 1 ? 'The only round.' : `Round ${S.run.round} of ${S.run.rounds}: the last one.`;
-      const where = lead ? 'You are in the lead already. Wait for your opponents; dig only if one passes you.' : need ? `To take the lead, survive ${need} Monster${need === 1 ? '' : 's'}.` : '';
-      fin = `<div class="fnote-back"><div class="fnote" role="dialog" aria-label="The final round"><div class="fbig">FINAL ROUND</div><p class="fsub">${sub}</p>${where ? `<p class="fwhere">${where}</p>` : ''}<div class="frules ${S.finalHow ? 'open' : ''}"><ul><li><b>Nobody banks.</b> You keep digging until you are in the lead, or you go BOOM.</li><li>The <b>leader</b> is whoever has survived the most Monsters (your best from earlier rounds counts). Level, the one who got there first leads.</li><li>Once you are in the lead, <b>stop and wait</b>: digging on only risks it. If your opponent passes you, dig again.</li><li>The round ends when everyone else has gone BOOM: whoever is still in the lead holds the Crown Jewel.</li></ul></div><div class="fbtns"><button class="btn alt" data-p="finalhow">${S.finalHow ? 'Hide the rules' : 'How the final round works'}</button><button class="btn" data-p="finalok">Start digging</button></div></div></div>`;
+      const stt = S.st, need = stt.board ? stt.board.leadN : null, who = leaderLine();
+      const where = who ? `<b>${who.name}</b> ${who.is} in the lead with <b>${who.n}</b>. ${who.me ? 'Try to beat your own score.' : 'Try to beat that score.'}` : need ? `Nobody leads yet. To take the lead, survive ${need} Monster${need === 1 ? '' : 's'}.` : '';
+      fin = `<div class="fnote-back"><div class="fnote" role="dialog" aria-label="The final round"><div class="fbig">FINAL ROUND</div>${where ? `<p class="fwhere">${where}</p>` : ''}<div class="frules ${S.finalHow ? 'open' : ''}"><ul><li><b>Nobody banks.</b> You keep digging until you are in the lead, or you go BOOM.</li><li>The <b>leader</b> is whoever has survived the most Monsters (your best from earlier rounds counts). Level, the one who got there first leads.</li><li>Once you are in the lead you may <b>keep going</b> to push your score higher, or <b>wait</b> and see if everyone else goes BOOM. If someone passes you, dig again.</li><li>The round ends when everyone else has gone BOOM: whoever is still in the lead holds the Crown Jewel.</li></ul></div><div class="fbtns"><button class="btn alt" data-p="finalhow">${S.finalHow ? 'Hide the rules' : 'How the final round works'}</button><button class="btn" data-p="finalok">Start digging</button></div></div></div>`;
     }
     let ownedP = '';
     if (S.showOwned && S.run && (S.panel === 'prep' || S.panel === 'done')) {          // a look at the cards you already own, while you choose (tap anywhere to close)
@@ -3684,6 +3697,7 @@ const AI = (() => {
       case 'reroll': if (f && f.phase === 'after') Dig.reroll(st); break;
       case 'face': if (st && (Dig.eligible(st).length || Dig.mayUse(st).length) && !S.confirmFace) { S.confirmFace = true; break; } S.confirmFace = false; Dig.face(st); break;
       case 'bank': if (S.run) Run.bank(S.run); else Dig.bank(st); break;
+      case 'hold': Dig.hold(st); break;
       case 'heart': break;
     }
     if (S.run) { Run.checkOver(S.run); if (S.run.phase === 'dig') Run.refresh(S.run); if (S.match) Match.finalCheck(S.match); else Run.finalCheck([S.run]); }
