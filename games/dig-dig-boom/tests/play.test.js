@@ -487,7 +487,7 @@ test('run: round 1 opens a Bronze Pack (draw 3, keep 1), then you choose your St
     assert.equal(await page.locator('#play [data-p=kitpick]').count(), 1, 'one card to choose from: the one you kept');
     assert.equal(await page.locator('#play [data-p=kitgem]').count(), 0, 'no gem to pick: an empty place is a gem');
     assert.match(await page.locator('#play .kitbar .count').innerText(), /^0 of 1$/, 'how many you may choose and how many you have');
-    assert.match(await page.locator('#play .kdef').innerText(), /^These will be the first cards you draw\.$/, 'the Starter Kit is defined, not explained');
+    assert.match(await page.locator('#play .kdef').innerText(), /^These will be the first cards you draw\.\s*Any place you leave empty gets a\s+gem instead\.$/, 'the Starter Kit is defined, not explained');
     assert.equal(await page.locator('#play .kslot.empty .kgem').count(), 1, 'an empty place shows the gem it will be filled with');
     assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('#play .kitbar .count')).fontSize), '42px', 'the Keep and Starter Kit titles use the same size');
     assert.equal(await page.locator('#play .pips2').count(), 0, 'no circles');

@@ -728,6 +728,8 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .eq .unseen { visibility: hidden; }
 #play .eq .t.sum { min-width: 118px; }
 #play .krow { display: flex; align-items: center; justify-content: center; gap: 30px; }
+#play .kdef small { display: block; margin-top: 8px; font-size: 15px; font-weight: 600; line-height: 1.3; color: var(--dim); }
+#play .kdef small .ic { width: 1.05em; height: 1.05em; vertical-align: -.2em; }
 #play .kdef { margin: 0; max-width: 240px; font-size: 22px; font-weight: 800; line-height: 1.25; color: var(--text); }
 
 #play .mode.waiting { opacity: .7; }
@@ -3210,7 +3212,7 @@ const AI = (() => {
         const r = from && from[c.uid] ? from[c.uid] : { x: innerWidth / 2 - 63 + (i - (rest.length - 1) / 2) * 130, y: innerHeight * .34, w: 125, h: 175 };
         return `<span class="sweepcard" style="--i:${i};left:${Math.round(r.x)}px;top:${Math.round(r.y)}px;width:${Math.round(r.w)}px;height:${Math.round(r.h)}px;--tx:${-Math.round(r.x + r.w + 120)}px;--ty:${-Math.round(r.y + r.h + 100)}px">${A.playCard(c, r.w / 250)}</span>`;
       }).join('')}</div>` : '';
-      body = `${sweep}<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${n} of ${pr.kitMax} chosen">${n} of ${pr.kitMax}</span></div><div class="krow"><div class="kslots ${first ? 'kfirst' : ''}">${slots}</div><p class="kdef">${say}</p></div><div class="poolhead">Your cards</div><div class="cards pool ${first ? 'kfirst' : ''}" style="min-height:${Math.round(350 * ps) + 24}px">${hand.map((c, i) => pcard(c, ps, { act: 'kitpick', i, ...tagOf2(c) })).join('')}</div>`;
+      body = `${sweep}<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${n} of ${pr.kitMax} chosen">${n} of ${pr.kitMax}</span></div><div class="krow"><div class="kslots ${first ? 'kfirst' : ''}">${slots}</div><p class="kdef">${say}<small>Any place you leave empty gets a ${ic('gem')} gem instead.</small></p></div><div class="poolhead">Your cards</div><div class="cards pool ${first ? 'kfirst' : ''}" style="min-height:${Math.round(350 * ps) + 24}px">${hand.map((c, i) => pcard(c, ps, { act: 'kitpick', i, ...tagOf2(c) })).join('')}</div>`;
       foot = `<button class="btn" data-p="startround">Start round ${run.round}${run.round === run.rounds ? ' · final' : ''}</button>`;
     }
     const stage = step === 'kit' || step === 'keep' || step === 'reveal' || (step === 'pack' && !pr.banked) ? body : `<div class="prepstage">${body}</div>`;
