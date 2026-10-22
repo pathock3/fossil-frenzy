@@ -767,7 +767,7 @@ test('ai: when your Dig ends you wait for the AI (or tap Fast forward); the Esca
     await page.waitForSelector('#play .over [data-p=prep]', { timeout: 20000 });
     assert.equal(await page.locator('#play .over [data-p=ff]').count(), 0);
     await page.click('#play [data-p=prep]');
-    assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'the Leaderboard first: columns of stacked spots'); assert.equal(await page.locator('#play .bigboard .bleg').count(), 2, 'you and the AI are on it');
+    assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'the Leaderboard first: columns of stacked spots'); { const toks = (await page.locator('#play .bigboard .bdisc').allInnerTexts()).map(t => t.replace(/[^A-Za-z]/g, '')); assert.ok(toks.includes('You') && toks.every(t => t === 'You' || t === 'AI'), 'the tokens say who they are (no colour legend needed): ' + toks); } assert.equal(await page.locator('#play .bigboard .blegend').count(), 0);
     await page.evaluate(() => { window.DigDigBoomPlay.S.match.dice = [6]; }); await page.click('#play [data-p=boardgo]');
     assert.ok(['escape', 'pack'].includes(await stOf(page, () => window.DigDigBoomPlay.S.match.runs.ai.prep.step)), 'the AI has not opened a pack: it does that when you open yours');
     await page.waitForSelector('#play .eq .t.die.pop'); await dieShows(page, '#play .eq .t.die', 6);
