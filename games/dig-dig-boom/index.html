@@ -1151,7 +1151,7 @@ const DDB = {
       { at: 35, name: 'Diamond+', draw: 7, keep: 4, color: '#6fe0ff' },
     ],
     firstPack: 'Bronze',                                 // round 1 opens with a pack too (draw 3, keep 1), then you choose your Starter Kit from the cards you own
-    boardNumbers: 9,                                     // the Leaderboard shows 0 to this many by default (the Mine holds 9 Monsters: 4 + 3 + 2); it grows only when somebody goes beyond
+    boardNumbers: 9,                                     // the Leaderboard shows 0 to this many by default (the Mine holds 9 Monsters: 4 + 3 + 2); it grows by one place beyond whoever is furthest (somebody at 9 makes a 10)
     startGems: 1,                                        // every Starter Kit place you leave empty is filled with this many gems at the start of the Dig
     boomPack: 'Bronze',                                  // "If you went BOOM, open a Bronze Pack"
   },
@@ -3161,7 +3161,7 @@ const AI = (() => {
     const bd = run.board, tr = Board.tracker(bd), holder = Board.holder(bd), me = run.me, players = bd.players;
     const here = st && !st.over ? Math.max(st.monstersDug, st.survived) : -1;
     const marks = players.flatMap(p => ['best', 'pledge'].map(k => ({ p, k, m: Board.marker(bd, p.id, k) }))).filter(x => x.m);
-    const max = Math.max(D.run.boardNumbers, tr + 2, here + 2, ...marks.map(x => x.m.n + 1));
+    const max = Math.max(D.run.boardNumbers, tr + 1, here + 1, ...marks.map(x => x.m.n + 1));
     const crownCol = bd.crownStart + 1;                                // the Crown Jewel waits on 3 until somebody locks that in; then it is on their name
     let cells = '';
     for (let n = 0; n <= max; n++) {
@@ -3218,7 +3218,7 @@ const AI = (() => {
     const holder = rs ? rs.holder : Board.holder(bd);
     const live = rs ? players.filter(p => !rs.done.has(p.id)).map(p => { const n = rs.pos[p.id] || 0; return { p, m: { n, rank: rs.at[n].indexOf(p.id) + 1 }, going: true }; })
       : players.map(p => { const r = S.match ? S.match.runs[p.id] : p.id === run.me ? run : null; if (!r || r.phase !== 'dig' || !r.dig || r.dig.over) return null; const m = Board.marker(bd, p.id, 'pledge'); return { p, m: { n: m ? m.n : 0, rank: m ? m.rank : 1 + players.indexOf(p) }, going: true }; }).filter(Boolean);          // (a round that is over has no second markers: each Dig ended, and with it the piece; while a Dig goes on, its piece is on its number)
-    const max = Math.max(D.run.boardNumbers, tr + 2, ...players.map(p => bestN(p) + 1), ...live.map(x => x.m.n + 1));
+    const max = Math.max(D.run.boardNumbers, tr + 1, ...players.map(p => bestN(p) + 1), ...live.map(x => x.m.n + 1));
     const crownCol = bd.crownStart + 1;
     const ord = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
     const rankOf = p => { const m = Board.marker(bd, p.id, 'best'); return m ? m.rank : 0; };

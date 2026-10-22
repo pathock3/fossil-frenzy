@@ -991,6 +991,10 @@ test('leaderboard: 0 to 9 by default; tap the small one while you dig for the fu
     await page.evaluate(() => window.DigDigBoomPlay.tick());
     assert.equal(await page.locator('#play .lbfull').count(), 1, 'the opponents move behind it and it stays open');
     await page.click('#play .lbfull'); assert.equal(await page.locator('#play .lbfull').count(), 0, 'a tap goes back to the Dig');
+    await page.evaluate(() => { const P = window.DigDigBoomPlay; Board.track(P.S.match.board, 'hard', 8); P.render(); });
+    assert.equal(await page.locator('#play section.lb .lbc').count(), 10, 'somebody at 8: still 0 to 9');
+    await page.evaluate(() => { const P = window.DigDigBoomPlay; Board.track(P.S.match.board, 'hard', 9); P.render(); });
+    assert.equal(await page.locator('#play section.lb .lbc').count(), 11, 'somebody at 9: one place more, for 10');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
