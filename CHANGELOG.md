@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — the drag glitch (really found), the Leaderboard, and a batch from your notes:**
+  - **Dragging a card over a Keep place:** the place got the class `over`, which is also the end-of-Dig overlay's class, so it jumped to the top-left corner full screen and flipped back at every pixel (that was the flicker, and why the title and cards moved). It now uses its own class.
+  - **Leaderboard between rounds:** nothing to tap. The round plays by itself, every piece that finished stays where it stopped with its gem (what it banked) or a starburst (BOOM), the continue button is there the whole time, and **Fast forward** jumps to the end. The Crown no longer flashes at every move. A piece stands on 0 on the little Leaderboard while you have not met a Monster.
+  - **End of the game:** tabs at the top left (Final, 1, 2, …) show any round's Leaderboard as it ended, with a Watch again button; the Round by round button is gone. In "Your cards", tap a card for the full-screen card, tap anywhere else to close.
+  - **The Crown** is just "the Crown". Panic Button: "The first time a roll would make you BOOM, take an Extra Roll, then this card breaks" (a broken card lies face down until the end of the Dig). Thorned Gadget: "At any time, you may lose 2 Health to take an Extra Roll" (the sheet has both).
+  - **A defeated Monster** needs no Continue: it is stamped Defeated at once, and tapping the Mine or the Bank goes on. Take damage asks first when you still have an Extra Roll (or a card to use). Take damage is a compact button.
+  - **Final round:** the top-right of the Leaderboard says "keep digging till you reach N"; Fast-forward only appears once you are one past your own best (your job is to beat it, not to wait); once everyone else has BOOMed you may keep digging or see the result.
+  - **Cards that looked missing:** dimmed Power cards are dimmed with a veil instead of a filter (filters on text-heavy cards are a known cause of the iPad dropping parts of them). Your report of cards vanishing with an Extra Roll I could not reproduce: please tell me if it still happens.
+
 - **Dig Dig BOOM! — iPhone on its side:** a screen shorter than 640 px (an iPhone 17 in landscape is 874 × 402) now gets the same layout as a tall one, scaled down to fit, instead of a squeezed one: the pack, Starter Kit, table (with its Bank and die), Banking screen and Leaderboard all fit, and dragging cards still works. (It is `DDB.screen.designHeight`.)
 
 - **Dig Dig BOOM! — Bonus Monster cards** no longer mention gems: just the damage number, big.

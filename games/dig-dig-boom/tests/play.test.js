@@ -187,11 +187,35 @@ test('table: tapping a card that defeats the Monster defeats it at once — no t
     assert.equal(await page.locator('#play .tcard.elig').count(), 1, 'the Pet glows');
     await page.click('#play .tcard.elig');                                           // the Pet
     assert.equal(await stOf(page, () => !!window.DigDigBoomPlay.S.st.fight), true, 'defeated, but the fight is still open: you may use other cards first');
-    assert.match(await page.locator('#play [data-p=face]').innerText(), /defeated: continue/i);
+    assert.equal(await page.locator('#play [data-p=face]').count(), 0, 'no "continue" button: the Monster is defeated');
+    assert.equal(await page.locator('#play .deck.live').count(), 1, 'the Mine is lit: tapping it is how you go on'); assert.equal(await page.locator('#play .pile.bankp.live').count(), 1, 'and so is the Bank');
+    await page.click('#play [data-p=dig]');                                          // digging on finishes the fight and draws the next card
+    assert.deepEqual(await stOf(page, () => { const s = window.DigDigBoomPlay.S.st; return [s.survived, s.defeated, s.heart, s.monsterPile.length, !!s.fight, s.fight && s.fight.monster.name]; }), [1, 1, 10, 1, true, 'Monster B'], 'the first Monster is done, the next one is up');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('table: Take damage asks first when you still have an Extra Roll to use ("You can still use an Extra Roll"), then takes it on the second tap', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await begin(page, { mine: ['MO-02'], dice: [1], start: { reroll: 2, heart: 10 } });
+    await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await page.waitForSelector('#play [data-p=face]:not(.waitroll)');
     await page.click('#play [data-p=face]');
-    assert.equal(await stOf(page, () => !!window.DigDigBoomPlay.S.st.fight), false, 'the fight is over');
-    assert.deepEqual(await stOf(page, () => { const s = window.DigDigBoomPlay.S.st; return [s.survived, s.defeated, s.heart, s.monsterPile.length, !!s.fight]; }), [1, 1, 10, 1, false]);
-    assert.match(await page.locator('#play [data-p=bank]').innerText(), /^BANK\s*1/i, 'a defeated Monster is worth a gem');
+    assert.match(await page.locator('#play .takedmg').innerText(), /can still use an Extra Roll[\s\S]*again/i);
+    assert.equal(await stOf(page, () => !!window.DigDigBoomPlay.S.st.fight), true, 'nothing was taken yet');
+    await page.click('#play [data-p=face]');
+    assert.equal(await stOf(page, () => !!window.DigDigBoomPlay.S.st.fight), false, 'the second tap takes it');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('table: after a defeated Monster, tapping the Bank banks (the fight ends first), with no continue button', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await begin(page, { mine: ['MO-01', 'MO-02'], dice: [10, 10] });
+    await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await page.click('#play .tcard.elig');
+    await page.click('#play [data-p=bank]');
+    assert.deepEqual(await stOf(page, () => { const s = window.DigDigBoomPlay.S.st; return [s.survived, !!s.fight, s.over && s.over.kind]; }), [1, false, 'bank']);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -331,13 +355,13 @@ test('table: after the roll a button takes the damage — then you see your new 
   } finally { await browser.close(); }
 });
 
-test('table: defeating a Monster with a card stamps it Defeated', SKIP, async () => {
+test('table: defeating a Monster with a card stamps it Defeated at once', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     await begin(page, { mine: ['MO-01'], dice: [10] });
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]');
-    await page.click('#play .tcard.elig'); assert.equal(await page.locator('#play .stamp').count(), 0, 'not until you continue');
-    await page.click('#play [data-p=face]');
+    assert.equal(await page.locator('#play .stamp').count(), 0, 'not before a card defeats it');
+    await page.click('#play .tcard.elig');
     assert.match(await page.locator('#play .stamp').innerText(), /defeated/i);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -555,16 +579,20 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.known), 2, 'the two kit cards are on top of the Mine, face up; the third is shuffled in');
     assert.equal(await page.locator('#play [data-p=bank]').count(), 0, 'the final round has no Bank at all, and no gem count');
     assert.match(await page.locator('#play .aprompt').innerText(), /last round: nobody banks|in the lead/i, 'it says why, and what to do');
-    assert.match(await page.locator('#play .lbhead').innerText(), /not in the lead: keep digging/i);
+    assert.match(await page.locator('#play .lbhead').innerText(), /keep digging till you reach/i);
     await script(page, { mine: ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01'], dice: Array(30).fill(10) });
-    for (let i = 0; i < 6 && !(await page.locator('#play .over').count()); i++) { await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await faceIt(page); }
+    for (let i = 0; i < 9 && !(await page.locator('#play .over').count()); i++) { await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await faceIt(page); }
     assert.match(await page.locator('#play .over').innerText(), /in the lead![\s\S]*Everyone else is out/i);
     await page.click('#play [data-p=prep]');                                             // the last round: straight to the end, which is the Leaderboard
-    assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown Jewel!/);
-    assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'the result is shown on the Leaderboard'); assert.equal(await page.locator('#play .bpl.me .cjewel').count(), 1, 'the Crown Jewel is on your name, at the bottom'); assert.equal(await page.locator('#play .bcrown').count(), 0, 'and no longer on the board');
-    await page.click('#play [data-p=roundlog]'); assert.equal(await page.locator('#play .rrow').count(), 2, 'one row for each round'); assert.match(await page.locator('#play .panel').innerText(), /Banked|BOOM/);
-    await page.click('#play [data-p=enddone]'); assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown Jewel!/, 'and back to the Leaderboard');
-    await page.click('#play [data-p=owned]'); assert.ok(await page.locator('#play .ownedpanel .ocard').count() >= 1, 'the cards you built'); await page.click('#play [data-p=ownedclose]', { position: { x: 5, y: 5 } });
+    assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown!/);
+    assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'the result is shown on the Leaderboard'); assert.equal(await page.locator('#play .bpl.me .cjewel').count(), 1, 'the Crown is on your name, at the bottom'); assert.equal(await page.locator('#play .bcrown').count(), 0, 'and no longer on the board');
+    assert.equal(await page.locator('#play .dtab').count(), 3, 'tabs at the top left: Final and one for each of the 2 rounds');
+    await page.click('#play [data-p=donetab][data-k="1"]'); assert.match(await page.locator('#play .endtitle').innerText(), /Round 1/); assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'that round\'s Leaderboard as it ended');
+    assert.equal(await page.locator('#play [data-p=roundlog]').count(), 0, 'no separate Round by round button');
+    await page.click('#play [data-p=donetab][data-k=final]'); assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown!/, 'and back to the final board');
+    await page.click('#play [data-p=owned]'); assert.ok(await page.locator('#play .ownedpanel .ocard').count() >= 1, 'the cards you built');
+    await page.click('#play .ownedpanel .ocard >> nth=0'); assert.equal(await page.locator('#play .zoom .card').count(), 1, 'tapping a card makes it a full-screen card'); await page.click('#play .zoom'); assert.equal(await page.locator('#play .zoom').count(), 0, 'tap it to put it back'); assert.equal(await page.locator('#play .ownedpanel').count(), 1, 'the list is still there');
+    await page.click('#play [data-p=ownedclose]', { position: { x: 5, y: 5 } }); assert.equal(await page.locator('#play .ownedpanel').count(), 0, 'tapping anywhere else closes it');
     assert.equal(await page.locator('#play [data-p=startrun]').count(), 1, 'and a new run is one button away');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -619,7 +647,7 @@ test('run: BOOM skips the Escape Bonus and gives a Bronze Pack; your marker move
   try {
     await startRun(page);
     await script(page, { mine: ['MO-01', 'MO-02'], dice: [10, 1], start: { heart: 1 } });
-    assert.equal(await page.locator('#play .lbc .mk.pledge').count(), 0, 'nothing encountered yet');
+    assert.equal(await page.locator('#play .lbc .mk.pledge').count(), 1, 'nothing encountered yet: your piece stands on 0'); assert.equal(await page.locator('#play .lbc:first-child .mk.pledge').count(), 1);
     await page.click('#play [data-p=dig]');
     assert.equal(await page.locator('#play .lbc.here').innerText().then(t => t.split('\n')[0].trim()), '1', 'the Monster is in front of you and already counts');
     assert.equal(await page.locator('#play .lbc:has(.mk.pledge) .ln').innerText(), '1');
@@ -717,8 +745,8 @@ test('play: monkey test — random taps through whole runs at iPad sizes: no err
         const prefer = pool.filter(([, p]) => ['dig', 'roll', 'face', 'boardgo', 'openpack', 'pick', 'keepgo', 'kitpick', 'startround', 'prep', 'unzoom', 'ff', 'hold'].includes(p));
         const from = prefer.length && rnd() < .85 ? prefer : pool, [idx] = from[Math.floor(rnd() * from.length)];
         const h = await page.evaluateHandle(`${ALL}[${idx}]`);
-        try { await h.asElement().click({ timeout: 15000 }); } catch (e) { if (/not attached/.test(e.message)) continue; throw e; }       // the AI's fast-forwarded clock may redraw the panel under the monkey
-        const m = await page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ih: innerHeight, done: /Crown Jewel|You win|AI wins/.test((document.querySelector('#play .panel h2') || {}).textContent || '') }));
+        const el = h.asElement(); if (!el) continue; try { await el.click({ timeout: 15000 }); } catch (e) { if (/not attached/.test(e.message)) continue; throw e; }       // the AI's fast-forwarded clock may redraw the panel under the monkey
+        const m = await page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ih: innerHeight, done: /Crown|You win|AI wins/.test((document.querySelector('#play .panel h2') || {}).textContent || '') }));
         assert.ok(m.sh <= m.ih + 1, `the page scrolls at step ${i}`);
         done = m.done;
       }
@@ -933,7 +961,10 @@ test('the last round: when you are in the lead you can fast-forward the opponent
     await page.click('#play [data-p=startround]'); await page.waitForSelector('#play .fnote'); await page.click('#play [data-p=finalok]');
     assert.equal(await page.locator('#play .ffbtn').count(), 0, 'not in the lead: nothing to fast-forward');
     await page.evaluate(() => { const P = window.DigDigBoomPlay, m = P.S.match; Board.lockIn(m.board, 'me', 5); Run.refresh(P.S.run); P.render(); });
-    assert.match(await page.locator('#play .ffbtn').innerText(), /Fast-forward/i, 'in the lead: the button is there');
+    assert.equal(await page.locator('#play .ffbtn').count(), 0, 'in the lead, but you have not gone one past your own best: your job is to dig, not to wait');
+    assert.match(await page.locator('#play .aprompt').innerText(), /in the lead with 5[\s\S]*one past/i);
+    await page.evaluate(() => { const P = window.DigDigBoomPlay, m = P.S.match; P.S.st.monstersDug = 6; Board.track(m.board, 'me', 6); Run.refresh(P.S.run); P.render(); });
+    assert.match(await page.locator('#play .ffbtn').innerText(), /Fast-forward/i, 'past your best and in the lead: now you may wait');
     await page.click('#play [data-p=ff]');
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.ff), true); assert.match(await page.locator('#play .ffbtn').innerText(), /Fast-forwarding/);
     await page.evaluate(() => { const P = window.DigDigBoomPlay, m = P.S.match; Board.track(m.board, 'easy', 7); P.tick(); });
@@ -962,20 +993,20 @@ test('the last round: when everyone else has gone BOOM you have won, but the Dig
   } finally { await browser.close(); }
 });
 
-test('leaderboard: a bank keeps its piece with a blue gem showing what it earned, a BOOM keeps its piece in a starburst; both stay until you tap, then they go', SKIP, async () => {
+test('leaderboard: the round plays by itself; a piece whose Dig ended stays where it stopped with a blue gem (what it earned) or a starburst (BOOM); Fast forward jumps ahead; the button to go on is there all the time', SKIP, async () => {
   const { browser, page, errors } = await open({ menu: true });
   try {
-    await page.evaluate(() => { window.DigDigBoomPlay.S.opp = true; window.DDB_BOARD_PACE = 3600000; }); await page.click('#play [data-p=startrun]'); await page.waitForSelector('#play [data-p=openpack]');
-    await page.evaluate(() => { const P = window.DigDigBoomPlay; P.S.bests0 = { me: 0, easy: 0, medium: 0, hard: 0 }; P.S.boardAnim = { from: P.S.bests0, newBest: false, events: [{ r: 1, id: 'hard', k: 'move', n: 2 }, { r: 1, id: 'hard', k: 'bank', n: 2, gems: 7 }, { r: 1, id: 'easy', k: 'boom', n: 0 }], k: 0, stop: false, timer: null, rects: null, fx: null }; P.S.panel = 'board'; P.render(); });
-    await page.click('#play .bigboard .scroll');          // skip to the first result
-    assert.equal(await page.locator('#play .bgem').innerText(), '7', 'a gem with what it earned');
-    assert.equal(await page.locator('#play .bdisc[data-pid=hard]').count(), 1, 'and its piece is still there');
-    await page.click('#play .bigboard .scroll'); await page.waitForTimeout(100);
-    assert.equal(await page.locator('#play .bgem').count(), 0, 'a tap: the gem goes');
-    assert.equal(await page.locator('#play .bdisc[data-pid=hard]').count(), 0, 'with its piece');
-    assert.equal(await page.locator('#play .bdisc.blown[data-pid=easy]').count(), 1, 'the piece that went BOOM is still there, in its starburst'); assert.equal(await page.locator('#play .bboom').count(), 1);
-    assert.equal(await page.locator('#play .bcap small').count(), 0, 'the last result needs no tap: only the button is left');
-    assert.equal(await page.locator('#play .bigboard .scroll[data-p=boardstep]').count(), 0);
+    await page.evaluate(() => { window.DigDigBoomPlay.S.opp = true; }); await page.click('#play [data-p=startrun]'); await page.waitForSelector('#play [data-p=openpack]');
+    await page.evaluate(() => { window.DDB_BOARD_PACE = 3600000; const P = window.DigDigBoomPlay; P.S.bests0 = { me: 0, easy: 0, medium: 0, hard: 0 }; P.S.boardAnim = { from: P.S.bests0, newBest: false, events: [{ r: 1, id: 'hard', k: 'move', n: 2 }, { r: 1, id: 'hard', k: 'bank', n: 2, gems: 7 }, { r: 1, id: 'easy', k: 'boom', n: 0 }, { r: 1, id: 'me', k: 'move', n: 1 }], k: 0, timer: null, rects: null, fx: null }; P.S.panel = 'board'; P.render(); });
+    assert.equal(await page.locator('#play [data-p=boardgo]').count(), 1, 'the way on is there from the start'); assert.equal(await page.locator('#play [data-p=boardfast]').count(), 1, 'and so is Fast forward');
+    assert.equal(await page.locator('#play .bcap small').count(), 0, 'nothing says tap');
+    await page.evaluate(() => { window.DDB_BOARD_PACE = 5; window.DigDigBoomPlay.act('boardfast'); });
+    await page.waitForFunction(() => window.DigDigBoomPlay.S.boardAnim.k === 4);
+    assert.equal(await page.locator('#play .bgem').innerText(), '7', 'the gem with what it earned stays');
+    assert.equal(await page.locator('#play .bdisc[data-pid=hard]').count(), 1, 'and so does its piece');
+    assert.equal(await page.locator('#play .bdisc.blown[data-pid=easy]').count(), 1, 'the piece that went BOOM stays, in its starburst'); assert.equal(await page.locator('#play .bboom').count(), 1);
+    assert.equal(await page.locator('#play [data-p=boardfast]').count(), 0, 'at the end there is nothing left to fast forward');
+    assert.equal(await page.locator('#play .bigboard .scroll[data-p=boardstep]').count(), 0, 'nothing to tap');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -1079,24 +1110,22 @@ test('leaderboard: 0 instead of Start; a gold-trimmed chip for each player stack
     assert.deepEqual((await page.locator('#play .bigboard .bcol .bn').allInnerTexts()).slice(0, 4).map(t => t.replace(/\D/g, '')), ['0', '1', '2', '3'], 'numbers start at 0');
     assert.equal(await page.locator('#play .bigboard .bn:has-text("Start")').count(), 0);
     assert.equal(await page.locator('#play .bigboard .bgrid .bcol >> nth=1').locator('.pchip').count(), 4, 'all four chips are stacked on 0');
-    assert.equal(await page.locator('#play .bigboard .bcol:nth-child(5) .bcrown').count(), 1, 'the Crown Jewel waits on 3');
+    assert.equal(await page.locator('#play .bigboard .bcol:nth-child(5) .bcrown').count(), 1, 'the Crown waits on 3');
     assert.equal(await page.locator('#play .bigboard .bspot:not(.lab)').count() % 4, 0); assert.equal(await page.locator('#play .bigboard .blabels .bspot').count(), 4, 'a row for each player');
     const colors = await page.locator('#play .bplayers .bpl').evaluateAll(els => els.map(e => getComputedStyle(e).color));
     assert.equal(new Set(colors).size, 4, 'each name in its own colour');
-    await page.evaluate(() => { window.DDB_BOARD_PACE = 20; const P = window.DigDigBoomPlay, m = P.S.match; for (const [id, n] of [['hard', 4], ['me', 5]]) { Board.track(m.board, id, n); Board.lockIn(m.board, id, n); } P.S.boardAnim = { from: P.S.bests0, newBest: true, events: [{ r: 1, id: 'hard', k: 'move', n: 4 }, { r: 1, id: 'hard', k: 'bank', n: 4, gems: 6, crown: true }, { r: 1, id: 'me', k: 'move', n: 5 }, { r: 1, id: 'me', k: 'bank', n: 5, gems: 9, crown: true, newBest: true }], k: 0, stop: false, timer: null, rects: null }; P.render(); });
+    await page.evaluate(() => { window.DDB_BOARD_PACE = 3600000; const P = window.DigDigBoomPlay, m = P.S.match; for (const [id, n] of [['hard', 4], ['me', 5]]) { Board.track(m.board, id, n); Board.lockIn(m.board, id, n); } P.S.boardAnim = { from: P.S.bests0, newBest: true, events: [{ r: 1, id: 'hard', k: 'move', n: 4 }, { r: 1, id: 'hard', k: 'bank', n: 4, gems: 6, crown: true }, { r: 1, id: 'me', k: 'move', n: 5 }, { r: 1, id: 'me', k: 'bank', n: 5, gems: 9, crown: true, newBest: true }], k: 0, timer: null, rects: null, fx: null }; P.render(); });
     assert.equal(await page.locator('#play .pchip:not(.mini):has-text("You")').count(), 1);
-    assert.equal(await page.locator('#play .bpl.me .cjewel').count(), 0, 'nobody holds the Crown Jewel until their result is told');
+    assert.equal(await page.locator('#play .bpl.me .cjewel').count(), 0, 'nobody holds the Crown until their result is told');
     assert.equal(await page.locator('#play .bcol:nth-child(5) .bcrown').count(), 1, 'it waits on 3');
-    await page.click('#play .bigboard .scroll'); assert.match(await page.locator('#play .bcap').innerText(), /Hard AI banked at 4 with 6 gems/);
-    assert.match(await page.locator('#play .bcap').innerText(), /tap to continue/i, 'it waits after a bank');
-    assert.equal(await page.locator('#play .newbest').count(), 0, 'your result has not been told yet');
-    await page.click('#play .bigboard .scroll');          // it plays on by itself: your move, then your bank
-    await page.waitForSelector('#play .newbest');
-    assert.equal(await page.locator('#play .bcrown').count(), 0, 'once someone locks in 3 or more the Crown Jewel leaves the board...');
+    await page.evaluate(() => { window.DDB_BOARD_PACE = 20; window.DigDigBoomPlay.act('boardfast'); });
+    await page.waitForFunction(() => window.DigDigBoomPlay.S.boardAnim.k === 4);
+    assert.equal(await page.locator('#play .bcrown').count(), 0, 'once someone locks in 3 or more the Crown leaves the board...');
     assert.equal(await page.locator('#play .bpl.me .cjewel').count(), 1, '...for their name');
-    assert.match(await page.locator('#play .bcap').innerText(), /You banked at 5 with 9 gems/); assert.equal(await page.locator('#play .bcap small').count(), 0, 'and that was the last result: no tap needed, only the button');
+    assert.match(await page.locator('#play .bcap').innerText(), /You banked at 5 with 9 gems/); assert.equal(await page.locator('#play .bcap small').count(), 0, 'nothing to tap: only the button');
+    assert.equal(await page.locator('#play .newbest').count(), 1, 'New Best! is said in the caption');
     await page.evaluate(() => { const P = window.DigDigBoomPlay; Board.lockIn(P.S.match.board, 'easy', 6); P.S.boardAnim = null; P.render(); });
-    assert.equal(await page.locator('#play .bpl[data-pid=easy] .cjewel').count(), 1, 'a higher number steals the Crown Jewel');
+    assert.equal(await page.locator('#play .bpl[data-pid=easy] .cjewel').count(), 1, 'a higher number steals the Crown');
     assert.equal(await page.locator('#play .newbest').count(), 0);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }

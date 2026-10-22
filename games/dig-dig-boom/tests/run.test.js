@@ -1,4 +1,4 @@
-// A run: rounds of Dig + Prep, the Leaderboard and the Crown Jewel, for one player (the Run engine and the pledge rules of the Dig engine).
+// A run: rounds of Dig + Prep, the Leaderboard and the Crown, for one player (the Run engine and the pledge rules of the Dig engine).
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path');
@@ -151,7 +151,7 @@ test('the reward ladder (the owner\'s): gems -> draw:keep, in steps of 6, Gold+ 
   assert.deepEqual(DDB.run.ladder.map(p => p.name), ['Bronze', 'Bronze+', 'Silver', 'Silver+', 'Gold', 'Gold+']);
 });
 
-test('Leaderboard and Crown Jewel: the tracker starts at 2; banking above it (3 is enough) takes the Crown and moves the tracker; BOOM locks in nothing', () => {
+test('Leaderboard and Crown: the tracker starts at 2; banking above it (3 is enough) takes the Crown and moves the tracker; BOOM locks in nothing', () => {
   const run = firstRound({ keepIds: ['PW-02'] }); Run.beginDig(run, { seed: 8 });
   run.dig.heart = 10;
   play(run, ['MO-01', 'MO-02', 'TR-01'], ['dig', 'dig', 'bank'], 10);          // two Monsters, each beaten by the Pet: survived 2, not more than 2
@@ -189,7 +189,7 @@ test('the app has no pledging: even with the Crown reached, nothing can be pledg
   assert.equal(DDB.rules.pledges, false); assert.ok(!Dig.canPledge(st, 3) && !Dig.canPledge(st, 4)); assert.ok(!Run.pledge(run, 4)); assert.ok(Dig.can(st).bank);
 });
 
-test('the final round is a race: nobody banks; alone at the table you are in the lead once you pass the Crown tracker, and then the run ends with the Crown Jewel yours', () => {
+test('the final round is a race: nobody banks; alone at the table you are in the lead once you pass the Crown tracker, and then the run ends with the Crown yours', () => {
   const run = Run.start(cards, { seed: 14, rounds: 2 });
   kitOne(run); Run.beginDig(run, { seed: 1 });
   play(run, ['TR-01'], ['dig', 'bank'], 1); Run.finishDig(run);                              // round 1: survived 0, banked

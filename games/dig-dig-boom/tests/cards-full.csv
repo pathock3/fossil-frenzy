@@ -57,7 +57,7 @@ ON-18,Grit Caddy,Ongoing,,Booster,1,"Whenever you spend 3+ {grit} on one roll, g
 ON-19,Monster Jerky,Ongoing,,Booster,1,"Whenever you defeat a Monster, +3 {heart}"
 ON-20,Monster Scope,Ongoing,,Booster,1,+2 to your rolls against Monsters with 5+ {damage}
 ON-21,Nurse Bot,Ongoing,,Booster,1,"Whenever you gain {heart}, gain 1 more"
-ON-22,Panic Button,Ongoing,,Booster,1,"The first time each Dig a roll would make you BOOM, reroll it for free"
+ON-22,Panic Button,Ongoing,,Booster,1,"The first time a roll would make you BOOM, take an Extra Roll, then this card breaks"
 ON-23,Patch Kit,Ongoing,,Booster,1,"Whenever you take {damage}, +1 {heart}"
 ON-24,Pep Horn,Ongoing,,Booster,1,"Whenever you gain {grit}, gain 1 more"
 ON-25,Pet Whistle,Ongoing,,Booster,1,Your Pet triggers on 9 instead of 10
@@ -66,7 +66,7 @@ ON-27,Redline,Ongoing,,Booster,1,"While you have 3 {heart} or less, +2 to your r
 ON-28,Salvage Claw,Ongoing,,Booster,1,"Whenever you defeat a Monster, +1 {grit} and +1 {heart}"
 ON-29,Second Spark,Ongoing,,Booster,1,"If your result is 3 or less, reroll for free"
 ON-30,Stubborn Engine,Ongoing,,Booster,1,"Whenever you take {damage}, +1 {grit}"
-ON-31,Thorned Gadget,Ongoing,,Booster,1,You may lose 2 {heart} instead of spending a {reroll}
+ON-31,Thorned Gadget,Ongoing,,Booster,1,"At any time, you may lose 2 {heart} to take an Extra Roll"
 ON-32,Trophy Case,Ongoing,,Booster,1,"Whenever you defeat a Monster, +2 {grit}"
 ON-33,Tune-Up,Ongoing,,Booster,1,+1 to your rolls
 ON-35,Victory Bell,Ongoing,,Booster,1,"Whenever you defeat a Monster, +1 {reroll}"

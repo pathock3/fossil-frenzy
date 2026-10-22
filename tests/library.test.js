@@ -27,7 +27,7 @@ test('library: an About Patrick section under the shelf (for a publisher): who h
   const t = [...LIBRARY.about.lines, LIBRARY.about.contact.lead].join(' ');
   assert.equal(LIBRARY.about.heading, 'About Patrick');
   assert.match(t, /Patrick Blim-Hockberger is a composer and elementary music teacher in Boulder, Colorado/);
-  assert.match(t, /board game designs[\s\S]*Claude Code/);
+  assert.match(t, /some of his board game designs[\s\S]*Claude Code/);
   assert.equal(LIBRARY.about.contact.email, 'patrickhockberger@gmail.com');
   assert.match(html, /mailto:\$\{esc\(L\.about\.contact\.email\)\}/, 'the address is a mail link');
 });

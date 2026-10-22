@@ -29,11 +29,11 @@ The game seats you against **all three at once** (`DDB.ai.opponents`): each has 
 
 **Speed is the tiebreaker.** Each opponent digs on its own clock; the Board gives a number's better spot to whoever reaches it first, so a quicker opponent wins ties against a slower one (and against you, if you dawdle). `DDB.ai.opponents[].speed` scales the pace in `DDB.ai.pace`.
 
-The win-chance table (`DDB.ai.phi`) is still the one measured with the Crown Jewel starting at 3, and for one opponent: re-running `tools/gather.js` for the new rules (and the Crown at 2) would strengthen all three thinking levels. Not done (slow).
+The win-chance table (`DDB.ai.phi`) is still the one measured with the Crown starting at 3, and for one opponent: re-running `tools/gather.js` for the new rules (and the Crown at 2) would strengthen all three thinking levels. Not done (slow).
 
 ## Updates since the measurements below
 
-* The Crown Jewel now starts at 2 (reaching 3 claims it), the Starter Kit's empty places are face-up gem cards, gem-boosting cards are out of the Booster Deck, and a Power card is only offered when its requirements are met. The win-chance table (`DDB.ai.phi`) was measured before these: **re-run `tools/gather.js` and paste the new table in** (until then the AI falls back to a guess for a best of 3, which is a little off).
+* The Crown now starts at 2 (reaching 3 claims it), the Starter Kit's empty places are face-up gem cards, gem-boosting cards are out of the Booster Deck, and a Power card is only offered when its requirements are met. The win-chance table (`DDB.ai.phi`) was measured before these: **re-run `tools/gather.js` and paste the new table in** (until then the AI falls back to a guess for a best of 3, which is a little off).
 * It plays at human speed on screen (`DDB.ai.pace`); Fast forward is unchanged. Its Prep runs in small time slices (`prepSteps`) so it never freezes the screen.
 
 ## What we measured (simulated matches, 4 rounds, seats swapped; ±4–5 points at 400–800 matches)

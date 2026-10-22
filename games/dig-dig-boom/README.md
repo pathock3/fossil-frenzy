@@ -8,7 +8,7 @@ One file: `index.html`. Open it directly or from the build. On the library shelf
 - **Card behaviour is read from the card text.** `DDB.phrases` lists sentence patterns; the `dig` script maps each to an effect. Change a card in the sheet and the game follows. A text the phrase book does not understand is shown as "not built yet" in the kit chooser, and `tests/dig.test.js` fails if any card of the fixture is not understood. To teach the game a new kind of sentence: add a pattern to `DDB.phrases` and handle its `op` in `Dig`.
 
 ## Scripts (in order)
-`data` → `engine` (sheet reading, text fitting) → `dig` (one Dig: roll, Grit, Rerolls, triggers, damage, every effect, save/load) → `board` (Leaderboard, Crown Jewel, Pledge, dibs; any number of players) → `run` (rounds, Prep, Booster Packs, Starter Kit, Escape Bonus, save/load) → `ui` (the Top Tab card design, Cards page) → `solo` (the game screen) → `printv` (print-and-play sheets).
+`data` → `engine` (sheet reading, text fitting) → `dig` (one Dig: roll, Grit, Rerolls, triggers, damage, every effect, save/load) → `board` (Leaderboard, Crown, Pledge, dibs; any number of players) → `run` (rounds, Prep, Booster Packs, Starter Kit, Escape Bonus, save/load) → `ui` (the Top Tab card design, Cards page) → `solo` (the game screen) → `printv` (print-and-play sheets).
 
 The engines have no DOM. State is plain data (the rng carries `.state()`/`.restore()`), so a game saves after every tap and a reload puts you back exactly where you were.
 

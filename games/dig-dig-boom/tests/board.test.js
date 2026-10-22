@@ -1,11 +1,11 @@
-// The Leaderboard and Crown Jewel for any number of players (Board engine): spots, dibs, pledges, the lead.
+// The Leaderboard and Crown for any number of players (Board engine): spots, dibs, pledges, the lead.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { Board, DDB } = require('./load.js');
 // (the engine tests below use a Crown that starts at 3, whatever the game's own starting number is: Board.create takes it)
 const mk = (...ids) => Board.create(ids.map(id => ({ id, name: id, color: '#fff' })), 3);
 
-test('the game starts the Crown Jewel at 2 (owner): reaching 3 is enough to claim it', () => {
+test('the game starts the Crown at 2 (owner): reaching 3 is enough to claim it', () => {
   assert.equal(DDB.run.crownStart, 2);
   const b = Board.create([{ id: 'a', name: 'a', color: '#fff' }]);
   assert.equal(Board.tracker(b), 2); assert.equal(Board.holder(b), null);
