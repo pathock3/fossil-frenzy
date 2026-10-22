@@ -94,3 +94,11 @@ Today nobody banks in the last round; the leader just waits and the round ends w
 
 ## After the 19th Bonus Monster
 There are Bonus Monster cards for damage 8 to 19. If a Dig goes past 19 Bonus Monsters the game repeats a 19.
+
+## From the combat redesign (rulings I made; tell me if you meant otherwise)
+- **Ongoing cards "at or below the die"**: Ongoing cards have no number, so they still work as always-on effects (not as cards that fire at a number). If you want Ongoing cards on the Power line with numbers, give them one in the sheet and tell me.
+- **Twin Drill** ("keep the higher result") now does nothing: your best roll always stays. It needs a new job or should go.
+- **Using a card no longer locks your roll in** (that was the old Reroll rule); Extra Rolls stay available all battle. Backfire ("you may make it a 10") is still a tap.
+- **Block cards** are unchanged numerically: "Block N" and "Deal N damage to the Monster" are the same effect (N markers). Reword them in the sheet when you like.
+- **Resolving order**: cards still fire when you tap them (or "Use all"); nothing fires by itself except what the AI and "Use all" do.
+- The Bonus Monster Loot is 1 (your latest ruling), not 2.

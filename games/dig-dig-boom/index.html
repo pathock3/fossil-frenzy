@@ -378,7 +378,9 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .tcard { position: relative; display: block; flex: none; border-radius: 12px; transition: transform .12s; }
 #play .tableau > * + .tcard { margin-left: var(--ov); }
 #play .tcard.off { opacity: .85; filter: grayscale(.3) brightness(.72); }          /* a card you cannot use on this roll is dimmed, never faded out: it is still there */
-#play .tcard.done { opacity: .7; }
+#play .tcard.done { opacity: .8; transform: rotate(90deg) scale(.8); margin: 0 calc(var(--cb) * 15px); }          /* a card you have used lies on its side until the battle is over */
+#play .dline { flex: none; align-self: stretch; display: flex; align-items: center; justify-content: center; width: 44px; margin: 0; border-left: 3px dashed rgba(255,255,255,.55); border-right: 3px dashed rgba(255,255,255,.55); background: rgba(255,255,255,.05); border-radius: 8px; }
+#play .dline .d10 { width: 36px; height: 36px; filter: drop-shadow(0 3px 0 rgba(0,0,0,.4)); }
 #play .tcard.elig { outline: 4px solid var(--accent); outline-offset: 3px; animation: pulse 1.2s ease-in-out infinite; transform: translateY(-8px); }
 #play .tcard.pick { outline: 4px solid var(--accent); outline-offset: 3px; animation: pulse 1.2s ease-in-out infinite; }
 #play .tcard .tg { position: absolute; left: 6px; bottom: 6px; z-index: 3; font-size: 12px; font-weight: 800; background: #1d1712; color: #fff; border-radius: 6px; padding: 2px 7px; }
@@ -883,6 +885,11 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .over.fx h2 { animation: ribbonin .7s cubic-bezier(.2,.9,.3,1.1) both; }
 @keyframes ribbonin { 0% { transform: scaleX(.15) translateY(-20px); opacity: 0; } 55% { transform: scaleX(1.06); opacity: 1; } 100% { transform: scaleX(1); } }
 @media (max-height: 780px) { #play .over h2 { font-size: 48px; padding: 8px 0 10px; } #play .over h2::before, #play .over h2::after { top: 14px; } #play .over .big { font-size: 20px; } }
+/* damage markers lie on the Monster: what you take is its damage minus them */
+#play .dmarks { position: absolute; left: 6px; right: 6px; bottom: 8px; z-index: 6; display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; pointer-events: none; }
+#play .dmarks i { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 34% 28%, #ff9a8a, #d4301f 60%, #7a120a); border: 2px solid #fff; box-shadow: 0 2px 0 rgba(0,0,0,.5); animation: markdrop .35s cubic-bezier(.3,1.5,.5,1) backwards; }
+#play .dmarks b { font-size: 14px; color: #fff; text-shadow: 0 1px 2px #000; align-self: center; }
+@keyframes markdrop { 0% { transform: translateY(-26px) scale(1.5); opacity: 0; } 100% { transform: none; opacity: 1; } }
 /* The Bank is a button, not a place for cards: a raised gold key at the right edge, bottom-aligned, that presses down */
 #play .piles { width: auto; height: auto; align-self: flex-end; margin-left: 0; flex: none; }
 #play .pile.bankp, #play .pile.bankp.live { flex: none; width: 210px; height: auto; min-height: 96px; padding: 10px 24px; flex-direction: row; gap: 14px; border-radius: 24px; border: 3px solid #fff0b8; color: #2a1700; font-size: 34px; font-weight: 900; letter-spacing: .02em; background: linear-gradient(180deg, #ffd45e, #e8920f); box-shadow: 0 8px 0 #8a4f06, 0 16px 24px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.55); overflow: visible; transition: transform .08s, box-shadow .08s; }
@@ -976,13 +983,13 @@ const DDB = {
   monsterLooks: [
     { sym: 't-monster', name: 'horned beast', hot: 'rgba(255,226,150,.95)', c1: '#f25a3c', c2: '#d23a27', border: '#7a1d1d', ink: '#2a0d0d' },
     { sym: 'm-slime',   name: 'one-eyed slime', hot: 'rgba(240,255,170,.95)', c1: '#6fd16a', c2: '#3fa84a', border: '#1d5a2a', ink: '#0d2a14' },
-    { sym: 'm-shroom',  name: 'spore mushroom', hot: 'rgba(210,240,255,.95)', c1: '#4aa3e6', c2: '#2f76c0', border: '#123a6e', ink: '#08203f' },
+    { sym: 'm-shroom',  name: 'spore mushroom', hot: 'rgba(255,244,190,.95)', c1: '#f2c53a', c2: '#d9a21a', border: '#6a4a08', ink: '#2a1d02' },          // (yellow, so the blue Loot gem is the only blue on a Monster card)
     { sym: 'm-skull',   name: 'bonus skull', hot: 'rgba(235,220,255,.95)', c1: '#9a7fe0', c2: '#6d55b8', border: '#2d1f66', ink: '#150d33' },
   ],
   // {code} in Card Text -> icon
   iconCodes: { heart: 'i-heart', reroll: 'i-reroll', damage: 'i-damage', gem: 'i-gem' },
   // Poker-size card, in hundredths of an inch (1 unit = 0.01 in).
-  card: { trimW: 250, trimH: 350, bleed: 12.5, safe: 12.5 },
+  card: { trimW: 250, trimH: 350, bleed: 12.5, safe: 12.5, lootArrow: false },          // lootArrow: a small "damage -> gem" strip on Monster cards (off: the corner gem says it)
   // ---- The rules of a Dig (v2.7 Rules tab). Numbers here are the rules; the engine (script "dig") only does what they say. ----
   rules: {
     die: 10,                                             // sides of the die (owner: a d10)
@@ -994,7 +1001,7 @@ const DDB = {
     line: { min: 1, max: 10 },
     startingDeck: 'Starting',                            // the Deck column value for the Mine's cards and the Pet
     survivedGems: 1, geodeGems: 1,
-    beyond: { firstDamage: 8, maxDamage: 19, gems: 2 },  // Monsters after the Mine runs out: 8, 9, ... up to 19 (there is a Bonus Monster card for each), and worth 2 gems
+    beyond: { firstDamage: 8, maxDamage: 19, gems: 1 },  // Monsters after the Mine runs out: 8, 9, ... up to 19 (there is a Bonus Monster card for each), and worth 1 gem (Loot) like every other Monster (owner)
     kitSizes: [1, 2, 2, 3, 3],                           // Round tracker: Starter Kit cards per round; 4 rounds use the first four (owner: five rounds = 1, 2, 2, 3, 3)
     pledges: false,                                      // owner: the app has no pledging; your live marker simply follows every Monster you survive (the engine still knows pledges)
     soloKit: 3,                                          // Starter Kit size offered in the solo prototype (the round tracker's round 1 is 1)                              // Round tracker: Starter Kit cards per round (testing)
@@ -1085,6 +1092,8 @@ const DDB = {
       ['ifNoOther', "^If (?:no other card triggers|this is the only card you trigger), (.+)$"],
       ['ifHeart',   "^If you have (\\d+) \\{heart\\} or less, (.+)$"],
       ['block',     "^Block (\\d+) \\{damage\\}$"],
+      ['block',     "^Deal (\\d+) \\{damage\\} to the Monster$"],
+      ['raise',     "^\\+(\\d+) to your result$"],          // slide the die up: upright cards it now reaches fire too (a chain), the Pet included          // the same thing, as the rules now say it: that many damage markers go on the Monster
       ['survive1',  "^If this Monster would make you BOOM, survive with (\\d+) \\{heart\\}$"],
       ['halve',     "^This Monster deals half \\{damage\\}, rounded down$"],
       ['defeat',    "^Defeat the Monster$"],
@@ -1127,6 +1136,7 @@ const DDB = {
       ['double',     "^Double your result against your first Monster each Dig$"],
       ['bounty',     "^Monsters you defeat are worth (\\d+) \\{gem\\}$"],
       ['bumper',     "^Block (\\d+) \\{damage\\} from every Monster$"],
+      ['bumper',     "^Deal (\\d+) \\{damage\\} to every Monster$"],
       ['cowcatcher', "^Your first Monster each Dig deals no \\{damage\\}$"],
       ['panic',      "^The first time each Dig a roll would make you BOOM, reroll it for free$"],
       ['thorned',    "^You may lose (\\d+) \\{heart\\} instead of spending a \\{reroll\\}$"],
@@ -1264,7 +1274,7 @@ const Dig = (() => {
     switch (h.op) {
       case 'list': return { op: 'list', items: listItems(s) };
       case 'whenKept': { const k = match(PH.kept, s); return k ? { op: 'whenKept', kept: k.op } : null; }
-      case 'gainHalf': case 'gainDmg': case 'block': case 'survive1': case 'halve': case 'defeat': case 'noDamage': case 'echo': case 'slide': case 'fill': case 'rewind': case 'shoo':
+      case 'gainHalf': case 'gainDmg': case 'block': case 'raise': case 'survive1': case 'halve': case 'defeat': case 'noDamage': case 'echo': case 'slide': case 'fill': case 'rewind': case 'shoo':
         return { op: h.op, n: m[1] ? Number(m[1]) : undefined };
       case 'gainPer': { const per = match(PH.per, m[3]); return per ? { op: 'gainPer', n: Number(m[1]), res: m[2], per: per.op } : null; }
       case 'ifNoOther': { const t = parseSentence(m[1]); return t ? { op: 'if', cond: { noOther: true }, then: t } : null; }
@@ -1443,14 +1453,15 @@ const Dig = (() => {
         break;
       }
       case 'seq': for (const x of e.list) apply(st, x, ctx); break;
-      case 'block': if (f) { f.block += e.n; log(st, 'effect', `${src}: block ${e.n} {damage}`); } break;
+      case 'block': if (f) { f.block += e.n; log(st, 'effect', `${src}: ${e.n} damage marker${e.n === 1 ? '' : 's'} on the Monster`); } break;
+      case 'raise': if (f) { f.raise = (f.raise || 0) + e.n; log(st, 'effect', `${src}: the die slides up ${e.n} → ${resultTotal(st)}`); } break;
       case 'survive1': if (f) { f.surviveAt = e.n; log(st, 'effect', `${src}: if this Monster would BOOM you, you survive with ${e.n} {heart}`); } break;
       case 'halve': if (f) { f.halve = true; log(st, 'effect', `${src}: this Monster deals half {damage}`); } break;
       case 'defeat': if (f) { f.defeat = true; log(st, 'effect', `${src}: the Monster is defeated`); } break;
       case 'noDamage': if (f) { f.noDamage = true; log(st, 'effect', `${src}: you take no damage`); } break;
       case 'falcon': {
         if (!f) break;
-        const d = rollDie(st); let r = d + modsTotal(st, f);
+        const d = rollDie(st); let r = d + modsTotal(st, f) + (f.raise || 0);
         r = transform(st, f, r);
         log(st, 'roll', `${src}: rolls again — ${d} → ${r}`);
         if (r >= e.a) { f.defeat = true; log(st, 'effect', `${src}: ${r} is ${e.a} or more — the Monster is defeated`); } else log(st, 'effect', `${src}: ${r} is not enough`);
@@ -1626,7 +1637,7 @@ const Dig = (() => {
     if (f.fixed !== null) return { total: f.fixed, parts: [{ label: 'Fixed', v: f.fixed }] };
     if (f.die === null) return { total: 0, parts: [] };
     const parts = [{ label: 'Die', v: f.die }]; let r = f.die;
-    const mt = modsTotal(st, f); if (mt) { parts.push({ label: 'Cards', v: mt }); r += mt; }
+    const mt = modsTotal(st, f) + (f.raise || 0); if (mt) { parts.push({ label: 'Cards', v: mt }); r += mt; }
     const t = transform(st, f, r); if (t !== r) parts.push({ label: 'Cards change it to', v: t, set: true });
     return { total: t, parts, raw: r };
   }
@@ -2669,13 +2680,14 @@ const AI = (() => {
     s += box(28, 28, W - 56, 64, 'band', `background:${t.color};--on:${t.on};border-radius:${u(7)}`);
     s += `<svg class="abs" style="left:${u(28)};top:${u(28)};width:${u(W - 56)};height:${u(64)};border-radius:${u(7)}" preserveAspectRatio="none"><rect width="100%" height="100%" fill="url(#${t.pattern})"/></svg>`;
     s += box(33, 36, 46, 46, 'disc', '', typeIcon(c.type, '78%', '#1d1712'));
-    const nw = c.number === null ? W - 56 - 62 : W - 56 - 62 - 50;
+    const pays = c.type === 'Monster' || c.type === 'Treasure', nw = c.number === null && !pays ? W - 56 - 62 : W - 56 - 62 - 50;
     if (c.type === 'Monster') s += nameBlock(c.name, 86, 33, nw, 52, 32, 17.5);          // a Monster's name says what it is: no type line under it
     else {
       s += nameBlock(c.name, 86, 34, nw, 38, 30, 17.5);
       s += box(86, 72, nw, 15, 'typeword band', `font-size:${u(13)}`, esc(c.type));
     }
     s += powerBadge(W - 28 - 50, 35, 44, c);
+    if (pays) s += gemBadge(W - 28 - 50, 35, 44, c, gem, c.type === 'Monster' ? (c.bonus ? D.rules.beyond.gems : D.rules.survivedGems) : E.gemWorth(c.text));
     return s;
   }
   const gemIcon = (sz, extra = '') => `<svg viewBox="0 0 24 24" style="width:${u(sz)};height:${u(sz)};flex:none;${extra}"><use href="#i-gem"/></svg>`;
@@ -2703,16 +2715,16 @@ const AI = (() => {
     }
     const gems = c.type === 'Monster' ? (c.bonus ? D.rules.beyond.gems : D.rules.survivedGems) : worth;                       // what a Monster is worth when survived comes from the rules (a Bonus Monster is worth more)
     const worthTxt = c.type === 'Monster' ? '' : 'each';          // a Monster is simply worth a gem: you can only bank once you have survived it
-    if (stat === 1) {          // Monster: art on top, the damage ladder in big tiles, what it is worth
-      s += artBox(28, 100, W - 56, 118, c);
+    if (stat === 1) {          // Monster: art, then the damage as the biggest, reddest thing on the card; the Loot is the gem in the corner (and a gem at the Monster's feet in the art)
+      const arrow = !!D.card.lootArrow;          // optional: a "damage -> gem" strip along the bottom (off by default)
+      s += artBox(28, 100, W - 56, 104, c);
+      if (c.type === 'Monster') s += box(W - 28 - 46, 100 + 104 - 46, 40, 40, '', 'pointer-events:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))', gemIcon(38));
       if (steps) {
-        if (c.bonus) s += stepTiles(steps, 31, 236, 213, 76, 56, step);          // a Bonus Monster has one number and no order to speak of
-        else {
-          s += box(31, 226, 213, 22, 'typeword', `font-size:${u(13)};color:#7a1d1d;display:flex;align-items:center;gap:${u(6)}`, `${dmgIcon(18)} DAMAGE, IN ORDER`);
-          s += stepTiles(steps, 31, 250, 213, 62, steps.length > 4 ? 34 : 46, step);
-        }
+        const th = arrow ? 84 : 108, ty = c.bonus ? 226 : 228, big = [96, 84, 66, 54, 40][Math.min(steps.length, 5) - 1];
+        if (!c.bonus) s += box(31, 207, 213, 20, 'typeword', `font-size:${u(12)};color:#7a1d1d;display:flex;align-items:center;gap:${u(6)}`, `${dmgIcon(16)} DAMAGE, IN ORDER`);
+        s += stepTiles(steps, 31, ty, 213, th, big, step);
+        if (arrow) s += box(31, 318, 213, 26, 'lootarrow', `font-size:${u(15)};font-weight:900;display:flex;align-items:center;justify-content:center;gap:${u(8)};color:#7a1d1d`, `${dmgIcon(18)} ➜ ${gemIcon(18)}`);
       } else s += box(31, 226, 213, 90, 'stat', `font-size:${u(104)};display:flex;align-items:center;justify-content:center;gap:${u(10)};color:#1d1712`, `${gems}${gemIcon(90)}`);
-      s += box(31, 318, 213, 26, 'stat', `font-size:${u(18)};display:flex;align-items:center;justify-content:center;gap:${u(6)};background:#2b86d1;color:#fff;border-radius:${u(8)}`, `${gems}${gemIcon(18)} ${worthTxt}`);
     } else {                   // two big tiles under a slim art strip
       s += artBox(28, 100, W - 56, 84, c);
       if (steps) {
@@ -2780,6 +2792,10 @@ const AI = (() => {
     const badge = letter ? `<span style="position:absolute;left:${u(8)};top:${u(6)};width:${u(30)};height:${u(30)};border-radius:50%;background:#fffaf0;border:${u(2.5)} solid ${k.border};color:${k.ink};font-weight:900;font-size:${u(20)};line-height:${u(25)};text-align:center;letter-spacing:0">${letter}</span>` : '';
     return box(x, y, w, h, 'art vivid', style, `<svg viewBox="0 0 24 24" style="color:${k.ink}"><use href="#${k.sym}"/></svg>${badge}`);
   }
+  // The gem in the corner: the same on every card that pays gems (a Geode's own gem, or the blue Loot gem of a Monster), with how many it pays. "Survive a Monster, take its Loot."
+  const gemBadge = (x, y, d, c, gem, n) => box(x, y, d, d, 'gembadge', `border-radius:50%;background:#fffaf0;border:${u(3.5)} solid #1d1712;display:flex;align-items:center;justify-content:center`,
+    `${gem ? gemSvg(gem, u(26)) : gemIcon(26)}<span style="position:absolute;right:${u(-7)};bottom:${u(-7)};min-width:${u(19)};height:${u(19)};border-radius:${u(10)};background:#1d1712;color:#fff;font:900 ${u(13)}/${u(19)}px system-ui,sans-serif;text-align:center">${n === null || n === undefined ? '' : n}</span>`)
+    + (c.type === 'Monster' ? box(x - 6, y + d + 2, d + 12, 12, 'lootword', `font-size:${u(9)};font-weight:900;letter-spacing:.16em;color:#fff;text-align:center;text-shadow:0 1px 0 rgba(0,0,0,.55)`, 'LOOT') : '');
   const powerBadge = (x, y, d, c) => c.number === null ? '' : box(x, y, d, d, 'num', `font-size:${u(d * 0.64)};border-width:${u(4)};border-color:#1d1712`, String(c.number));
   const typeColors = c => D.types[c.type];
   // ---------------- the page ----------------
@@ -3310,11 +3326,13 @@ const AI = (() => {
       const tag = (done ? '✓ ' : '') + (e.pet ? 'PET' : e.cloned ? '×2' : e.at < e.base ? '↓' + e.base : '') + (f && f.deferred.includes(e) ? ' waits' : '') + (need !== null ? `needs ≤${need} ♥` : '');
       return `<button class="${cls} ${(st.under[e.card.uid] || []).length ? 'hasunder' : ''}" data-p="card" data-uid="${e.card.uid}" data-id="${A.esc(e.card.id)}" aria-label="${A.esc(e.card.name)}, Power ${e.at}">${underOf(e.card)}${cw(A.playCard({ ...e.card, number: e.at }, 1), 'cb')}${tag ? `<span class="tg">${A.esc(tag)}</span>` : ''}</button>`;
     });
+    const nCards = cards.length;
+    if (after && power.length) cards.splice(power.filter(e => e.at <= total).length, 0, `<span class="dline" role="img" aria-label="The die is at ${total}">${d10(total, '')}</span>`);          // the die on the Power line: upright cards at or below it fire
     const pickO = o => st.pending && st.pending.kind === 'clone' && o !== st.pending.card;
     const buried = new Set(Object.values(st.under).flat());          // a Cloning Machine lies under the card it clones: it is drawn there, not in the Ongoing area
     const ong = st.ongoing.filter(o => !buried.has(o) && o !== held).map(o => `<button class="tcard inplay ${usable.includes(o) ? 'elig' : ''} ${isNew(o) ? 'arrive' : ''} ${pickO(o) ? 'pick' : ''} ${(st.under[o.uid] || []).length ? 'hasunder' : ''}" data-p="${pickO(o) ? 'card' : usable.includes(o) ? 'usemod' : 'zoom'}" data-uid="${o.uid}" data-id="${A.esc(o.id)}" aria-label="${A.esc(o.name)}, Ongoing">${underOf(o)}${cw(A.playCard(o, 1), 'cb')}${st.cloned.includes(o.uid) ? '<span class="tg">×2</span>' : ''}</button>`);
     S.tabSeen = nowSeen;
-    return `<section class="tableau" data-n="${cards.length + ong.length}">${cards.join('')}${ong.length ? '<span class="tsep"></span>' : ''}${ong.join('')}</section>`;
+    return `<section class="tableau" data-n="${nCards + ong.length}">${cards.join('')}${ong.length ? '<span class="tsep"></span>' : ''}${ong.join('')}</section>`;
   }
   // The card you just dug always lands in the same spot, right beside the Mine.
   // Drawing a card: it comes off the Mine (face down), slides into the flip spot and turns over on the way. Used for every card you flip, and by the main menu's picture.
@@ -3324,7 +3342,9 @@ const AI = (() => {
     const f = st.fight, fx = S.fx, before = S.dugShown;          // the card that was in the flip spot before this render: it stays visible underneath while the new card flips over it
     const under = c => c ? `<span class="under">${cw(A.playCard(c, 1), 'ca')}</span>` : '';
     if (f) S.dugShown = f.monster;
-    if (f) return `<div class="mcard" aria-label="${A.esc(f.monster.name)}"><span class="flipwrap ${f.monster.uid !== fx.mon ? 'landing' : ''}">${f.monster.uid !== fx.mon ? under(before) + drawn(cw(A.playCard(f.monster, 1, { step: f.step }), 'ca'), backOf('var(--ca)')) : cw(A.playCard(f.monster, 1, { step: f.step }), 'ca')}</span></div>`;       // the Monster is not a button: you leave the fight by tapping the Mine (dig on) or the Bank (stop)
+    const marks = f ? f.block + (Dig.flag(st, 'bumper') || 0) : 0;          // damage markers on the Monster: what you take is its damage minus these
+    const markers = marks > 0 ? `<span class="dmarks" role="img" aria-label="${marks} damage markers">${Array.from({ length: Math.min(marks, 7) }, () => '<i></i>').join('')}${marks > 7 ? `<b>+${marks - 7}</b>` : ''}</span>` : '';
+    if (f) return `<div class="mcard" aria-label="${A.esc(f.monster.name)}${marks ? ', ' + marks + ' damage markers' : ''}"><span class="flipwrap ${f.monster.uid !== fx.mon ? 'landing' : ''}">${f.monster.uid !== fx.mon ? under(before) + drawn(cw(A.playCard(f.monster, 1, { step: f.step }), 'ca'), backOf('var(--ca)')) : cw(A.playCard(f.monster, 1, { step: f.step }), 'ca')}</span>${markers}</div>`;       // the Monster is not a button: you leave the fight by tapping the Mine (dig on) or the Bank (stop)
     // Every card you dig lands here, face up. A Power or Ongoing card stays here until you dig the next card; then it moves up to the others (see tableauHTML).
     const show = st.last;
     S.dugShown = show || null;
@@ -3409,13 +3429,16 @@ const AI = (() => {
     return `<div class="panel helppanel"><div class="shead"><button class="chip back" data-p="closehelp">‹ Back</button><h2>How to play</h2></div><div class="scroll">
       <div class="how">
         ${card('1 · Dig', `<span class="cw hmini" style="--s:.36"><span class="cs"><span class="cardback"></span></span></span>${arrow}${mini(geo, { gem: 2 })}`, 'Tap the Mine to flip a card. Gems go in your Bank.')}
-        ${card('2 · Face the Monster', `${mini(monA, { step: 1 })}<span class="hdie">${d10(6, '')}</span>${mini(pet, { cls: 'glow' })}`, 'Tap the die. Use glowing cards. Take the damage. Then dig on, or bank.')}
+        ${card('2 · Face the Monster', `${mini(monA, { step: 1 })}<span class="hdie">${d10(6, '')}</span>${mini(pet, { cls: 'glow' })}`, 'Tap the die. Every upright card at or below it glows: use it and it lies down. Survive, and take the Loot.')}
         ${card('3 · Bank or push on', `<span class="hbankpic">5 ${ic('gem')}</span>${arrow}<span class="hsafe">Safe</span>`, 'Bank to keep your gems. Health at 0 is BOOM: you lose everything.')}
       </div>
       <p class="hline">${ic('heart')} <b>Win rounds</b> to open Booster Packs and build a better Mine. Be in the lead when the last round ends.</p>
       <details class="fine"><summary>The fine print</summary><ul>
         <li>The die is a d${R.die}; Health starts at ${R.start.heart}, Extra Rolls ${R.start.reroll} (up to ${R.caps.reroll}).</li>
-        <li>Cards you use resolve highest number first; damage is halved before Block is taken off.</li>
+        <li>If it's upright and at or below the die, do it and turn it. A card that raises your result slides the die up, and any upright cards it now reaches (the Pet too) fire as well. Everything is untapped after the battle.</li>
+        <li>An Extra Roll rolls again: your best roll stays, tapped cards stay tapped, so it can only help.</li>
+        <li>Cards that deal damage to the Monster put damage markers on it: you take its damage minus its markers (never below 0). Damage is halved before markers are taken off.</li>
+        <li>Survive a Monster, take its Loot: a gem (1, for every Monster, the Bonus Monsters too).</li>
         <li>Result changes apply in order: bonuses, then double, then "becomes", then "less than".</li>
         <li>"Whenever you gain" only counts when the track actually moves.</li>
         <li>The last round is a race: nobody banks. Whoever is in the lead may wait; the rest must keep digging.</li>

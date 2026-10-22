@@ -283,7 +283,7 @@ test('table: when the Mine runs out a message says what happens next, once, and 
     await page.evaluate(() => { const P = window.DigDigBoomPlay; P.S.run = null; });
     await page.click('#play [data-p=dig]');
     await page.waitForSelector('#play .mnote');
-    assert.match(await page.locator('#play .mnote').innerText(), /bottom of your Mine[\s\S]*Bonus Monster[\s\S]*8[\s\S]*9[\s\S]*2/i);
+    assert.match(await page.locator('#play .mnote').innerText(), /bottom of your Mine[\s\S]*Bonus Monster[\s\S]*8[\s\S]*9[\s\S]*1/i);
     assert.equal(await page.locator('#play .deck .card[data-id="BONUS"]').count() + await page.locator('#play .deck .mcard, #play .deck .card').count() > 0, true, 'a card is face up on the empty Mine');
     assert.match(await page.locator('#play .deck').innerText(), /8/, 'it says how much damage it deals');
     await page.click('#play [data-p=emptyok]'); assert.equal(await page.locator('#play .mnote').count(), 0, 'once you have read it, it goes');

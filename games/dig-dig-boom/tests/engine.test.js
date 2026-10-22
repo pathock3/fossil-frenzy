@@ -64,7 +64,7 @@ test('data: the card sheet and rules tab are the owner\'s Google Sheet; the page
 });
 
 test('card geometry: poker size with a 0.125 in bleed and a 0.125 in safe zone', () => {
-  assert.deepEqual(DDB.card, { trimW: 250, trimH: 350, bleed: 12.5, safe: 12.5 });
+  assert.deepEqual(DDB.card, { trimW: 250, trimH: 350, bleed: 12.5, safe: 12.5, lootArrow: false });
 });
 
 test('stats: a Monster\'s damage ladder and a Treasure\'s gem worth are read from the card text', () => {
