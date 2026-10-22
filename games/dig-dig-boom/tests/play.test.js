@@ -315,6 +315,7 @@ test('table: after the roll a button takes the damage — then you see your new 
     assert.equal(await page.locator('#play .steps').count(), 0, 'no step line');
     await page.click('#play [data-p=roll]');
     assert.ok(await page.locator('#play .deck').isDisabled() && await page.locator('#play [data-p=bank]').isDisabled(), 'the Mine and the Bank wait until the damage is taken');
+    await page.waitForSelector('#play [data-p=face]', { state: 'visible' });          // (it appears when the die has landed)
     assert.match(await page.locator('#play [data-p=face]').innerText(), /^Take 1 damage$/);
     await page.click('#play [data-p=face]');
     assert.deepEqual(await stOf(page, () => { const s = window.DigDigBoomPlay.S.st; return [s.heart, s.survived, !!s.fight]; }), [2, 1, false], 'your Health is updated first');
@@ -558,8 +559,13 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     await script(page, { mine: ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01'], dice: Array(30).fill(10) });
     for (let i = 0; i < 6 && !(await page.locator('#play .over').count()); i++) { await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await faceIt(page); }
     assert.match(await page.locator('#play .over').innerText(), /In the lead![\s\S]*Everyone else is out/);
-    await page.click('#play [data-p=prep]'); await page.click('#play [data-p=boardgo]');
+    await page.click('#play [data-p=prep]');                                             // the last round: straight to the end, which is the Leaderboard
     assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown Jewel!/);
+    assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'the result is shown on the Leaderboard'); assert.equal(await page.locator('#play .bdisc.crowned .cjewel').count(), 1, 'the Crown Jewel is on your token');
+    await page.click('#play [data-p=roundlog]'); assert.equal(await page.locator('#play .rrow').count(), 2, 'one row for each round'); assert.match(await page.locator('#play .panel').innerText(), /Banked|BOOM/);
+    await page.click('#play [data-p=enddone]'); assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown Jewel!/, 'and back to the Leaderboard');
+    await page.click('#play [data-p=owned]'); assert.ok(await page.locator('#play .ownedpanel .ocard').count() >= 1, 'the cards you built'); await page.click('#play [data-p=ownedclose]', { position: { x: 5, y: 5 } });
+    assert.equal(await page.locator('#play [data-p=startrun]').count(), 1, 'and a new run is one button away');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -900,6 +906,40 @@ test('table: there is no "take the damage" button until the die has finished rol
     assert.equal(await page.locator('#play .takedmg').isVisible(), false, 'the die is still rolling');
     await page.waitForSelector('#play .takedmg', { state: 'visible', timeout: 4000 });
     assert.equal(await page.locator('#play .takedmg.waitroll').count(), 0);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('Prep is one screen: it cannot be scrolled (the pack\'s sparks used to make it scrollable), and the chosen card stays clear of the Starter Kit title', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await page.click('#play [data-p=startrun]'); await page.click('#play [data-p=openpack]'); await page.waitForSelector('#play .pcard[data-p=pick]'); await page.waitForTimeout(1500);
+    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('#play #setupScroll')).overflowY), 'hidden', 'no scrolling on the pack screen');
+    await page.mouse.move(600, 500); await page.mouse.wheel(0, 600); await page.waitForTimeout(150);
+    assert.equal(await page.evaluate(() => document.querySelector('#play #setupScroll').scrollTop), 0, 'a wheel or a drag does not move it');
+    await keepNonMystery(page, 1);
+    await page.waitForSelector('#play .kslots'); await page.click('#play .pool [data-p=kitpick] >> nth=0'); await page.waitForTimeout(300);
+    const g = await page.evaluate(() => ({ title: document.querySelector('#play .kitbar').getBoundingClientRect().bottom, slots: document.querySelector('#play .kslots').getBoundingClientRect().top }));
+    assert.ok(g.slots - g.title >= 20, 'the Starter Kit title is clear of the cards: ' + (g.slots - g.title) + ' px');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('the last round: when you are in the lead you can fast-forward the opponent, and it slows down again once they catch up with you', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await page.evaluate(() => { const P = window.DigDigBoomPlay; P.S.rounds = 2; });
+    await page.click('#play [data-p=startrun]'); await page.waitForSelector('#play [data-p=openpack]');
+    await page.evaluate(() => { const m = window.DigDigBoomPlay.S.match; for (const r of Object.values(m.runs)) { r.rounds = 1; } m.rounds = 1; });
+    await page.click('#play [data-p=openpack]'); await page.waitForSelector('#play .pcard[data-p=pick]'); await keepNonMystery(page, 1);
+    await page.click('#play [data-p=startround]'); await page.waitForSelector('#play .fnote'); await page.click('#play [data-p=finalok]');
+    assert.equal(await page.locator('#play .ffbtn').count(), 0, 'not in the lead: nothing to fast-forward');
+    await page.evaluate(() => { const P = window.DigDigBoomPlay, m = P.S.match; Board.lockIn(m.board, 'me', 5); Run.refresh(P.S.run); P.render(); });
+    assert.match(await page.locator('#play .ffbtn').innerText(), /Fast-forward/i, 'in the lead: the button is there');
+    await page.click('#play [data-p=ff]');
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.ff), true); assert.match(await page.locator('#play .ffbtn').innerText(), /Fast-forwarding/);
+    await page.evaluate(() => { const P = window.DigDigBoomPlay, m = P.S.match; Board.track(m.board, 'ai', 7); P.tick(); });
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.ff), false, 'the opponent passed you: back to its own pace');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

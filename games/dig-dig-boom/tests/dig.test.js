@@ -816,3 +816,9 @@ test('beyond the Mine: the next Bonus Monster is known and does not change until
   Dig.dig(st); assert.equal(st.last, a, 'and that is the card you dig'); assert.equal(Dig.peekBonus(st).damageNow, 9, 'the next one is a 9');
   st.beyond = 30; assert.equal(Dig.peekBonus(st).damageNow, DDB.rules.beyond.maxDamage, 'there is no card above 19');
 });
+
+test('a Bonus Monster is worth what the rules say (2 gems), a Starting Monster 1: the card and the notice agree with what the engine pays', () => {
+  assert.equal(DDB.rules.beyond.gems, 2); assert.equal(DDB.rules.survivedGems, 1);
+  const st = game({ mine: [], start: { heart: 10 }, dice: [10] }); Dig.dig(st); Dig.roll(st); Dig.autoFace(st);
+  assert.equal(st.monsterGems, DDB.rules.beyond.gems, 'surviving a Bonus Monster pays the rules\' number');
+});

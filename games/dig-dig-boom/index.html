@@ -783,6 +783,24 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .ownedpanel .ocard { position: relative; display: block; flex: none; }
 #play .ownedpanel .closehint { margin-top: 10px; color: var(--dim); font-size: 15px; }
 #play .takedmg.waitroll { visibility: hidden; pointer-events: none; }          /* no "take the damage" until the die has landed */
+/* Prep is one screen: it never scrolls (the pack's rays and sparks reach past the edges, which used to let it scroll) */
+#play .panel.prep #setupScroll, #play .panel.prep .scroll { overflow: hidden; overscroll-behavior: none; }
+#play .kitbar + .kslots, #play .kitbar + .krow { margin-top: 20px; }          /* the chosen card's outline and number badge reach above its place: keep them clear of the title */
+/* the end of a run */
+#play .enddone .endtitle { text-align: center; font-size: 58px; margin: 8px 0 18px; font-weight: 900; color: var(--text); }
+#play .enddone .endtitle.won { color: #ffd45e; text-shadow: 0 4px 0 #8a3a0c, 0 10px 24px rgba(255,160,40,.5); }
+#play .enddone .endtitle.won::before { content: "♛ "; }
+#play .enddone .foot { justify-content: space-between; }
+#play .enddone .foot .endbtns { display: flex; gap: 12px; }
+#play .rounds .rlist { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+#play .rounds .rrow { display: grid; grid-template-columns: 150px 1fr 1fr; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 16px; background: #2a1f18; border: 2px solid #4b3a2c; }
+#play .rounds .rnum { font-size: 24px; font-weight: 900; color: var(--text); display: flex; flex-direction: column; } #play .rounds .rnum small { font-size: 14px; color: #ffd45e; letter-spacing: .1em; text-transform: uppercase; }
+#play .rounds .rchip { display: grid; grid-template-columns: 54px 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; }
+#play .rounds .rchip .bdisc { grid-row: 1 / 3; width: 50px; height: 50px; animation: none; display: flex; align-items: center; justify-content: center; }
+#play .rounds .rchip .bdisc b { font-size: 16px; color: #fff; }
+#play .rounds .rwhat b { font-size: 26px; font-weight: 900; color: var(--text); } #play .rounds .rwhat b.boom { color: #ff6b5b; }
+#play .rounds .rsub { font-size: 17px; color: var(--dim); } #play .rounds .rsub b.took { color: #ffd45e; }
+#play .ffbtn { margin-top: 6px; }
 /* The Bank is a button, not a place for cards: a raised gold key at the right edge, bottom-aligned, that presses down */
 #play .piles { width: auto; height: auto; align-self: flex-end; margin-left: 0; flex: none; }
 #play .pile.bankp, #play .pile.bankp.live { flex: none; width: 210px; height: auto; min-height: 96px; padding: 10px 24px; flex-direction: row; gap: 14px; border-radius: 24px; border: 3px solid #fff0b8; color: #2a1700; font-size: 34px; font-weight: 900; letter-spacing: .02em; background: linear-gradient(180deg, #ffd45e, #e8920f); box-shadow: 0 8px 0 #8a4f06, 0 16px 24px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.55); overflow: visible; transition: transform .08s, box-shadow .08s; }
@@ -2502,7 +2520,7 @@ const AI = (() => {
       return s + box(28, 100, W - 56, 244, 'gemtile', `background:radial-gradient(circle at 70% 36%, #fff 0, ${g.light} 38%, ${g.color} 100%);border:${u(3)} solid ${g.dark};border-radius:${u(10)};display:flex;align-items:center;justify-content:center;gap:${u(4)};font-weight:900;font-size:${u(130)};line-height:1;color:#1d1712;overflow:hidden`,
         `<span style="flex:none">${worth}</span>${gem ? gemSvg(gem, u(108), 'filter:drop-shadow(0 ' + u(4) + ' ' + u(4) + ' rgba(0,0,0,.35))') : gemIcon(108)}${sp(`left:${u(12)};top:${u(10)};font-size:${u(22)}`)}${sp(`right:${u(14)};top:${u(26)};font-size:${u(14)}`)}${sp(`right:${u(22)};bottom:${u(14)};font-size:${u(20)}`)}${sp(`left:${u(20)};bottom:${u(24)};font-size:${u(12)}`)}`);
     }
-    const gems = c.type === 'Monster' ? 1 : worth;                       // a Monster is worth 1 gem when survived (v2.7 Rules: Gems)
+    const gems = c.type === 'Monster' ? (c.bonus ? D.rules.beyond.gems : D.rules.survivedGems) : worth;                       // what a Monster is worth when survived comes from the rules (a Bonus Monster is worth more)
     const worthTxt = c.type === 'Monster' ? '' : 'each';          // a Monster is simply worth a gem: you can only bank once you have survived it
     if (stat === 1) {          // Monster: art on top, the damage ladder in big tiles, what it is worth
       s += artBox(28, 100, W - 56, 118, c);
@@ -2882,10 +2900,10 @@ const AI = (() => {
     return `<div class="tear" style="--pc:${col}" aria-hidden="true"><span class="rays"></span><span class="shock"></span><div class="tpack"><div class="pk ttop"><span class="star">${plus ? '★★' : '★'}</span></div><div class="pk tbody"><b>${A.esc(pack.name.replace('+', ''))}</b></div><span class="tflash"></span></div><span class="sparks">${sparks}</span></div>`;
   }
   // The Leaderboard, full screen, between the end of the Dig and the gems being added up: one row per player with their marker, and the Crown Jewel's tracker above.
-  function boardHTML() {
+  function boardGrid(run) {
     // The real Leaderboard: one column for each number, with spots stacked in it. Whoever reaches a number first takes the top spot; whoever reaches it later slots into
     // the highest spot still free. Level on a number, the one higher up the column is ahead. (Not one track for each player.)
-    const run = S.run, bd = run.board, tr = Board.tracker(bd), holder = Board.holder(bd), players = bd.players;
+    const bd = run.board, tr = Board.tracker(bd), holder = Board.holder(bd), players = bd.players;
     const marks = players.map(p => ({ p, m: Board.marker(bd, p.id, 'best') })).filter(x => x.m);
     const max = Math.max(8, tr + 2, ...marks.map(x => x.m.n + 1)), nSpots = Math.max(2, players.length * 2);
     const ord = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
@@ -2895,8 +2913,11 @@ const AI = (() => {
       const x = marks.find(k => k.m.n === n && k.m.rank === i + 1);
       return `<div class="bspot ${i === 0 ? 'top' : ''}">${x ? `<i class="bdisc ${x.p.id === holder ? 'crowned' : ''}" style="--pc:${x.p.color};--d:${(.4 + (x.m.t || 0) % 7 * .12 + i * .15).toFixed(2)}s" title="${A.esc(tag(x.p))}"><b>${A.esc(tag(x.p))}</b>${x.p.id === holder ? '<span class="cjewel" aria-label="Crown Jewel">♛</span>' : ''}</i>` : ''}</div>`;
     }).join('')}</div>`).join('');
-    const final = run.phase === 'done';
-    return `<div class="panel setup bigboard"><div class="scroll"><h2 class="steptitle">Leaderboard</h2><div class="bbwrap bstack"><div class="bgrid" style="grid-template-columns:70px repeat(${max + 1},minmax(0,1fr))">${labels}${cols}</div></div></div><div class="foot"><button class="btn" data-p="boardgo">${final ? 'See the result' : 'Add up your gems'}</button></div></div>`;
+    return `<div class="bbwrap bstack"><div class="bgrid" style="grid-template-columns:70px repeat(${max + 1},minmax(0,1fr))">${labels}${cols}</div></div>`;
+  }
+  function boardHTML() {
+    const run = S.run, final = run.phase === 'done';
+    return `<div class="panel setup bigboard"><div class="scroll"><h2 class="steptitle">Leaderboard</h2>${boardGrid(run)}</div><div class="foot"><button class="btn" data-p="boardgo">${final ? 'See the result' : 'Add up your gems'}</button></div></div>`;
   }
   // The tally after a bank, shown one piece at a time while a thermometer fills up beside it: Treasure, a pause, Monsters, a pause, then you tap the die; and only when the die has landed does the pack appear.
   const TP = () => window.DDB_TALLY_PACE || 1;                         // tests speed this up
@@ -2997,15 +3018,20 @@ const AI = (() => {
     const stage = step === 'kit' || step === 'keep' || step === 'reveal' || (step === 'pack' && !pr.banked) ? body : `<div class="prepstage">${body}</div>`;
     return `<div class="panel setup prep"><div class="scroll" id="setupScroll">${stage}</div>${foot ? `<div class="foot">${foot}</div>` : ''}</div>`;
   }
+  // The end of a run: the Leaderboard is the result. A big line says who won; buttons look back at the run (round by round, the cards you built); one starts a new run.
   function doneHTML() {
     const run = S.run, r = run.result, m = S.match, mr = m && m.result;
-    const title = m ? (mr.winner === 'me' ? '♛ You win!' : mr.winner ? 'The AI wins' : 'Nobody took the Crown Jewel') : (r.crown ? '♛ You hold the Crown Jewel!' : 'The Crown Jewel stays on the table');
-    const cell = h => h ? `${h.kind === 'bank' ? `Banked · ${h.survived}${h.stoleCrown ? ' ♛' : ''}` : 'BOOM'}` : '';
-    return `<div class="panel setup"><div class="scroll">
-      <h2>${title}</h2>
-      ${m ? `<table class="cmp"><tr><th>Round</th><th>You</th><th>AI</th></tr>${mr.rounds.map(x => `<tr><td>${x.round}</td><td>${cell(x.me)}</td><td>${cell(x.ai)}</td></tr>`).join('')}</table>`
-        : `<table class="cmp"><tr><th>Round</th><th>You</th></tr>${run.history.map(h => `<tr><td>${h.round}</td><td>${cell(h)}</td></tr>`).join('')}</table>`}
-    </div><div class="foot"><button class="btn" data-p="startrun">New run</button></div></div>`;
+    const won = m ? mr.winner === 'me' : r.crown;
+    const title = m ? (mr.winner === 'me' ? 'You win!' : mr.winner ? 'The AI wins' : 'Nobody took the Crown Jewel') : (r.crown ? 'You hold the Crown Jewel!' : 'The Crown Jewel stays on the table');
+    return `<div class="panel setup bigboard enddone"><div class="scroll"><h2 class="endtitle ${won ? 'won' : ''}">${A.esc(title)}</h2>${boardGrid(run)}</div><div class="foot"><span class="endbtns"><button class="btn alt" data-p="roundlog">Round by round</button>${run.owned.length ? `<button class="btn alt" data-p="owned">Your cards (${run.owned.length})</button>` : ''}</span><button class="btn" data-p="startrun">New run</button></div></div>`;
+  }
+  // What happened in each round, for you and the AI.
+  function roundsHTML() {
+    const run = S.run, m = S.match, mr = m && m.result;
+    const rows = m ? mr.rounds.map(x => ({ round: x.round, me: x.me, ai: x.ai })) : run.history.map(h => ({ round: h.round, me: h }));
+    const chip = (who, color, h) => h ? `<span class="rchip"><i class="bdisc small" style="--pc:${color}"><b>${who}</b></i><span class="rwhat">${h.kind === 'bank' ? `<b>Banked ${h.survived}</b>` : '<b class="boom">BOOM</b>'}</span><span class="rsub">${h.kind === 'bank' ? `${h.geodes + h.monsters} gems` : 'no gems'}${h.stoleCrown ? ' · <b class="took">took the Crown</b>' : ''}</span></span>` : '';
+    const col = DDB.table.playerColors;
+    return `<div class="panel setup rounds"><div class="shead"><button class="chip back" data-p="enddone">‹ Leaderboard</button><h2>Round by round</h2></div><div class="scroll"><div class="rlist">${rows.map(x => `<div class="rrow"><span class="rnum">Round ${x.round}${x.round === run.rounds ? '<small>final</small>' : ''}</span>${chip('You', col[0], x.me)}${chip('AI', col[1], x.ai)}</div>`).join('')}</div></div></div>`;
   }
 
   // ----- the table -----
@@ -3090,7 +3116,8 @@ const AI = (() => {
     if (st.over) return '';
     // The last round is a race: nobody banks. Say so, and say what to do: keep digging until you lead; once you lead, wait (digging on only risks the lead).
     const lastRound = !!(S.run && st.board && st.board.final), say = lastRound ? (st.board.lead ? 'You are in the lead. Wait for your opponent: if they pass you, dig again.' : 'The last round: nobody banks. Dig until you are in the lead.') : can.bank ? 'Tap the Mine to dig, or the Bank to keep your gems' : 'Tap the Mine to dig';
-    return `<div class="action"><div class="aprompt">${say}</div></div>`;
+    const ffBtn = lastRound && st.board.lead && aiDigging() ? `<button class="btn alt ffbtn" data-p="ff" ${S.ff ? 'disabled' : ''}>${S.ff ? 'Fast-forwarding…' : 'Fast-forward your opponent'}</button>` : '';          // you wait; this speeds the opponent up until they pass you or go BOOM
+    return `<div class="action"><div class="aprompt">${say}</div>${ffBtn}</div>`;
   }
   // ----- little things that pop. What is new since the last drawing is remembered, so each flourish plays once, on the thing that just happened. -----
   const fxOf = st => st ? { last: st.last ? st.last.uid : null, mon: st.fight ? st.fight.monster.uid : null, roll: st.fight && st.fight.phase === 'after' ? `${st.digs}:${st.fight.rolls}:${st.fight.die}` : null, gems: st.geodeGems + st.monsterGems, over: st.over } : { last: null, mon: null, roll: null, gems: 0, over: null };
@@ -3171,6 +3198,7 @@ const AI = (() => {
     else if (S.panel === 'board' && S.run) body = boardHTML();
     else if (S.panel === 'prep' && S.run) body = prepHTML();
     else if (S.panel === 'done' && S.run) body = doneHTML();
+    else if (S.panel === 'rounds' && S.run) body = roundsHTML();
     else if (S.panel === 'setup' || !S.st) body = setupHTML();
     else body = `<div class="pmain"><div class="ptable ${S.st.fight && S.st.fight.phase === 'before' && !S.st.over ? 'await-roll' : ''}" data-step="${S.st.over ? 'over' : S.st.fight ? (S.st.fight.phase === 'before' ? 'roll' : 'damage') : 'dig'}">${tableHTML()}</div></div>`;       // a Monster is in front of you and nothing else matters until you roll: the rest of the table dims
     const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, Math.min(1.35, (innerHeight - 70) / 350))}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}</div>` : '';
@@ -3183,7 +3211,7 @@ const AI = (() => {
       fin = `<div class="fnote-back"><div class="fnote" role="dialog" aria-label="The final round"><div class="fbig">FINAL ROUND</div><p class="fsub">${sub}</p>${where ? `<p class="fwhere">${where}</p>` : ''}<div class="frules ${S.finalHow ? 'open' : ''}"><ul><li><b>Nobody banks.</b> You keep digging until you are in the lead, or you go BOOM.</li><li>The <b>leader</b> is whoever has survived the most Monsters (your best from earlier rounds counts). Level, the one who got there first leads.</li><li>Once you are in the lead, <b>stop and wait</b>: digging on only risks it. If your opponent passes you, dig again.</li><li>The round ends when everyone else has gone BOOM: whoever is still in the lead holds the Crown Jewel.</li></ul></div><div class="fbtns"><button class="btn alt" data-p="finalhow">${S.finalHow ? 'Hide the rules' : 'How the final round works'}</button><button class="btn" data-p="finalok">Start digging</button></div></div></div>`;
     }
     let ownedP = '';
-    if (S.showOwned && S.run && S.panel === 'prep') {          // a look at the cards you already own, while you choose (tap anywhere to close)
+    if (S.showOwned && S.run && (S.panel === 'prep' || S.panel === 'done')) {          // a look at the cards you already own, while you choose (tap anywhere to close)
       const list = S.run.owned, sc = Math.min(.55, fitCards(list.length, .55, Math.min(innerWidth, 1180) - 80, innerHeight - 190, 12)), inKit = new Set((S.run.kit || []).map(c => c.uid));
       ownedP = `<div class="ownedback" data-p="ownedclose"><div class="ownedpanel" role="dialog" aria-label="Your cards"><h3>Your cards</h3><div class="cards">${list.map(c => `<span class="ocard" style="width:${250 * sc}px;height:${350 * sc}px">${A.playCard(c, sc)}${inKit.has(c.uid) ? '<span class="ctag last">In your kit</span>' : ''}</span>`).join('') || '<span class="note">You do not own any cards yet.</span>'}</div></div></div>`;
     }
@@ -3225,6 +3253,7 @@ const AI = (() => {
     clearTimeout(aiTimer); aiTimer = null;
     if (!aiDigging()) return;
     Match.aiStep(S.match); S.aiDelay = humanWait(S.match.aiLast); if (S.run.dig && !S.run.dig.over) Run.refresh(S.run); persist();
+    if (S.ff && S.run.round === S.run.rounds && S.run.dig && !S.run.dig.over && S.run.dig.board && !S.run.dig.board.lead) S.ff = false;          // the opponent has caught up with you: slow down, you dig again
     const lb = $.querySelector('section.lb');
     if (S.panel === 'dig' && !S.help && !S.zoom && lb && aiDigging()) { lb.outerHTML = lbHTML(S.run, S.st); scheduleAI(); }
     else if (S.panel === 'dig' && !S.help && !S.zoom) render();
@@ -3269,7 +3298,7 @@ const AI = (() => {
       }
       case 'startround': startRound(); break;
       case 'ff': S.ff = true; if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; } break;
-      case 'prep': if (S.match) Match.finishRound(S.match); else Run.finishDig(S.run); S.panel = 'board'; S.tally = null; break;          // first, a look at where everyone stands
+      case 'prep': if (S.match) Match.finishRound(S.match); else Run.finishDig(S.run); S.panel = S.run.phase === 'done' ? 'done' : 'board'; S.tally = null; break;          // a round: first a look at where everyone stands; the last round: straight to the end, which is the Leaderboard          // first, a look at where everyone stands
       case 'boardgo': S.panel = S.run.phase === 'done' ? 'done' : 'prep'; break;
             case 'tab': S.tab = ds.v; break;
       case 'kit': { const c = cards().find(x => x.id === ds.id); if (!c || !Dig.supported(c)) break; const i = S.kit.indexOf(c.id); if (i >= 0) S.kit.splice(i, 1); else if (S.kit.length < S.kitSize) S.kit.push(c.id); break; }
@@ -3286,6 +3315,8 @@ const AI = (() => {
       case 'unzoom': S.zoom = null; break;
       case 'emptyok': S.emptySeen = S.st; break;
       case 'owned': S.showOwned = true; break;
+      case 'roundlog': S.panel = 'rounds'; break;
+      case 'enddone': S.panel = 'done'; break;
       case 'ownedclose': S.showOwned = false; break;
       case 'finalok': S.finalSeen = S.st; S.finalHow = false; S.aiDelay = D.ai.pace.startMs; break;
       case 'finalhow': S.finalHow = !S.finalHow; break;
