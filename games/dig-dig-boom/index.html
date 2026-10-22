@@ -790,6 +790,8 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .piles { display: flex; flex-direction: column; align-items: flex-end; gap: 14px; }
 #play .piles .rollbtn { margin: 0; align-self: flex-end; width: 104px; height: auto; gap: 0; }
 #play .piles { gap: 8px; }
+#play .piles .takedmg { width: 210px; min-height: 60px; padding: 8px 12px; font-size: 22px; line-height: 1.15; align-self: flex-end; }
+#play .piles .takedmg.sure { font-size: 16px; }
 #play .piles .rollbtn .tapword { white-space: nowrap; font-size: 17px; padding: 4px 14px; margin-top: 4px; }
 #play .pile.bankp, #play .pile.bankp.live { min-height: 84px; }
 /* tokens say who they are (You on blue, AI on red); the Crown Jewel sits on the leader's token */
@@ -847,7 +849,10 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .bpl b { color: inherit; text-shadow: 0 2px 0 rgba(0,0,0,.45); }
 #play .bpl .cjewel { position: static; transform: none; margin-left: 2px; font-size: 30px; line-height: 1; color: #ffd13a; text-shadow: 0 2px 0 #8a5a00, 0 0 12px rgba(255,200,60,.8); animation: crownpop .6s ease-out both; }
 @keyframes crownpop { 0% { transform: translateY(-20px) scale(.4); opacity: 0; } 100% { transform: none; opacity: 1; } }
-#play .newbest { font-style: normal; font-size: 18px; font-weight: 900; padding: 4px 12px; border-radius: 99px; background: linear-gradient(180deg, #ffe27a, #f0a81c); color: #3a2200; border: 2px solid #fff3c4; box-shadow: 0 3px 0 #8a5a00; animation: newbest .7s cubic-bezier(.3,1.6,.5,1) 1.7s both; white-space: nowrap; }
+#play .bcap { text-align: center; font-size: 28px; font-weight: 800; margin: 22px 0 0; color: var(--text); min-height: 74px; }
+#play .bcap small { display: block; margin-top: 6px; font-size: 17px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); animation: bcapblink 1.4s ease-in-out infinite; }
+@keyframes bcapblink { 50% { opacity: .45; } }
+#play .newbest { font-style: normal; font-size: 18px; font-weight: 900; padding: 4px 12px; border-radius: 99px; background: linear-gradient(180deg, #ffe27a, #f0a81c); color: #3a2200; border: 2px solid #fff3c4; box-shadow: 0 3px 0 #8a5a00; animation: newbest .7s cubic-bezier(.3,1.6,.5,1) both; white-space: nowrap; }
 @keyframes newbest { 0% { transform: scale(.2) rotate(-12deg); opacity: 0; } 100% { transform: scale(1) rotate(-3deg); opacity: 1; } }
 #play .pbar .mk.best { border: 2px solid #e3b93b; }
 #play .rounds .rrow { grid-template-columns: 150px; grid-auto-flow: column; grid-auto-columns: 1fr; }
@@ -2511,7 +2516,7 @@ const AI = (() => {
       }
     }
     function prep(run) { const g = prepSteps(run); while (!g.next().done); }
-    return { act, prep, prepSteps, P, phi, valueOf, context, idleArms };
+    return { act, prep, prepSteps, P, phi, valueOf, context, idleArms, baseAct };
   }
   // Difficulty levels (DDB.ai.levels): "easy" is the old rules of thumb, "normal" is the thinking AI on a small budget (quick to compute), "best" is the strongest we can build (for testing, not for play).
   const level = name => { const d = A.levels[name] || A.levels[A.level]; return d === 'basic' ? Basic : make(d); };
@@ -3048,9 +3053,15 @@ const AI = (() => {
   // Under it, as many rows as there are players: each player's second marker, their live position, whose order in the column is the tiebreaker (whoever reached the number first is higher up).
   // The Crown Jewel waits on 3; the first to lock that in takes it onto their name below, and anyone who does better steals it.
   function boardGrid(run, anim) {
-    const bd = run.board, tr = Board.tracker(bd), holder = Board.holder(bd), players = bd.players, rows = Math.max(1, players.length);
-    const bestN = p => { const m = Board.marker(bd, p.id, 'best'); return m ? m.n : 0; };
-    const live = players.map(p => ({ p, m: Board.marker(bd, p.id, 'pledge') || Board.marker(bd, p.id, 'best') })).filter(x => x.m);
+    const bd = run.board, tr = Board.tracker(bd), players = bd.players, rows = Math.max(1, players.length);
+    const rawBest = p => { const m = Board.marker(bd, p.id, 'best'); return m ? m.n : 0; };
+    // After a round the results are told one at a time (tap to continue): a player whose best changes stays where they were until their turn comes.
+    const steps = anim && anim.steps || [], shown = anim ? anim.i : steps.length, stepOf = id => steps.findIndex(x => x.ids.includes(id));
+    const pending = p => !!(anim && anim.from && rawBest(p) !== (anim.from[p.id] || 0) && stepOf(p.id) >= shown);
+    const bestN = p => pending(p) ? (anim.from[p.id] || 0) : rawBest(p);
+    let holder = Board.holder(bd);
+    if (holder && pending(players.find(p => p.id === holder))) { holder = null; let top = bd.crownStart; for (const p of players) if (bestN(p) > top) { top = bestN(p); holder = p.id; } }          // (the Crown stays with whoever held it until the move that takes it)
+    const live = players.filter(p => !pending(p)).map(p => ({ p, m: Board.marker(bd, p.id, 'pledge') || Board.marker(bd, p.id, 'best') })).filter(x => x.m);
     const max = Math.max(8, tr + 2, ...players.map(p => bestN(p) + 1), ...live.map(x => x.m.n + 1));
     const crownCol = bd.crownStart + 1;
     const ord = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
@@ -3058,39 +3069,45 @@ const AI = (() => {
     const stackOrder = players.slice().reverse().sort((a, b) => rankOf(b) - rankOf(a));          // in a stack the better spot lies on top (before anyone has banked, you do)
     const labels = `<div class="bcol blabels"><div class="bhead"></div>${Array.from({ length: rows }, (_, i) => `<div class="bspot lab">${ord[i] || i + 1 + 'th'}</div>`).join('')}</div>`;
     const cols = Array.from({ length: max + 1 }, (_, n) => {
-      const chips = stackOrder.filter(p => bestN(p) === n).map((p, k) => `<i class="pchip ${p.id === run.me ? 'me' : ''}" data-pid="${p.id}" data-from="${anim && anim.from && anim.from[p.id] !== undefined ? anim.from[p.id] : n}" style="--pc:${p.color};--k:${k}" title="${A.esc(p.name)}: best ${n}"><b>${A.esc(tagOf(run, p))}</b></i>`).join('');
+      const chips = stackOrder.filter(p => bestN(p) === n).map((p, k) => `<i class="pchip ${p.id === run.me ? 'me' : ''}" data-pid="${p.id}" data-from="${anim && anim.fresh != null && stepOf(p.id) === anim.fresh - 1 && anim.from[p.id] !== undefined ? anim.from[p.id] : n}" style="--pc:${p.color};--k:${k}" title="${A.esc(p.name)}: best ${n}">${p.id === run.me ? '<b>You</b>' : ''}</i>`).join('');
       const here = live.filter(x => x.m.n === n).sort((x, y) => x.m.rank - y.m.rank);
       return `<div class="bcol ${n <= tr ? 'free' : ''}"><div class="bhead"><span class="bn">${n}${!holder && n === crownCol ? '<span class="bcrown" aria-label="Crown Jewel">♛</span>' : ''}</span><span class="bchips">${chips}</span></div>${Array.from({ length: rows }, (_, i) => {
         const x = here[i];
         return `<div class="bspot ${i === 0 ? 'top' : ''}">${x ? `<i class="bdisc" style="--pc:${x.p.color}" title="${A.esc(x.p.name)}${Board.marker(bd, x.p.id, 'pledge') ? ': this Dig' : ''}"></i>` : ''}</div>`;
       }).join('')}</div>`;
     }).join('');
-    const names = players.map(p => `<span class="bpl ${p.id === run.me ? 'me' : ''}" data-pid="${p.id}" style="--pc:${p.color}"><i class="pchip mini"></i><b>${A.esc(p.name)}</b>${p.id === holder ? '<span class="cjewel" aria-label="holds the Crown Jewel">♛</span>' : ''}${anim && anim.newBest && p.id === run.me ? '<em class="newbest">New Best!</em>' : ''}</span>`).join('');
+    const names = players.map(p => `<span class="bpl ${p.id === run.me ? 'me' : ''}" data-pid="${p.id}" style="--pc:${p.color}"><i class="pchip mini"></i><b>${A.esc(p.name)}</b>${p.id === holder ? '<span class="cjewel" aria-label="holds the Crown Jewel">♛</span>' : ''}${anim && anim.newBest && p.id === run.me && stepOf(p.id) < shown ? '<em class="newbest">New Best!</em>' : ''}</span>`).join('');
     return `<div class="bbwrap bstack"><div class="bgrid" style="grid-template-columns:70px repeat(${max + 1},minmax(0,1fr))">${labels}${cols}</div></div><div class="bplayers">${names}</div>`;
   }
-  // The chips slide to their new best in turn: Easy, Medium, Hard, then you (a new best for you says so).
+  // The results of a round, told one at a time: each opponent who banked (Easy, Medium, Hard), then you, and last everyone who went BOOM. A tap brings the next.
+  function boardSteps(m, run, from) {
+    const ids = [...Match.botIds(m), run.me], nameOf2 = id => id === run.me ? 'You' : run.board.players.find(p => p.id === id).name, now = bestsNow();
+    const last = id => { const h = m.runs[id].history; return h[h.length - 1]; }, bank = [], boom = [];
+    for (const id of ids) { const h = last(id); if (h) (h.kind === 'bank' ? bank : boom).push({ id, h }); }
+    const steps = bank.map(({ id, h }) => ({ ids: [id], text: `${nameOf2(id)} banked at ${h.survived}${id === run.me && now[id] > (from[id] || 0) ? '. New Best!' : h.stoleCrown ? ' and took the Crown Jewel.' : '.'}` }));
+    if (boom.length) { const n = boom.map(x => nameOf2(x.id)); steps.push({ ids: boom.map(x => x.id), text: (boom.length === ids.length ? 'Everyone' : n.length === 1 ? n[0] : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1]) + ' went BOOM.' }); }
+    return steps;
+  }
+  // The chips of the result just told slide to their new places.
   function boardAnimate() {
-    const an = S.boardAnim; if (!an || an.played || !an.from || S.panel !== 'board') return;
-    const grid = $.querySelector('.bgrid'); if (!grid) return; an.played = true;
-    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const an = S.boardAnim; if (!an || an.fresh == null || S.panel !== 'board') return;
+    const grid = $.querySelector('.bgrid'); if (!grid) return;
+    const stp = an.steps[an.fresh - 1]; an.fresh = null;
+    if (!stp || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
     const heads = [...grid.querySelectorAll('.bcol')].slice(1).map(c => c.querySelector('.bhead'));
-    const order = [...(S.match ? Match.botIds(S.match) : []), S.run.me];
-    order.forEach((id, i) => {
-      const chip = grid.querySelector(`.pchip[data-pid="${id}"]`), pl = $.querySelector(`.bpl[data-pid="${id}"]`); if (!chip) return;
+    for (const id of stp.ids) {
+      const chip = grid.querySelector(`.pchip[data-pid="${id}"]`); if (!chip) continue;
       const from = Number(chip.dataset.from), to = heads.findIndex(h => h.contains(chip));
-      const delay = 500 + i * 1000;
       if (from !== to && heads[from] && heads[to]) {
         const dx = heads[from].getBoundingClientRect().left - heads[to].getBoundingClientRect().left;
-        chip.animate([{ transform: `translateX(${dx}px)`, zIndex: 5 }, { transform: `translateX(${dx / 2}px) translateY(-14px)`, zIndex: 5, offset: .5 }, { transform: 'none', zIndex: 5 }], { duration: 750, delay, fill: 'both', easing: 'cubic-bezier(.4,.1,.3,1)' });
-        if (pl) pl.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.18)' }, { transform: 'scale(1)' }], { duration: 600, delay: delay + 650 });
+        chip.animate([{ transform: `translateX(${dx}px)`, zIndex: 5 }, { transform: `translateX(${dx / 2}px) translateY(-14px)`, zIndex: 5, offset: .5 }, { transform: 'none', zIndex: 5 }], { duration: 750, fill: 'both', easing: 'cubic-bezier(.4,.1,.3,1)' });
       }
-      const nb = id === S.run.me ? $.querySelector('.newbest') : null;
-      if (nb) nb.style.animationDelay = (delay + 700) + 'ms';
-    });
+    }
   }
   function boardHTML() {
-    const run = S.run, final = run.phase === 'done';
-    return `<div class="panel setup bigboard"><div class="scroll"><h2 class="steptitle">Leaderboard</h2>${boardGrid(run, S.boardAnim)}</div><div class="foot"><button class="btn" data-p="boardgo">${final ? 'See the result' : 'Add up your gems'}</button></div></div>`;
+    const run = S.run, final = run.phase === 'done', an = S.boardAnim, more = !!an && an.i < an.steps.length;
+    const cap = !an ? '' : `<p class="bcap" role="status">${an.i === 0 ? `Round ${run.round - 1} is over.` : A.esc(an.steps[an.i - 1].text)}${more ? '<small>Tap to continue</small>' : ''}</p>`;
+    return `<div class="panel setup bigboard"><div class="scroll" ${more ? 'data-p="boardstep"' : ''}><h2 class="steptitle">Leaderboard</h2>${boardGrid(run, an)}${cap}</div><div class="foot"><button class="btn" data-p="boardgo">${final ? 'See the result' : 'Add up your gems'}</button></div></div>`;
   }
   // The tally after a bank, shown one piece at a time while a thermometer fills up beside it: Treasure, a pause, Monsters, a pause, then you tap the die; and only when the die has landed does the pack appear.
   const TP = () => window.DDB_TALLY_PACE || 1;                         // tests speed this up
@@ -3283,8 +3300,9 @@ const AI = (() => {
       const lock = open || locked ? `<span class="dlock ${open ? 'open' : 'shut'}" title="${open ? 'You can still reroll' : 'Locked in'}"><svg viewBox="0 0 24 24" aria-hidden="true">${open ? '<path d="M8 11V7.5a4 4 0 0 1 7.6-1.7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>' : '<path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>'}<rect x="4.5" y="11" width="15" height="10.5" rx="2.6" fill="currentColor"/></svg></span>` : '';
       const rr = open ? `<button class="rerollbtn" data-p="reroll" aria-label="Reroll">${ic('reroll')}<span>Reroll</span><small>${st.reroll} left</small></button>` : locked ? '<div class="lockednote">Locked in</div>' : '';
       const die = `<div class="dieb rollbtn still">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}${lock}<span class="tapword" aria-hidden="true" style="visibility:hidden">Tap to roll</span></div>`;          // (the hidden word keeps the die exactly where the Roll button was)
-      return { die, html: `<div class="action">${elig.length > 1 ? `<div class="aprompt"><button class="chip" data-p="triggerall">Use all ${elig.length}</button></div>` : ''}
-        <div class="astack">${calc}${rr}<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''} ${sure ? 'sure' : ''} ${fresh ? 'waitroll' : ''}" data-p="face">${sure ? `You can still use cards.<br>Tap again to ${f.defeat ? 'move on' : dmg ? `take ${dmg} damage` : 'carry on'}` : f.defeat ? 'Monster defeated: continue' : dmg ? `Take ${dmg} damage` : 'Take no damage'}</button></div></div>` };
+      const take = `<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''} ${sure ? 'sure' : ''} ${fresh ? 'waitroll' : ''}" data-p="face">${sure ? `You can still use cards.<br>Tap again to ${f.defeat ? 'move on' : dmg ? `take ${dmg} damage` : 'carry on'}` : f.defeat ? 'Monster defeated: continue' : dmg ? `Take ${dmg} damage` : 'Take no damage'}</button>`;          // (it sits in the right-hand column, above the die: where your hand already is)
+      return { die, take, html: `<div class="action">${elig.length > 1 ? `<div class="aprompt"><button class="chip" data-p="triggerall">Use all ${elig.length}</button></div>` : ''}
+        <div class="astack">${calc}${rr}</div></div>` };
     }
     if (st.pending) return { html: `<div class="action"><div class="aprompt">${A.esc(st.pending.card.name)}: tap a Power card</div></div>`, die: '' };
     if (st.over) return { html: '', die: '' };
@@ -3308,7 +3326,7 @@ const AI = (() => {
     // There is no separate discard pile: the cards you flip land in one spot beside the Mine, and the ones before it are stacked underneath. (Monsters move on to the Monster pile above.)
     const piles = `<div class="piles"><button class="pile bankp ${bankLive ? 'live' : ''}" data-p="bank" ${bankLive ? '' : 'disabled'}><span class="bword">Bank</span><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span></button></div>`;
     const preRoll = !!f && f.phase === 'before' && !st.over, finalRound = !!(S.run && st.board && st.board.final);          // the last round: nobody banks, so there is no Bank and no gem count
-    const dz = diceHTML(st, can), rolled = dz.die;
+    const dz = diceHTML(st, can), rolled = dz.die ? (dz.take || '') + dz.die : '';
     const rollBtn = preRoll ? `<button class="dieb live rollbtn" data-p="roll" aria-label="Roll the die">${d10('', 'idle')}<span class="tapword">Tap to roll</span></button>` : rolled;
     const rollCol = finalRound ? (rollBtn ? `<div class="piles">${rollBtn}</div>` : '') : piles.replace('<div class="piles">', `<div class="piles">${rollBtn}`);
     const dug = `<div class="dugz"><div class="slot ${st.discard.length ? 'stacked' : ''}">${dugHTML(st)}</div></div>`;
@@ -3360,12 +3378,16 @@ const AI = (() => {
         <li>Easy, Medium and Hard dig on their own clocks (the harder, the quicker: whoever reaches a number first takes the better spot); tap Fast-forward when you are done and they are not.</li></ul></details>
     </div></div>`;
   }
-  // Once in each Dig, when the next card could be a Monster that would put you out (its damage is at least your Health), a quick note says so. It fades by itself and never gets in the way of a tap.
+  // When the next card you dig could be a Monster that would put you out (its damage is at least your Health), a quick note says so: once each time you come into that danger (not again for each card while it lasts, but
+  // again if you get out of it and back in). It fades by itself and never gets in the way of a tap.
   function dangerAlert() {
     const st = S.st;
-    if (S.panel !== 'dig' || !st || st.over || st.fight || st.pending || S.dangerSeen === st || S.help || S.zoom || finalNote()) return;
-    if (!Dig.can(st).dig || Dig.maxNextDamage(st) < st.heart) return;
-    S.dangerSeen = st;
+    if (S.panel !== 'dig' || !st || st.over || st.fight || st.pending || S.help || S.zoom || finalNote()) return;
+    if (!Dig.can(st).dig) return;
+    const danger = Dig.maxNextDamage(st) >= st.heart;
+    if (!danger) { if (S.danger && S.danger.st === st) S.danger.on = false; return; }
+    if (S.danger && S.danger.st === st && S.danger.on) return;
+    S.danger = { st, on: true };
     const el = document.createElement('div'); el.className = 'dangertoast'; el.setAttribute('role', 'status');
     el.innerHTML = `${ic('damage')} <span>Careful: the next Monster could knock you out</span>`;
     $.parentNode.appendChild(el); setTimeout(() => el.remove(), 2600);
@@ -3498,7 +3520,7 @@ const AI = (() => {
       }
       case 'startround': startRound(); break;
       case 'ff': S.ff = true; stopClocks(); break;
-      case 'prep': if (S.match) Match.finishRound(S.match); else Run.finishDig(S.run); S.panel = S.run.phase === 'done' ? 'done' : 'board'; S.tally = null; if (S.bests0) { const now = bestsNow(); S.boardAnim = { from: S.bests0, newBest: now[S.run.me] > (S.bests0[S.run.me] || 0), played: false }; } break;          // a round: first a look at where everyone stands; the last round: straight to the end, which is the Leaderboard          // first, a look at where everyone stands
+      case 'prep': if (S.match) Match.finishRound(S.match); else Run.finishDig(S.run); S.panel = S.run.phase === 'done' ? 'done' : 'board'; S.tally = null; if (S.bests0 && S.match) { const now = bestsNow(); S.boardAnim = { from: S.bests0, newBest: now[S.run.me] > (S.bests0[S.run.me] || 0), steps: boardSteps(S.match, S.run, S.bests0), i: 0, fresh: null }; } break;          // a round: first a look at where everyone stands; the last round: straight to the end, which is the Leaderboard          // first, a look at where everyone stands
       case 'boardgo': S.panel = S.run.phase === 'done' ? 'done' : 'prep'; break;
             case 'tab': S.tab = ds.v; break;
       case 'kit': { const c = cards().find(x => x.id === ds.id); if (!c || !Dig.supported(c)) break; const i = S.kit.indexOf(c.id); if (i >= 0) S.kit.splice(i, 1); else if (S.kit.length < S.kitSize) S.kit.push(c.id); break; }
@@ -3515,6 +3537,7 @@ const AI = (() => {
       case 'unzoom': S.zoom = null; break;
       case 'emptyok': S.emptySeen = S.st; break;
       case 'owned': S.showOwned = true; break;
+      case 'boardstep': if (S.boardAnim && S.boardAnim.i < S.boardAnim.steps.length) { S.boardAnim.i++; S.boardAnim.fresh = S.boardAnim.i; } break;
       case 'roundlog': S.panel = 'rounds'; break;
       case 'enddone': S.panel = 'done'; break;
       case 'ownedclose': S.showOwned = false; break;
