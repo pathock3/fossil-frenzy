@@ -10,6 +10,7 @@ function findChromium() {
 const chromium = findChromium();
 const exe = ['/opt/pw-browsers/chromium'].find(p => fs.existsSync(p));
 const FILE = 'file://' + path.join(__dirname, '..', 'index.html');
+const BONUS = 12;          // the Bonus Monster cards (damage 8 to 19) that follow the sheet's cards on the cards page
 const SKIP = { skip: !chromium && 'Playwright/Chromium not available', timeout: 90000 };
 const fixture = fs.readFileSync(path.join(__dirname, 'fixture.csv'), 'utf8');
 
@@ -32,7 +33,7 @@ test('cards: reads the sheet live (not a copy), says so, and draws every card of
   try {
     assert.match(await page.locator('.status').first().innerText(), /Live from your sheet · 11 cards/);
     assert.ok(requests.some(u => /docs\.google\.com\/spreadsheets\/d\/e\/2PACX-[\w-]+\/pub\?gid=2&single=true&output=csv/.test(u)), 'it asked the published sheet for the card tab');
-    assert.equal(await page.locator('#deckRow .card').count(), 13);
+    assert.equal(await page.locator('#deckRow .card').count(), 13 + BONUS, 'every card of the sheet, and the Bonus Monsters (8 to 19)');
     const labels = await page.locator('#deckRow .card').evaluateAll(els => els.map(e => e.getAttribute('aria-label')));
     for (const t of types) assert.ok(labels.some(x => x.includes(', ' + t)), 'a ' + t + ' card');
     assert.equal(await page.locator('text=/Round 1|Round 2|direction/i').count(), 0, 'the old design explorations are gone');
@@ -46,7 +47,7 @@ test('cards: when the sheet cannot be reached (or answers with a web page) it sa
     try {
       const status = await page.locator('.status').first().innerText();
       assert.match(status, /Could not reach the sheet/); assert.match(status, /sample/);
-      assert.equal(await page.locator('#deckRow .card').count(), 12);
+      assert.equal(await page.locator('#deckRow .card').count(), 12 + BONUS);
       assert.deepEqual(errors, []);
     } finally { await browser.close(); }
   }
@@ -115,7 +116,7 @@ test('cards: offline, the copy of the sheet this browser saved last time is used
     await page.reload(); await page.waitForSelector('#deckRow .card');
     const t = await page.locator('.status').first().innerText();
     assert.match(t, /Could not reach the sheet/); assert.match(t, /Using the copy from/);
-    assert.equal(await page.locator('#deckRow .card').count(), 13, 'all the cards the game can play, not just the sample');
+    assert.equal(await page.locator('#deckRow .card').count(), 13 + BONUS, 'all the cards the game can play, not just the sample');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

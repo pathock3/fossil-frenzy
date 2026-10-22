@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — table and rules batch:**
+  - **Crown Jewel starts one spot back**: the tracker starts at 2, so reaching 3 Monsters is enough to claim it.
+  - **Cloning Machine** goes under a Power *or* Ongoing card, and it is drawn *under* that card (its name peeking out above). On an Ongoing card everything it does counts twice (+1 to your rolls becomes +2, "whenever" reactions happen twice, Block 1 becomes Block 2). Tapping a cloned Power card uses it twice at once.
+  - **A card you dig lands face up in the pile of drawn cards** — a Power or Ongoing card too — and moves up to your row when you dig the next card.
+  - **A card is only highlighted when everything it asks for is true**: Nervous Mouse needs 4 Health or less, not just a roll of 2. A card you cannot use this roll is dimmed (not faded out) and says what it wants.
+  - **Take damage while you can still use a card** asks first ("You can still use cards. Tap again to take 3 damage").
+  - **The bottom of your Mine**: a message says what happens next (Bonus Monsters: 8 damage, then 9, … worth 2 gems), and the next Bonus Monster lies face up on the empty Mine. There is a Bonus Monster card for every damage from 8 to 19 (shown on the cards page).
+  - **The last round says why you cannot bank** and what to do ("You are in the lead. Wait for your opponent…").
+  - **No Booster cards that boost gems** (a rule in the data block: any Booster card whose text mentions {gem} stays out of the deck).
+  - **Leaderboard** is the real board: a column for each number with spots stacked in it — first to a number takes the top spot, later ones slot into the highest free spot. "Add up your gems" is bottom right. The Bank button reads "Bank 4 gems".
+  - **Gem tally**: the equation starts high so the pack's room is reserved (nothing jumps when it appears); the die appears already rolling (no "?"); the pack flies from the tally to the middle of the card row. A Mystery Box keeps you on the pack screen: the other cards fly away and the extra card is dealt face down and turned over, at the same card size.
+  - **New card backs**: a cross-section of the earth — soil, clay, rock and the dark below — with the drill at work and crystals in the deep.
+  - **The AI plays at a person's pace** (about 1.5 s a card, several seconds for a Monster, a pause before it banks, never twice the same), and it chooses its pack and kit a moment after yours opens, in small slices, so nothing stalls the screen (this was the stall when a Silver pack was dealt).
 - **Dig Dig BOOM! — opening is quicker:** the main menu now shows at once (the real one, with Continue, never a "Reading your sheet…" placeholder): the page starts from the copy of your cards this browser kept last time, reads the sheet in the background (all addresses at once, first good answer wins), and quietly picks up any change. Only the very first visit has to wait, with Play lit up as soon as the cards arrive. The pack sits in the middle of the row where your cards will be dealt (the Keep places above stay clear), and tears open there.
 
 - **Dig Dig BOOM! — a much smarter AI opponent:** the AI now thinks ahead. It tries each choice (dig or bank, reroll, which Power cards to trigger and in what order) on copies of its Dig with its unseen cards shuffled, plays each out, and takes the best; a finished Dig is valued by how likely it makes the AI to win the Crown (measured in self-play). In Prep it keeps the pack cards and builds the Starter Kit that make its next Dig most valuable — aimed at getting ahead of your best. It sees only what a player sees (its own Mine's contents, not their order, and the Leaderboard). In 800 simulated matches the new deck-building alone wins about 79% against the old AI. The old AI is kept as `AI.basic`. Tools in `games/dig-dig-boom/tools/` run these tournaments.

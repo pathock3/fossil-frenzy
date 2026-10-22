@@ -84,3 +84,13 @@ Immediate cards:
 
 ## Echo + Rewind Tape can loop for ever (found by AI simulation)
 With both in the Mine, Rewind Tape puts Echo back on top and Echo copies Rewind Tape, so digging them can alternate without end. In a normal round the AI banks after 40 cards, but in the **last round nobody can bank**, so the round never ends. Should one of them change (e.g. Echo cannot copy Rewind Tape, or Rewind Tape skips an Echo), or should a Dig end after some number of cards in a row without a Monster?
+
+
+## Cloning Machine on an Ongoing card — what does "twice" mean? (a ruling I made; please check)
+The Machine now goes under a Power **or** Ongoing card. For an Ongoing card I made everything it does count twice: "+N to your rolls" is +2N, "Whenever …" reactions happen twice, "Block N from every Monster" is Block 2N, "double your result" is ×4, "at the start of each Dig" happens twice. Things that are the same twice (Cowcatcher, "if your result is 1 it becomes 10", Panic Button's "first time") are unchanged, and I left "Monsters you defeat are worth 2" and "You may lose 2 Health instead of a Reroll" alone. The Machine stays one of your Ongoing cards (it still counts for Duct Tape and Tool Shed). The sheet's text still says "Power cards": the game accepts either wording.
+
+## The last round: can the leader bank?
+Today nobody banks in the last round; the leader just waits and the round ends when everyone else is out. A player who is in the lead (say, 29 gems at the bottom of the Mine) sees the Bank greyed out and is told to wait. Should the leader be able to stand (bank) once they are in the lead?
+
+## After the 19th Bonus Monster
+There are Bonus Monster cards for damage 8 to 19. If a Dig goes past 19 Bonus Monsters the game repeats a 19.

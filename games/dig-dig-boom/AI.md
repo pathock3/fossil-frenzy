@@ -15,6 +15,11 @@ Goal of this phase: **play as close to perfectly as we can**. Only then decide h
 * **The last round**: the leader waits, everyone else digs (the existing rule). We tested "the leader keeps digging too": it loses badly (27% against waiting) — waiting keeps your last Dig in hand for when you are passed.
 * `AI.basic` is the old simple AI (kept for comparison, and as a starting point for playing worse on purpose).
 
+## Updates since the measurements below
+
+* The Crown Jewel now starts at 2 (reaching 3 claims it), the Starter Kit's empty places are face-up gem cards, gem-boosting cards are out of the Booster Deck, and a Power card is only offered when its requirements are met. The win-chance table (`DDB.ai.phi`) was measured before these: **re-run `tools/gather.js` and paste the new table in** (until then the AI falls back to a guess for a best of 3, which is a little off).
+* It plays at human speed on screen (`DDB.ai.pace`); Fast forward is unchanged. Its Prep runs in small time slices (`prepSteps`) so it never freezes the screen.
+
 ## What we measured (simulated matches, 4 rounds, seats swapped; ±4–5 points at 400–800 matches)
 
 | A | B | A wins |
