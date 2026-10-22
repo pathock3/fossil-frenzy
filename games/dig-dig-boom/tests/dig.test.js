@@ -858,3 +858,13 @@ test('a card that only blocks or halves damage is not offered once there is no d
   const bug = Dig.eligible(small).find(e => e.card.id === 'PW-09'); assert.ok(bug); assert.ok(Dig.eligible(small).some(e => e.card.id === 'PW-12'), 'Dart Frog is offered first'); assert.ok(Dig.trigger(small, bug));
   assert.ok(Dig.eligible(small).length === 0, 'no damage left to block: Dart Frog is not offered');
 });
+
+test('maxNextDamage: the worst the next card could do — the next Monster of each set left in the Mine, only the top card when it is known, and the Bonus Monster at the bottom', () => {
+  const st = game({ mine: ['MO-01', 'MO-02', 'TR-01'], start: { heart: 6 } });
+  assert.equal(Dig.maxNextDamage(st), 2, 'A would deal 1 and B 2');
+  st.known = 1; st.mine = [st.mine[2], st.mine[0], st.mine[1]]; assert.equal(Dig.maxNextDamage(st), 0, 'a known Geode on top: nothing to fear');
+  st.known = 0; Dig.dig(st); Dig.roll(st); Dig.autoFace(st);
+  assert.equal(Dig.maxNextDamage(st), 2, 'a Geode was dug: both sets are still at their first Monster');
+  const empty = game({ mine: [], start: { heart: 9 } });
+  assert.equal(Dig.maxNextDamage(empty), DDB.rules.beyond.firstDamage, 'the Bonus Monster');
+});

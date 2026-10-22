@@ -803,6 +803,10 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .ffbtn { margin-top: 6px; }
 #play .zoom .zdyn { margin-top: 14px; padding: 10px 24px; border-radius: 99px; background: #2a1f18; border: 3px solid #ffb13b; font-size: 26px; font-weight: 800; color: var(--text); text-align: center; }
 #play .zoom .zdyn b { color: #ffd45e; }
+/* a quick warning, outside the table so a redraw does not remove it; it goes by itself */
+.dangertoast { position: fixed; z-index: 40; left: 50%; top: max(70px, calc(env(safe-area-inset-top) + 62px)); transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 12px 22px; border-radius: 99px; background: #b81d12; border: 3px solid #ffd9d3; color: #fff; font: 800 19px/1.2 system-ui, -apple-system, sans-serif; box-shadow: 0 8px 22px rgba(0,0,0,.5); pointer-events: none; animation: dangerpop 2.6s ease-out both; }
+.dangertoast .ic { width: 1.3em; height: 1.3em; flex: none; }
+@keyframes dangerpop { 0% { opacity: 0; transform: translate(-50%, -14px) scale(.92); } 10%, 80% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -6px); } }
 /* The Bank is a button, not a place for cards: a raised gold key at the right edge, bottom-aligned, that presses down */
 #play .piles { width: auto; height: auto; align-self: flex-end; margin-left: 0; flex: none; }
 #play .pile.bankp, #play .pile.bankp.live { flex: none; width: 210px; height: auto; min-height: 96px; padding: 10px 24px; flex-direction: row; gap: 14px; border-radius: 24px; border: 3px solid #fff0b8; color: #2a1700; font-size: 34px; font-weight: 900; letter-spacing: .02em; background: linear-gradient(180deg, #ffd45e, #e8920f); box-shadow: 0 8px 0 #8a4f06, 0 16px 24px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.55); overflow: visible; transition: transform .08s, box-shadow .08s; }
@@ -1610,6 +1614,17 @@ const Dig = (() => {
     const f = st.fight; const list = f.deferred.splice(0);
     for (const e of list) { if (over(st)) return; run(st, compile(e.card).effects, { src: e.card, result: resultTotal(st), trig: f.trig, depth: 0 }); }
   }
+  // The most the next card you dig could do to you: the next Monster of each set you still have in the Mine (their numbers are on the table), or, with the Mine known on top, only that card; at the bottom, the Bonus Monster.
+  function maxNextDamage(st) {
+    if (!st.mine.length) return peekBonus(st).damageNow;
+    let d = 0;
+    for (const c of (st.known > 0 ? [st.mine[0]] : st.mine)) {
+      if (c.type !== 'Monster') continue;
+      const lad = compile(c).ladder; if (!lad) continue;
+      d = Math.max(d, lad[Math.min((st.setCount[c.id] || 0) + 1, lad.length) - 1]);
+    }
+    return d;
+  }
   function previewDamage(st) {
     const f = st.fight; if (f.defeat || f.noDamage) return 0;
     if (f.first && anyFlag(st, 'cowcatcher')) return 0;
@@ -1755,7 +1770,7 @@ const Dig = (() => {
       choose: !!st.pending && !st.over,
     };
   }
-  return { save, load, compile, supported, parseEffects, parseOngoing, start, clone, can, pledge, canPledge, dig, roll, reroll, face, autoFace, eligible, unmetFor, trigger, triggerFully, triggerAll, bank, chooseClone, cloneTargets, peekBonus, dynamic, hold, score, result, makeRng, shuffle, flag, previewDamage };
+  return { save, load, compile, supported, parseEffects, parseOngoing, start, clone, can, pledge, canPledge, dig, roll, reroll, face, autoFace, eligible, unmetFor, trigger, triggerFully, triggerAll, bank, chooseClone, cloneTargets, peekBonus, maxNextDamage, dynamic, hold, score, result, makeRng, shuffle, flag, previewDamage };
 })();
 </script>
 
@@ -2936,7 +2951,7 @@ const AI = (() => {
     // the highest spot still free. Level on a number, the one higher up the column is ahead. (Not one track for each player.)
     const bd = run.board, tr = Board.tracker(bd), holder = Board.holder(bd), players = bd.players;
     const marks = players.map(p => ({ p, m: Board.marker(bd, p.id, 'best') })).filter(x => x.m);
-    const max = Math.max(8, tr + 2, ...marks.map(x => x.m.n + 1)), nSpots = Math.max(2, players.length * 2);
+    const max = Math.max(8, tr + 2, ...marks.map(x => x.m.n + 1)), nSpots = Math.max(1, players.length);          // as many rows as players
     const ord = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
     const labels = `<div class="bcol blabels"><div class="bhead"></div>${Array.from({ length: nSpots }, (_, i) => `<div class="bspot lab">${ord[i] || i + 1 + 'th'}</div>`).join('')}</div>`;
     const tag = p => (p.id === run.me ? 'You' : p.name);
@@ -3043,7 +3058,7 @@ const AI = (() => {
         const r = from && from[c.uid] ? from[c.uid] : { x: innerWidth / 2 - 63 + (i - (rest.length - 1) / 2) * 130, y: innerHeight * .34, w: 125, h: 175 };
         return `<span class="sweepcard" style="--i:${i};left:${Math.round(r.x)}px;top:${Math.round(r.y)}px;width:${Math.round(r.w)}px;height:${Math.round(r.h)}px;--tx:${-Math.round(r.x + r.w + 120)}px;--ty:${-Math.round(r.y + r.h + 100)}px">${A.playCard(c, r.w / 250)}</span>`;
       }).join('')}</div>` : '';
-      body = `${sweep}<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${n} of ${pr.kitMax} chosen">${n} of ${pr.kitMax}</span></div><div class="krow"><div class="kslots ${first ? 'kfirst' : ''}">${slots}</div><p class="kdef">${say}</p></div><div class="poolhead">Your cards</div><div class="cards pool ${first ? 'kfirst' : ''}" style="min-height:${Math.round(350 * ps)}px">${hand.map((c, i) => pcard(c, ps, { act: 'kitpick', i, ...tagOf2(c) })).join('')}</div>`;
+      body = `${sweep}<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${n} of ${pr.kitMax} chosen">${n} of ${pr.kitMax}</span></div><div class="krow"><div class="kslots ${first ? 'kfirst' : ''}">${slots}</div><p class="kdef">${say}</p></div><div class="poolhead">Your cards</div><div class="cards pool ${first ? 'kfirst' : ''}" style="min-height:${Math.round(350 * ps) + 24}px">${hand.map((c, i) => pcard(c, ps, { act: 'kitpick', i, ...tagOf2(c) })).join('')}</div>`;
       foot = `<button class="btn" data-p="startround">Start round ${run.round}${run.round === run.rounds ? ' · final' : ''}</button>`;
     }
     const stage = step === 'kit' || step === 'keep' || step === 'reveal' || (step === 'pack' && !pr.banked) ? body : `<div class="prepstage">${body}</div>`;
@@ -3218,6 +3233,16 @@ const AI = (() => {
         <li>The AI digs on its own clock; tap Fast-forward the AI when you are done and it is not.</li></ul></details>
     </div></div>`;
   }
+  // Once in each Dig, when the next card could be a Monster that would put you out (its damage is at least your Health), a quick note says so. It fades by itself and never gets in the way of a tap.
+  function dangerAlert() {
+    const st = S.st;
+    if (S.panel !== 'dig' || !st || st.over || st.fight || st.pending || S.dangerSeen === st || S.help || S.zoom || finalNote()) return;
+    if (!Dig.can(st).dig || Dig.maxNextDamage(st) < st.heart) return;
+    S.dangerSeen = st;
+    const el = document.createElement('div'); el.className = 'dangertoast'; el.setAttribute('role', 'status');
+    el.innerHTML = `${ic('damage')} <span>Careful: the next Monster could knock you out</span>`;
+    $.parentNode.appendChild(el); setTimeout(() => el.remove(), 2600);
+  }
   function render() {
     if (document.body.dataset.mode !== 'play') return;
     const keep = $.querySelector('#setupScroll'), ks = keep ? keep.scrollTop : 0;
@@ -3251,7 +3276,7 @@ const AI = (() => {
     }
     $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z + note + fin + ownedP;
     const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
-    fitHero(); heroPlay(); fitTable(); playDice();
+    fitHero(); heroPlay(); fitTable(); playDice(); dangerAlert();
     if (S.packFrom) { const fp = $.querySelector('.flypack'); if (fp) { const r = fp.getBoundingClientRect(); fp.style.setProperty('--fx', Math.round(S.packFrom.x - (r.left + r.width / 2)) + 'px'); fp.style.setProperty('--fy', Math.round(S.packFrom.y - (r.top + r.height / 2)) + 'px'); } S.packFrom = null; }
     if (S.keepFrom && $.querySelector('.pcard.kept')) {          // the cards you kept slide from where they were to their places; the others are dealt in after them
       $.querySelectorAll('.pcard.kept').forEach(el => {

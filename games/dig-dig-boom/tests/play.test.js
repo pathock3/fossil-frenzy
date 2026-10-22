@@ -517,7 +517,7 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     await page.click('#play [data-p=bank]');
     assert.match(await page.locator('#play .over').innerText(), /Banked![\s\S]*4 Monsters survived · ♛/);
     await page.click('#play [data-p=prep]');
-    assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'first the Leaderboard, full screen: a column for each number, with spots stacked in it'); assert.ok(await page.locator('#play .bigboard .bspot').count() >= 18); assert.equal(await page.locator('#play .bdisc').count(), 1, 'your marker is on it, in the top spot'); assert.equal(await page.locator('#play .bigboard .bspot.top .bdisc').count(), 1);
+    assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'first the Leaderboard, full screen: a column for each number, with spots stacked in it'); assert.ok(await page.locator('#play .bigboard .bspot').count() >= 9, 'one row for each player'); assert.equal(await page.locator('#play .bdisc').count(), 1, 'your marker is on it, in the top spot'); assert.equal(await page.locator('#play .bigboard .bspot.top .bdisc').count(), 1);
     await page.evaluate(() => { window.DigDigBoomPlay.S.run.dice = [8]; });
     await page.click('#play [data-p=boardgo]');
     assert.equal(await page.locator('#play .bigdie, #play [data-p=escape]').count(), 0, 'nothing to tap: the die rolls by itself');
@@ -953,6 +953,22 @@ test('tapping a card whose power depends on the game says what it is worth right
     assert.match(await page.locator('#play .zoom .zdyn').innerText(), /Right now:\s*\+1/, 'Tune-Up is the one Ongoing card in play: +1');
     assert.doesNotMatch(await page.locator('#play .zoom').innerText(), /tap anywhere/i);
     await page.click('#play .zoom');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('table: a quick note warns once per Dig when the next Monster could put you out', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await begin(page, { mine: ['TR-01', 'TR-01', 'MO-02', 'TR-01'], dice: [1, 1], line: [], start: { heart: 2 } });
+    await page.waitForSelector('.dangertoast');
+    assert.match(await page.locator('.dangertoast').innerText(), /next Monster could knock you out/i);
+    await page.click('#play [data-p=dig]'); await page.click('#play [data-p=dig]');
+    assert.equal(await page.locator('.dangertoast').count() <= 1, true, 'not again for the next card');
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.dangerSeen === window.DigDigBoomPlay.S.st), true, 'it has been shown for this Dig');
+    await page.waitForFunction(() => !document.querySelector('.dangertoast'), null, { timeout: 5000 });
+    await page.click('#play [data-p=dig]');
+    assert.equal(await page.locator('.dangertoast').count(), 0, 'still only once');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
