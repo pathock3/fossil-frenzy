@@ -80,3 +80,7 @@ Immediate cards:
 
 ## Decided for the prototype
 - Advanced trash is not in the prototype (it stays in the rule book as an optional rule). Lucky Coin stays +1. The 35 Grit/move cards stay out of the game in the proposed form above; variety of Booster cards is a late-stage pivot.
+
+
+## Echo + Rewind Tape can loop for ever (found by AI simulation)
+With both in the Mine, Rewind Tape puts Echo back on top and Echo copies Rewind Tape, so digging them can alternate without end. In a normal round the AI banks after 40 cards, but in the **last round nobody can bank**, so the round never ends. Should one of them change (e.g. Echo cannot copy Rewind Tape, or Rewind Tape skips an Echo), or should a Dig end after some number of cards in a row without a Monster?
