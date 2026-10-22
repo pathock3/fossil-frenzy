@@ -50,6 +50,6 @@ module.exports = { G, cards, playMatch, tournament };
 
 if (require.main === module) {
   const t = Date.now();
-  tournament(G.AI, G.AI, { n: 400 });
+  tournament(G.Basic, G.Basic, { n: 400 });
   console.log(((Date.now() - t) / 1000).toFixed(1) + ' s');
 }

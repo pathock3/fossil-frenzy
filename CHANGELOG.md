@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — a much smarter AI opponent:** the AI now thinks ahead. It tries each choice (dig or bank, reroll, which Power cards to trigger and in what order) on copies of its Dig with its unseen cards shuffled, plays each out, and takes the best; a finished Dig is valued by how likely it makes the AI to win the Crown (measured in self-play). In Prep it keeps the pack cards and builds the Starter Kit that make its next Dig most valuable — aimed at getting ahead of your best. It sees only what a player sees (its own Mine's contents, not their order, and the Leaderboard). In 800 simulated matches the new deck-building alone wins about 79% against the old AI. The old AI is kept as `AI.basic`. Tools in `games/dig-dig-boom/tools/` run these tournaments.
+
 - **Dig Dig BOOM! — Starter Kit gems and the Bank:** a Starter Kit place you leave empty is now a real gem card (a Geode), face up on top of your Mine right after your Kit cards — you dig it first, and it counts when you do (it is no longer put in the Bank at the start). The **Bank is a button**, not a card-shaped place: a raised gold key at the bottom right that shows your gems and presses down when tapped (greyed while you cannot bank).
 
 - **Dig Dig BOOM! — end of a Dig:** "Fast forward" now says what it does ("Your opponent is still digging" / "Fast-forward the AI"). Before the gems are added up, a full-screen **Leaderboard** shows where everyone stands (the Crown and one row per player, markers dropping in); "Add up your gems" continues. The Escape Bonus die now **rolls by itself** once the tally has shown Treasure and Monsters. In the sum, every piece (Treasure, Monsters, die, total) has its place from the start, so nothing moves when the next one appears.

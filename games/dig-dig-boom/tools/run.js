@@ -3,11 +3,11 @@
 const { fork } = require('child_process'), os = require('os');
 function brainFrom(spec) {
   const { G } = require('./sim.js');
-  if (spec === 'base') return G.AI;
+  if (spec === 'base') return G.Basic;
   const m = /^(\w+)(?::(.*))?$/.exec(spec), over = m[2] ? JSON.parse(m[2]) : {};
   const b = require('./brain.js').makeBrain(over);
-  if (m[1] === 'smartprep') return { act: G.AI.act, prep: b.prep };      // the shipped Dig play, the new Prep
-  if (m[1] === 'rolldig') return { act: b.act, prep: G.AI.prep };        // the new Dig play, the shipped Prep
+  if (m[1] === 'smartprep') return { act: G.Basic.act, prep: b.prep };      // the shipped Dig play, the new Prep
+  if (m[1] === 'rolldig') return { act: b.act, prep: G.Basic.prep };        // the new Dig play, the shipped Prep
   return b;                                                              // "rollout": both
 }
 module.exports = { brainFrom };
