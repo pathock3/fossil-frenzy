@@ -846,3 +846,15 @@ test('review fixes: "N+ cards trigger on one roll" fires when the Nth card trigg
   fight(st);
   assert.equal(st.reroll, 1);
 });
+
+test('a card that only blocks or halves damage is not offered once there is no damage left to take (the Monster is defeated, or the damage is already nothing)', () => {
+  const st = game({ mine: ['MO-01'], power: ['PW-09'], start: { heart: 6 }, dice: [10] });          // the Pet (10) defeats the Monster; Pill Bug (Block 1) has nothing left to do
+  Dig.dig(st); Dig.roll(st);
+  assert.deepEqual(Dig.eligible(st).map(e => e.card.id).sort(), ['PW-01', 'PW-09'], 'before the Pet: both are offered');
+  assert.ok(Dig.trigger(st, Dig.eligible(st).find(e => e.card.id === 'PW-01')));
+  assert.deepEqual(Dig.eligible(st).map(e => e.card.id), [], 'the Monster is defeated: Block does nothing, so it is not offered');
+  const small = game({ mine: ['MO-01'], power: ['PW-09', 'PW-12'], start: { heart: 6 }, dice: [6] });          // the Monster deals 1: after Pill Bug's Block 1 there is nothing left for Dart Frog to block
+  Dig.dig(small); Dig.roll(small);
+  const bug = Dig.eligible(small).find(e => e.card.id === 'PW-09'); assert.ok(bug); assert.ok(Dig.eligible(small).some(e => e.card.id === 'PW-12'), 'Dart Frog is offered first'); assert.ok(Dig.trigger(small, bug));
+  assert.ok(Dig.eligible(small).length === 0, 'no damage left to block: Dart Frog is not offered');
+});

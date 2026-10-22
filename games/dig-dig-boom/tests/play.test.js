@@ -237,7 +237,7 @@ test('table: a Power or Ongoing card is dug into the flip spot, face up, and mov
 test('table: a card whose requirements are not met is not highlighted, but it is still there', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
-    await begin(page, { mine: ['MO-01'], dice: [9], line: ['PW-07', 'PW-02'], start: { heart: 7 } });             // Nervous Mouse wants 4 Health or less
+    await begin(page, { mine: ['MO-01'], dice: [8], line: ['PW-07', 'PW-02'], start: { heart: 7 } });             // Nervous Mouse wants 4 Health or less
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]');
     assert.equal(await page.locator('#play .tcard.elig').count(), 1, 'only Nurse Newt');
     assert.equal(await page.locator('#play .tcard[aria-label^="Nervous Mouse"]').count(), 1, 'Nervous Mouse is still on the table');

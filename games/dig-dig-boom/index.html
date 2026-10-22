@@ -481,7 +481,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .piles { width: 150px; }
 #play .tableau { align-items: center; }
 
-#play .pbar.slim { position: absolute; z-index: 12; top: var(--top); right: max(14px, env(safe-area-inset-right)); padding: 0; }
+#play .pbar.slim { position: absolute; z-index: 12; top: calc(var(--top) + 10px); right: max(10px, env(safe-area-inset-right)); padding: 0;          /* the same spot as on the dig screen */ }
 #play .pbar .pgrow { flex: 1; }
 #play .keepsay { margin: 0; font-size: 22px; font-weight: 800; color: var(--text); text-align: center; }
 #play .tcard.arrive { animation: arrive .5s cubic-bezier(.2,.8,.3,1) backwards; }
@@ -767,7 +767,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .piles { display: flex; flex-direction: column; align-items: flex-end; gap: 14px; }
 #play .piles .rollbtn { margin: 0; align-self: flex-end; width: 104px; height: auto; gap: 0; }
 #play .piles { gap: 8px; }
-#play .piles .rollbtn .tapword { font-size: 17px; padding: 4px 14px; margin-top: 4px; }
+#play .piles .rollbtn .tapword { white-space: nowrap; font-size: 17px; padding: 4px 14px; margin-top: 4px; }
 #play .pile.bankp, #play .pile.bankp.live { min-height: 84px; }
 /* tokens say who they are (You on blue, AI on red); the Crown Jewel sits on the leader's token */
 #play .bstack .bdisc { width: 54px; height: 54px; position: relative; }
@@ -1569,10 +1569,18 @@ const Dig = (() => {
     return need;
   };
   const unmetFor = (st, entry) => needHeart(st, compile(entry.card).effects);
+  // A card that only softens the damage (Block, halve, "no damage", survive) has nothing left to do once the damage is gone (a Monster defeated, or no damage to take); one that only defeats the Monster, once it is defeated.
+  const flatOps = effs => effs.flatMap(e => e.op === 'seq' ? flatOps(e.list) : [e]);
+  function pointless(st, entry) {
+    const f = st.fight, ops = flatOps(compile(entry.card).effects).map(e => e.op);
+    if (!ops.length) return false;
+    if (f.defeat) return ops.every(o => ['block', 'halve', 'noDamage', 'survive1', 'defeat'].includes(o));
+    return previewDamage(st) === 0 && ops.every(o => ['block', 'halve', 'noDamage', 'survive1'].includes(o));
+  }
   function eligible(st) {
     const f = st.fight; if (!f || f.phase !== 'after' || over(st)) return [];
     const r = resultTotal(st);
-    return st.line.filter(e => e.at <= r && f.trig.filter(x => x === e).length < (e.cloned ? 2 : 1) && unmetFor(st, e) === null).sort((a, b) => b.at - a.at);
+    return st.line.filter(e => e.at <= r && f.trig.filter(x => x === e).length < (e.cloned ? 2 : 1) && unmetFor(st, e) === null && !pointless(st, e)).sort((a, b) => b.at - a.at);
   }
   // Effects that need to know which OTHER cards triggered ("for each other card that triggers", "if no other card triggers") wait until you have chosen.
   const needsFinal = effs => effs.some(e => (e.op === 'gainPer' && e.per === 'otherTriggers') || (e.op === 'if' && e.cond && e.cond.noOther) || (e.op === 'seq' && needsFinal(e.list)));
@@ -2879,8 +2887,8 @@ const AI = (() => {
   // The roll, played out: numbers flick past on the die and settle on the real result (already decided; this is only for the eye).
   function playDice() {
     $.querySelectorAll('.d10.fx-tumble .dnum[data-final]').forEach(el => {
-      const fast = !!el.closest('.action'), steps = fast ? 8 : 15, ms = fast ? 55 : 80;        // the roll in a fight happens a lot: quick; the Escape Bonus is a moment: slower
-      let n = 0; const fin = el.dataset.final, iv = setInterval(() => { n++; if (n >= steps || !el.isConnected) { clearInterval(iv); el.textContent = fin; const tb = el.closest('.action'); if (tb) tb.querySelectorAll('.waitroll').forEach(b => b.classList.remove('waitroll')); return; } el.textContent = 1 + Math.floor(Math.random() * 10); }, ms);
+      const fast = !!el.closest('.action, .piles'), steps = fast ? 8 : 15, ms = fast ? 55 : 80;        // the roll in a fight happens a lot: quick; the Escape Bonus is a moment: slower
+      let n = 0; const fin = el.dataset.final, iv = setInterval(() => { n++; if (n >= steps || !el.isConnected) { clearInterval(iv); el.textContent = fin; if (el.closest('.piles')) $.querySelectorAll('.waitroll').forEach(b => b.classList.remove('waitroll')); return; } el.textContent = 1 + Math.floor(Math.random() * 10); }, ms);
     });
   }
   function lbHTML(run, st) {
@@ -3023,7 +3031,7 @@ const AI = (() => {
       const ss = Math.min(.6, fitCards(pr.kitMax, .6, W, avail * .46)), sh = 350 * ss;
       const prev = (run.kit || []).map(c => c.uid), kitCards = pr.kitPick.map(id => run.owned.find(c => c.uid === id)).filter(Boolean);
       const hand = run.owned.filter(c => !pr.kitPick.includes(c.uid)).sort((x, y) => (pr.gained.includes(y.uid) ? 1 : 0) - (pr.gained.includes(x.uid) ? 1 : 0));          // what you just won comes first, top left
-      const ps = Math.min(.8, fitCards(hand.length, .8, W, avail - sh - 14, 12));
+      const ps = Math.min(.8, fitCards(Math.max(1, hand.length), .8, W, avail - sh - 14, 12));          // (an empty hand keeps the size and room of one card, so nothing moves)
       const tagOf = c => (first && S.keepFrom && pr.picked.includes(c.uid) ? { kept: true } : {}) ;
       const tagOf2 = c => ({ ...tagOf(c), ...(pr.gained.includes(c.uid) ? { tag: 'NEW', tagCls: 'new' } : prev.includes(c.uid) ? { tag: 'Last round', tagCls: 'last' } : {}) });
       const gemIc = `<svg class="kgem" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gem"/></svg>`;
@@ -3035,7 +3043,7 @@ const AI = (() => {
         const r = from && from[c.uid] ? from[c.uid] : { x: innerWidth / 2 - 63 + (i - (rest.length - 1) / 2) * 130, y: innerHeight * .34, w: 125, h: 175 };
         return `<span class="sweepcard" style="--i:${i};left:${Math.round(r.x)}px;top:${Math.round(r.y)}px;width:${Math.round(r.w)}px;height:${Math.round(r.h)}px;--tx:${-Math.round(r.x + r.w + 120)}px;--ty:${-Math.round(r.y + r.h + 100)}px">${A.playCard(c, r.w / 250)}</span>`;
       }).join('')}</div>` : '';
-      body = `${sweep}<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${n} of ${pr.kitMax} chosen">${n} of ${pr.kitMax}</span></div><div class="krow"><div class="kslots ${first ? 'kfirst' : ''}">${slots}</div><p class="kdef">${say}</p></div><div class="poolhead">Your cards</div><div class="cards pool ${first ? 'kfirst' : ''}">${hand.map((c, i) => pcard(c, ps, { act: 'kitpick', i, ...tagOf2(c) })).join('') || '<span class="note">Everything you own is in your Starter Kit.</span>'}</div>`;
+      body = `${sweep}<div class="kitbar"><b>Starter Kit</b><span class="count" aria-label="${n} of ${pr.kitMax} chosen">${n} of ${pr.kitMax}</span></div><div class="krow"><div class="kslots ${first ? 'kfirst' : ''}">${slots}</div><p class="kdef">${say}</p></div><div class="poolhead">Your cards</div><div class="cards pool ${first ? 'kfirst' : ''}" style="min-height:${Math.round(350 * ps)}px">${hand.map((c, i) => pcard(c, ps, { act: 'kitpick', i, ...tagOf2(c) })).join('')}</div>`;
       foot = `<button class="btn" data-p="startround">Start round ${run.round}${run.round === run.rounds ? ' · final' : ''}</button>`;
     }
     const stage = step === 'kit' || step === 'keep' || step === 'reveal' || (step === 'pack' && !pr.banked) ? body : `<div class="prepstage">${body}</div>`;
@@ -3118,12 +3126,13 @@ const AI = (() => {
     return `<button class="mcard" data-p="zoom" data-uid="${show.uid}" aria-label="${A.esc(show.name)}${oc ? ', ' + oc : ''}"><span class="flipwrap">${fresh ? under(before) + drawn(cw(A.playCard(show, 1), 'ca'), backOf('var(--ca)')) : cw(A.playCard(show, 1), 'ca')}${fresh && show.type === 'Treasure' ? burstHTML(10) : ''}${oc ? `<span class="stamp ${oc}">${oc === 'defeated' ? 'Defeated' : 'Survived'}</span>` : ''}</span></button>`;
   }
   // The action zone, bottom right: the die, the button that takes the damage, and one line saying what the game is waiting for.
+  // What the action zone holds, and (once you have rolled) the die itself, which stays where the Roll button was: in the right-hand column above the Bank.
   function diceHTML(st, can) {
     const f = st.fight;
     if (f) {
       const res = Dig.result(st), after = f.phase === 'after', elig = after ? Dig.eligible(st) : [];
       const rollKey = `${st.digs}:${f.rolls}:${f.die}`, shown = f.fixed !== null ? f.fixed : f.die, fresh = rollKey !== S.fx.roll;
-      if (!after) return '<div class="action"></div>';          // the die to tap is in the right-hand column, above the Bank (see tableHTML)
+      if (!after) return { html: '<div class="action"></div>', die: '' };          // the die to tap is in the right-hand column, above the Bank (see tableHTML)
       // the die says the roll; only when cards changed it does one line add up: 7 +1 = 8
       const calc = res.parts.length > 1 ? `<div class="calc">${res.parts.map((p, i) => i === 0 ? p.v : p.set ? `→ ${p.v}` : `${p.v >= 0 ? '+' : '−'}${Math.abs(p.v)}`).join(' ')} = <b>${res.total}</b></div>` : '';
       const dmg = Dig.previewDamage(st), sure = elig.length > 0 && S.confirmFace;          // you can still use cards: the first tap on "take damage" only asks
@@ -3131,16 +3140,16 @@ const AI = (() => {
       const hasRR = st.reroll >= R.rerollCost || can.reroll, open = can.reroll, locked = !open && hasRR && f.fixed === null && f.trig.length > 0;
       const lock = open || locked ? `<span class="dlock ${open ? 'open' : 'shut'}" title="${open ? 'You can still reroll' : 'Locked in'}"><svg viewBox="0 0 24 24" aria-hidden="true">${open ? '<path d="M8 11V7.5a4 4 0 0 1 7.6-1.7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>' : '<path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>'}<rect x="4.5" y="11" width="15" height="10.5" rx="2.6" fill="currentColor"/></svg></span>` : '';
       const rr = open ? `<button class="rerollbtn" data-p="reroll" aria-label="Reroll">${ic('reroll')}<span>Reroll</span><small>${st.reroll} left</small></button>` : locked ? '<div class="lockednote">Locked in</div>' : '';
-      return `<div class="action">${elig.length > 1 ? `<div class="aprompt"><button class="chip" data-p="triggerall">Use all ${elig.length}</button></div>` : ''}
-        <div class="arow"><div class="dieb">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}${lock}</div>
-          <div class="astack">${calc}${rr}<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''} ${sure ? 'sure' : ''} ${fresh ? 'waitroll' : ''}" data-p="face">${sure ? `You can still use cards.<br>Tap again to ${f.defeat ? 'move on' : dmg ? `take ${dmg} damage` : 'carry on'}` : f.defeat ? 'Monster defeated: continue' : dmg ? `Take ${dmg} damage` : 'Take no damage'}</button></div></div></div>`;
+      const die = `<div class="dieb rollbtn still">${d10(fresh ? '' : shown, fresh ? 'fx-tumble' : '', shown)}${lock}<span class="tapword" aria-hidden="true" style="visibility:hidden">Tap to roll</span></div>`;          // (the hidden word keeps the die exactly where the Roll button was)
+      return { die, html: `<div class="action">${elig.length > 1 ? `<div class="aprompt"><button class="chip" data-p="triggerall">Use all ${elig.length}</button></div>` : ''}
+        <div class="astack">${calc}${rr}<button class="takedmg ${dmg >= st.heart ? 'lethal' : ''} ${sure ? 'sure' : ''} ${fresh ? 'waitroll' : ''}" data-p="face">${sure ? `You can still use cards.<br>Tap again to ${f.defeat ? 'move on' : dmg ? `take ${dmg} damage` : 'carry on'}` : f.defeat ? 'Monster defeated: continue' : dmg ? `Take ${dmg} damage` : 'Take no damage'}</button></div></div>` };
     }
-    if (st.pending) return `<div class="action"><div class="aprompt">${A.esc(st.pending.card.name)}: tap a Power card</div></div>`;
-    if (st.over) return '';
+    if (st.pending) return { html: `<div class="action"><div class="aprompt">${A.esc(st.pending.card.name)}: tap a Power card</div></div>`, die: '' };
+    if (st.over) return { html: '', die: '' };
     // The last round is a race: nobody banks. Say so, and say what to do: keep digging until you lead; once you lead, wait (digging on only risks the lead).
     const lastRound = !!(S.run && st.board && st.board.final), say = lastRound ? (st.board.lead ? 'You are in the lead. Wait for your opponent: if they pass you, dig again.' : 'The last round: nobody banks. Dig until you are in the lead.') : can.bank ? 'Tap the Mine to dig, or the Bank to keep your gems' : 'Tap the Mine to dig';
     const ffBtn = lastRound && st.board.lead && aiDigging() ? `<button class="btn alt ffbtn" data-p="ff" ${S.ff ? 'disabled' : ''}>${S.ff ? 'Fast-forwarding…' : 'Fast-forward your opponent'}</button>` : '';          // you wait; this speeds the opponent up until they pass you or go BOOM
-    return `<div class="action"><div class="aprompt">${say}</div>${ffBtn}</div>`;
+    return { html: `<div class="action"><div class="aprompt">${say}</div>${ffBtn}</div>`, die: '' };
   }
   // ----- little things that pop. What is new since the last drawing is remembered, so each flourish plays once, on the thing that just happened. -----
   const fxOf = st => st ? { last: st.last ? st.last.uid : null, mon: st.fight ? st.fight.monster.uid : null, roll: st.fight && st.fight.phase === 'after' ? `${st.digs}:${st.fight.rolls}:${st.fight.die}` : null, gems: st.geodeGems + st.monsterGems, over: st.over } : { last: null, mon: null, roll: null, gems: 0, over: null };
@@ -3157,10 +3166,11 @@ const AI = (() => {
     // There is no separate discard pile: the cards you flip land in one spot beside the Mine, and the ones before it are stacked underneath. (Monsters move on to the Monster pile above.)
     const piles = `<div class="piles"><button class="pile bankp ${bankLive ? 'live' : ''}" data-p="bank" ${bankLive ? '' : 'disabled'}><span class="bword">Bank</span><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span></button></div>`;
     const preRoll = !!f && f.phase === 'before' && !st.over, finalRound = !!(S.run && st.board && st.board.final);          // the last round: nobody banks, so there is no Bank and no gem count
-    const rollBtn = preRoll ? `<button class="dieb live rollbtn" data-p="roll" aria-label="Roll the die">${d10('', 'idle')}<span class="tapword">Tap to roll</span></button>` : '';
+    const dz = diceHTML(st, can), rolled = dz.die;
+    const rollBtn = preRoll ? `<button class="dieb live rollbtn" data-p="roll" aria-label="Roll the die">${d10('', 'idle')}<span class="tapword">Tap to roll</span></button>` : rolled;
     const rollCol = finalRound ? (rollBtn ? `<div class="piles">${rollBtn}</div>` : '') : piles.replace('<div class="piles">', `<div class="piles">${rollBtn}`);
     const dug = `<div class="dugz"><div class="slot ${st.discard.length ? 'stacked' : ''}">${dugHTML(st)}</div></div>`;
-    const action = `<div class="dicez">${diceHTML(st, can)}</div>`;
+    const action = `<div class="dicez">${dz.html}</div>`;
     const s = st.over ? Dig.score(st) : null;
     let over = '';
     const ovFx = st.over && st.over !== fx.over ? 'fx' : '';
