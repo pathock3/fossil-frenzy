@@ -38,7 +38,7 @@ PW-31,Proud Lion,Power,10,Booster,1,+2 {reroll}
 PW-32,Sponge Slug,Power,10,Booster,1,Gain {heart} equal to this Monster's {damage}
 ON-01,Adrenaline Pump,Ongoing,,Booster,1,"Whenever you gain {heart}, +1 {grit}"
 ON-02,Applause Meter,Ongoing,,Booster,1,"Whenever 4+ cards trigger on one roll, +1 {reroll}"
-ON-03,Backfire,Ongoing,,Booster,1,"If your result is 1, it becomes a 10"
+ON-03,Backfire,Ongoing,,Booster,1,"If your result is 1, you may make it a 10"
 ON-04,Bounty Poster,Ongoing,,Booster,1,Monsters you defeat are worth 2 {gem}
 ON-05,Bumper,Ongoing,,Booster,1,Block 1 {damage} from every Monster
 ON-06,Cloning Machine,Ongoing,,Booster,1,Place under one of your Power cards. That card triggers twice

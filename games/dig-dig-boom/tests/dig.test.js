@@ -360,9 +360,14 @@ test('roll bonuses: Tune-Up, Redline (3 Health or less), Monster Scope / Giant S
   const fw = game({ mine: ['MO-01'], ongoing: ['ON-15'], dice: [4] }); fw.discard = Array(5).fill(0).map(() => ({ ...by('IM-13') })); Dig.dig(fw); Dig.roll(fw); assert.equal(Dig.result(fw).total, 7);
 });
 
-test('result changes: Floor Jack (below 4 becomes 4), Backfire (1 becomes 10), Wrecking Ball doubles the first Monster each Dig; in the ruled order', () => {
+test('result changes: Floor Jack (below 4 becomes 4), Backfire (you may make a 1 a 10), Wrecking Ball doubles the first Monster each Dig; in the ruled order', () => {
   const fj = game({ mine: ['MO-01'], ongoing: ['ON-14'], dice: [2] }); Dig.dig(fj); Dig.roll(fj); assert.equal(Dig.result(fj).total, 4);
-  const bf = game({ mine: ['MO-01'], ongoing: ['ON-03'], dice: [1] }); Dig.dig(bf); Dig.roll(bf); assert.equal(Dig.result(bf).total, 10);
+  const bf = game({ mine: ['MO-01'], ongoing: ['ON-03'], dice: [1, 4], start: { reroll: 1 } }); Dig.dig(bf); Dig.roll(bf);
+  assert.equal(Dig.result(bf).total, 1, 'Backfire is a choice: until you use it the result is still 1'); assert.deepEqual(Dig.mayUse(bf).map(o => o.id), ['ON-03']);
+  assert.equal(Dig.can(bf).reroll, true); assert.ok(Dig.useMod(bf, Dig.mayUse(bf)[0])); assert.equal(Dig.result(bf).total, 10); assert.deepEqual(Dig.mayUse(bf), [], 'once');
+  assert.equal(Dig.can(bf).reroll, false, 'using a card locks the roll in');
+  const nb = game({ mine: ['MO-01'], ongoing: ['ON-03'], dice: [5] }); Dig.dig(nb); Dig.roll(nb); assert.deepEqual(Dig.mayUse(nb), [], 'not on any other number');
+  const hurry = game({ mine: ['MO-01'], ongoing: ['ON-03'], power: ['PW-01'], start: { heart: 3 }, dice: [1] }); Dig.dig(hurry); Dig.roll(hurry); Dig.autoFace(hurry); assert.equal(hurry.heart, 3, 'a hurried player (and the AI) uses it, and the Pet then triggers on the 10');
   const wb = game({ mine: ['MO-01', 'MO-01'], ongoing: ['ON-37'], start: { heart: 12 }, dice: [3, 3] });
   Dig.dig(wb); Dig.roll(wb); assert.equal(Dig.result(wb).total, 6); Dig.autoFace(wb);
   Dig.dig(wb); Dig.roll(wb); assert.equal(Dig.result(wb).total, 3, 'only the first Monster');
@@ -502,9 +507,10 @@ test('audit: Cave Scout digging a card that slides back into the Mine (or Echo a
   const a = game({ mine: ['IM-03', slide, 'TR-01', 'MO-01'] }); Dig.dig(a); assert.ok(!a.over);
   const b = game({ mine: ['IM-03', 'IM-06', 'MO-01'] }); b.discard.push(put('IM-22')); Dig.dig(b); assert.ok(!b.over);
 });
-test('audit: Twin Drill keeps the higher RESULT (Backfire turns a 1 into a 10), and not when a Thorned Gadget paid Health instead of a Reroll', () => {
+test('audit: Twin Drill keeps the higher RESULT (Backfire, used, turns a 1 into a 10), and not when a Thorned Gadget paid Health instead of a Reroll', () => {
   const st = game({ mine: ['MO-01'], ongoing: ['ON-34', 'ON-03'], start: { reroll: 1 }, dice: [1, 5] });
-  Dig.dig(st); Dig.roll(st); assert.equal(Dig.result(st).total, 10); Dig.reroll(st); assert.equal(Dig.result(st).total, 10);
+  Dig.dig(st); Dig.roll(st); Dig.useMod(st, Dig.mayUse(st)[0]); assert.equal(Dig.result(st).total, 10); assert.equal(Dig.can(st).reroll, false, 'using Backfire locks the roll in: no reroll after it');
+  const tw = game({ mine: ['MO-01'], ongoing: ['ON-34'], start: { reroll: 1 }, dice: [6, 2] }); Dig.dig(tw); Dig.roll(tw); Dig.reroll(tw); assert.equal(Dig.result(tw).total, 6, 'Twin Drill keeps the higher result');
   const th = game({ mine: ['MO-01'], ongoing: ['ON-34', 'ON-31'], start: { reroll: 0, heart: 8 }, dice: [6, 2] });
   Dig.dig(th); Dig.roll(th); Dig.reroll(th); assert.equal(Dig.result(th).total, 2, 'Twin Drill only applies when you spend a Reroll');
 });
@@ -893,4 +899,11 @@ test('Monster C: two cards, the first deals 3 and the second 5; it counts separa
   const seen = [];
   for (let i = 0; i < 4; i++) { Dig.dig(st); seen.push([st.fight.monster.id, st.fight.damage]); Dig.roll(st); Dig.autoFace(st); }
   assert.deepEqual(seen, [['MO-03', 3], ['MO-01', 1], ['MO-03', 5], ['MO-02', 2]]);
+});
+
+test('every Dig that ends is stamped with the order in which Digs ended (the Leaderboard tells the round in that order)', () => {
+  const a = game({ mine: ['TR-01'] }), b = game({ mine: ['TR-01'] }), c = game({ mine: ['MO-01'], start: { heart: 1 }, dice: [1] });
+  Dig.dig(b); Dig.dig(a); Dig.dig(c); Dig.roll(c); Dig.autoFace(c);          // c goes BOOM first
+  Dig.bank(b); Dig.bank(a);
+  assert.ok(c.over.seq < b.over.seq && b.over.seq < a.over.seq, 'BOOM, then b banked, then a: ' + [c.over.seq, b.over.seq, a.over.seq]);
 });

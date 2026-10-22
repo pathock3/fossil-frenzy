@@ -366,7 +366,7 @@ test('table: banking keeps your gems and ends the Dig; it cannot be done in fron
     assert.equal(await page.locator('#play [data-p=bank] .gemline svg').count(), 1, 'one gem icon on the Bank pile');
     await page.click('#play [data-p=bank]');
     const o = await page.locator('#play .over').innerText();
-    assert.match(o, /Banked!/); assert.match(o, /2 Geodes|\(2 from Geodes, 0 from Monsters\)/);
+    assert.match(o, /banked!/i); assert.match(o, /2 Geodes|\(2 from Geodes, 0 from Monsters\)/);
     await page.click('#play [data-p=setup]'); await page.waitForSelector('#play .panel');
     assert.ok(await page.locator('#play [data-p=go]').isVisible());
     const { browser: b2, page: p2 } = await open();
@@ -514,7 +514,7 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     assert.equal(await page.locator('#play .lbc.here').innerText().then(t => t.split('\n')[0].trim()), '4');
     assert.equal(await page.locator('#play .lbc[data-p], #play button.lbc').count(), 0, 'no pledging: nothing to tap on the Leaderboard');
     await page.click('#play [data-p=bank]');
-    assert.match(await page.locator('#play .over').innerText(), /Banked![\s\S]*4 Monsters survived · ♛/);
+    assert.match(await page.locator('#play .over').innerText(), /banked![\s\S]*4 Monsters survived · ♛/i);
     await page.click('#play [data-p=prep]');
     assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'first the Leaderboard, full screen: a column for each number, with spots stacked in it'); assert.ok(await page.locator('#play .bigboard .bspot').count() >= 9, 'one row for each player'); assert.equal(await page.locator('#play .bdisc').count(), 1, 'your marker is on it, in the top spot'); assert.equal(await page.locator('#play .bigboard .bspot.top .bdisc').count(), 1);
     await page.evaluate(() => { window.DigDigBoomPlay.S.run.dice = [8]; });
@@ -557,7 +557,7 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     assert.match(await page.locator('#play .lbhead').innerText(), /not in the lead: keep digging/i);
     await script(page, { mine: ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01'], dice: Array(30).fill(10) });
     for (let i = 0; i < 6 && !(await page.locator('#play .over').count()); i++) { await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await faceIt(page); }
-    assert.match(await page.locator('#play .over').innerText(), /In the lead![\s\S]*Everyone else is out/);
+    assert.match(await page.locator('#play .over').innerText(), /in the lead![\s\S]*Everyone else is out/i);
     await page.click('#play [data-p=prep]');                                             // the last round: straight to the end, which is the Leaderboard
     assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown Jewel!/);
     assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'the result is shown on the Leaderboard'); assert.equal(await page.locator('#play .bpl.me .cjewel').count(), 1, 'the Crown Jewel is on your name, at the bottom'); assert.equal(await page.locator('#play .bcrown').count(), 0, 'and no longer on the board');
@@ -1018,6 +1018,19 @@ test('opponents: Easy, Medium and Hard each dig on their own clock, and the hard
     const before = await stOf(page, () => ['easy', 'medium', 'hard'].map(id => window.DigDigBoomPlay.S.match.runs[id].dig.digs));
     await page.evaluate(() => window.DigDigBoomPlay.tick());
     assert.deepEqual(await stOf(page, () => ['easy', 'medium', 'hard'].map(id => window.DigDigBoomPlay.S.match.runs[id].dig.digs)).then(a => a.map((n, i) => n - before[i])), [1, 1, 1], 'a tick moves each of them one card');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('table: Backfire ("you may make it a 10") lights up when you roll a 1; tapping it changes the result, and Take damage then asks nothing more', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await begin(page, { mine: ['MO-01'], dice: [1], ongoing: ['ON-03'], line: [], start: { heart: 5 } });
+    await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]');
+    assert.equal(await page.locator('#play .tcard.inplay.elig').count(), 1, 'Backfire is offered on a 1');
+    await page.click('#play .tcard.inplay.elig');
+    assert.equal(await page.locator('#play .tcard.inplay.elig').count(), 0, 'used: no longer offered');
+    assert.match(await page.locator('#play .calc').innerText(), /10/);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

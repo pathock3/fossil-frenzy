@@ -245,9 +245,9 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 /* ---------- the Booster Pack: a foil wrapper with crimped ends, a gem medallion and a gloss that sweeps across ---------- */
 #play .pack { position: relative; display: block; width: 190px; height: 260px; padding: 0; border: 0; background: none; color: #2b1b10; filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)); animation: packglow 1.8s ease-in-out infinite; }
 #play .pkart { position: absolute; left: 0; top: 0; width: 190px; height: 260px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; overflow: hidden; border-radius: 14px; border: 3px solid rgba(255,255,255,.7); color: #2b1b10;
-  background: radial-gradient(ellipse 70% 38% at 50% 44%, color-mix(in srgb, var(--pc) 35%, #fff) 0, rgba(255,255,255,0) 100%), repeating-linear-gradient(90deg, rgba(255,255,255,.09) 0 3px, rgba(0,0,0,.05) 3px 6px), linear-gradient(165deg, color-mix(in srgb, var(--pc) 42%, #fff) 0%, var(--pc) 40%, color-mix(in srgb, var(--pc) 72%, #000) 100%);
+  background: radial-gradient(ellipse 70% 38% at 50% 44%, color-mix(in srgb, var(--pc) 35%, #fff) 0, rgba(255,255,255,0) 100%), linear-gradient(165deg, color-mix(in srgb, var(--pc) 42%, #fff) 0%, var(--pc) 40%, color-mix(in srgb, var(--pc) 72%, #000) 100%);
   clip-path: polygon(0 3%, 6% 0, 12% 3%, 18% 0, 24% 3%, 30% 0, 36% 3%, 42% 0, 48% 3%, 54% 0, 60% 3%, 66% 0, 72% 3%, 78% 0, 84% 3%, 90% 0, 96% 3%, 100% 0, 100% 97%, 94% 100%, 88% 97%, 82% 100%, 76% 97%, 70% 100%, 64% 97%, 58% 100%, 52% 97%, 46% 100%, 40% 97%, 34% 100%, 28% 97%, 22% 100%, 16% 97%, 10% 100%, 4% 97%, 0 100%); }
-#play .pkc { position: absolute; left: 0; right: 0; height: 26px; display: flex; align-items: center; justify-content: center; background: repeating-linear-gradient(90deg, rgba(0,0,0,.2) 0 2px, rgba(255,255,255,.28) 2px 5px), linear-gradient(180deg, rgba(255,255,255,.35), rgba(0,0,0,.12)); }
+#play .pkc { position: absolute; left: 0; right: 0; height: 26px; display: flex; align-items: center; justify-content: center; background: repeating-linear-gradient(90deg, rgba(0,0,0,.07) 0 2px, rgba(255,255,255,.1) 2px 5px), linear-gradient(180deg, rgba(255,255,255,.3), rgba(0,0,0,.08)); }
 #play .pkc.top { top: 0; } #play .pkc.bot { bottom: 0; transform: scaleY(-1); }
 #play .pkc i { font: italic 900 10px/1 system-ui, -apple-system, sans-serif; letter-spacing: .22em; color: rgba(45,25,8,.7); text-shadow: 0 1px 0 rgba(255,255,255,.45); margin-top: 6px; }
 #play .pkmedal { position: relative; width: 88px; height: 88px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 8px; background: radial-gradient(circle at 36% 30%, #fffdf0, #f6e3a6 55%, #d9b04a); border: 4px solid #e3b93b; box-shadow: 0 4px 0 rgba(70,40,5,.55), inset 0 0 0 3px rgba(255,255,255,.55), 0 0 18px color-mix(in srgb, var(--pc) 60%, #fff); }
@@ -862,6 +862,27 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .mset .lad i { min-width: 24px; height: 24px; font-size: 14px; border-radius: 6px; }
 #play .mset .lad { gap: 3px; }
 #play .mnote .ic { width: 1.15em; height: 1.15em; vertical-align: -.22em; }
+/* the end of a Dig (Banked! / BOOM!): a ribbon across the middle of the screen, the table dimmed behind it */
+#play .over { position: fixed; inset: 0; z-index: 12; border-radius: 0; overflow: visible; background: rgba(14,8,4,.7); pointer-events: none; padding: 0 16px; gap: 0; display: grid; grid-template-rows: 1fr auto 1fr; justify-items: center; align-items: center; }
+#play .over .obody { grid-row: 3; align-self: start; display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 36px; }
+#play .over h2 { grid-row: 2; }
+#play .over.boom { background: rgba(40,8,6,.66); }
+#play .over > * { pointer-events: auto; }
+#play .over .confetti { pointer-events: none; z-index: 0; }
+#play .over h2 { position: relative; z-index: 1; width: min(900px, 84vw); margin: 0; padding: 12px 0 14px; font-size: 64px; line-height: 1; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: #3d2200;
+  background: linear-gradient(180deg, #fff0a8 0%, #ffd24a 22%, #f4a91c 62%, #cf7d0a 100%); border-top: 4px solid #fff7d0; border-bottom: 4px solid #8a5200; text-shadow: 0 2px 0 rgba(255,255,255,.6), 0 -1px 0 rgba(120,70,0,.4);
+  box-shadow: 0 12px 0 rgba(0,0,0,.3), 0 22px 34px rgba(0,0,0,.55), inset 0 3px 0 rgba(255,255,255,.55), inset 0 -4px 0 rgba(150,85,0,.35); }
+#play .over h2::before, #play .over h2::after { content: ""; position: absolute; top: 20px; width: 120px; height: 100%; z-index: -1; background: linear-gradient(180deg, #e0961a, #a85f06); border-top: 4px solid #f4c85a; border-bottom: 4px solid #6b3d00; }
+#play .over h2::before { left: -84px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 26% 50%); }
+#play .over h2::after { right: -84px; clip-path: polygon(0 0, 100% 0, 74% 50%, 100% 100%, 0 100%); }
+#play .over.boom h2 { color: #fff5ee; background: linear-gradient(180deg, #ff8f7a 0%, #ee4a33 30%, #c22414 70%, #8d1409 100%); border-top-color: #ffd0c4; border-bottom-color: #5a0a04; text-shadow: 0 3px 0 rgba(70,6,0,.7); }
+#play .over.boom h2::before, #play .over.boom h2::after { background: linear-gradient(180deg, #a81c10, #6e0d06); border-top-color: #e97a68; border-bottom-color: #3d0602; }
+#play .over .big { position: relative; z-index: 1; font-size: 26px; font-weight: 800; color: #fff3d6; text-shadow: 0 2px 6px rgba(0,0,0,.8); }
+#play .over .note { position: relative; z-index: 1; }
+#play .over .row2 { position: relative; z-index: 1; }
+#play .over.fx h2 { animation: ribbonin .7s cubic-bezier(.2,.9,.3,1.1) both; }
+@keyframes ribbonin { 0% { transform: scaleX(.15) translateY(-20px); opacity: 0; } 55% { transform: scaleX(1.06); opacity: 1; } 100% { transform: scaleX(1); } }
+@media (max-height: 780px) { #play .over h2 { font-size: 48px; padding: 8px 0 10px; } #play .over h2::before, #play .over h2::after { top: 14px; } #play .over .big { font-size: 20px; } }
 /* The Bank is a button, not a place for cards: a raised gold key at the right edge, bottom-aligned, that presses down */
 #play .piles { width: auto; height: auto; align-self: flex-end; margin-left: 0; flex: none; }
 #play .pile.bankp, #play .pile.bankp.live { flex: none; width: 210px; height: auto; min-height: 96px; padding: 10px 24px; flex-direction: row; gap: 14px; border-radius: 24px; border: 3px solid #fff0b8; color: #2a1700; font-size: 34px; font-weight: 900; letter-spacing: .02em; background: linear-gradient(180deg, #ffd45e, #e8920f); box-shadow: 0 8px 0 #8a4f06, 0 16px 24px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.55); overflow: visible; transition: transform .08s, box-shadow .08s; }
@@ -1101,6 +1122,7 @@ const DDB = {
       ['modLow',     "^While you have (\\d+) \\{heart\\} or less, \\+(\\d+) to your rolls$"],
       ['modLethal',  "^If the Monster's \\{damage\\} is (?:equal to or greater than|greater than or equal to) your \\{heart\\}, \\+(\\d+) to your rolls?$"],     // the starting Ongoing card: a little luck when a Monster could BOOM you
       ['becomes',    "^If your result is (\\d+), it becomes a (\\d+)$"],
+      ['becomesMay', "^If your result is (\\d+), you may make it a (\\d+)$"],          // the same, but you choose: tap the card (it is one of the cards you use, so it locks your roll in)
       ['floor',      "^If your result is less than (\\d+), it becomes (\\d+)$"],
       ['sparkLow',   "^If your result is (\\d+) or less, reroll for free$"],
       ['double',     "^Double your result against your first Monster each Dig$"],
@@ -1290,6 +1312,7 @@ const Dig = (() => {
       case 'modLow': o.mods.push({ plus: n(2), heartAtMost: n(1) }); break;
       case 'modLethal': o.mods.push({ plus: n(1), lethal: true }); break;
       case 'becomes': o.transforms.push({ kind: 'becomes', from: n(1), to: n(2) }); break;
+      case 'becomesMay': o.transforms.push({ kind: 'becomes', from: n(1), to: n(2), may: true }); break;
       case 'floor': o.transforms.push({ kind: 'floor', below: n(1), to: n(2) }); break;
       case 'sparkLow': o.flags.sparkLow = n(1); break;
       case 'double': o.transforms.push({ kind: 'double' }); break;
@@ -1370,7 +1393,8 @@ const Dig = (() => {
     st.heart = Math.max(0, st.heart - n); log(st, 'effect', `${src}: lose ${n} {heart}`);
     if (st.heart === 0) boom(st, `${src} cost your last {heart}`);
   }
-  function boom(st, why) { if (st.over) return; st.over = { kind: 'boom', why }; st.fight = null; st.pledge = null; log(st, 'boom', `BOOM! ${why}.`); }
+  let overSeq = 0;                                              // the order in which Digs end, across all players (for telling the results of a round in the order they happened)
+  function boom(st, why) { if (st.over) return; st.over = { kind: 'boom', why, seq: ++overSeq }; st.fight = null; st.pledge = null; log(st, 'boom', `BOOM! ${why}.`); }
 
   // ---------------- watchers: "Whenever ..." Ongoing cards ----------------
   function fire(st, ev, data, depth) {
@@ -1567,7 +1591,7 @@ const Dig = (() => {
     const dmg = m.bonus ? m.damageNow : lad[Math.min(n, lad.length) - 1];
     const prev = st.fight;                                    // a Monster dug by Sneak Attack while another is being faced must not replace it
     const f = st.fight = { monster: m, damage: dmg, step: m.bonus ? undefined : Math.min(n, lad.length), phase: 'before', die: null, first: st.monstersDug === 1, fixed: null,
-      block: 0, halve: false, noDamage: false, defeat: false, surviveAt: null, sparkUsed: false, rolls: 0, trig: [], deferred: [] };
+      block: 0, halve: false, noDamage: false, defeat: false, surviveAt: null, sparkUsed: false, rolls: 0, trig: [], deferred: [], used: [] };
     log(st, 'dig', `${m.name}${m.bonus ? '' : ' #' + n} — deals ${dmg} {damage}`);
     if (opt.autoDefeat) { fire(st, 'digMonster', { damage: dmg }, 1); f.defeat = true; log(st, 'effect', `The Monster is defeated without a roll`); if (!over(st)) finishFight(st, true); st.fight = over(st) ? null : prev; return; }
     fire(st, 'digMonster', { damage: dmg }, 1);
@@ -1588,7 +1612,7 @@ const Dig = (() => {
     return t;
   }
   function transform(st, f, r) {
-    const ts = []; for (const o of st.ongoing) for (const t of compile(o).ongoing.transforms) ts.push({ ...t, n: times(st, o) });
+    const ts = []; for (const o of st.ongoing) for (const t of compile(o).ongoing.transforms) { if (t.may && !(f.used || []).includes(o.uid)) continue; ts.push({ ...t, n: times(st, o) }); }          // (a "you may" card only counts once you have used it)
     for (const kind of RL.transformOrder) for (const t of ts) {
       if (t.kind !== kind) continue;
       if (kind === 'double' && f.first) r *= 2 ** t.n;
@@ -1679,8 +1703,19 @@ const Dig = (() => {
     for (let n = 0; n < 2 && eligible(st).includes(entry); n++) { if (trigger(st, entry, hold)) did = true; else break; }
     return did;
   }
+  // Ongoing cards that change your result only if you choose to ("If your result is 1, you may make it a 10"): the ones that could be used right now.
+  function mayUse(st) {
+    const f = st.fight; if (!f || f.phase !== 'after' || over(st) || f.fixed !== null) return [];
+    const r = result(st); if (!r || r.raw === undefined) return [];
+    return st.ongoing.filter(o => !(f.used || []).includes(o.uid) && compile(o).ongoing.transforms.some(t => t.may && t.from === r.raw));
+  }
+  function useMod(st, o) {
+    const f = st.fight; if (!f || !mayUse(st).includes(o)) return false;
+    (f.used || (f.used = [])).push(o.uid); log(st, 'roll', `You use ${o.name}: your result is now ${resultTotal(st)}`); return true;
+  }
   function triggerAll(st) {                                // the order a hurried player would use: highest number first
     const f = st.fight;
+    for (let n = 0; n < 6 && st.fight && !over(st); n++) { const m = mayUse(st); if (!m.length) break; useMod(st, m[0]); }          // (what you may change comes first: a changed result can reach more cards)
     for (let n = 0; n < 60 && st.fight && !over(st); n++) { const el = eligible(st); if (!el.length) break; trigger(st, el[0], true); }
     if (st.fight === f && f && f.deferred.length && !over(st)) runDeferred(st);
   }
@@ -1799,7 +1834,7 @@ const Dig = (() => {
     const lineMap = new Map(), line = st.line.map(e => { const n = { ...e }; lineMap.set(e, n); return n; }), remap = list => (list || []).map(e => lineMap.get(e) || e);
     return { ...st, seed: null, rng: makeRng(seed === undefined ? 1 : seed), dice: null, log: [], quiet: true, over: st.over && { ...st.over }, flags: { ...st.flags },
       mine: st.mine.slice(), discard: st.discard.slice(), monsterPile: st.monsterPile.slice(), ongoing: st.ongoing.slice(), cloned: st.cloned.slice(), under: Object.fromEntries(Object.entries(st.under).map(([k, cs]) => [k, cs.slice()])), kit: st.kit, line,
-      pending: st.pending && { ...st.pending }, fight: st.fight && { ...st.fight, trig: remap(st.fight.trig), deferred: remap(st.fight.deferred) },
+      pending: st.pending && { ...st.pending }, fight: st.fight && { ...st.fight, trig: remap(st.fight.trig), deferred: remap(st.fight.deferred), used: (st.fight.used || []).slice() },
       setCount: { ...st.setCount }, board: st.board && { ...st.board }, rules: st.rules };
   }
   // What a card is worth RIGHT NOW, for the cards whose number depends on the game ("+1 {heart} for each Ongoing card you have", "+1 to your rolls for every 3 Monsters you've survived"):
@@ -1825,12 +1860,12 @@ const Dig = (() => {
   function pledge(st, n) { if (!canPledge(st, n)) return false; st.pledge = n; log(st, 'sys', `You pledge ${n}.`); return true; }
   function bank(st) {
     if (!can(st).bank) return false;
-    const s = score(st); st.over = { kind: 'bank', ...s }; log(st, 'sys', `You bank: ${s.total} {gem}, ${s.survived} Monster${s.survived === 1 ? '' : 's'} survived.`); return true;
+    const s = score(st); st.over = { kind: 'bank', ...s, seq: ++overSeq }; log(st, 'sys', `You bank: ${s.total} {gem}, ${s.survived} Monster${s.survived === 1 ? '' : 's'} survived.`); return true;
   }
   // The final round: whoever is in the lead when everyone else has gone BOOM stands (nothing to bank; the Dig simply ends with their score).
   function hold(st) {
     if (st.over || st.fight || st.pending || !(st.board && st.board.final)) return false;
-    const s = score(st); st.over = { kind: 'bank', held: true, ...s }; log(st, 'sys', `Everyone else is out: you stand with ${s.survived} Monster${s.survived === 1 ? '' : 's'} survived.`); return true;
+    const s = score(st); st.over = { kind: 'bank', held: true, ...s, seq: ++overSeq }; log(st, 'sys', `Everyone else is out: you stand with ${s.survived} Monster${s.survived === 1 ? '' : 's'} survived.`); return true;
   }
   function can(st) {
     const f = st.fight, idle = !st.over && !f && !st.pending;
@@ -1838,13 +1873,13 @@ const Dig = (() => {
       dig: idle,
       bank: idle && !(st.board && st.board.final) && (RL.bankWhen === 'anytime' || st.survived >= 1) && (st.pledge === null || st.survived >= st.pledge),       // the final round is a race: nobody banks
       roll: !!f && !st.over && f.phase === 'before',
-      reroll: !!f && !st.over && f.phase === 'after' && f.fixed === null && !f.trig.length && (st.reroll >= R.rerollCost || (!!flag(st, 'thorned') && st.heart > flag(st, 'thorned'))),
+      reroll: !!f && !st.over && f.phase === 'after' && f.fixed === null && !f.trig.length && !(f.used && f.used.length) && (st.reroll >= R.rerollCost || (!!flag(st, 'thorned') && st.heart > flag(st, 'thorned'))),
       face: !!f && !st.over && f.phase === 'after',
       trigger: !!f && !st.over && f.phase === 'after' && eligible(st).length > 0,
       choose: !!st.pending && !st.over,
     };
   }
-  return { save, load, compile, supported, parseEffects, parseOngoing, start, clone, can, pledge, canPledge, dig, roll, reroll, face, autoFace, eligible, unmetFor, trigger, triggerFully, triggerAll, bank, chooseClone, cloneTargets, peekBonus, maxNextDamage, dynamic, hold, score, result, makeRng, shuffle, flag, previewDamage };
+  return { save, load, compile, supported, parseEffects, parseOngoing, start, clone, can, pledge, canPledge, dig, roll, reroll, face, autoFace, eligible, mayUse, useMod, unmetFor, trigger, triggerFully, triggerAll, bank, chooseClone, cloneTargets, peekBonus, maxNextDamage, dynamic, hold, score, result, makeRng, shuffle, flag, previewDamage };
 })();
 </script>
 
@@ -2087,7 +2122,7 @@ const Run = (() => {
   // The Dig is over (banked or BOOM): update the Leaderboard, then Prep (or the end of the run).
   function finishDig(run) {
     const st = run.dig; if (!st || !st.over || run.phase !== 'dig') return false;
-    const o = st.over, final = run.round === run.rounds, rec = { round: run.round, kind: o.kind, survived: st.survived, geodes: st.geodeGems, monsters: st.monsterGems };
+    const o = st.over, final = run.round === run.rounds, rec = { round: run.round, kind: o.kind, survived: st.survived, geodes: st.geodeGems, monsters: st.monsterGems, seq: o.seq };
     checkOver(run);
     const ei = run.endInfo || { stoleCrown: false, newBest: false, rank: null }; rec.stoleCrown = ei.stoleCrown; rec.newBest = ei.newBest; rec.rank = ei.rank;
     run.history.push(rec);
@@ -3045,7 +3080,7 @@ const AI = (() => {
   const dots = (n, on) => `<span class="pips2" role="img" aria-label="${on} of ${n}">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</span>`;
   // The Booster Pack's face: a foil wrapper with crimped ends, the gem medallion (a + for the bigger pack of each kind), its name and what it holds.
   const packColor = name => (D.run.ladder.find(l => l.name === name) || {}).color || '#b8743a';
-  const packArt = (name, draw, keep) => `<span class="pkart"><span class="pkc top"><i>DIG DIG BOOM!</i></span><span class="pkmedal"><svg class="pkgem" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gem"/></svg>${/\+$/.test(name) ? '<em class="pkplus">+</em>' : ''}</span><b>${A.esc(name.replace('+', ''))}</b><span class="pkinfo">Draw ${draw} · Keep ${keep}</span><span class="pkc bot"></span><span class="pksheen"></span></span>`;
+  const packArt = (name, draw, keep) => `<span class="pkart"><span class="pkc top"></span><span class="pkmedal"><svg class="pkgem" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gem"/></svg>${/\+$/.test(name) ? '<em class="pkplus">+</em>' : ''}</span><b>${A.esc(name.replace('+', ''))}</b><span class="pkinfo">Draw ${draw} · Keep ${keep}</span><span class="pkc bot"></span><span class="pksheen"></span></span>`;
   // The pack you tapped in the tally flies to the middle of the row where your cards will be dealt, and tears open there.
   function flyPackHTML(pack) {
     return `<span class="pack flypack" aria-hidden="true" style="--pc:${packColor(pack.name)}">${packArt(pack.name, pack.draw, pack.keep)}</span>`;
@@ -3092,7 +3127,14 @@ const AI = (() => {
     const ids = [...Match.botIds(m), run.me], nameOf2 = id => id === run.me ? 'You' : run.board.players.find(p => p.id === id).name, now = bestsNow();
     const last = id => { const h = m.runs[id].history; return h[h.length - 1]; }, bank = [], boom = [];
     for (const id of ids) { const h = last(id); if (h) (h.kind === 'bank' ? bank : boom).push({ id, h }); }
-    const steps = bank.map(({ id, h }) => ({ ids: [id], text: `${nameOf2(id)} banked at ${h.survived}${id === run.me && now[id] > (from[id] || 0) ? '. New Best!' : h.stoleCrown ? ' and took the Crown Jewel.' : '.'}` }));
+    bank.sort((a, b) => (a.h.seq || 0) - (b.h.seq || 0));          // in the order they banked, so "took the Crown" and "stole it" make sense
+    let holder = null, top = run.board.crownStart; for (const id of ids) if ((from[id] || 0) > top) { top = from[id]; holder = id; }          // who held the Crown before the round
+    const steps = bank.map(({ id, h }) => {
+      let text = `${nameOf2(id)} banked at ${h.survived}`;
+      if (h.stoleCrown) { text += holder && holder !== id ? ` and stole the Crown Jewel from ${nameOf2(holder)}` : ' and took the Crown Jewel'; holder = id; }
+      text += id === run.me && now[id] > (from[id] || 0) ? '. New Best!' : '.';
+      return { ids: [id], text };
+    });
     if (boom.length) { const n = boom.map(x => nameOf2(x.id)); steps.push({ ids: boom.map(x => x.id), text: (boom.length === ids.length ? 'Everyone' : n.length === 1 ? n[0] : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1]) + ' went BOOM.' }); }
     return steps;
   }
@@ -3257,7 +3299,7 @@ const AI = (() => {
   // Power cards from the smallest number to the biggest, then your Ongoing cards: you check "do I have anything for this?" left to right.
   function tableauHTML(st, freshUid) {
     const f = st.fight, after = f && f.phase === 'after', total = after ? Dig.result(st).total : null;
-    const elig = after ? Dig.eligible(st) : [];
+    const elig = after ? Dig.eligible(st) : [], usable = after ? Dig.mayUse(st) : [];
     const underOf = c => (st.under[c.uid] || []).map((m, i) => `<span class="underc" style="--k:${i}">${cw(A.playCard(m, 1), 'cb')}</span>`).join('');
     const held = st.last && !st.over && !f && (st.last.type === 'Power' || st.last.type === 'Ongoing') ? st.last : null;          // still lying in the dug pile: it moves up when you dig the next card
     if (S.tabDig !== st) { S.tabDig = st; S.tabSeen = null; }          // a new Dig: nothing arrives, everything is simply there
@@ -3272,7 +3314,7 @@ const AI = (() => {
     });
     const pickO = o => st.pending && st.pending.kind === 'clone' && o !== st.pending.card;
     const buried = new Set(Object.values(st.under).flat());          // a Cloning Machine lies under the card it clones: it is drawn there, not in the Ongoing area
-    const ong = st.ongoing.filter(o => !buried.has(o) && o !== held).map(o => `<button class="tcard inplay ${isNew(o) ? 'arrive' : ''} ${pickO(o) ? 'pick' : ''} ${(st.under[o.uid] || []).length ? 'hasunder' : ''}" data-p="${pickO(o) ? 'card' : 'zoom'}" data-uid="${o.uid}" data-id="${A.esc(o.id)}" aria-label="${A.esc(o.name)}, Ongoing">${underOf(o)}${cw(A.playCard(o, 1), 'cb')}${st.cloned.includes(o.uid) ? '<span class="tg">×2</span>' : ''}</button>`);
+    const ong = st.ongoing.filter(o => !buried.has(o) && o !== held).map(o => `<button class="tcard inplay ${usable.includes(o) ? 'elig' : ''} ${isNew(o) ? 'arrive' : ''} ${pickO(o) ? 'pick' : ''} ${(st.under[o.uid] || []).length ? 'hasunder' : ''}" data-p="${pickO(o) ? 'card' : usable.includes(o) ? 'usemod' : 'zoom'}" data-uid="${o.uid}" data-id="${A.esc(o.id)}" aria-label="${A.esc(o.name)}, Ongoing">${underOf(o)}${cw(A.playCard(o, 1), 'cb')}${st.cloned.includes(o.uid) ? '<span class="tg">×2</span>' : ''}</button>`);
     S.tabSeen = nowSeen;
     return `<section class="tableau" data-n="${cards.length + ong.length}">${cards.join('')}${ong.length ? '<span class="tsep"></span>' : ''}${ong.join('')}</section>`;
   }
@@ -3302,7 +3344,7 @@ const AI = (() => {
       if (!after) return { html: '<div class="action"></div>', die: '' };          // the die to tap is in the right-hand column, above the Bank (see tableHTML)
       // the die says the roll; only when cards changed it does one line add up: 7 +1 = 8
       const calc = res.parts.length > 1 ? `<div class="calc">${res.parts.map((p, i) => i === 0 ? p.v : p.set ? `→ ${p.v}` : `${p.v >= 0 ? '+' : '−'}${Math.abs(p.v)}`).join(' ')} = <b>${res.total}</b></div>` : '';
-      const dmg = Dig.previewDamage(st), sure = elig.length > 0 && S.confirmFace;          // you can still use cards: the first tap on "take damage" only asks
+      const dmg = Dig.previewDamage(st), sure = (elig.length > 0 || Dig.mayUse(st).length > 0) && S.confirmFace;          // you can still use cards: the first tap on "take damage" only asks
       // Rerolls: until you use a card the roll is open (an open padlock and a Reroll button); the first card you use locks it in (a closed padlock, the button gone)
       const hasRR = st.reroll >= R.rerollCost || can.reroll, open = can.reroll, locked = !open && hasRR && f.fixed === null && f.trig.length > 0;
       const lock = open || locked ? `<span class="dlock ${open ? 'open' : 'shut'}" title="${open ? 'You can still reroll' : 'Locked in'}"><svg viewBox="0 0 24 24" aria-hidden="true">${open ? '<path d="M8 11V7.5a4 4 0 0 1 7.6-1.7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>' : '<path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>'}<rect x="4.5" y="11" width="15" height="10.5" rx="2.6" fill="currentColor"/></svg></span>` : '';
@@ -3347,12 +3389,12 @@ const AI = (() => {
       const next = waiting ? `<div class="big">Your opponents are still digging</div><div class="row2"><button class="btn" data-p="ff">Fast-forward them</button></div>`
         : `<div class="row2"><button class="btn" data-p="prep">${fin ? 'See the result' : 'To Prep'}</button></div>`;
       over = st.over.kind === 'boom'
-        ? `<div class="over boom ${ovFx}"><h2>BOOM!</h2>${next}</div>`
-        : `<div class="over ${ovFx}">${ovFx ? confettiHTML(16) : ''}<h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="big">${fin ? '' : `<b>${s.total}</b> ${ic('gem', ' style="width:34px;height:34px;vertical-align:-7px"')}<br>`}<b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${(S.run.endInfo || {}).stoleCrown ? ' · ♛' : ''}${fin ? '<br>Everyone else is out' : ''}</div>${next}</div>`;
+        ? `<div class="over boom ${ovFx}"><h2>BOOM!</h2><div class="obody">${next}</div></div>`
+        : `<div class="over ${ovFx}">${ovFx ? confettiHTML(16) : ''}<h2>${fin ? 'In the lead!' : 'Banked!'}</h2><div class="obody"><div class="big">${fin ? '' : `<b>${s.total}</b> ${ic('gem', ' style="width:34px;height:34px;vertical-align:-7px"')}<br>`}<b>${st.survived}</b> Monster${st.survived === 1 ? '' : 's'} survived${(S.run.endInfo || {}).stoleCrown ? ' · ♛' : ''}${fin ? '<br>Everyone else is out' : ''}</div>${next}</div></div>`;
     } else if (st.over) {
       over = (st.over.kind === 'boom'
-      ? `<div class="over boom ${ovFx}"><h2>BOOM!</h2>`
-      : `<div class="over ${ovFx}">${ovFx ? confettiHTML(16) : ''}<h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + (st.best && st.over.kind === 'bank' ? `<div class="note">Best so far: ${st.best.now.survived} Monsters survived${st.best.newSurvived ? ' (new!)' : ''} · ${st.best.now.gems} gems banked${st.best.newGems ? ' (new!)' : ''}</div>` : '') + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>`;
+      ? `<div class="over boom ${ovFx}"><h2>BOOM!</h2><div class="obody">`
+      : `<div class="over ${ovFx}">${ovFx ? confettiHTML(16) : ''}<h2>Banked!</h2><div class="obody"><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + (st.best && st.over.kind === 'bank' ? `<div class="note">Best so far: ${st.best.now.survived} Monsters survived${st.best.newSurvived ? ' (new!)' : ''} · ${st.best.now.gems} gems banked${st.best.newGems ? ' (new!)' : ''}</div>` : '') + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div></div>`;
     }
     S.fx = fxOf(st);
     return `${drillHTML(st, can)}${tableauHTML(st, freshUid)}<div class="mat">${deck}${dug}${action}${rollCol}${over}</div>`;
@@ -3553,11 +3595,12 @@ const AI = (() => {
       case 'finalhow': S.finalHow = !S.finalHow; break;
       case 'zoom': S.zoom = findCard(ds.uid); break;
       case 'card': { const c = findCard(ds.uid), e = st && st.line.find(x => x.card === c); if (st && st.pending && (e || st.ongoing.includes(c))) Dig.chooseClone(st, e || c); else if (e && f && f.phase === 'after' && Dig.eligible(st).includes(e)) Dig.triggerFully(st, e); else S.zoom = c; break; }
+      case 'usemod': { const o = findCard(ds.uid); if (st && o) Dig.useMod(st, o); break; }
       case 'triggerall': if (st) Dig.triggerAll(st); break;
       case 'dig': if (st) Dig.dig(st); break;
       case 'roll': Dig.roll(st); break;
       case 'reroll': if (f && f.phase === 'after') Dig.reroll(st); break;
-      case 'face': if (st && Dig.eligible(st).length && !S.confirmFace) { S.confirmFace = true; break; } S.confirmFace = false; Dig.face(st); break;
+      case 'face': if (st && (Dig.eligible(st).length || Dig.mayUse(st).length) && !S.confirmFace) { S.confirmFace = true; break; } S.confirmFace = false; Dig.face(st); break;
       case 'bank': if (S.run) Run.bank(S.run); else Dig.bank(st); break;
       case 'heart': break;
     }
