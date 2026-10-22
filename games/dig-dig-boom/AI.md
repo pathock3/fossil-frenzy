@@ -15,6 +15,22 @@ Goal of this phase: **play as close to perfectly as we can**. Only then decide h
 * **The last round**: the leader waits, everyone else digs (the existing rule). We tested "the leader keeps digging too": it loses badly (27% against waiting) — waiting keeps your last Dig in hand for when you are passed.
 * `AI.basic` is the old simple AI (kept for comparison, and as a starting point for playing worse on purpose).
 
+## The opponents you play (Easy, Medium, Hard)
+
+The game seats you against **all three at once** (`DDB.ai.opponents`): each has a level (`DDB.ai.levels`), a colour and a speed.
+
+| Opponent | Level | Budget (Prep / Dig) | Speed | Against |
+|---|---|---|---|---|
+| Easy AI | `easy` = the old rules of thumb (`AI.basic`) | none | 1.7× slower than a person who knows the game | loses ~60% to Medium |
+| Medium AI | `medium`: the thinking AI, small budget | 12 prep playouts, 8/16 rolls | 1× | ~60% against Easy |
+| Hard AI | `hard`: the thinking AI, somewhat bigger budget | 16 prep playouts, 12/24 rolls | 0.6× (quickest) | ~55% against Medium |
+
+(Simulated 4-round matches, seats swapped, ±7 points at 200 matches; Prep takes about 90 ms on average for Medium and 160 ms for Hard on a desktop, in small time slices.) The strongest model, `best`, is only for testing (`node tools/run.js best medium 200`).
+
+**Speed is the tiebreaker.** Each opponent digs on its own clock; the Board gives a number's better spot to whoever reaches it first, so a quicker opponent wins ties against a slower one (and against you, if you dawdle). `DDB.ai.opponents[].speed` scales the pace in `DDB.ai.pace`.
+
+The win-chance table (`DDB.ai.phi`) is still the one measured with the Crown Jewel starting at 3, and for one opponent: re-running `tools/gather.js` for the new rules (and the Crown at 2) would strengthen all three thinking levels. Not done (slow).
+
 ## Updates since the measurements below
 
 * The Crown Jewel now starts at 2 (reaching 3 claims it), the Starter Kit's empty places are face-up gem cards, gem-boosting cards are out of the Booster Deck, and a Power card is only offered when its requirements are met. The win-chance table (`DDB.ai.phi`) was measured before these: **re-run `tools/gather.js` and paste the new table in** (until then the AI falls back to a guess for a best of 3, which is a little off).
