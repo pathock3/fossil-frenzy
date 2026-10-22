@@ -2441,10 +2441,11 @@ const AI = (() => {
   // The page opens at once from the copy this browser kept the last time it read your sheet, then reads the sheet in the background; only if the sheet has changed
   // does the game hear about it. (The very first visit has no copy yet: the menu is there, and Play lights up when the cards arrive.)
   async function load(force) {
-    const saved = savedCopy(), status0 = state.status;
+    const saved = savedCopy();
     if (saved && !force && !state.all.length) { state.all = E.cards(E.parseCSV(saved.text), D.columns); state.source = 'cache'; state.status = 'ok'; state.cachedAt = saved.t; state.fresh = false; }
     else if (!state.all.length || force) { state.status = 'loading'; render(); }
     let changed = true;
+    const status0 = state.status;          // (after the saved copy is in: only a change from here on is news)
     try {
       const text = await fetchTab(D.sheet.tabs.cards);
       changed = !saved || saved.text !== text || state.source !== 'cache' && state.source !== 'sheet';
@@ -2848,9 +2849,11 @@ const AI = (() => {
     const note = !ready ? (st.status === 'loading' ? '' : 'No cards yet.')
       : offline ? 'Your sheet could not be reached, so only the design sample is here. Reload when you are online.'
       : st.source === 'cache' && st.status === 'offline' ? 'Offline: using the copy of your sheet this browser saved last time.' : '';
+    const since = performance.now() - (S.logoAt = S.logoAt === undefined ? performance.now() : S.logoAt);          // the title slides in once; a redraw part-way (or later) carries on from where it was
+    const logoStyle = since > 900 ? 'animation:none' : `animation-delay:${Math.round(150 - since)}ms`;
     return `<div class="home">${libLink}<div class="homegrid">${heroHTML()}
       <div class="homemenu">
-        <h1 class="logo"><span class="l1">Dig Dig</span><span class="l2">BOOM!<i>✦</i></span></h1>
+        <h1 class="logo" style="${logoStyle}"><span class="l1">Dig Dig</span><span class="l2">BOOM!<i>✦</i></span></h1>
         <p class="tagline">Dig deep. Push your luck. Don't go BOOM.</p>
         ${inProgress ? `<button class="mode primary row" data-p="resume"><b>Continue</b>${run ? pips : ''}</button>` : ''}
         ${newRun}
