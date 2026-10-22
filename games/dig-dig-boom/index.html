@@ -2137,6 +2137,7 @@ const AI = (() => {
       Run.refresh(run);
       const q = opts.quick, rolls = q ? P.quickRolls : P.rolls, idleRolls = q ? P.quickIdleRolls : P.idleRolls;
       const ctx = context(run), c = Dig.can(st), f = st.fight;
+      if ((P.basicFight && f) || (P.basicIdle && !f && !c.choose)) return Basic.act(run);          // (for experiments: use the old rules of thumb for part of the Dig)
       if (c.choose) { const i = argmax(st.line.map((e, k) => k), k => evaluate(st, ctx, x => Dig.chooseClone(x, x.line[k]), rolls, 99)); Dig.chooseClone(st, st.line[i]); return true; }
       if (f) {
         if (f.phase === 'before') { Dig.roll(st); return true; }
