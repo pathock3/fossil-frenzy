@@ -29,7 +29,7 @@ function fight(st) { assert.ok(Dig.dig(st)); assert.ok(Dig.roll(st)); if (st.fig
 const UNSUPPORTED = ["PW-04", "PW-06", "PW-08", "PW-10", "PW-11", "PW-13", "PW-18", "PW-23", "PW-25", "PW-26", "PW-29", "PW-30", "ON-01", "ON-07", "ON-10", "ON-13", "ON-16", "ON-18", "ON-24", "ON-25", "ON-26", "ON-28", "ON-30", "ON-32", "ON-36", "IM-02", "IM-09", "IM-10", "IM-12", "IM-15", "IM-18", "IM-19", "IM-27", "IM-29", "IM-31", "IM-34"];
 test('the rules are data: nothing the engine needs is missing from DDB.rules; every card text is understood except the Grit cards and the two player-chosen moves, which are cut', () => {
   for (const k of ['die', 'caps', 'start', 'pet', 'beyond', 'rulings']) assert.ok(DDB.rules[k] !== undefined, k);
-  assert.equal(cards.length, 107, 'the sheet\'s 108 cards (with Monster C), less the Lucky Coin (taken out of the game)');
+  assert.equal(cards.length, 106, 'the sheet\'s 108 cards (with Monster C), less the Lucky Coin and Twin Drill (taken out of the game)');
   const bad = cards.filter(c => !Dig.supported(c)).map(c => c.id);
   assert.deepEqual(bad.slice().sort(), UNSUPPORTED.slice().sort(), 'exactly these cards are unsupported — everything else is understood');
   assert.equal(bad.length, 36);
@@ -353,7 +353,7 @@ test('roll bonuses: Tune-Up, Redline (3 Health or less), Monster Scope / Giant S
   const rl2 = game({ mine: ['MO-01'], ongoing: ['ON-27'], start: { heart: 4 }, dice: d.slice() }); Dig.dig(rl2); Dig.roll(rl2); assert.equal(Dig.result(rl2).total, 4);
   const ms = game({ mine: ['MO-01', 'MO-01', 'MO-01', 'MO-01'], ongoing: ['ON-20'], start: { heart: 40 }, dice: [4, 4, 4, 4] });
   const got = []; for (let i = 0; i < 4; i++) { Dig.dig(ms); Dig.roll(ms); got.push(Dig.result(ms).total); Dig.autoFace(ms); }
-  assert.deepEqual(got, [4, 4, 4, 6], 'only the 7-damage fourth Monster gets +2');
+  assert.deepEqual(got, [4, 4, 6, 6], 'the 5- and 7-damage Monsters get +2: it works against Monsters with 5+ damage');
   const gs = game({ mine: ['MO-01', 'MO-01', 'MO-01', 'MO-01'], ongoing: ['ON-17'], start: { heart: 40 }, dice: [4, 4, 4, 4] });
   for (let i = 0; i < 3; i++) { Dig.dig(gs); Dig.roll(gs); Dig.autoFace(gs); } Dig.dig(gs); Dig.roll(gs); assert.equal(Dig.result(gs).total, 7);
   const dg = game({ mine: ['MO-01'], ongoing: ['ON-11'], dice: [4] }); dg.survived = 6; Dig.dig(dg); Dig.roll(dg); assert.equal(Dig.result(dg).total, 6);
@@ -375,7 +375,7 @@ test('result changes: Floor Jack (below 4 becomes 4), Backfire (you may make a 1
 });
 
 test('the Lucky Coin is out of the game (the sheet may still list it), and the Pet triggers on a roll of 9 or more', () => {
-  assert.ok(!cards.some(c => c.id === 'ON-38'), 'it is not read from the sheet'); assert.deepEqual(DDB.rules.removedCards, ['ON-38']);
+  assert.ok(!cards.some(c => c.id === 'ON-38'), 'it is not read from the sheet'); assert.deepEqual(DDB.rules.removedCards, ['ON-38', 'ON-34']);
   const d = Dig.start(cards, [], { seed: 3 }); assert.deepEqual(d.ongoing, [], 'nothing is in play at the start'); assert.equal(d.kit.length, 0);
   const roll = (heart, die, id = 'MO-01') => { const st = game({ mine: [id], start: { heart }, dice: [die] }); Dig.dig(st); Dig.roll(st); return st; };
   assert.equal(Dig.result(roll(1, 4)).total, 4, 'no bonus to the roll at the brink any more');
@@ -448,8 +448,7 @@ test('Panic Button: the first time each Dig a roll would BOOM you, a free reroll
   const once = game({ mine: ['MO-01'], ongoing: ['ON-29'], dice: [1, 2, 6] }); Dig.dig(once); Dig.roll(once); assert.equal(Dig.result(once).total, 2, 'only one free reroll');
 });
 
-test('Twin Drill keeps the higher die on a reroll; Thorned Gadget pays Health for a reroll when you have none', () => {
-  const td = game({ mine: ['MO-01'], ongoing: ['ON-34'], start: { reroll: 1, heart: 12 }, dice: [5, 2] }); Dig.dig(td); Dig.roll(td); Dig.reroll(td); assert.equal(Dig.result(td).total, 5);
+test('Thorned Gadget pays Health for a reroll when you have none', () => {
   const tg = game({ mine: ['MO-01'], ongoing: ['ON-31'], start: { reroll: 0, heart: 6 }, dice: [1, 4] }); Dig.dig(tg); Dig.roll(tg); assert.ok(Dig.can(tg).reroll); Dig.reroll(tg); assert.deepEqual([tg.heart, Dig.result(tg).total], [4, 4]);
   const no = game({ mine: ['MO-01'], ongoing: ['ON-31'], start: { reroll: 0, heart: 2 }, dice: [1] }); Dig.dig(no); Dig.roll(no); assert.ok(!Dig.can(no).reroll, 'it would BOOM you');
 });
@@ -507,13 +506,10 @@ test('audit: Cave Scout digging a card that slides back into the Mine (or Echo a
   const a = game({ mine: ['IM-03', slide, 'TR-01', 'MO-01'] }); Dig.dig(a); assert.ok(!a.over);
   const b = game({ mine: ['IM-03', 'IM-06', 'MO-01'] }); b.discard.push(put('IM-22')); Dig.dig(b); assert.ok(!b.over);
 });
-test('audit: Backfire (used) turns a 1 into a 10; Twin Drill keeps the higher result only when an Extra Roll (not Health) paid for it', () => {
-  const st = game({ mine: ['MO-01'], ongoing: ['ON-34', 'ON-03'], start: { reroll: 1 }, dice: [1, 5] });
+test('audit: Backfire (used) turns a 1 into a 10, and an Extra Roll can still follow it; an Extra Roll replaces your result', () => {
+  const st = game({ mine: ['MO-01'], ongoing: ['ON-03'], start: { reroll: 1 }, dice: [1, 5] });
   Dig.dig(st); Dig.roll(st); Dig.useMod(st, Dig.mayUse(st)[0]); assert.equal(Dig.result(st).total, 10); assert.equal(Dig.can(st).reroll, true, 'an Extra Roll can still follow Backfire');
-  const tw = game({ mine: ['MO-01'], ongoing: ['ON-34'], start: { reroll: 1 }, dice: [6, 2] }); Dig.dig(tw); Dig.roll(tw); Dig.reroll(tw); assert.equal(Dig.result(tw).total, 6, 'Twin Drill keeps the higher result');
-  const nt = game({ mine: ['MO-01'], start: { reroll: 1 }, dice: [6, 2] }); Dig.dig(nt); Dig.roll(nt); Dig.reroll(nt); assert.equal(Dig.result(nt).total, 2, 'without it the Extra Roll replaces your result');
-  const th = game({ mine: ['MO-01'], ongoing: ['ON-34', 'ON-31'], start: { reroll: 0, heart: 8 }, dice: [6, 2] });
-  Dig.dig(th); Dig.roll(th); Dig.reroll(th); assert.equal(Dig.result(th).total, 2, 'Twin Drill only applies when you spend an Extra Roll, not when you pay Health');
+  const nt = game({ mine: ['MO-01'], start: { reroll: 1 }, dice: [6, 2] }); Dig.dig(nt); Dig.roll(nt); Dig.reroll(nt); assert.equal(Dig.result(nt).total, 2, 'the Extra Roll replaces your result, even with a lower one');
 });
 test('audit: damage watchers see the damage actually taken (Lucky Cricket saves you, so Patch Kit and Crumple Zone do not fire for what was saved)', () => {
   const st = game({ mine: ['MO-01'], power: ['PW-14'], ongoing: ['ON-23'], start: { heart: 1 }, dice: [6] });

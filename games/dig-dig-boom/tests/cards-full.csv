@@ -6,7 +6,7 @@ MO-02,Monster B,Monster,,Starting,3,{damage} 2 → 4 → 6
 MO-03,Monster C,Monster,,Starting,2,{damage} 3 → 5
 ON-38,Lucky Coin,Ongoing,,Starting,1,"If the Monster's {damage} is equal to or greater than your {heart}, +1 to your roll"
 PW-02,Nurse Newt,Power,1,Booster,1,+1 {heart}
-PW-03,Picnic Ant,Power,1,Booster,1,"Gain {heart} equal to half your result, rounded down"
+PW-03,Picnic Ant,Power,3,Booster,1,"Gain {heart} equal to half your result, rounded down"
 PW-04,Prickly Porcupine,Power,1,Booster,1,"Lose 1 {heart}, then +2 {grit}"
 PW-05,Unlucky Duck,Power,1,Booster,1,"If no other card triggers, +1 {reroll}"
 PW-06,Gritty Gecko,Power,2,Booster,1,+1 {grit}
@@ -55,7 +55,7 @@ ON-16,Generator,Ongoing,,Booster,1,"At the start of each Dig, +2 {grit}"
 ON-17,Giant Slayer,Ongoing,,Booster,1,+3 to your rolls against Monsters with 7+ {damage}
 ON-18,Grit Caddy,Ongoing,,Booster,1,"Whenever you spend 3+ {grit} on one roll, get 1 back"
 ON-19,Monster Jerky,Ongoing,,Booster,1,"Whenever you defeat a Monster, +3 {heart}"
-ON-20,Monster Scope,Ongoing,,Booster,1,+2 to your rolls against Monsters with 6+ {damage}
+ON-20,Monster Scope,Ongoing,,Booster,1,+2 to your rolls against Monsters with 5+ {damage}
 ON-21,Nurse Bot,Ongoing,,Booster,1,"Whenever you gain {heart}, gain 1 more"
 ON-22,Panic Button,Ongoing,,Booster,1,"The first time each Dig a roll would make you BOOM, reroll it for free"
 ON-23,Patch Kit,Ongoing,,Booster,1,"Whenever you take {damage}, +1 {heart}"
@@ -69,7 +69,6 @@ ON-30,Stubborn Engine,Ongoing,,Booster,1,"Whenever you take {damage}, +1 {grit}"
 ON-31,Thorned Gadget,Ongoing,,Booster,1,You may lose 2 {heart} instead of spending a {reroll}
 ON-32,Trophy Case,Ongoing,,Booster,1,"Whenever you defeat a Monster, +2 {grit}"
 ON-33,Tune-Up,Ongoing,,Booster,1,+1 to your rolls
-ON-34,Twin Drill,Ongoing,,Booster,1,"Whenever you spend a {reroll}, keep the higher result"
 ON-35,Victory Bell,Ongoing,,Booster,1,"Whenever you defeat a Monster, +1 {reroll}"
 ON-36,Workbench,Ongoing,,Booster,1,"Any time, trade 3 {grit} for 1 {reroll}, or 1 {reroll} for 3 {grit}"
 ON-37,Wrecking Ball,Ongoing,,Booster,1,Double your result against your first Monster each Dig

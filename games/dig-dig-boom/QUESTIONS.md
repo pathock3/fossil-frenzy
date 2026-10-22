@@ -97,7 +97,7 @@ There are Bonus Monster cards for damage 8 to 19. If a Dig goes past 19 Bonus Mo
 
 ## From the combat redesign (rulings I made; tell me if you meant otherwise)
 - **Ongoing cards "at or below the die"**: Ongoing cards have no number, so they still work as always-on effects (not as cards that fire at a number). If you want Ongoing cards on the Power line with numbers, give them one in the sheet and tell me.
-- **Extra Roll** replaces your result (owner's clarification): used cards stay used and the new result may reach different cards. Twin Drill ("keep the higher result") still has its job.
+- **Extra Roll** replaces your result (owner's clarification): used cards stay used and the new result may reach different cards. (Twin Drill, "keep the higher result", was deleted: it no longer makes sense.)
 - **Using a card no longer locks your roll in** (that was the old Reroll rule); Extra Rolls stay available all battle. Backfire ("you may make it a 10") is still a tap.
 - **Block cards** are unchanged numerically: "Block N" and "Deal N damage to the Monster" are the same effect (N markers). Reword them in the sheet when you like.
 - **Resolving order**: cards still fire when you tap them (or "Use all"); nothing fires by itself except what the AI and "Use all" do.
