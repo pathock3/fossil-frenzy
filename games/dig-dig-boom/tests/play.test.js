@@ -545,9 +545,14 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     await page.click('#play .pool [data-p=kitpick] >> nth=0'); await page.waitForTimeout(120);
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.run.prep.kitPick.length), 2, 'and a tap puts one back');
     await page.click('#play [data-p=startround]');
+    await page.waitForSelector('#play .fnote');
+    assert.match(await page.locator('#play .fnote').innerText(), /FINAL ROUND/i, 'the final round is announced before anyone digs');
+    assert.equal(await page.locator('#play .frules.open').count(), 0, 'the rules are only a button away');
+    await page.click('#play [data-p=finalhow]'); assert.match(await page.locator('#play .frules.open').innerText(), /Nobody banks[\s\S]*stop and wait/i);
+    await page.click('#play [data-p=finalok]'); assert.equal(await page.locator('#play .fnote').count(), 0, 'then it goes');
     assert.match(await page.locator('#play .lbhead').innerText(), /round 2 of 2 · final/i);
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.known), 2, 'the two kit cards are on top of the Mine, face up; the third is shuffled in');
-    assert.ok(await page.locator('#play [data-p=bank]').isDisabled(), 'the final round is a race: nobody banks');
+    assert.equal(await page.locator('#play [data-p=bank]').count(), 0, 'the final round has no Bank at all, and no gem count');
     assert.match(await page.locator('#play .aprompt').innerText(), /last round: nobody banks|in the lead/i, 'it says why, and what to do');
     assert.match(await page.locator('#play .lbhead').innerText(), /not in the lead: keep digging/i);
     await script(page, { mine: ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01'], dice: Array(30).fill(10) });
@@ -854,5 +859,19 @@ test('the main menu is the real one on the first frame: with a saved copy of the
     await page.waitForFunction(() => window.DigDigBoomUI.state.source === 'sheet', null, { timeout: 8000 });
     assert.equal(await page.evaluate(() => window.DigDigBoomUI.state.all.length), before + 1, 'the sheet changed: the new card is in');
     assert.equal(await page.locator('#play .homenote').count(), 0);
+  } finally { await browser.close(); }
+});
+
+test('a Mystery Box: the cards you did not keep fly away once, on the pack screen, and not again on the Starter Kit screen', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await page.click('#play [data-p=startrun]'); await page.click('#play [data-p=openpack]'); await page.waitForSelector('#play .pcard[data-p=pick]');
+    await page.evaluate(() => { const P = window.DigDigBoomPlay, run = P.S.match.runs.me, pr = run.prep, full = window.DigDigBoomUI.state.all; pr.offer = ['IM-14', 'PW-32', 'PW-09'].map((id, i) => ({ ...full.find(c => c.id === id), uid: 9100 + i })); pr.picked = []; run.deck.unshift({ ...full.find(c => c.id === 'ON-33'), uid: 9150 }); P.render(); });
+    await page.click('#play .pcard[data-uid="9100"]'); await page.click('#play [data-p=keepgo]');
+    await page.waitForSelector('#play [data-p=continuereveal]');
+    assert.equal(await page.locator('#play .sweepcard').count(), 2, 'on the pack screen the two cards fly away');
+    await page.click('#play [data-p=continuereveal]'); await page.waitForSelector('#play [data-p=startround]');
+    assert.equal(await page.locator('#play .sweepcard').count(), 0, 'and they do not fly away a second time');
+    assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

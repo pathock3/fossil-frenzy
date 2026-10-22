@@ -4,6 +4,8 @@ const { fork } = require('child_process'), os = require('os');
 function brainFrom(spec) {
   const { G } = require('./sim.js');
   if (spec === 'base') return G.Basic;
+  if (['easy', 'normal', 'best'].includes(spec)) return G.AI.level(spec);          // the shipped difficulty levels
+  if (['easy', 'normal', 'best'].includes(spec)) return G.AI.level(spec);          // the shipped difficulty levels
   const m = /^(\w+)(?::(.*))?$/.exec(spec), over = m[2] ? JSON.parse(m[2]) : {};
   const b = require('./brain.js').makeBrain(over);
   if (m[1] === 'smartprep') return { act: G.Basic.act, prep: b.prep };      // the shipped Dig play, the new Prep

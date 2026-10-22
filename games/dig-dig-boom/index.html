@@ -497,8 +497,8 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .deck .dcap-unused { position: absolute; z-index: 3; left: 8%; right: 8%; bottom: 12px; padding: 8px 6px; border-radius: 12px; background: rgba(20,12,8,.88); border: 2px solid var(--accent); color: #fff; font-size: 16px; font-weight: 800; line-height: 1.2; text-align: center; }
 
 /* a Monster is in front of you: only the Monster and the die stay lit */
-#play .ptable .drill, #play .ptable .tableau, #play .ptable .deck, #play .ptable .piles { transition: opacity .25s, filter .25s; }
-#play .ptable.await-roll .drill, #play .ptable.await-roll .tableau, #play .ptable.await-roll .deck, #play .ptable.await-roll .piles { opacity: .3; filter: saturate(.5) brightness(.8); }
+#play .ptable .drill, #play .ptable .tableau, #play .ptable .deck, #play .ptable .piles .bankp { transition: opacity .25s, filter .25s; }
+#play .ptable.await-roll .drill, #play .ptable.await-roll .tableau, #play .ptable.await-roll .deck, #play .ptable.await-roll .piles .bankp { opacity: .3; filter: saturate(.5) brightness(.8); }
 #play .ptable.await-roll .deck.live { animation: none; outline: none; }
 #play .dieb.live { position: relative; animation: glowpulse 1.3s ease-in-out infinite; }
 #play .dieb.live .d10 { animation: dbounce 1.3s ease-in-out infinite; }
@@ -753,6 +753,22 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 /* Card backs: a cross-section of the earth, deep underground (soil, clay, rock, the dark below), with the drill at work and crystals glinting in the deep */
 #play .cardback { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 234 334' preserveAspectRatio='none'%3E%0A%3Cdefs%3E%0A%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2394603a'/%3E%3Cstop offset='.2' stop-color='%2374492a'/%3E%3Cstop offset='.4' stop-color='%2355403a'/%3E%3Cstop offset='.64' stop-color='%2334303f'/%3E%3Cstop offset='1' stop-color='%2316111e'/%3E%3C/linearGradient%3E%0A%3CradialGradient id='w' cx='.5' cy='.5' r='.5'%3E%3Cstop offset='0' stop-color='%23ffd98a' stop-opacity='.7'/%3E%3Cstop offset='1' stop-color='%23ffd98a' stop-opacity='0'/%3E%3C/radialGradient%3E%0A%3ClinearGradient id='m' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%238d96a3'/%3E%3Cstop offset='.5' stop-color='%23e5ebf2'/%3E%3Cstop offset='1' stop-color='%2379828f'/%3E%3C/linearGradient%3E%0A%3CclipPath id='c'%3E%3Cpolygon points='91,134 143,134 117,214'/%3E%3C/clipPath%3E%0A%3C/defs%3E%0A%3Crect width='234' height='334' fill='url(%23g)'/%3E%0A%3Cg fill='none' stroke-linecap='round'%3E%0A%3Cpath d='M0 62 Q40 52 80 64 T160 60 T234 66' stroke='%23000' stroke-opacity='.28' stroke-width='3'/%3E%0A%3Cpath d='M0 66 Q40 56 80 68 T160 64 T234 70' stroke='%23ffd9a0' stroke-opacity='.12' stroke-width='2'/%3E%0A%3Cpath d='M0 116 Q50 106 100 120 T234 112' stroke='%23000' stroke-opacity='.3' stroke-width='3'/%3E%0A%3Cpath d='M0 120 Q50 110 100 124 T234 116' stroke='%23ffd9a0' stroke-opacity='.1' stroke-width='2'/%3E%0A%3Cpath d='M0 214 Q60 204 120 218 T234 210' stroke='%23000' stroke-opacity='.34' stroke-width='3'/%3E%0A%3Cpath d='M0 262 Q70 252 130 266 T234 258' stroke='%23000' stroke-opacity='.4' stroke-width='3'/%3E%0A%3Cpath d='M30 0 L26 24 L34 40 M196 20 L204 46 L196 70' stroke='%23000' stroke-opacity='.3' stroke-width='2'/%3E%0A%3C/g%3E%0A%3Cg%3E%0A%3Cellipse cx='30' cy='36' rx='9' ry='6' fill='%23b88a57'/%3E%3Cellipse cx='198' cy='30' rx='7' ry='5' fill='%23a07848'/%3E%3Cellipse cx='52' cy='92' rx='6' ry='4' fill='%238d6a45'/%3E%3Cellipse cx='190' cy='96' rx='10' ry='6' fill='%23a8845a'/%3E%0A%3Cellipse cx='24' cy='152' rx='8' ry='5' fill='%236d6460'/%3E%3Cellipse cx='206' cy='160' rx='9' ry='6' fill='%237a706c'/%3E%3Cellipse cx='40' cy='196' rx='6' ry='4' fill='%235c5552'/%3E%3Cellipse cx='196' cy='200' rx='7' ry='5' fill='%236a625f'/%3E%0A%3Cg transform='translate(30 232) rotate(-18)' fill='%23e8dcc0' opacity='.85'%3E%3Crect x='0' y='0' width='34' height='7' rx='3.5'/%3E%3Ccircle cx='0' cy='3.5' r='6'/%3E%3Ccircle cx='34' cy='3.5' r='6'/%3E%3C/g%3E%0A%3Cg transform='translate(178 80) rotate(24)' fill='%23e8dcc0' opacity='.7'%3E%3Crect x='0' y='0' width='26' height='6' rx='3'/%3E%3Ccircle cx='0' cy='3' r='5'/%3E%3Ccircle cx='26' cy='3' r='5'/%3E%3C/g%3E%0A%3C/g%3E%0A%3Ccircle cx='117' cy='168' r='96' fill='url(%23w)'/%3E%0A%3Ccircle cx='117' cy='168' r='66' fill='%231d1712' stroke='%23e7b866' stroke-width='5'/%3E%0A%3Ccircle cx='117' cy='168' r='58' fill='none' stroke='%23e7b866' stroke-opacity='.45' stroke-width='1.5' stroke-dasharray='3 5'/%3E%0A%3Crect x='108' y='104' width='18' height='30' rx='3' fill='url(%23m)'/%3E%3Crect x='102' y='128' width='30' height='8' rx='3' fill='%23c9a24a'/%3E%0A%3Cpolygon points='91,134 143,134 117,214' fill='url(%23m)'/%3E%0A%3Cg clip-path='url(%23c)' stroke='%234a525e' stroke-width='5'%3E%3Cpath d='M84 148 L150 136'/%3E%3Cpath d='M84 166 L150 154'/%3E%3Cpath d='M84 184 L150 172'/%3E%3Cpath d='M84 202 L150 190'/%3E%3C/g%3E%0A%3Cpolygon points='91,134 143,134 117,214' fill='none' stroke='%232a2f38' stroke-width='2' stroke-linejoin='round'/%3E%0A%3Cg fill='%23e7b866'%3E%3Cpolygon points='78,214 88,206 86,218'/%3E%3Cpolygon points='156,210 148,203 147,216'/%3E%3Cpolygon points='106,226 112,220 113,230'/%3E%3Cpolygon points='128,228 134,222 136,231'/%3E%3Ccircle cx='96' cy='228' r='2.5'/%3E%3Ccircle cx='142' cy='226' r='2.5'/%3E%3C/g%3E%0A%3Cg%3E%3Cpolygon points='14,334 20,290 32,300 38,334' fill='%238a4fe0'/%3E%3Cpolygon points='26,334 34,304 44,334' fill='%23b88aff'/%3E%3Cpolygon points='196,334 204,296 216,308 222,334' fill='%2326b5c9'/%3E%3Cpolygon points='208,334 214,310 226,334' fill='%237ee8f5'/%3E%3Cpolygon points='118,334 124,312 134,334' fill='%23e0a43a'/%3E%3C/g%3E%0A%3C/svg%3E") center / 100% 100% no-repeat, #2e2a38; border-color: #e7b866; }
 #play .cardback::after { content: none; }
+/* the final round, announced */
+#play .fnote-back { position: fixed; inset: 0; z-index: 31; display: flex; align-items: center; justify-content: center; background: rgba(10,6,3,.78); }
+#play .fnote { width: min(700px, calc(100vw - 40px)); padding: 30px 34px 28px; border-radius: 26px; background: linear-gradient(180deg, #4a2a1d, #2a1712); border: 4px solid #ffb13b; box-shadow: 0 0 0 6px rgba(255,177,59,.18), 0 24px 70px rgba(0,0,0,.7); text-align: center; }
+#play .fnote .fbig { font-size: 76px; line-height: 1; font-weight: 900; letter-spacing: .04em; color: #ffd45e; text-shadow: 0 4px 0 #8a3a0c, 0 10px 24px rgba(255,140,40,.5); }
+#play .fnote .fsub { margin: 10px 0 4px; font-size: 24px; font-weight: 800; color: var(--text); }
+#play .fnote .fwhere { margin: 10px 0 0; font-size: 24px; font-weight: 800; color: #fff; }
+#play .fnote .frules { max-height: 0; overflow: hidden; transition: max-height .3s ease; text-align: left; }
+#play .fnote .frules.open { max-height: 340px; margin-top: 14px; }
+#play .fnote .frules ul { margin: 0; padding: 0 0 0 26px; font-size: 20px; line-height: 1.35; color: var(--text); }
+#play .fnote .frules li { margin: 6px 0; }
+#play .fnote .fbtns { display: flex; gap: 14px; justify-content: center; margin-top: 22px; }
+#play .piles { display: flex; flex-direction: column; align-items: flex-end; gap: 14px; }
+#play .piles .rollbtn { margin: 0; align-self: flex-end; width: 104px; height: auto; gap: 0; }
+#play .piles { gap: 8px; }
+#play .piles .rollbtn .tapword { font-size: 17px; padding: 4px 14px; margin-top: 4px; }
+#play .pile.bankp, #play .pile.bankp.live { min-height: 84px; }
 /* The Bank is a button, not a place for cards: a raised gold key at the right edge, bottom-aligned, that presses down */
 #play .piles { width: auto; height: auto; align-self: flex-end; margin-left: 0; flex: none; }
 #play .pile.bankp, #play .pile.bankp.live { flex: none; width: 210px; height: auto; min-height: 96px; padding: 10px 24px; flex-direction: row; gap: 14px; border-radius: 24px; border: 3px solid #fff0b8; color: #2a1700; font-size: 34px; font-weight: 900; letter-spacing: .02em; background: linear-gradient(180deg, #ffd45e, #e8920f); box-shadow: 0 8px 0 #8a4f06, 0 16px 24px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.55); overflow: visible; transition: transform .08s, box-shadow .08s; }
@@ -892,6 +908,12 @@ const DDB = {
       lambda: 0.03,                                      // what one more card kept from a pack is worth, in chance of winning
       phiLeft: 5, phiBest: 8, phiPrior: 25,              // the win-chance table covers up to this many rounds left and this big a best; a guess counts as this many games where data is thin
       prepSims: 60, screenSims: 16, finalists: 3, kitMargin: 0.003, prepSeed: 31337,   // Prep: Digs played to judge a deck; to screen a set of kept cards; how many sets get the full look; a Kit place is only filled by a card that adds at least this much (else it is a gem)
+    },
+    level: 'normal',                                     // the AI you play against: easy, normal or best (best is only for testing: it thinks hard)
+    levels: {
+      easy: 'basic',                                     // the old simple rules of thumb
+      normal: { prepSims: 12, screenSims: 4, finalists: 1, rolls: 8, idleRolls: 16, quickRolls: 4, quickIdleRolls: 8, bankAt: [4, 5, 6] },          // the thinking AI with a small budget
+      best: { prepSims: 200, screenSims: 50, finalists: 4, rolls: 80, idleRolls: 120 },          // as strong as we know how to make it
     },
     phi: {"1|4|4|1":[2720,4136],"1|4|4|-1":[1416,4136],"1|0|0|0":[3314,6628],"1|4|0|0":[6752,8616],"1|0|4|0":[1864,8616],"1|0|6|0":[72,686],"1|6|0|0":[614,686],"1|6|4|0":[947,1233],"1|4|6|0":[286,1233],"1|5|0|0":[1794,2053],"1|0|5|0":[259,2053],"1|4|5|0":[1271,4558],"1|5|4|0":[3287,4558],"1|0|7|0":[40,458],"1|7|0|0":[418,458],"1|5|5|1":[586,951],"1|5|5|-1":[365,951],"1|6|5|0":[779,1101],"1|5|6|0":[322,1101],"1|7|5|0":[680,887],"1|5|7|0":[207,887],"1|4|7|0":[164,1021],"1|7|4|0":[857,1021],"2|4|4|1":[2017,3463],"2|4|4|-1":[1446,3463],"2|0|0|0":[3276,6552],"2|4|0|0":[5645,8032],"2|0|4|0":[2387,8032],"2|0|6|0":[76,518],"2|6|0|0":[442,518],"2|6|4|0":[544,769],"2|4|6|0":[225,769],"2|5|0|0":[1388,1717],"2|0|5|0":[329,1717],"2|4|5|0":[1163,3420],"2|5|4|0":[2257,3420],"2|0|7|0":[42,272],"2|7|0|0":[230,272],"1|6|6|1":[88,135],"1|6|6|-1":[47,135],"2|5|5|1":[326,608],"2|5|5|-1":[282,608],"2|6|5|0":[385,614],"2|5|6|0":[229,614],"2|7|5|0":[281,388],"2|5|7|0":[107,388],"2|4|7|0":[98,497],"2|7|4|0":[399,497],"3|4|4|1":[1374,2521],"3|4|4|-1":[1147,2521],"3|0|0|0":[3177,6354],"3|4|0|0":[4546,6957],"3|0|4|0":[2411,6957],"1|7|7|1":[146,238],"1|7|7|-1":[92,238],"3|0|6|0":[67,338],"3|6|0|0":[271,338],"3|6|4|0":[271,402],"3|4|6|0":[131,402],"1|6|7|0":[131,448],"1|7|6|0":[317,448],"3|5|0|0":[981,1300],"3|0|5|0":[319,1300],"3|4|5|0":[752,2097],"3|5|4|0":[1345,2097],"3|0|7|0":[22,140],"3|7|0|0":[118,140],"2|6|6|1":[33,61],"2|6|6|-1":[28,61],"3|5|5|1":[175,330],"3|5|5|-1":[155,330],"3|6|5|0":[138,248],"3|5|6|0":[110,248],"3|7|5|0":[74,107],"3|5|7|0":[33,107],"3|4|7|0":[41,177],"3|7|4|0":[136,177],"4|4|4|1":[708,1388],"4|4|4|-1":[680,1388],"4|0|0|0":[2904,5808],"4|4|0|0":[3207,5224],"4|0|4|0":[2017,5224],"2|7|7|1":[35,50],"2|7|7|-1":[15,50],"4|0|6|0":[45,163],"4|6|0|0":[118,163],"4|6|4|0":[90,142],"4|4|6|0":[52,142],"2|6|7|0":[55,154],"2|7|6|0":[99,154],"4|5|0|0":[606,817],"4|0|5|0":[211,817],"4|4|5|0":[355,959],"4|5|4|0":[604,959],"4|0|7|0":[4,52],"4|7|0|0":[48,52],"3|6|6|1":[8,17],"3|6|6|-1":[9,17],"4|5|5|1":[55,101],"4|5|5|-1":[46,101],"4|6|5|0":[30,59],"4|5|6|0":[29,59],"4|7|5|0":[15,20],"4|5|7|0":[5,20],"4|4|7|0":[16,46],"4|7|4|0":[30,46],"5|4|4|1":[203,432],"5|4|4|-1":[229,432],"5|0|0|0":[2133,4266],"5|4|0|0":[1596,2671],"5|0|4|0":[1075,2671],"3|7|7|1":[5,7],"3|7|7|-1":[2,7],"5|0|6|0":[16,58],"5|6|0|0":[42,58],"5|6|4|0":[15,25],"5|4|6|0":[10,25],"3|6|7|0":[11,32],"3|7|6|0":[21,32],"5|5|0|0":[226,320],"5|0|5|0":[94,320],"5|4|5|0":[86,237],"5|5|4|0":[151,237],"5|0|7|0":[2,11],"5|7|0|0":[9,11],"5|5|5|1":[6,11],"5|5|5|-1":[5,11],"5|6|5|0":[3,7],"5|5|6|0":[4,7],"5|4|7|0":[5,7],"5|7|4|0":[2,7]},                                      // chance of winning from "rounds left|my best|their best|who holds the better spot when level" -> [wins, games]; measured in self-play (tools/gather.js)
   },
@@ -2328,7 +2350,9 @@ const AI = (() => {
     function prep(run) { const g = prepSteps(run); while (!g.next().done); }
     return { act, prep, prepSteps, P, phi, valueOf, context, idleArms };
   }
-  return { ...make(), make, basic: Basic };
+  // Difficulty levels (DDB.ai.levels): "easy" is the old rules of thumb, "normal" is the thinking AI on a small budget (quick to compute), "best" is the strongest we can build (for testing, not for play).
+  const level = name => { const d = A.levels[name] || A.levels[A.level]; return d === 'basic' ? Basic : make(d); };
+  return { ...level(A.level), make, level, basic: Basic, levelName: A.level };
 })();
 </script>
 
@@ -2949,7 +2973,7 @@ const AI = (() => {
       const slots = Array.from({ length: pr.kitMax }, (_, i) => { const c = kitCards[i]; return `<div class="kslot ${c ? '' : 'empty'}" data-i="${i}" style="width:${250 * ss}px;height:${sh}px">${c ? pcard(c, ss, { act: 'kitpick', sel: true, badge: i + 1, i: i, deal: false, ...tagOf2(c) }) : `${gemIc}<span>gem</span>`}</div>`; }).join('');
       const n = kitCards.length, same = prev.length && prev.length === n && prev.every((id, i) => id === pr.kitPick[i]);
       const say = 'These will be the first cards you draw.';
-      const from = first ? S.keepFrom : null, rest = first ? pr.offer.filter(c => !pr.picked.includes(c.uid)) : [];
+      const from = first ? S.keepFrom : null, rest = first && !pr.extra.length ? pr.offer.filter(c => !pr.picked.includes(c.uid)) : [];          // (after a Mystery Box they flew away on the pack screen already: only once)
       const sweep = rest.length ? `<div class="sweep" aria-hidden="true">${rest.map((c, i) => {
         const r = from && from[c.uid] ? from[c.uid] : { x: innerWidth / 2 - 63 + (i - (rest.length - 1) / 2) * 130, y: innerHeight * .34, w: 125, h: 175 };
         return `<span class="sweepcard" style="--i:${i};left:${Math.round(r.x)}px;top:${Math.round(r.y)}px;width:${Math.round(r.w)}px;height:${Math.round(r.h)}px;--tx:${-Math.round(r.x + r.w + 120)}px;--ty:${-Math.round(r.y + r.h + 100)}px">${A.playCard(c, r.w / 250)}</span>`;
@@ -3037,7 +3061,7 @@ const AI = (() => {
     if (f) {
       const res = Dig.result(st), after = f.phase === 'after', elig = after ? Dig.eligible(st) : [];
       const rollKey = `${st.digs}:${f.rolls}:${f.die}`, shown = f.fixed !== null ? f.fixed : f.die, fresh = rollKey !== S.fx.roll;
-      if (!after) return `<div class="action"><button class="dieb live" data-p="roll" aria-label="Roll the die">${d10('', 'idle')}<span class="tapword">Tap to roll</span></button></div>`;
+      if (!after) return '<div class="action"></div>';          // the die to tap is in the right-hand column, above the Bank (see tableHTML)
       // the die says the roll; only when cards changed it does one line add up: 7 +1 = 8
       const calc = res.parts.length > 1 ? `<div class="calc">${res.parts.map((p, i) => i === 0 ? p.v : p.set ? `→ ${p.v}` : `${p.v >= 0 ? '+' : '−'}${Math.abs(p.v)}`).join(' ')} = <b>${res.total}</b></div>` : '';
       const dmg = Dig.previewDamage(st), sure = elig.length > 0 && S.confirmFace;          // you can still use cards: the first tap on "take damage" only asks
@@ -3069,6 +3093,9 @@ const AI = (() => {
     const deck = `<div class="stack"><button class="deck ${live ? 'live' : ''}" data-p="dig" ${live ? '' : 'disabled'} aria-label="Mine, ${st.mine.length} cards">${st.mine.length ? `<span class="cw" style="--s:var(--ca)"><span class="cs">${up ? A.playCard(up, 1) : '<span class="cardback"></span>'}</span></span>` : `<span class="cw" style="--s:var(--ca)"><span class="cs">${A.playCard(Dig.peekBonus(st), 1)}</span></span>`}<span class="cnt">${st.mine.length}</span></button></div>`;
     // There is no separate discard pile: the cards you flip land in one spot beside the Mine, and the ones before it are stacked underneath. (Monsters move on to the Monster pile above.)
     const piles = `<div class="piles"><button class="pile bankp ${bankLive ? 'live' : ''}" data-p="bank" ${bankLive ? '' : 'disabled'}><span class="bword">Bank</span><span class="gemline ${gems > fx.gems ? 'fx-bump' : ''}">${gems}${ic('gem')}</span></button></div>`;
+    const preRoll = !!f && f.phase === 'before' && !st.over, finalRound = !!(S.run && st.board && st.board.final);          // the last round: nobody banks, so there is no Bank and no gem count
+    const rollBtn = preRoll ? `<button class="dieb live rollbtn" data-p="roll" aria-label="Roll the die">${d10('', 'idle')}<span class="tapword">Tap to roll</span></button>` : '';
+    const rollCol = finalRound ? (rollBtn ? `<div class="piles">${rollBtn}</div>` : '') : piles.replace('<div class="piles">', `<div class="piles">${rollBtn}`);
     const dug = `<div class="dugz"><div class="slot ${st.discard.length ? 'stacked' : ''}">${dugHTML(st)}</div></div>`;
     const action = `<div class="dicez">${diceHTML(st, can)}</div>`;
     const s = st.over ? Dig.score(st) : null;
@@ -3087,7 +3114,7 @@ const AI = (() => {
       : `<div class="over ${ovFx}">${ovFx ? confettiHTML(16) : ''}<h2>Banked!</h2><div class="big"><b>${s.total}</b> ${ic('gem', ' style="width:30px;height:30px;vertical-align:-6px"')} (${s.geodes} from Geodes, ${s.monsters} from Monsters)<br><b>${s.survived}</b> Monster${s.survived === 1 ? '' : 's'} survived</div>`) + (st.best && st.over.kind === 'bank' ? `<div class="note">Best so far: ${st.best.now.survived} Monsters survived${st.best.newSurvived ? ' (new!)' : ''} · ${st.best.now.gems} gems banked${st.best.newGems ? ' (new!)' : ''}</div>` : '') + `<div class="row2"><button class="btn" data-p="again">New Dig, same kit</button><button class="btn alt" data-p="setup">Choose a kit</button></div></div>`;
     }
     S.fx = fxOf(st);
-    return `${drillHTML(st, can)}${tableauHTML(st, freshUid)}<div class="mat">${deck}${dug}${action}${piles}${over}</div>`;
+    return `${drillHTML(st, can)}${tableauHTML(st, freshUid)}<div class="mat">${deck}${dug}${action}${rollCol}${over}</div>`;
   }
   // The in-game menu: quiet, small. Your game is saved after every tap, so "Main menu" leaves nothing to lose; there you can Continue it or start a new one.
   function gmenuHTML() {
@@ -3136,7 +3163,13 @@ const AI = (() => {
     const z = S.zoom ? `<div class="zoom" data-p="unzoom">${A.playCard(S.zoom, Math.min(1.35, (innerHeight - 70) / 350))}${Dig.supported(S.zoom) ? '' : '<div class="warn">This card\'s effect is not built yet.</div>'}<div class="closehint">tap anywhere to close</div></div>` : '';
     const bottom = S.panel === 'dig' && S.st && !S.st.mine.length && !S.st.over && !S.st.fight && !S.st.pending && S.emptySeen !== S.st && !S.help;          // you dug the last card of your Mine: say what happens next, once
     const B = D.rules.beyond, note = bottom ? `<div class="mnote-back"><div class="mnote" role="dialog" aria-label="The bottom of your Mine"><h3>That was the bottom of your Mine</h3><p>From now on, every card you dig is a <b>Bonus Monster</b>. The next one is face up on the Mine: it deals <b>${B.firstDamage}</b> damage, the one after <b>${B.firstDamage + 1}</b>, and so on. Survive one and it is worth <b>${B.gems}</b> gems. You can still bank any time.</p><button class="btn" data-p="emptyok">Got it</button></div></div>` : '';
-    $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z + note;
+    let fin = '';
+    if (finalNote() && !S.help) {
+      const stt = S.st, lead = stt.board && stt.board.lead, need = stt.board ? stt.board.leadN : null, sub = S.run.rounds === 1 ? 'The only round.' : `Round ${S.run.round} of ${S.run.rounds}: the last one.`;
+      const where = lead ? 'You are in the lead already. Wait for your opponent; dig only if they pass you.' : need ? `To take the lead, survive ${need} Monster${need === 1 ? '' : 's'}.` : '';
+      fin = `<div class="fnote-back"><div class="fnote" role="dialog" aria-label="The final round"><div class="fbig">FINAL ROUND</div><p class="fsub">${sub}</p>${where ? `<p class="fwhere">${where}</p>` : ''}<div class="frules ${S.finalHow ? 'open' : ''}"><ul><li><b>Nobody banks.</b> You keep digging until you are in the lead, or you go BOOM.</li><li>The <b>leader</b> is whoever has survived the most Monsters (your best from earlier rounds counts). Level, the one who got there first leads.</li><li>Once you are in the lead, <b>stop and wait</b>: digging on only risks it. If your opponent passes you, dig again.</li><li>The round ends when everyone else has gone BOOM: whoever is still in the lead holds the Crown Jewel.</li></ul></div><div class="fbtns"><button class="btn alt" data-p="finalhow">${S.finalHow ? 'Hide the rules' : 'How the final round works'}</button><button class="btn" data-p="finalok">Start digging</button></div></div></div>`;
+    }
+    $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z + note + fin;
     const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
     fitHero(); heroPlay(); fitTable(); playDice();
     if (S.packFrom) { const fp = $.querySelector('.flypack'); if (fp) { const r = fp.getBoundingClientRect(); fp.style.setProperty('--fx', Math.round(S.packFrom.x - (r.left + r.width / 2)) + 'px'); fp.style.setProperty('--fy', Math.round(S.packFrom.y - (r.top + r.height / 2)) + 'px'); } S.packFrom = null; }
@@ -3158,6 +3191,8 @@ const AI = (() => {
   // The AI digs on its own, at a person's pace (D.ai.pace), whether or not you tap. Once you are done, Fast forward makes it D.ai.fastMs.
   // While you are still playing only the Leaderboard is redrawn, so a tick never swallows a tap on the table.
   let aiTimer = null;
+  // The final round is announced before anyone digs (and the AI waits for you to read it).
+  const finalNote = () => !!(S.panel === 'dig' && S.run && S.st && S.run.round === S.run.rounds && S.st.digs === 0 && !S.st.over && S.finalSeen !== S.st);
   const aiDigging = () => { const ai = S.match && S.run && S.run.phase === 'dig' ? Match.bot(S.match) : null; return !!(ai && ai.dig && !ai.dig.over); };
   // How long a person would take over what the AI just did: a card, a Monster (roll, look at the line, trigger cards, take the damage), a decision to bank; never the same twice.
   const humanWait = last => {
@@ -3167,7 +3202,7 @@ const AI = (() => {
     return Math.round(ms * (1 + (Math.random() * 2 - 1) * P.jitter));
   };
   const pace = () => S.ff ? D.ai.fastMs : (window.DDB_AI_PACE || S.aiDelay || D.ai.pace.cardMs);
-  function scheduleAI() { if (!aiDigging()) { S.ff = false; return; } if (!aiTimer) aiTimer = setTimeout(aiTick, pace()); }
+  function scheduleAI() { if (!aiDigging()) { S.ff = false; return; } if (finalNote()) return; if (!aiTimer) aiTimer = setTimeout(aiTick, pace()); }
   function aiTick() {
     clearTimeout(aiTimer); aiTimer = null;
     if (!aiDigging()) return;
@@ -3232,6 +3267,8 @@ const AI = (() => {
       case 'cards': S.help = false; UI.setMode('cards'); return;
       case 'unzoom': S.zoom = null; break;
       case 'emptyok': S.emptySeen = S.st; break;
+      case 'finalok': S.finalSeen = S.st; S.finalHow = false; S.aiDelay = D.ai.pace.startMs; break;
+      case 'finalhow': S.finalHow = !S.finalHow; break;
       case 'zoom': S.zoom = findCard(ds.uid); break;
       case 'card': { const c = findCard(ds.uid), e = st && st.line.find(x => x.card === c); if (st && st.pending && (e || st.ongoing.includes(c))) Dig.chooseClone(st, e || c); else if (e && f && f.phase === 'after' && Dig.eligible(st).includes(e)) Dig.triggerFully(st, e); else S.zoom = c; break; }
       case 'triggerall': if (st) Dig.triggerAll(st); break;

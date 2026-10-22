@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — the final round is announced:** before anyone digs in the last round a big FINAL ROUND card says so (and what you need to lead), with a button for a reminder of how the final round works; the AI waits until you start. In the final round there is **no Bank and no gem count** at all. The die you tap to roll now sits at the bottom right, above the Bank, for your right hand. After a Mystery Box the cards you did not keep fly away once (not again on the Starter Kit screen).
+- **Dig Dig BOOM! — AI difficulty levels:** `DDB.ai.level` is **normal** (the thinking AI on a small budget: quick to compute, about 69% against the old AI); **easy** is the old rules of thumb; **best** is the strongest we can build (for testing only). Change `level` in the data block.
+
 - **Dig Dig BOOM! — table and rules batch:**
   - **Crown Jewel starts one spot back**: the tracker starts at 2, so reaching 3 Monsters is enough to claim it.
   - **Cloning Machine** goes under a Power *or* Ongoing card, and it is drawn *under* that card (its name peeking out above). On an Ongoing card everything it does counts twice (+1 to your rolls becomes +2, "whenever" reactions happen twice, Block 1 becomes Block 2). Tapping a cloned Power card uses it twice at once.
