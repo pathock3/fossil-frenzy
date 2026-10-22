@@ -840,7 +840,7 @@ const DDB = {
     think: {                                             // how the thinking AI works (see the script "ai"); every number here is a tuning knob
       rolls: 40, idleRolls: 80, quickRolls: 12, quickIdleRolls: 24,   // playouts per option at a decision; the "quick" numbers are for Fast forward
       bankAt: [1, 2, 3, 4, 5, 6, 8],                     // at "dig on or bank?" it also tries "play on until this many Monsters have been survived, then bank"
-      fightBankAt: 5, rerollBelow: 3, digCap: 70,        // the quick policy inside playouts: bank at (in a fight), reroll when it would leave this little Health, give up a playout after this many cards
+      fightBankAt: 5, fightMargin: 0.02, rerollBelow: 3, digCap: 70,        // the quick policy inside playouts: bank at (in a fight), reroll when it would leave this little Health, give up a playout after this many cards
       lambda: 0.03,                                      // what one more card kept from a pack is worth, in chance of winning
       phiLeft: 5, phiBest: 8, phiPrior: 25,              // the win-chance table covers up to this many rounds left and this big a best; a guess counts as this many games where data is thin
       prepSims: 60, screenSims: 16, finalists: 3, kitMargin: 0.003, prepSeed: 31337,   // Prep: Digs played to judge a deck; to screen a set of kept cards; how many sets get the full look; a Kit place is only filled by a card that adds at least this much (else it is a gem)
@@ -2144,8 +2144,14 @@ const AI = (() => {
         const options = [], seen = new Set();
         if (c.reroll) options.push({ kind: 'reroll' });
         for (const plan of plans(st)) { const t = sample(st, 5); applyPlan(t, plan); const s = sig(t); if (seen.has(s)) continue; seen.add(s); options.push({ kind: 'plan', plan }); }
-        const T = ctx.final ? 99 : P.fightBankAt;
-        const pick = options.length === 1 ? options[0] : argmax(options, o => evaluate(st, ctx, k => (o.kind === 'reroll' ? Dig.reroll(k) : applyPlan(k, o.plan)), rolls, T));
+        const T = ctx.final ? 99 : P.fightBankAt, all = Dig.eligible(st).map(e => st.line.indexOf(e));
+        // the usual thing is to trigger everything, highest first; anything else has to be clearly better (a few playouts cannot tell a small gain from luck)
+        const usual = options.find(o => o.kind === 'plan' && o.plan.length === all.length && o.plan.every((x, i) => x === all[i])) || options.find(o => o.kind === 'plan' && !o.plan.length) || options[0];
+        let pick = usual;
+        if (options.length > 1) {
+          const val = o => evaluate(st, ctx, k => (o.kind === 'reroll' ? Dig.reroll(k) : applyPlan(k, o.plan)), rolls, T), base = val(usual);
+          let bv = base + P.fightMargin; for (const o of options) { if (o === usual) continue; const v = val(o); if (v > bv) { bv = v; pick = o; } }
+        }
         if (pick.kind === 'reroll') Dig.reroll(st); else applyPlan(st, pick.plan);
         return true;
       }
