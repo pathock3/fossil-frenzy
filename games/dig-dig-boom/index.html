@@ -2270,9 +2270,11 @@ const Run = (() => {
     const pr = run.prep; if (!pr || pr.step !== 'keep' || pr.picked.length !== keepCount(run)) return false;
     const kept = pr.offer.filter(c => pr.picked.includes(c.uid)), rest = pr.offer.filter(c => !pr.picked.includes(c.uid));
     run.trash.push(...rest); run.owned.push(...kept);
-    for (const c of kept) for (const e of Dig.compile(c).effects) if (e.op === 'whenKept' && (e.kept === 'alsoKeepTop' || e.kept === 'alsoKeepImmediate')) {
+    const queue = kept.slice();          // a Mystery Box that comes as another one's extra card keeps one more, in its turn (the cards of the deck run out long before this goes on for ever)
+    for (let q = 0; q < queue.length; q++) for (const e of Dig.compile(queue[q]).effects) if (e.op === 'whenKept' && (e.kept === 'alsoKeepTop' || e.kept === 'alsoKeepImmediate')) {
+      const c = queue[q];
       const i = e.kept === 'alsoKeepTop' ? 0 : run.deck.findIndex(x => x.type === 'Immediate'), top = i >= 0 ? run.deck.splice(i, 1)[0] : null;          // the top card, or the next Immediate card down the deck (the cards above it stay where they are)
-      if (top) { run.owned.push(top); pr.extra.push(top); log(run, `${c.name}: also keep the ${e.kept === 'alsoKeepTop' ? 'top card' : 'next Immediate card'} of the Booster Deck — ${top.name}.`); }
+      if (top) { run.owned.push(top); pr.extra.push(top); queue.push(top); log(run, `${c.name}: also keep the ${e.kept === 'alsoKeepTop' ? 'top card' : 'next Immediate card'} of the Booster Deck — ${top.name}.`); }
     }
     log(run, `Kept: ${kept.map(c => c.name).join(', ')}.`);
     pr.gained = [...kept, ...pr.extra].map(c => c.uid);
@@ -3220,7 +3222,7 @@ const AI = (() => {
     // one circle per round: filled for the rounds you have finished, ringed for the one you are in
     const pips = run ? `<span class="pips" role="img" aria-label="Round ${Math.min(run.round, run.rounds)} of ${run.rounds}">${Array.from({ length: run.rounds }, (_, i) => `<i class="${i < run.round - 1 ? 'on' : i === run.round - 1 ? 'now' : ''}"></i>`).join('')}</span>` : '';
     const libLink = /^https?:$/.test(location.protocol) ? `<a class="libback" href="${A.esc(D.library.href)}"><span>‹</span> ${A.esc(D.library.name)}</a>` : '';
-    const newRun = `<button class="mode ${inProgress ? '' : 'primary'} ${S.confirmNew === 'startrun' ? 'confirm' : ''} ${ready ? '' : 'waiting'}" data-p="startrun" ${ready ? '' : 'disabled'}><b>${S.confirmNew === 'startrun' ? 'Tap again to replace your game' : inProgress ? 'New run' : 'Play'}</b></button>`;
+    const newRun = `<button class="mode ${inProgress ? '' : 'primary'} ${S.confirmNew === 'startrun' ? 'confirm' : ''} ${ready ? '' : 'waiting'}" data-p="startrun" ${ready ? '' : 'disabled'}><b>${S.confirmNew === 'startrun' ? 'Tap again to replace your game' : inProgress ? 'New game' : 'Play'}</b></button>`;
     const note = !ready ? (st.status === 'loading' ? '' : 'No cards yet.')
       : offline ? 'Your sheet could not be reached, so only the design sample is here. Reload when you are online.'
       : st.source === 'cache' && st.status === 'offline' ? 'Offline: using the copy of your sheet this browser saved last time.' : '';
@@ -3229,7 +3231,7 @@ const AI = (() => {
     return `<div class="home">${libLink}<div class="homegrid">${heroHTML()}
       <div class="homemenu">
         <h1 class="logo" style="${logoStyle}"><span class="l1">Dig Dig</span><span class="l2">BOOM!<i>✦</i></span></h1>
-        <p class="tagline">Dig deep. Push your luck. Don't go BOOM.</p>
+        <p class="tagline">Strap into a drill and launch yourself toward the center of the earth!</p>
         ${inProgress ? `<button class="mode primary row" data-p="resume"><b>Continue</b>${run ? pips : ''}</button>` : ''}
         ${newRun}
         <div class="ghostrow"><button class="ghost" data-p="help">How to play</button><button class="ghost" data-p="more">Settings</button></div>
@@ -3359,7 +3361,7 @@ const AI = (() => {
     const you = e.id === run.me, nm = you ? 'You' : run.board.players.find(p => p.id === e.id).name;
     if (e.k === 'move') return `${nm} ${you ? 'reach' : 'reaches'} ${e.n}.`;
     if (e.k === 'boom') return `${nm} went BOOM${e.n ? ` at ${e.n}` : ''}.`;
-    if (e.final) return `${nm} ${you ? 'finish' : 'finishes'} in the lead at ${e.n}.`;
+    if (e.final) return `${nm} ${you ? 'win' : 'wins'}.`;
     const g = e.gems || 0; let t = `${nm} banked at ${e.n} with ${g} gem${g === 1 ? '' : 's'}`;
     if (e.crown) t += ' and took the Crown';
     return t + (you && e.newBest ? '. New Best!' : '.');
@@ -3396,7 +3398,9 @@ const AI = (() => {
   function boardPlay(first, linger) {
     const an = S.boardAnim; if (!an || an.timer || an.k >= an.events.length) return;
     const ms = REPLAY_MS(an) * (an.fast ? 1 : first ? 2 : linger ? 2.6 : 1);
-    an.timer = setTimeout(() => { an.timer = null; if (S.boardAnim === an && (S.panel === 'board' || S.panel === 'done')) boardNext(); }, ms);
+    const go = () => { an.timer = null; if (S.boardAnim !== an) return; if (S.gmenu || S.help) { an.timer = setTimeout(go, 250); return; }          // the menu or How to play is open: the replay waits for you
+      if (S.panel === 'board' || S.panel === 'done') boardNext(); };
+    an.timer = setTimeout(go, ms);
   }
   const boardScale = () => Math.max(.5, Math.min(1, (VH() - 24) / 860)).toFixed(3);
   // The full-size Leaderboard, opened by tapping the little one while you dig (the opponents keep going behind it).
@@ -3523,9 +3527,9 @@ const AI = (() => {
   // The end of a run: the Leaderboard is the result. A big line says who won; the tabs at the top left look back at any round (its Leaderboard as it ended, and a button to watch it again); buttons look at the cards you built, and start a new run.
   function doneHTML() {
     const run = S.run, r = run.result, m = S.match, mr = m && m.result;
-    const won = m ? mr.winner === 'me' : r.crown, tab = S.doneTab && S.doneTab <= run.rounds ? S.doneTab : null;
+    const won = m ? mr.winner === 'me' : r.crown, sel = S.doneTab && S.doneTab <= run.rounds ? S.doneTab : run.rounds, tab = sel === run.rounds ? null : sel;          // one tab for each round, the last one (the end of the game) lit to begin with
     const title = tab ? `Round ${tab}` : m ? (mr.winner === 'me' ? 'You win!' : mr.winner ? `${(run.board.players.find(p => p.id === mr.winner) || { name: 'The AI' }).name} wins` : 'Nobody took the Crown') : (r.crown ? 'You hold the Crown!' : 'The Crown stays on the table');
-    const tabs = `<div class="dtabs" role="tablist"><button class="dtab ${tab ? '' : 'on'}" data-p="donetab" data-k="final" role="tab">Final</button>${Array.from({ length: run.rounds }, (_, i) => `<button class="dtab ${tab === i + 1 ? 'on' : ''}" data-p="donetab" data-k="${i + 1}" role="tab" aria-label="Round ${i + 1}">${i + 1}</button>`).join('')}</div>`;
+    const tabs = `<div class="dtabs" role="tablist">${Array.from({ length: run.rounds }, (_, i) => `<button class="dtab ${sel === i + 1 ? 'on' : ''}" data-p="donetab" data-k="${i + 1}" role="tab" aria-label="${i + 1 === run.rounds ? 'Round ' + (i + 1) + ', the end of the game' : 'Round ' + (i + 1)}">${i + 1}</button>`).join('')}</div>`;
     const an = tab ? (S.boardAnim && S.boardAnim.round === tab ? S.boardAnim : histAnim(run, tab)) : null, playing = !!an && an.k < an.events.length;
     const cap = tab && an && an.k > 0 ? `<p class="bcap" role="status">${A.esc(boardText(run, an.events[an.k - 1], an.from))}</p>` : '';
     return `<div class="panel setup bigboard enddone" style="--bv:${boardScale()}">${tabs}<div class="scroll"><h2 class="endtitle ${won && !tab ? 'won' : ''}">${A.esc(title)}</h2>${boardGrid(run, an)}${cap}</div><div class="foot"><span class="endbtns">${tab ? (playing ? (an.fast ? '' : '<button class="btn alt" data-p="boardfast">Fast forward ⏩</button>') : '<button class="btn alt" data-p="donereplay">Watch again</button>') : ''}${run.owned.length ? `<button class="btn alt" data-p="owned">Your cards (${run.owned.length})</button>` : ''}</span><button class="btn" data-p="startrun">New run</button></div></div>`;
@@ -3717,6 +3721,7 @@ const AI = (() => {
     if (!danger || (S.danger && S.danger.st === st)) return;          // once in the whole Dig: healing back up and being in danger again does not bring it back
     S.danger = { st }; S.dangerNote = true;
   }
+  const ffNoteHTML = () => S.ffNote && S.panel === 'dig' ? `<div class="mnote-back"><div class="mnote" role="alertdialog" aria-label="Fast-forward stopped"><h3>${S.ffNote.name} took the lead!</h3><p>Fast-forward has stopped. ${S.ffNote.name} ${S.ffNote.name === 'You' ? 'are' : 'is'} in the lead with <b>${S.ffNote.n}</b>. Keep digging to beat that.</p><button class="btn bigok" data-p="ffok">Got it</button></div></div>` : '';
   const dangerHTML = () => { const st = S.st; if (!S.dangerNote || S.panel !== 'dig' || !st) return ''; return `<div class="mnote-back"><div class="mnote" role="alertdialog" aria-label="Careful"><h3>Careful!</h3><p>The next Monster could make you go <b>BOOM!</b></p><button class="btn bigok" data-p="dangerok">Got it</button></div></div>`; };
   function render() {
     if (document.body.dataset.mode !== 'play') return;
@@ -3749,7 +3754,7 @@ const AI = (() => {
       const list = S.run.owned, sc = Math.min(.55, fitCards(list.length, .55, Math.min(VW(), 1180) - 80, VH() - 190, 12)), inKit = new Set((S.run.kit || []).map(c => c.uid));
       ownedP = `<div class="ownedback" data-p="ownedclose"><div class="ownedpanel" role="dialog" aria-label="Your cards"><h3>Your cards</h3><div class="cards">${list.map(c => `<span class="ocard" data-p="zoom" data-uid="${c.uid}" style="width:${250 * sc}px;height:${350 * sc}px">${A.playCard(c, sc)}${inKit.has(c.uid) ? '<span class="ctag last">In your kit</span>' : ''}</span>`).join('') || '<span class="note">You do not own any cards yet.</span>'}</div></div></div>`;
     }
-    $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z + note + fin + dangerHTML() + lbFullHTML() + ownedP;
+    $.innerHTML = (S.panel === 'menu' || S.panel === 'more' || (S.panel === 'setup' && !S.run) ? '' : bar) + body + (S.gmenu ? gmenuHTML() : '') + (S.help ? helpHTML() : '') + z + note + fin + dangerHTML() + ffNoteHTML() + lbFullHTML() + ownedP;
     const sc = $.querySelector('#setupScroll'); if (sc) sc.scrollTop = ks;
     fitHero(); heroPlay(); fitTable(); playDice(); boardAnimate();
     if (S.packFrom) { const fp = $.querySelector('.flypack'); if (fp) { const r = rr(fp); fp.style.setProperty('--fx', Math.round(S.packFrom.x - (r.left + r.width / 2)) + 'px'); fp.style.setProperty('--fy', Math.round(S.packFrom.y - (r.top + r.height / 2)) + 'px'); } S.packFrom = null; }
@@ -3786,23 +3791,27 @@ const AI = (() => {
   };
   const startDelays = () => { S.aiDelay = S.match ? Object.fromEntries(Match.botIds(S.match).map(id => [id, Math.round(D.ai.pace.startMs * speedOf(id))])) : {}; };
   const pace = id => S.ff ? D.ai.fastMs : (window.DDB_AI_PACE || (S.aiDelay && S.aiDelay[id]) || Math.round(D.ai.pace.cardMs * speedOf(id)));
+  // The game stands still while you are away from the table: the in-game menu, How to play, the main menu, and a note that waits for you (the opponents' clocks stop; they start again from the table).
+  const paused = () => !!(S.gmenu || S.help || S.ffNote || S.panel === 'menu' || S.panel === 'more');
   const stopClocks = () => { for (const k of Object.keys(aiTimers)) { clearTimeout(aiTimers[k]); delete aiTimers[k]; } };
   function scheduleAI() {
     const ids = botsDigging(); if (!ids.length) { S.ff = false; return; }
-    if (finalPending()) return;
+    if (finalPending() || paused()) return;
     for (const id of ids) if (!aiTimers[id]) aiTimers[id] = setTimeout(() => aiTick(id), pace(id));
   }
   // One opponent moves (or, with no id, every opponent still digging moves once: the tests' tick).
   function aiTick(id) {
+    if (paused()) { stopClocks(); return; }
     for (const k of id === undefined ? botsDigging() : [id]) {
       clearTimeout(aiTimers[k]); delete aiTimers[k];
       if (!botsDigging().includes(k)) continue;
       Match.aiStep(S.match, k); (S.aiDelay || (S.aiDelay = {}))[k] = humanWait(S.match.last[k], k);
     }
     if (S.run.dig && !S.run.dig.over) Run.refresh(S.run); persist();
-    if (S.ff && S.run.round === S.run.rounds && S.run.dig && !S.run.dig.over && S.run.dig.board && !S.run.dig.board.lead) S.ff = false;          // an opponent has caught up with you: slow down, you dig again
+    let ffStopped = false;
+    if (S.ff && S.run.round === S.run.rounds && S.run.dig && !S.run.dig.over && S.run.dig.board && !S.run.dig.board.lead) { S.ff = false; ffStopped = true; const ll = leaderLine(); if (ll) S.ffNote = { name: ll.name, n: ll.n }; }          // an opponent has taken the lead from you: the fast-forward stops, and a note says who and how far
     const lb = $.querySelector('section.lb');
-    if (S.lbFull) render();
+    if (S.lbFull || ffStopped) render();
     else if (S.panel === 'dig' && !S.help && !S.zoom && lb && aiDigging()) { lb.outerHTML = lbHTML(S.run, S.st); scheduleAI(); }
     else if (S.panel === 'dig' && !S.help && !S.zoom) render();
     else scheduleAI();
@@ -3827,6 +3836,7 @@ const AI = (() => {
       case 'gmenu': S.gmenu = true; break;
       case 'gmenuclose': S.gmenu = false; break;
       case 'dangerok': S.dangerNote = false; break;
+      case 'ffok': S.ffNote = null; break;
       case 'mainmenu': if (S.panel !== 'menu' && S.panel !== 'more') S.back = S.panel; S.panel = 'menu'; S.gmenu = false; S.help = false; break;
       case 'resume': S.panel = S.back || 'menu'; break;
       case 'practice': if (resumable() && S.confirmNew !== 'practice') { S.confirmNew = 'practice'; break; } S.confirmNew = null; S.run = null; S.match = null; S.st = null; S.panel = 'setup'; S.back = null; break;
@@ -3881,7 +3891,7 @@ const AI = (() => {
       case 'emptyok': S.emptySeen = S.st; break;
       case 'owned': S.showOwned = true; break;
       case 'boardfast': { const an = S.boardAnim; if (an) { an.fast = true; an.stop = false; clearTimeout(an.timer); an.timer = null; boardPlay(); } break; }
-      case 'donetab': { const an = S.boardAnim; if (an) { clearTimeout(an.timer); } S.boardAnim = null; S.doneTab = ds.k === 'final' ? null : Number(ds.k); break; }
+      case 'donetab': { const an = S.boardAnim; if (an) { clearTimeout(an.timer); } S.boardAnim = null; S.doneTab = Number(ds.k); break; }
       case 'donereplay': { if (S.boardAnim) clearTimeout(S.boardAnim.timer); const an = S.boardAnim = { ...histAnim(S.run, S.doneTab, 0), round: S.doneTab }; boardPlay(true); break; }
       case 'ownedclose': S.showOwned = false; break;
       case 'finalok': S.finalSeen = S.st; S.finalHow = false; startDelays(); break;

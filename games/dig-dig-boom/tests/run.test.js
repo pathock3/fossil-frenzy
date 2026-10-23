@@ -338,3 +338,12 @@ test('the Dig\'s copy of the Leaderboard is refreshed from the live Board before
   Run.refresh(run); assert.ok(!Board.wouldLead(run.board, 'me', st.survived), '7 only ties the AI, and the AI has the better spot: banking now would not take the lead');
   Dig.dig(st); Dig.roll(st); Dig.autoFace(st); Run.refresh(run); assert.ok(Board.wouldLead(run.board, 'me', st.survived), '8 leads');
 });
+
+test('Mystery Boxes chain: a Mystery Box that arrives as another one\'s extra card keeps one more card of the Booster Deck in its turn', () => {
+  const run = Run.start(cards, { seed: 3 }); Run.openPack(run);
+  const box = id => ({ ...cards.find(c => c.id === id), uid: 98000 + Number(id.slice(3)) });
+  const a = box('IM-14'), c = box('IM-16'); run.prep.offer[0] = a; run.deck.unshift(c);          // the top card of the Booster Deck is Mystery Box C
+  const after = run.deck[1]; Run.toggleKeep(run, a.uid); assert.ok(Run.confirmKeep(run));
+  assert.deepEqual(run.prep.extra.map(x => x.id), ['IM-16', after.id], 'A brings C, and C brings the card under it');
+  assert.ok(run.owned.some(x => x.id === 'IM-16') && run.owned.some(x => x.id === after.id));
+});

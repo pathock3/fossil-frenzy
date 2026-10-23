@@ -272,11 +272,11 @@ test('table: a Power or Ongoing card is dug into the flip spot, face up, and mov
 test('table: a card whose requirements are not met is not highlighted, but it is still there', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
-    await begin(page, { mine: ['MO-01'], dice: [8], line: ['PW-07', 'PW-02'], start: { heart: 7 } });             // Nervous Mouse wants 4 Health or less
+    await begin(page, { mine: ['MO-01'], dice: [8], line: ['PW-07', 'PW-02'], start: { heart: 7 } });             // Nervous Mouse wants 5 Health or less
     await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]');
     assert.equal(await page.locator('#play .tcard.elig').count(), 1, 'only Nurse Newt');
     assert.equal(await page.locator('#play .tcard[aria-label^="Nervous Mouse"]').count(), 1, 'Nervous Mouse is still on the table');
-    assert.match(await page.locator('#play .tcard[aria-label^="Nervous Mouse"] .tg').innerText(), /4/, 'and says what it wants');
+    assert.match(await page.locator('#play .tcard[aria-label^="Nervous Mouse"] .tg').innerText(), /5/, 'and says what it wants');
     assert.ok(Number(await page.locator('#play .tcard[aria-label^="Nervous Mouse"]').evaluate(e => getComputedStyle(e).opacity)) >= 0.8, 'dimmed, not faded out');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -597,10 +597,10 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     await page.click('#play [data-p=prep]');                                             // the last round: straight to the end, which is the Leaderboard
     assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown!/);
     assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'the result is shown on the Leaderboard'); assert.equal(await page.locator('#play .bpl.me .cjewel').count(), 1, 'the Crown is on your name, at the bottom'); assert.equal(await page.locator('#play .bcrown').count(), 0, 'and no longer on the board');
-    assert.equal(await page.locator('#play .dtab').count(), 3, 'tabs at the top left: Final and one for each of the 2 rounds');
+    assert.equal(await page.locator('#play .dtab').count(), 2, 'tabs at the top left: one for each of the 2 rounds, no "Final"'); assert.equal(await page.locator('#play .dtab.on').innerText(), '2', 'the last round is lit to begin with');
     await page.click('#play [data-p=donetab][data-k="1"]'); assert.match(await page.locator('#play .endtitle').innerText(), /Round 1/); assert.ok(await page.locator('#play .bigboard .bgrid .bcol').count() >= 9, 'that round\'s Leaderboard as it ended');
     assert.equal(await page.locator('#play [data-p=roundlog]').count(), 0, 'no separate Round by round button');
-    await page.click('#play [data-p=donetab][data-k=final]'); assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown!/, 'and back to the final board');
+    await page.click('#play [data-p=donetab][data-k="2"]'); assert.match(await page.locator('#play .panel').innerText(), /You hold the Crown!/, 'and back to the final board');
     await page.click('#play [data-p=owned]'); assert.ok(await page.locator('#play .ownedpanel .ocard').count() >= 1, 'the cards you built');
     await page.click('#play .ownedpanel .ocard >> nth=0'); assert.equal(await page.locator('#play .zoom .card').count(), 1, 'tapping a card makes it a full-screen card'); await page.click('#play .zoom'); assert.equal(await page.locator('#play .zoom').count(), 0, 'tap it to put it back'); assert.equal(await page.locator('#play .ownedpanel').count(), 1, 'the list is still there');
     await page.click('#play [data-p=ownedclose]', { position: { x: 5, y: 5 } }); assert.equal(await page.locator('#play .ownedpanel').count(), 0, 'tapping anywhere else closes it');
@@ -689,7 +689,7 @@ test('run: the main menu, Prep and the Leaderboard fit the screen on an iPad (la
   }
 });
 
-test('menu: in a game there is no link out to the library — a Menu with a way back to the main menu; your game is saved, Continue picks it up, New run replaces it only after a second tap', SKIP, async () => {
+test('menu: in a game there is no link out to the library — a Menu with a way back to the main menu; your game is saved, Continue picks it up, New game replaces it only after a second tap', SKIP, async () => {
   const { browser, page, errors } = await open({ menu: true });
   try {
     await startRun(page);
@@ -701,8 +701,8 @@ test('menu: in a game there is no link out to the library — a Menu with a way 
     assert.match(await page.locator('#play .gmenu').innerText(), /Back to the game[\s\S]*How to play[\s\S]*Main menu/);
     await page.click('#play [data-p=gmenuclose]'); assert.equal(await page.locator('#play .gmenu').count(), 0);
     await page.click('#play .pbar [data-p=gmenu]'); await page.click('#play [data-p=mainmenu]');
-    assert.match(await page.locator('#play .homemenu').innerText(), /Continue[\s\S]*New run/);
-    assert.equal(await page.locator('#play [data-p=resume] .pips i').count(), 4, 'one circle per round on Continue'); assert.equal(await page.locator('#play [data-p=resume] .pips i.now').count(), 1, 'the current round is ringed'); assert.doesNotMatch(await page.locator('#play [data-p=resume]').innerText(), /Round|Dig|Prep/, 'circles, no words');
+    assert.match(await page.locator('#play .homemenu').innerText(), /Continue[\s\S]*New game/);
+    assert.equal(await page.locator('#play [data-p=resume] .pips i').count(), 5, 'one circle per round on Continue'); assert.equal(await page.locator('#play [data-p=resume] .pips i.now').count(), 1, 'the current round is ringed'); assert.doesNotMatch(await page.locator('#play [data-p=resume]').innerText(), /Round|Dig|Prep/, 'circles, no words');
     await page.click('#play [data-p=startrun]');                                       // the first tap only asks
     assert.match(await page.locator('#play .homemenu').innerText(), /Tap again to replace your game/); assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.digs), 1, 'nothing was replaced yet');
     await page.click('#play [data-p=resume]'); await page.waitForSelector('#play .ptable');
@@ -980,6 +980,26 @@ test('the last round: when you are in the lead you can fast-forward the opponent
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.ff), true); assert.match(await page.locator('#play .ffbtn').innerText(), /Fast-forwarding/);
     await page.evaluate(() => { const P = window.DigDigBoomPlay, m = P.S.match; Board.track(m.board, 'easy', 7); P.tick(); });
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.ff), false, 'the opponent passed you: back to its own pace');
+    assert.match(await page.locator('#play [role=alertdialog]').innerText(), /took the lead[\s\S]*Fast-forward has stopped[\s\S]*7/i, 'and a note says who took the lead, and with what');
+    assert.equal(await page.locator('#play .ffbtn:has-text("Fast-forwarding")').count(), 0, 'the button no longer says it is fast-forwarding');
+    const digs = () => stOf(page, () => Object.values(window.DigDigBoomPlay.S.match.runs).reduce((a, r) => a + (r.dig ? r.dig.digs : 0), 0)), d0 = await digs();
+    await page.evaluate(() => window.DigDigBoomPlay.tick()); assert.equal(await digs(), d0, 'while the note waits for you, the opponents wait too');
+    await page.click('#play [data-p=ffok]'); assert.equal(await page.locator('#play [role=alertdialog]').count(), 0);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('the in-game menu (and How to play) pause the game: the opponents do not move until you are back at the table', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await startRun(page, { opp: true });
+    await script(page, { mine: ['MO-01', 'MO-02', 'MO-01', 'MO-02'], dice: Array(30).fill(10) });
+    const aiDigs = () => stOf(page, () => window.DigDigBoomPlay.S.match.runs.easy.dig.digs);
+    await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await faceIt(page);
+    const before = await aiDigs();
+    await page.click('#play [data-p=gmenu]'); await page.evaluate(() => window.DigDigBoomPlay.tick()); assert.equal(await aiDigs(), before, 'the menu is open: its clock does nothing');
+    await page.click('#play [data-p=gmenuclose]'); await page.evaluate(() => window.DigDigBoomPlay.tick()); assert.equal(await aiDigs(), before + 1, 'back at the table: it moves again');
+    await page.click('#play [data-p=gmenu]'); await page.click('#play [data-p=help]'); await page.evaluate(() => window.DigDigBoomPlay.tick()); assert.equal(await aiDigs(), before + 1, 'How to play pauses it too');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -1095,10 +1115,10 @@ test('leaderboard: nothing scrolls at any iPad size (the whole screen is drawn s
 test('tapping a card whose power depends on the game says what it is worth right now', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
-    await begin(page, { mine: ['IM-05', 'TR-01'], ongoing: ['ON-33'], start: { heart: 4 } });                  // Duct Tape: +1 Health for each Ongoing card you have
+    await begin(page, { mine: ['IM-05', 'TR-01'], ongoing: ['ON-33'], start: { heart: 4 } });                  // Duct Tape: +2 Health for each Ongoing card you have
     await page.click('#play [data-p=dig]'); await page.waitForTimeout(600);
     await page.click('#play .slot [data-p=zoom]');
-    assert.match(await page.locator('#play .zoom .zdyn').innerText(), /Right now:\s*\+1/, 'Tune-Up is the one Ongoing card in play: +1');
+    assert.match(await page.locator('#play .zoom .zdyn').innerText(), /Right now:\s*\+2/, 'Tune-Up is the one Ongoing card in play: +2 Health (Duct Tape gives 2 for each)');
     assert.doesNotMatch(await page.locator('#play .zoom').innerText(), /tap anywhere/i);
     await page.click('#play .zoom');
     assert.deepEqual(errors, []);

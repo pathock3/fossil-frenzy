@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — a batch from your notes:**
+  - **The menu pauses the game:** with the in-game menu or How to play open (or on the main menu) the opponents' clocks and the Leaderboard replay stand still; they carry on when you are back at the table.
+  - **Fast-forward in the final round:** when an opponent takes the lead from you it stops, the screen is redrawn (it kept saying "Fast-forwarding…"), and a note says who took the lead and with how many ("Hard AI took the lead!"). The opponents wait while the note is up.
+  - **The final Leaderboard replay** ends with "Hard AI wins." (or "You win.") instead of "finishes in the lead at N".
+  - **The end-of-game tabs** are one per round (no "Final" tab); the last round's tab is lit to begin with.
+  - **Mystery Boxes chain:** a Mystery Box that arrives as another one's extra card now also keeps one more card (it used to give nothing, which looked like Mystery Box C not working).
+  - **"New run" is "New game"** (the menu button). The game's tagline is "Strap into a drill and launch yourself toward the center of the earth!" (menu and library entry).
+
 - **Dig Dig BOOM! — the little Leaderboard in the final round** no longer says "keep digging till you reach N" (the prompt on the table and the final-round note still say what to beat).
 
 - **Dig Dig BOOM! — 5 rounds, and the Starter Kit is 1, 2, 2, 3, 3 cards** (round by round). A game saved under another run length is not continued.
