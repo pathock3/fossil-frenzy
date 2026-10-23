@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — Booster Packs open on the first tap, every kind** (Bronze, Silver, Gold, the one after BOOM): the pack now opens the moment a finger lands on it (not when it lifts), the click that follows is ignored, and the pack's glow and sheen no longer use animated filters/blend modes (they only fade, like the other glows), which kept the iPad repainting the pack and could lose taps.
+
 - **Dig Dig BOOM! — 5 rounds, a Starter Kit of at most 3, and Cowcatcher:** a run is now 5 rounds (the menu's round dots, the Leaderboard header and the tabs all follow the rules, and a game saved under the old 4-round length is no longer continued, so the old number cannot come back). The Starter Kit is 1, 2, 3, 3, 3 cards. Cowcatcher now reads "Your next Monster deals no damage": in play from the start it covers the first Monster; dug later, the next Monster after it (a Monster dug before it does not count), then it is used up (face down). Sheet updated.
 
 - **Tabletop Library — the header is now "Patrick's Tabletop Library"** (also the page title and the home-screen name), and the box art is richer: a printed lid edge, rim shadow and a soft gloss sheen on every box, a wood-grain table behind the shelf, and fuller cover scenes (sparkles and a burst behind BOOM!, an ammonite and a bigger board for Fossil Frenzy, big faint numerals for Advanced Counting, cave stalactites and light rays for One More…). Still art only: no text on the boxes.

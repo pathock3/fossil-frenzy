@@ -243,7 +243,8 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .eq .t.sum { background: linear-gradient(180deg, #2f86c0, #1c5a86); border-color: #7cc4f0; font-size: 34px; }
 #play .eq .op { font-size: 26px; font-weight: 900; color: var(--dim); }
 /* ---------- the Booster Pack: a foil wrapper with crimped ends, a gem medallion and a gloss that sweeps across ---------- */
-#play .pack { position: relative; display: block; width: 190px; height: 260px; padding: 0; border: 0; background: none; color: #2b1b10; filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)); animation: packglow 1.8s ease-in-out infinite; }
+#play .pack { position: relative; display: block; width: 190px; height: 260px; padding: 0; border: 0; background: none; color: #2b1b10; filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)); touch-action: manipulation; }
+#play .pack::before { content: ""; position: absolute; inset: -6px; border-radius: 20px; box-shadow: 0 0 26px 8px rgba(255,214,110,.85); opacity: 0; pointer-events: none; animation: ringpulse 1.8s ease-in-out infinite; }          /* (the glow breathes by its opacity only: an animated filter keeps repainting the pack, and on the iPad taps on it got lost) */
 #play .pkart { position: absolute; left: 0; top: 0; width: 190px; height: 260px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; overflow: hidden; border-radius: 14px; border: 3px solid rgba(255,255,255,.7); color: #2b1b10;
   background: radial-gradient(ellipse 70% 38% at 50% 44%, color-mix(in srgb, var(--pc) 35%, #fff) 0, rgba(255,255,255,0) 100%), linear-gradient(165deg, color-mix(in srgb, var(--pc) 42%, #fff) 0%, var(--pc) 40%, color-mix(in srgb, var(--pc) 72%, #000) 100%);
   clip-path: polygon(0 3%, 6% 0, 12% 3%, 18% 0, 24% 3%, 30% 0, 36% 3%, 42% 0, 48% 3%, 54% 0, 60% 3%, 66% 0, 72% 3%, 78% 0, 84% 3%, 90% 0, 96% 3%, 100% 0, 100% 97%, 94% 100%, 88% 97%, 82% 100%, 76% 97%, 70% 100%, 64% 97%, 58% 100%, 52% 97%, 46% 100%, 40% 97%, 34% 100%, 28% 97%, 22% 100%, 16% 97%, 10% 100%, 4% 97%, 0 100%); }
@@ -256,12 +257,11 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .pkart b { font-size: 30px; font-weight: 900; letter-spacing: .02em; text-shadow: 0 2px 0 rgba(255,255,255,.55); margin-top: 2px; }
 #play .pkart b.plus { font-size: 23px; white-space: nowrap; }
 #play .pkinfo { font-size: 15px; font-weight: 800; padding: 3px 12px; border-radius: 99px; background: rgba(35,18,6,.72); color: #fff3d6; margin-bottom: 18px; }
-#play .pksheen { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, rgba(255,255,255,0) 40%, rgba(255,255,255,.55) 50%, rgba(255,255,255,0) 60%); background-size: 260% 100%; background-position: 160% 0; animation: pksheen 2.8s ease-in-out infinite; mix-blend-mode: soft-light; }
-@keyframes pksheen { 0%, 20% { background-position: 160% 0; } 70%, 100% { background-position: -60% 0; } }
-@keyframes packglow { 50% { filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)) drop-shadow(0 0 14px rgba(255,214,110,.75)); } }
+#play .pksheen { position: absolute; top: 0; bottom: 0; left: -100%; width: 300%; pointer-events: none; background: linear-gradient(115deg, rgba(255,255,255,0) 42%, rgba(255,255,255,.4) 50%, rgba(255,255,255,0) 58%); animation: pksheen 2.8s ease-in-out infinite; }
+@keyframes pksheen { 0%, 20% { transform: translateX(-20%); } 70%, 100% { transform: translateX(20%); } }
 #play .pool .pack, #play .pool .tear .tpack { zoom: var(--pks, 1); }          /* on a short screen the pack is drawn smaller, to fit the place the cards will be dealt in */
-#play .pack:active { transform: scale(.97); animation: none; }
-#play .pack.pressed { transform: scale(1.1); animation: none; filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)) drop-shadow(0 0 22px rgba(255,226,140,.95)); transition: transform .12s ease-out, filter .12s; }
+#play .pack:active { transform: scale(.97); }
+#play .pack.pressed { transform: scale(1.1); filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)) drop-shadow(0 0 22px rgba(255,226,140,.95)); transition: transform .12s ease-out, filter .12s; }
 /* the tear: the pack shakes harder and harder, the top strip rips off, foil bits and a column of light burst out, the cards come after */
 #play .tpack { position: relative; width: 190px; height: 260px; filter: drop-shadow(0 12px 14px rgba(0,0,0,.5)); animation: tpack 1.5s ease-in both; }
 #play .tpack .pk { position: absolute; left: 0; width: 190px; overflow: hidden; }
@@ -3895,6 +3895,8 @@ const AI = (() => {
   }
   // Dragging in the Starter Kit: pick a card up and drop it on a place to put it there, swap with the card in it, or reorder.
   let drag = null;
+  // A pack opens the instant a finger lands on it (not when it lifts): a tap that the iPad turns into a long press or a slide, or that a redraw interrupts, never gets lost. The click that follows is swallowed.
+  $.addEventListener('pointerdown', e => { const pk = e.target.closest('[data-p=openpack]'); if (pk && !pk.disabled && !(e.pointerType === 'mouse' && e.button > 0)) { S.noClickUntil = performance.now() + 700; act('openpack', pk); } });
   $.addEventListener('pointerdown', e => { const el = e.target.closest('.pcard[data-p=kitpick], .pcard[data-p=pick]'); if (!el || (e.pointerType === 'mouse' && e.button > 0)) return; drag = { el, uid: Number(el.dataset.uid), x0: e.clientX, y0: e.clientY, moved: false, ghost: null }; });
   window.addEventListener('pointermove', e => {
     if (!drag) return;
@@ -3923,7 +3925,7 @@ const AI = (() => {
     render();
   };
   window.addEventListener('pointerup', e => endDrag(e, true)); window.addEventListener('pointercancel', e => endDrag(e, false));
-  $.addEventListener('click', e => { if (S.noClick) { e.preventDefault(); return; } const el = e.target.closest('[data-p]'); if (!el || el.disabled) return; e.preventDefault(); act(el.dataset.p, el); });
+  $.addEventListener('click', e => { if (S.noClickUntil) { const swallow = performance.now() < S.noClickUntil; S.noClickUntil = 0; if (swallow) { e.preventDefault(); return; } } if (S.noClick) { e.preventDefault(); return; } const el = e.target.closest('[data-p]'); if (!el || el.disabled) return; e.preventDefault(); act(el.dataset.p, el); });
   document.addEventListener('ddb-cards', () => { restore(); render(); }); document.addEventListener('ddb-mode', render);
   let sized = innerWidth + 'x' + innerHeight, sizeTimer = null;
   window.addEventListener('resize', () => {
