@@ -3273,7 +3273,7 @@ const AI = (() => {
       const dots = marks.filter(x => x.m.n === n).map(x => `<i class="mk ${x.k}" style="--pc:${x.p.color}" title="${A.esc(x.p.name)}: ${x.k === 'best' ? 'best Dig' : 'this Dig'}">${x.m.rank > 1 ? x.m.rank : ''}</i>`).join('');
       cells += `<div class="lbc ${n === here ? 'here' : ''} ${n <= tr ? 'free' : ''}"><span class="ln">${n}</span><span class="lm">${!holder && n === crownCol ? '<b class="crownmk">♛</b>' : ''}${dots}</span></div>`;
     }
-    const finalNote = run.round >= run.rounds && st && !st.over && st.board ? (st.board.lead ? ' · <b style="color:var(--accent)">you are in the lead</b>' : ` · <b>keep digging till you reach ${st.board.leadN}</b>`) : '';
+    const finalNote = run.round >= run.rounds && st && !st.over && st.board ? (st.board.lead ? ' · <b style="color:var(--accent)">you are in the lead</b>' : '') : '';          // (the final round's number to beat is told on the final-round note and the prompt, not up here)
     const hp = holder && players.find(p => p.id === holder), holdName = hp ? (holder === me ? '<b style="color:var(--accent)">you</b>' : `<b>${A.esc(hp.name)}</b>`) : '';
     const legend = players.length > 1 ? players.map(p => `<span style="color:${p.color}">●</span> ${A.esc(tagOf(run, p))}`).join(' &nbsp; ') : '';
     return `<section class="lb" data-p="lbopen"><div class="lbhead"><span>Round ${Math.min(run.round, run.rounds)} of ${run.rounds}${run.round >= run.rounds ? ' · final' : ''}${legend ? ' · ' + legend : ''}</span><span>♛ ${holdName || crownCol}${holdName ? ' · ' + tr : ''}${finalNote}</span></div>

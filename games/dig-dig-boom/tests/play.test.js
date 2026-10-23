@@ -590,7 +590,7 @@ test('run: bank, tap the die for the Escape Bonus (a d10 that rolls and shows th
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.known), 2, 'the two kit cards are on top of the Mine, face up; the third is shuffled in');
     assert.equal(await page.locator('#play [data-p=bank]').count(), 0, 'the final round has no Bank at all, and no gem count');
     assert.match(await page.locator('#play .aprompt').innerText(), /last round: nobody banks|in the lead/i, 'it says why, and what to do');
-    assert.match(await page.locator('#play .lbhead').innerText(), /keep digging till you reach/i);
+    assert.doesNotMatch(await page.locator('#play .lbhead').innerText(), /keep digging till you reach/i, 'the little Leaderboard does not say it');
     await script(page, { mine: ['MO-01', 'MO-02', 'MO-01', 'MO-02', 'MO-01'], dice: Array(30).fill(10) });
     for (let i = 0; i < 9 && !(await page.locator('#play .over').count()); i++) { await page.click('#play [data-p=dig]'); await page.click('#play [data-p=roll]'); await faceIt(page); }
     assert.match(await page.locator('#play .over').innerText(), /in the lead![\s\S]*Everyone else is out/i);

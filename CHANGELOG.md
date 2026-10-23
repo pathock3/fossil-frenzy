@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — the little Leaderboard in the final round** no longer says "keep digging till you reach N" (the prompt on the table and the final-round note still say what to beat).
+
 - **Dig Dig BOOM! — 5 rounds, and the Starter Kit is 1, 2, 2, 3, 3 cards** (round by round). A game saved under another run length is not continued.
 
 - **Dig Dig BOOM! — wording:** the Leaderboard's button that said "Add up your gems" now says **Booster Pack**, and so does the header of the screen it opens (it said "Banking"). Thorned Gadget reads "During a battle, you may lose 1 Health to take an Extra Roll" (sheet updated): it is not usable at any time.
