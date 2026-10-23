@@ -10,6 +10,10 @@
 <meta name="build" content="__BUILD__">
 <meta name="theme-color" content="#07051a">
 <title>One More…</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="One More…">
+<meta property="og:description" content="A quick push-your-luck game: dig for gems, save them before you go boom — or risk just one more.">
+<meta name="description" content="A quick push-your-luck game: dig for gems, save them before you go boom — or risk just one more.">
 <link rel="icon" type="image/png" href="../../assets/favicon.png">
 <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
 <style>
@@ -847,7 +851,9 @@ const Sound = (() => {
   const humanTurn = () => !!ui.st && ui.screen === 'play' && !ui.st.over && !isBot(ui.st.current) && !ui.hold && !ui.botBusy;
 
   // ---------------- screens ----------------
-  const libraryLink = () => (D.library && /^https?:$/.test(location.protocol) ? `<a class="back libback" href="${esc(D.library.href)}"><span aria-hidden="true">‹</span> ${esc(D.library.name)}</a>` : '');
+  // The way back to the library is only for somebody who came from it: the shelf links here with ?from=library (the tab remembers it), a link you share goes straight to this game with nothing of the library in it.
+  const fromLibrary = () => { let came = /[?&]from=library\b/.test(location.search); try { if (came) sessionStorage.setItem('tabletop-library-from', '1'); else came = sessionStorage.getItem('tabletop-library-from') === '1'; } catch (e) { /* no storage: only a page opened from the shelf shows it */ } return /^https?:$/.test(location.protocol) && came; };
+  const libraryLink = () => (D.library && fromLibrary() ? `<a class="back libback" href="${esc(D.library.href)}"><span aria-hidden="true">‹</span> ${esc(D.library.name)}</a>` : '');
   const soundIcon = () => (ui.sound ? '🔊' : '🔇');
 
   function homeHTML() {

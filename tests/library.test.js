@@ -112,7 +112,7 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     for (const vp of [{ width: 1024, height: 768 }, { width: 768, height: 1024 }, { width: 390, height: 844 }, { width: 360, height: 640 }]) {
       await page.setViewportSize(vp);
       for (const g of listed.filter(g => g.path)) {
-        await page.goto(base + '/' + g.path);
+        await page.goto(base + '/' + g.path + '?from=library');
         const o = await page.evaluate(() => {
           const chip = document.querySelector('a.libback').getBoundingClientRect(), hit = [];
           document.querySelectorAll('h1, .title, .logo').forEach(e => { const r = e.getBoundingClientRect(); if (r.width && r.height && !(r.right <= chip.left || r.left >= chip.right || r.bottom <= chip.top || r.top >= chip.bottom)) hit.push(e.className || e.tagName); });
@@ -124,7 +124,7 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     await page.setViewportSize({ width: 1024, height: 768 });
     await page.goto(base + '/index.html');
     await page.tap(ff);
-    await page.waitForURL('**/games/fossil-frenzy/index.html');
+    await page.waitForURL(/games\/fossil-frenzy\/index\.html\?from=library/);
     assert.match(await page.locator('h1').first().innerText(), /Fossil\s+Frenzy/);
     const back = await page.locator('a.back').boundingBox();
     assert.ok(back.x < 40 && back.y < 40, 'the way back is in the very top-left corner: ' + JSON.stringify(back));
@@ -132,10 +132,18 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     await page.tap('a.back');
     await page.waitForURL(base + '/index.html');
     for (const g of listed.filter(g => g.path && g.id !== 'fossil-frenzy')) {      // every other game links back too, from the top-left
-      await page.goto(base + '/' + g.path);
+      await page.goto(base + '/' + g.path + '?from=library');
       await page.waitForSelector('a.libback', { timeout: 15000 });
       const link = await page.locator('a.libback').boundingBox();
       assert.ok(link && link.x < 40 && link.y < 40 && link.height >= 44, g.id + ' has the way back in the top-left: ' + JSON.stringify(link));
+    }
+    // a game's own address, opened by somebody it was shared with, knows nothing of the library: no way back, no mention
+    for (const g of listed.filter(g => g.path)) {
+      const solo = await (await browser.newContext({ viewport: { width: 1180, height: 820 } })).newPage();
+      await solo.goto(base + '/' + g.path); await solo.waitForTimeout(1500);
+      assert.equal(await solo.locator('a.libback, a[href$="../../index.html"]').count(), 0, g.id + ': opened on its own it has no link to the library');
+      assert.doesNotMatch(await solo.locator('body').innerText(), /Tabletop Library/, g.id + ': nor any mention of it');
+      await solo.close();
     }
     await page.goto(base + '/index.html');
     assert.equal(await page.title(), "Patrick's Tabletop Library");

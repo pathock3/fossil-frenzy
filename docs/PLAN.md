@@ -91,3 +91,7 @@ The app is the **Tabletop Library**; each game keeps its own name inside it (Fos
 | iPad Home Screen icons and bookmarks | the old address | **owner**, per device |
 | The game's own title (`games/<id>/index.html`) | stays the game's name | — |
 
+
+
+## Sharing one game
+Every game has its own address, `…/games/<id>/index.html` (for example `/games/dig-dig-boom/index.html`), and opened that way it is just the game: no link to the library, no mention of it. The way back to the library appears only when you arrive from the shelf, which links to `…?from=library` (the tab remembers it, so reloads keep the link). To share one game, copy that game's own address from the browser (or send `<site>/games/<id>/index.html`); the link preview shows the game's title and tagline. A game's saved progress is its own, so it is the same whether it was opened from the shelf or directly.

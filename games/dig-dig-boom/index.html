@@ -10,6 +10,10 @@
 <meta name="build" content="__BUILD__">
 <meta name="theme-color" content="#1c1410">
 <title>Dig Dig BOOM!</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="Dig Dig BOOM!">
+<meta property="og:description" content="Strap into a drill and launch yourself toward the center of the earth!">
+<meta name="description" content="Strap into a drill and launch yourself toward the center of the earth!">
 <link rel="icon" type="image/png" href="../../assets/favicon.png">
 <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png">
 <style>
@@ -2814,7 +2818,7 @@ const AI = (() => {
     render(); if (changed || force || state.status !== status0) document.dispatchEvent(new Event('ddb-cards'));          // (a changed status too: the menu says when it is on the saved copy)
   }
   const setMode = m => { document.body.dataset.mode = m; if (m === 'cards') render(); else document.dispatchEvent(new Event('ddb-mode')); };
-  window.DigDigBoomUI = { state, load, render: () => render(), setMode, build: BUILD, api: {} };
+  window.DigDigBoomUI = { state, load, render: () => render(), setMode, build: BUILD, api: {}, fromLibrary: () => fromLibrary() };
 
   // ---------------- icons ----------------
   const ic = (code, extra = '') => `<svg class="ic" viewBox="0 0 24 24" aria-label="${code}"${extra}><use href="#i-${code}"/></svg>`;
@@ -2989,9 +2993,11 @@ const AI = (() => {
     if (state.source === 'cache') return `<span class="status bad"><b>Could not reach the sheet</b> (${esc(state.error)}). Using the copy from ${new Date(state.cachedAt).toLocaleString()}. <button class="chip" data-act="reload">Try again</button></span>`;
     return `<span class="status bad"><b>Could not reach the sheet</b> (${esc(state.error)}). Showing a 6-card design sample only. <button class="chip" data-act="reload">Try again</button></span>`;
   }
+  // The way back to the library is only for somebody who came from it: the shelf links here with ?from=library (the tab remembers it), a link you share goes straight to this game with nothing of the library in it.
+  const fromLibrary = () => { let came = /[?&]from=library\b/.test(location.search); try { if (came) sessionStorage.setItem('tabletop-library-from', '1'); else came = sessionStorage.getItem('tabletop-library-from') === '1'; } catch (e) { /* no storage: only a page opened from the shelf shows it */ } return /^https?:$/.test(location.protocol) && came; };
   function render() {
     if (document.body.dataset.mode !== 'cards') return;
-    const libLink = /^https?:$/.test(location.protocol) ? `<a class="back libback" href="${esc(D.library.href)}"><span>‹</span> ${esc(D.library.name)}</a>` : '';
+    const libLink = fromLibrary() ? `<a class="back libback" href="${esc(D.library.href)}"><span>‹</span> ${esc(D.library.name)}</a>` : '';
     const scale = Math.min(innerWidth - 40, 1000) < 500 ? 0.78 : 1;
     let html = `<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">${libLink}${statusLine()}</div>
       <h1>${esc(D.title)} — the cards</h1>
@@ -3221,7 +3227,7 @@ const AI = (() => {
     const inProgress = resumable(), run = S.run;
     // one circle per round: filled for the rounds you have finished, ringed for the one you are in
     const pips = run ? `<span class="pips" role="img" aria-label="Round ${Math.min(run.round, run.rounds)} of ${run.rounds}">${Array.from({ length: run.rounds }, (_, i) => `<i class="${i < run.round - 1 ? 'on' : i === run.round - 1 ? 'now' : ''}"></i>`).join('')}</span>` : '';
-    const libLink = /^https?:$/.test(location.protocol) ? `<a class="libback" href="${A.esc(D.library.href)}"><span>‹</span> ${A.esc(D.library.name)}</a>` : '';
+    const libLink = UI.fromLibrary() ? `<a class="libback" href="${A.esc(D.library.href)}"><span>‹</span> ${A.esc(D.library.name)}</a>` : '';
     const newRun = `<button class="mode ${inProgress ? '' : 'primary'} ${S.confirmNew === 'startrun' ? 'confirm' : ''} ${ready ? '' : 'waiting'}" data-p="startrun" ${ready ? '' : 'disabled'}><b>${S.confirmNew === 'startrun' ? 'Tap again to replace your game' : inProgress ? 'New game' : 'Play'}</b></button>`;
     const note = !ready ? (st.status === 'loading' ? '' : 'No cards yet.')
       : offline ? 'Your sheet could not be reached, so only the design sample is here. Reload when you are online.'

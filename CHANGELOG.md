@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Tabletop Library — each game can be shared on its own:** a game's address (`/games/<id>/index.html`) opens just that game, with no link to the library and no mention of it; the way back to the library shows only when you came from the shelf (the shelf's boxes link with `?from=library`). Link previews carry each game's title and tagline.
+
 - **Dig Dig BOOM! — a batch from your notes:**
   - **The menu pauses the game:** with the in-game menu or How to play open (or on the main menu) the opponents' clocks and the Leaderboard replay stand still; they carry on when you are back at the table.
   - **Fast-forward in the final round:** when an opponent takes the lead from you it stops, the screen is redrawn (it kept saying "Fast-forwarding…"), and a note says who took the lead and with how many ("Hard AI took the lead!"). The opponents wait while the note is up.

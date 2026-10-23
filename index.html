@@ -120,7 +120,7 @@ const LIBRARY = {
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const BUILD = (() => { const m = document.querySelector('meta[name=build]'); const v = m ? m.content : ''; return !v || v.startsWith('__') ? 'local file' : v; })();
   const showUnlisted = /[?&]unlisted\b/.test(location.search);
-  const href = g => g.path || g.url || '';
+  const href = g => g.path ? g.path + '?from=library' : g.url || '';          // (a game opened from the shelf shows its way back here; the game's own address, shared on its own, does not)
 
   // ---- the cover art: one picture per game, drawn as a toy-like scene (never text-heavy: the name, and what you get to play with) ----
   const hex = (cx, cy, r) => Array.from({ length: 6 }, (_, i) => { const a = Math.PI / 180 * (60 * i - 30); return (cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1); }).join(' ');
