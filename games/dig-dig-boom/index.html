@@ -3388,14 +3388,14 @@ const AI = (() => {
     }
   }
   const REPLAY_MS = an => window.DDB_BOARD_PACE !== undefined ? window.DDB_BOARD_PACE : an && an.fast ? 40 : 480;
-  function boardNext() {          // the next event; the whole round plays on by itself, and a bank or a BOOM lingers a while (its piece stays, with its gem or starburst)
+  function boardNext() {          // the next event; the whole round plays on by itself, and a bank or a BOOM lingers a little (its piece stays, with its gem or starburst)
     const an = S.boardAnim; if (!an || an.k >= an.events.length) return;
     an.rects = boardRects(); an.k++; const ev = an.events[an.k - 1]; an.fx = ev.k === 'boom' ? ev : null; render();
     if (an.k < an.events.length) boardPlay(false, ev.k !== 'move');
   }
   function boardPlay(first, linger) {
     const an = S.boardAnim; if (!an || an.timer || an.k >= an.events.length) return;
-    const ms = REPLAY_MS(an) * (an.fast ? 1 : first ? 2 : linger ? 3.4 : 1);
+    const ms = REPLAY_MS(an) * (an.fast ? 1 : first ? 2 : linger ? 2.6 : 1);
     an.timer = setTimeout(() => { an.timer = null; if (S.boardAnim === an && (S.panel === 'board' || S.panel === 'done')) boardNext(); }, ms);
   }
   const boardScale = () => Math.max(.5, Math.min(1, (VH() - 24) / 860)).toFixed(3);
