@@ -1004,6 +1004,19 @@ test('the last round: when everyone else has gone BOOM you have won, but the Dig
   } finally { await browser.close(); }
 });
 
+test('leaderboard, final round: the winner\'s piece wears the Crown where a banked piece would show its gem', SKIP, async () => {
+  const { browser, page, errors } = await open({ menu: true });
+  try {
+    await page.evaluate(() => { window.DigDigBoomPlay.S.opp = true; }); await page.click('#play [data-p=startrun]'); await page.waitForSelector('#play [data-p=openpack]');
+    await page.evaluate(() => { window.DDB_BOARD_PACE = 3600000; const P = window.DigDigBoomPlay; P.S.bests0 = { me: 0, easy: 0, medium: 0, hard: 0 }; P.S.boardAnim = { from: P.S.bests0, newBest: false, events: [{ r: 1, id: 'hard', k: 'move', n: 2 }, { r: 1, id: 'easy', k: 'boom', n: 1 }, { r: 1, id: 'hard', k: 'bank', n: 2, final: true }], k: 0, timer: null, rects: null, fx: null }; P.S.panel = 'board'; P.render(); });
+    await page.evaluate(() => { window.DDB_BOARD_PACE = 5; window.DigDigBoomPlay.act('boardfast'); });
+    await page.waitForFunction(() => window.DigDigBoomPlay.S.boardAnim.k === 3);
+    assert.equal(await page.locator('#play .bgem.bwin').count(), 1, 'one Crown'); assert.equal(await page.locator('#play .bgem.bwin').innerText(), '♛');
+    assert.equal(await page.locator('#play .bgem:not(.bwin)').count(), 0, 'and no gem: the winner does not bank');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
 test('leaderboard: the round plays by itself with nothing to tap; a piece whose Dig ended stays where it stopped with a blue gem (what it earned) or a starburst (BOOM); Fast forward jumps ahead; the button to go on is there all the time', SKIP, async () => {
   const { browser, page, errors } = await open({ menu: true });
   try {
