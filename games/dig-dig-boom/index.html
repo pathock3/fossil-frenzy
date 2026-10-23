@@ -771,6 +771,7 @@ body[data-mode=play] { background: radial-gradient(130% 75% at 50% -10%, #74401e
 #play .mnote h3 { margin: 0 0 12px; font-size: 28px; font-weight: 900; color: #ffd45e; }
 #play .mnote p { margin: 0 0 20px; font-size: 21px; line-height: 1.35; color: var(--text); }
 #play .mnote p b { color: #fff; }
+#play .mnote .btn.bigok { min-width: 210px; min-height: 92px; padding: 0 36px; font-size: 34px; border-radius: 16px; }          /* the Careful! button is as big as the Bank: easy to hit without looking */
 /* the Leaderboard: columns of stacked spots; the top spot goes to whoever got there first; the foot button sits bottom right like the others */
 #play .bigboard .foot { display: flex; justify-content: flex-end; gap: 14px; }
 #play .bstack .bgrid { display: grid; gap: 5px; }
@@ -3716,7 +3717,7 @@ const AI = (() => {
     if (!danger || (S.danger && S.danger.st === st)) return;          // once in the whole Dig: healing back up and being in danger again does not bring it back
     S.danger = { st }; S.dangerNote = true;
   }
-  const dangerHTML = () => { const st = S.st; if (!S.dangerNote || S.panel !== 'dig' || !st) return ''; return `<div class="mnote-back"><div class="mnote" role="alertdialog" aria-label="Careful"><h3>Careful!</h3><p>The next Monster could make you go <b>BOOM!</b></p><button class="btn" data-p="dangerok">Got it</button></div></div>`; };
+  const dangerHTML = () => { const st = S.st; if (!S.dangerNote || S.panel !== 'dig' || !st) return ''; return `<div class="mnote-back"><div class="mnote" role="alertdialog" aria-label="Careful"><h3>Careful!</h3><p>The next Monster could make you go <b>BOOM!</b></p><button class="btn bigok" data-p="dangerok">Got it</button></div></div>`; };
   function render() {
     if (document.body.dataset.mode !== 'play') return;
     const keep = $.querySelector('#setupScroll'), ks = keep ? keep.scrollTop : 0;
