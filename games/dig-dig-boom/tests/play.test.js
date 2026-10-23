@@ -524,18 +524,18 @@ test('run: round 1 opens a Bronze Pack (draw 3, keep 1), then you choose your St
     assert.equal(await page.locator('#play [data-p=kitgem]').count(), 0, 'no gem to pick: an empty place is a gem');
     assert.equal(await page.locator('#play .kitbar .count').count(), 0, 'no "0 of 1" count: the outlined places say it');
     assert.match(await page.locator('#play .kdef').innerText(), /^These will be the first cards you draw\.\s*Any place you leave empty gets a\s+gem instead\.$/, 'the Starter Kit is defined, not explained');
-    assert.equal(await page.locator('#play .kslot.empty .kgem').count(), 1, 'an empty place shows the gem it will be filled with');
+    assert.equal(await page.locator('#play .kslot.empty .kgem').count(), 2, 'the Starter Kit is always 2 places: each empty one shows the gem it will be filled with');
     assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('#play .kitbar b')).fontSize), '42px', 'the Keep and Starter Kit titles use the same size');
     assert.equal(await page.locator('#play .pips2').count(), 0, 'no circles');
     assert.equal(await page.locator('#play [data-p=startround]').isEnabled(), true, 'you may start with the place empty');
     await page.click('#play [data-p=startround]'); await page.waitForSelector('#play .ptable');
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.geodeGems), 0, 'the gem is a card on top of the Mine: nothing in the Bank until you dig it');
     assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.mine[0].type), 'Treasure', 'the empty place is a gem, face up on top of the Mine');
-    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.known), 1, 'only that gem is known: the card you left out of the kit is shuffled into the Mine');
+    assert.equal(await stOf(page, () => window.DigDigBoomPlay.S.st.known), 2, 'only the two gems are known: the card you left out of the kit is shuffled into the Mine');
     assert.equal(await page.locator('#play .deck .card').count() > 0, true, 'the gem shows face up on the Mine');
     await page.click('#play [data-p=dig]'); await page.waitForTimeout(300);
-    assert.match(await page.locator('#play [data-p=bank]').innerText(), /^BANK\s*1/i, 'dig the gem and it is in the Bank');
-    assert.equal(await page.locator('#play .lb').count(), 1); assert.match(await page.locator('#play .lbhead').innerText(), /round 1 of 5/i);
+    assert.match(await page.locator('#play [data-p=bank]').innerText(), /^BANK\s*1/i, 'dig a gem and it is in the Bank');
+    assert.equal(await page.locator('#play .lb').count(), 1); assert.match(await page.locator('#play .lbhead').innerText(), /round 1 of 4/i);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

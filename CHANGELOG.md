@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — 4 rounds again, and the Starter Kit is always 2 cards** (every round, including the first; each empty place is a gem on top of your Mine). A game saved under another run length is not continued.
+
 - **Dig Dig BOOM! — the winner of the final round wears the Crown on the Leaderboard replay:** the piece that finishes in the lead (it does not bank, so it has no gem) now has a gold crown over it, where a banked piece would show its gems.
 
 - **Dig Dig BOOM! — Booster Packs open on the first tap, every kind** (Bronze, Silver, Gold, the one after BOOM): the pack now opens the moment a finger lands on it (not when it lifts), the click that follows is ignored, and the pack's glow and sheen no longer use animated filters/blend modes (they only fade, like the other glows), which kept the iPad repainting the pack and could lose taps.

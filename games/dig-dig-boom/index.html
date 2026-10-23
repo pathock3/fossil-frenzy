@@ -1106,7 +1106,7 @@ const DDB = {
     startingDeck: 'Starting',                            // the Deck column value for the Mine's cards and the Pet
     survivedGems: 1, geodeGems: 1,
     beyond: { firstDamage: 8, maxDamage: 19, gems: 0 },  // Monsters after the Mine runs out: 8, 9, ... up to 19 (there is a Bonus Monster card for each), and worth 0 gems (owner: by then you already have 30, the top pack)
-    kitSizes: [1, 2, 3, 3, 3],                           // Round tracker: Starter Kit cards per round: as big as the round number, never more than 3 (owner)
+    kitSizes: [2, 2, 2, 2],                              // Round tracker: Starter Kit cards per round: always 2 (owner)
     pledges: false,                                      // owner: the app has no pledging; your live marker simply follows every Monster you survive (the engine still knows pledges)
     soloKit: 3,                                          // Starter Kit size offered in the solo prototype (the round tracker's round 1 is 1)                              // Round tracker: Starter Kit cards per round (testing)
     maxChain: 6,                                         // safety limit on effects that trigger effects
@@ -1155,7 +1155,7 @@ const DDB = {
   table: { playerColors: ['#2b86d1', '#e8344e', '#2b86d1', '#2eaf68', '#7a3fb8', '#1d1712'] },   // each player's Drill trim = their Leaderboard marker
   // ---- A run: rounds of Dig + Prep, the Leaderboard and the Crown (v2.7 Rules tab), for one player ----
   run: {
-    rounds: 5,                                               // the length of a run (owner: 5 rounds) (not a setting). Everything about the final round keys on round === rounds, so this is the only number to change
+    rounds: 4,                                               // the length of a run (owner: 4 rounds, for now) (not a setting). Everything about the final round keys on round === rounds, so this is the only number to change
     crownStart: 2,                                       // the Crown tracker starts at 2 (owner): reaching 3 Monsters is enough to claim the Crown
     boosterDeck: 'Booster',                              // the Deck column value of the Booster Deck
     boosterBan: ['\\{gem\\}'],                            // (owner) no Booster cards that boost gems: a card whose text matches one of these stays out of the Booster Deck
