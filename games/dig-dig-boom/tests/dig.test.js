@@ -463,6 +463,7 @@ test('Panic Button: the first time each Dig a roll would BOOM you, a free reroll
 });
 
 test('Thorned Gadget pays Health for a reroll when you have none', () => {
+  assert.ok(Dig.supported({ id: 'XX-T', name: 'T', type: 'Ongoing', number: null, deck: 'Booster', count: 1, text: 'During a battle, you may lose 1 {heart} to take an Extra Roll' }), 'the sheet now says "During a battle"');
   const tg = game({ mine: ['MO-01'], ongoing: ['ON-31'], start: { reroll: 0, heart: 6 }, dice: [1, 4] }); Dig.dig(tg); Dig.roll(tg); assert.ok(Dig.can(tg).reroll); Dig.reroll(tg); assert.deepEqual([tg.heart, Dig.result(tg).total], [5, 4]);
   const no = game({ mine: ['MO-01'], ongoing: ['ON-31'], start: { reroll: 0, heart: 1 }, dice: [1] }); Dig.dig(no); Dig.roll(no); assert.ok(!Dig.can(no).reroll, 'it would BOOM you');
 });

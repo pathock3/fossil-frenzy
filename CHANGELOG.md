@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — wording:** the Leaderboard's button that said "Add up your gems" now says **Booster Pack**, and so does the header of the screen it opens (it said "Banking"). Thorned Gadget reads "During a battle, you may lose 1 Health to take an Extra Roll" (sheet updated): it is not usable at any time.
+
 - **Dig Dig BOOM! — a shorter pause on the Leaderboard replay** when someone banks or goes BOOM (about 1.25 s instead of 1.6 s).
 
 - **Dig Dig BOOM! — the Careful! button** ("Got it") is now as big as the Bank button, 210 × 92.

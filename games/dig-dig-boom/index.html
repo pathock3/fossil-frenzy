@@ -1249,7 +1249,7 @@ const DDB = {
       ['bumper',     "^Deal (\\d+) \\{damage\\} to every Monster$"],
       ['cowcatcher', "^Your next Monster deals no \\{damage\\}$"],
       ['panic',      "^The first time a roll would make you BOOM, take an Extra Roll, then this card breaks$"],
-      ['thorned',    "^At any time, you may lose (\\d+) \\{heart\\} to take an Extra Roll$"],
+      ['thorned',    "^(?:At any time|During a battle), you may lose (\\d+) \\{heart\\} to take an Extra Roll$"],
       ['capDamage',  "^Monsters deal at most (\\d+) \\{damage\\}$"],
       ['ignoreSmall', "^Monsters with (\\d+) or less \\{damage\\} deal no \\{damage\\}$"],
       ['everyNth',   "^Every (\\d+)(?:st|nd|rd|th) Monster you dig deals no \\{damage\\}$"],
@@ -3409,7 +3409,7 @@ const AI = (() => {
     const run = S.run, final = run.phase === 'done', an = S.boardAnim, more = !!an && an.k < an.events.length;          // (a tap goes on after each result; Fast forward runs through them all; the button to go on is there all the time)
     const cap = !an ? '' : `<p class="bcap" role="status">${an.k === 0 ? `Round ${run.round - 1} is over.` : A.esc(boardText(run, an.events[an.k - 1], an.from)).replace('New Best!', '<em class="newbest">New Best!</em>')}</p>`;
     const bv = boardScale();          // everything on this screen is drawn at this size, so it always fits: nothing here scrolls
-    return `<div class="panel setup bigboard" style="--bv:${bv}"><div class="scroll"><h2 class="steptitle">Leaderboard</h2>${boardGrid(run, an)}${cap}</div><div class="foot">${more && !an.fast ? '<button class="btn alt" data-p="boardfast">Fast forward ⏩</button>' : ''}<button class="btn" data-p="boardgo">${final ? 'See the result' : 'Add up your gems'}</button></div></div>`;
+    return `<div class="panel setup bigboard" style="--bv:${bv}"><div class="scroll"><h2 class="steptitle">Leaderboard</h2>${boardGrid(run, an)}${cap}</div><div class="foot">${more && !an.fast ? '<button class="btn alt" data-p="boardfast">Fast forward ⏩</button>' : ''}<button class="btn" data-p="boardgo">${final ? 'See the result' : 'Booster Pack'}</button></div></div>`;
   }
   // The tally after a bank, shown one piece at a time while a thermometer fills up beside it: Treasure, a pause, Monsters, a pause, then you tap the die; and only when the die has landed does the pack appear.
   const TP = () => window.DDB_TALLY_PACE || 1;                         // tests speed this up
@@ -3455,7 +3455,7 @@ const AI = (() => {
       const info = rolled ? Run.packInfo(run) : null, col = info ? (D.run.ladder.find(l => l.name === info.name) || {}).color || '#b8743a' : '', plus = info && /\+$/.test(info.name);
       const packBtn = stage >= 6 ? `<button class="pack pop" data-p="openpack" style="--pc:${col}" aria-label="Open the ${A.esc(packName(info.name))} Pack">${packArt(info.name, info.draw, info.keep)}</button>` : '';
       const packRoom = stage >= 6 ? packBtn : `<span class="pack ghostpack" aria-hidden="true"></span>`;          // the pack's place is kept from the start, so nothing moves when it appears
-      body = `<div class="tallyrow" ${stage < 6 ? 'data-p="skiptally"' : ''}><h2 class="steptitle tallytop">Banking</h2><div class="tallymain">${eq}${tnote}${packRoom}</div>${gemChart(lvl, stage >= 6, stage === 5 ? pr.geodes + pr.monsters : null)}</div>`;
+      body = `<div class="tallyrow" ${stage < 6 ? 'data-p="skiptally"' : ''}><h2 class="steptitle tallytop">Booster Pack</h2><div class="tallymain">${eq}${tnote}${packRoom}</div>${gemChart(lvl, stage >= 6, stage === 5 ? pr.geodes + pr.monsters : null)}</div>`;
     } else if (step === 'escape') body = '';
     else if (step === 'pack') {
       // The same layout the cards will be dealt into: the Keep places on top and, in the middle of the row below, the closed pack. It tears open right there.
