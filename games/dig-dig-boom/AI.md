@@ -36,7 +36,7 @@ The win-chance table (`DDB.ai.phi`) is still the one measured with the Crown sta
 * The Crown now starts at 2 (reaching 3 claims it), the Starter Kit's empty places are face-up gem cards, gem-boosting cards are out of the Booster Deck, and a Power card is only offered when its requirements are met. The win-chance table (`DDB.ai.phi`) was measured before these: **re-run `tools/gather.js` and paste the new table in** (until then the AI falls back to a guess for a best of 3, which is a little off).
 * It plays at human speed on screen (`DDB.ai.pace`); Fast forward is unchanged. Its Prep runs in small time slices (`prepSteps`) so it never freezes the screen.
 
-## What we measured (simulated matches, 4 rounds, seats swapped; ±4–5 points at 400–800 matches)
+## What we measured (simulated matches, 4 rounds, seats swapped; the game now plays 5; ±4–5 points at 400–800 matches)
 
 | A | B | A wins |
 |---|---|---|

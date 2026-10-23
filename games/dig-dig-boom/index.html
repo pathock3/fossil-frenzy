@@ -1105,7 +1105,7 @@ const DDB = {
     startingDeck: 'Starting',                            // the Deck column value for the Mine's cards and the Pet
     survivedGems: 1, geodeGems: 1,
     beyond: { firstDamage: 8, maxDamage: 19, gems: 0 },  // Monsters after the Mine runs out: 8, 9, ... up to 19 (there is a Bonus Monster card for each), and worth 0 gems (owner: by then you already have 30, the top pack)
-    kitSizes: [1, 2, 3, 4],                              // Round tracker: Starter Kit cards per round: the kit is as big as the round number (owner: 4 rounds)
+    kitSizes: [1, 2, 3, 3, 3],                           // Round tracker: Starter Kit cards per round: as big as the round number, never more than 3 (owner)
     pledges: false,                                      // owner: the app has no pledging; your live marker simply follows every Monster you survive (the engine still knows pledges)
     soloKit: 3,                                          // Starter Kit size offered in the solo prototype (the round tracker's round 1 is 1)                              // Round tracker: Starter Kit cards per round (testing)
     maxChain: 6,                                         // safety limit on effects that trigger effects
@@ -1154,7 +1154,7 @@ const DDB = {
   table: { playerColors: ['#2b86d1', '#e8344e', '#2b86d1', '#2eaf68', '#7a3fb8', '#1d1712'] },   // each player's Drill trim = their Leaderboard marker
   // ---- A run: rounds of Dig + Prep, the Leaderboard and the Crown (v2.7 Rules tab), for one player ----
   run: {
-    rounds: 4,                                               // the length of a run (not a setting). Everything about the final round keys on round === rounds, so this is the only number to change
+    rounds: 5,                                               // the length of a run (owner: 5 rounds) (not a setting). Everything about the final round keys on round === rounds, so this is the only number to change
     crownStart: 2,                                       // the Crown tracker starts at 2 (owner): reaching 3 Monsters is enough to claim the Crown
     boosterDeck: 'Booster',                              // the Deck column value of the Booster Deck
     boosterBan: ['\\{gem\\}'],                            // (owner) no Booster cards that boost gems: a card whose text matches one of these stays out of the Booster Deck
@@ -1245,7 +1245,7 @@ const DDB = {
       ['bounty',     "^Monsters you defeat are worth (\\d+) \\{gem\\}$"],
       ['bumper',     "^Block (\\d+) \\{damage\\} from every Monster$"],
       ['bumper',     "^Deal (\\d+) \\{damage\\} to every Monster$"],
-      ['cowcatcher', "^Your first Monster each Dig deals no \\{damage\\}$"],
+      ['cowcatcher', "^Your next Monster deals no \\{damage\\}$"],
       ['panic',      "^The first time a roll would make you BOOM, take an Extra Roll, then this card breaks$"],
       ['thorned',    "^At any time, you may lose (\\d+) \\{heart\\} to take an Extra Roll$"],
       ['capDamage',  "^Monsters deal at most (\\d+) \\{damage\\}$"],
@@ -1744,6 +1744,8 @@ const Dig = (() => {
       block: 0, halve: false, noDamage: false, defeat: false, surviveAt: null, sparkUsed: false, rolls: 0, trig: [], deferred: [], used: [], n: st.monstersDug };
     log(st, 'dig', `${m.name}${m.bonus ? '' : ' #' + n} — deals ${dmg} {damage}`);
     if (st.flags.nextHalve) { f.halve = true; delete st.flags.nextHalve; log(st, 'effect', `This Monster deals half {damage}`); }
+    const cow = st.ongoing.find(o => compile(o).ongoing.flags.cowcatcher && !(st.flags.spent || []).includes(o.uid));          // Cowcatcher: the next Monster after it is in play (a Monster you dug before it is not "next")
+    if (cow) { (st.flags.spent || (st.flags.spent = [])).push(cow.uid); f.noDamage = true; log(st, 'effect', `${cow.name}: this Monster deals no {damage}`); }
     if (st.flags.nextNone) { f.noDamage = true; delete st.flags.nextNone; log(st, 'effect', `This Monster deals no {damage}`); }
     if (opt.autoDefeat) { fire(st, 'digMonster', { damage: dmg }, 1); f.defeat = true; log(st, 'effect', `The Monster is defeated without a roll`); if (!over(st)) finishFight(st, true); st.fight = over(st) ? null : prev; return; }
     fire(st, 'digMonster', { damage: dmg }, 1);
@@ -1899,7 +1901,6 @@ const Dig = (() => {
   }
   function previewDamage(st) {
     const f = st.fight; if (f.defeat || f.noDamage) return 0;
-    if (f.first && anyFlag(st, 'cowcatcher')) return 0;
     const nth = flag(st, 'everyNth'), small = flag(st, 'ignoreSmall'), cap = flag(st, 'capDamage');
     if (nth && f.n % nth === 0) return 0;                       // every 3rd Monster you dig is harmless
     if (small !== undefined && f.damage <= small) return 0;
@@ -3056,8 +3057,10 @@ const AI = (() => {
     try {
       const raw = localStorage.getItem(SAVE_KEY); if (!raw) return;
       const d = JSON.parse(raw); if (d.v !== 2) return;
+      const savedRounds = d.match ? d.match.rounds : d.run ? d.run.rounds : null;
+      if (savedRounds !== null && savedRounds !== D.run.rounds) { localStorage.removeItem(SAVE_KEY); return; }          // a game saved when a run was a different length (4 rounds): it is not continued, so the menu never shows the old number of rounds
       const match = d.match ? Match.load(cards(), d.match) : null, run = match ? Match.human(match) : d.run ? Run.load(cards(), d.run) : null, st = run ? run.dig : d.st ? Dig.load(cards(), d.st) : null;
-      S.match = match; S.opp = d.opp !== false; S.run = run; S.st = st; S.fx = fxOf(st); S.kit = d.kit || []; S.kitSize = d.kitSize; S.start = d.start; S.rounds = d.rounds; S.back = d.panel;
+      S.match = match; S.opp = d.opp !== false; S.run = run; S.st = st; S.fx = fxOf(st); S.kit = d.kit || []; S.kitSize = d.kitSize; S.start = d.start; S.back = d.panel;          // (the length of a run is the rules', never a saved one)
       // Tapping the game on the shelf (a fresh visit) opens the main menu, where Continue waits; a reload (iPad Safari does that to a backgrounded tab) puts you straight back where you were.
       const nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {};
       S.panel = nav.type === 'navigate' ? 'menu' : d.panel;
@@ -3559,7 +3562,7 @@ const AI = (() => {
     const nCards = cards.length;
     const pickO = o => st.pending && st.pending.kind === 'clone' && o !== st.pending.card;
     const buried = new Set(Object.values(st.under).flat());          // a Cloning Machine lies under the card it clones: it is drawn there, not in the Ongoing area
-    const broke = o => (st.panicUsed && Dig.compile(o).ongoing.flags.panic) || (st.flags.phoenixUsed && Dig.compile(o).ongoing.flags.phoenix !== undefined);          // a broken card lies face down until the end of the Dig
+    const broke = o => (st.panicUsed && Dig.compile(o).ongoing.flags.panic) || (st.flags.phoenixUsed && Dig.compile(o).ongoing.flags.phoenix !== undefined) || (st.flags.spent || []).includes(o.uid);          // a broken card lies face down until the end of the Dig
     const ong = st.ongoing.filter(o => !buried.has(o) && o !== held).map(o => `<button class="tcard inplay ${broke(o) ? 'broken' : ''} ${usable.includes(o) ? 'elig' : ''} ${isNew(o) ? 'arrive' : ''} ${pickO(o) ? 'pick' : ''} ${(st.under[o.uid] || []).length ? 'hasunder' : ''}" data-p="${pickO(o) ? 'card' : usable.includes(o) ? 'usemod' : 'zoom'}" data-uid="${o.uid}" data-id="${A.esc(o.id)}" aria-label="${A.esc(o.name)}, Ongoing${broke(o) ? ', broken' : ''}">${underOf(o)}${broke(o) ? cw('<span class="cardback"></span>', 'cb') : cw(A.playCard(o, 1), 'cb')}${st.cloned.includes(o.uid) ? '<span class="tg">×2</span>' : ''}</button>`);
     S.tabSeen = nowSeen;
     return `<section class="tableau" data-n="${nCards + ong.length}">${cards.join('')}${ong.length ? '<span class="tsep"></span>' : ''}${ong.join('')}</section>`;

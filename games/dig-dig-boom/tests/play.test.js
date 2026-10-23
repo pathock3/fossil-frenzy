@@ -535,7 +535,7 @@ test('run: round 1 opens a Bronze Pack (draw 3, keep 1), then you choose your St
     assert.equal(await page.locator('#play .deck .card').count() > 0, true, 'the gem shows face up on the Mine');
     await page.click('#play [data-p=dig]'); await page.waitForTimeout(300);
     assert.match(await page.locator('#play [data-p=bank]').innerText(), /^BANK\s*1/i, 'dig the gem and it is in the Bank');
-    assert.equal(await page.locator('#play .lb').count(), 1); assert.match(await page.locator('#play .lbhead').innerText(), /round 1 of 4/i);
+    assert.equal(await page.locator('#play .lb').count(), 1); assert.match(await page.locator('#play .lbhead').innerText(), /round 1 of 5/i);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

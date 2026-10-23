@@ -93,8 +93,8 @@ test("Starter Kit: last round's kit is already in your kit; cards can be dragged
   Run.beginDig(run, { seed: 5 }); assert.deepEqual(run.dig.mine.slice(0, 2).map(c => c.id), ['PW-09', 'ON-33'], 'the kit goes on top in the order you set');
 });
 
-test('Starter Kit: up to the round tracker (1, 2, 2, 3); the Mine is the 30 starting cards plus every card you own that is not in the kit', () => {
-  assert.deepEqual([1, 2, 3, 4, 5, 6].map(r => Run.kitSize({}, r)), [1, 2, 3, 4, 4, 4]);
+test('Starter Kit: up to the round tracker (1, 2, 3, 3, 3: never more than 3); the Mine is the 30 starting cards plus every card you own that is not in the kit', () => {
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map(r => Run.kitSize({}, r)), [1, 2, 3, 3, 3, 3]);
   const run = firstRound({ keepIds: ['PW-28'] });
   assert.ok(!Run.toggleKit(run, 12345), 'only cards you own'); assert.ok(Run.toggleKit(run, run.owned[0].uid));
   Run.beginDig(run, { seed: 3 });

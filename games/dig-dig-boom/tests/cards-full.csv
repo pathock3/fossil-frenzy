@@ -43,7 +43,7 @@ ON-04,Bounty Poster,Ongoing,,Booster,1,Monsters you defeat are worth 2 {gem}
 ON-05,Bumper,Ongoing,,Booster,1,Block 1 {damage} from every Monster
 ON-06,Cloning Machine,Ongoing,,Booster,1,Place under one of your Power cards. That card triggers twice
 ON-07,Confetti Cannon,Ongoing,,Booster,1,"Whenever you dig an Immediate card, +1 {grit}"
-ON-08,Cowcatcher,Ongoing,,Booster,1,Your first Monster each Dig deals no {damage}
+ON-08,Cowcatcher,Ongoing,,Booster,1,Your next Monster deals no {damage}
 ON-09,Crumple Zone,Ongoing,,Booster,1,"Whenever you take 4+ {damage}, +1 {reroll}"
 ON-10,Danger Siren,Ongoing,,Booster,1,"Whenever you dig a Monster with 6+ {damage}, +2 {grit}"
 ON-11,Depth Gauge,Ongoing,,Booster,1,+1 to your rolls for every 3 Monsters you've survived this Dig

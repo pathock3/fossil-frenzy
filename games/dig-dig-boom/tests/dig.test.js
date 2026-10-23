@@ -398,9 +398,11 @@ test('Pet Whistle is gone: there is no way to move the Pet, so its text is not p
   assert.ok(!Dig.supported(by('ON-25')));
 });
 
-test('Cowcatcher: your first Monster each Dig deals no damage; Bumper blocks 1 from every Monster', () => {
+test('Cowcatcher: the next Monster deals no damage (the first one if it is in play from the start, the next one after it if you dig it later); Bumper blocks 1 from every Monster', () => {
   const st = game({ mine: ['MO-01', 'MO-01'], ongoing: ['ON-08'], start: { heart: 6 }, dice: [2, 2] });
   fight(st); assert.equal(st.heart, 6); fight(st); assert.equal(st.heart, 3);
+  const late = game({ mine: ['MO-01', 'ON-08', 'MO-01', 'MO-01'], start: { heart: 10 }, dice: [2, 2, 2] }); fight(late); assert.equal(late.heart, 9, 'a Monster before the Cowcatcher is not its next Monster');
+  Dig.dig(late); fight(late); assert.equal(late.heart, 9, 'the next Monster after it deals nothing'); fight(late); assert.equal(late.heart, 4, 'and then it is used up: Monster A\'s third card deals 5');
   const b = game({ mine: ['MO-01', 'MO-01'], ongoing: ['ON-05'], start: { heart: 6 }, dice: [2, 2] }); fight(b); assert.equal(b.heart, 6); fight(b); assert.equal(b.heart, 4);
 });
 
