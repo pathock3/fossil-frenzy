@@ -1,9 +1,10 @@
-// The rules of a Dig (Dig engine). Cards come from tests/cards-full.csv — a test fixture, a snapshot of the v2.7 sheet.
+// The rules of a Dig (Dig engine). Cards come from tests/cards-rules.csv — a frozen snapshot of the sheet's cards: these tests are about how the rules work, so they must not move when the owner rebalances a card's numbers
+// (tests/cards-full.csv is the live copy of the sheet; the other tests use that).
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path');
 const { Dig, Engine, DDB } = require('./load.js');
-const cards = Engine.cards(Engine.parseCSV(fs.readFileSync(path.join(__dirname, 'cards-full.csv'), 'utf8')), DDB.columns);
+const cards = Engine.cards(Engine.parseCSV(fs.readFileSync(path.join(__dirname, 'cards-rules.csv'), 'utf8')), DDB.columns);
 const by = id => { const c = cards.find(x => x.id === id); assert.ok(c, 'card ' + id); return c; };
 let n = 1;
 // A card given by id comes from the fixture; a card object (see `card` below) is used as it is.

@@ -1,4 +1,4 @@
-// The new Booster cards (NEW-BOOSTERS.csv: proposals not yet on the owner's sheet) and the rules they need.
+// The new Booster cards (NEW-BOOSTERS.csv: proposals not yet on the owner's sheet) and the rules they need. (They are played here as they were first written, in tests/new-cards-rules.csv.)
 // Each design space they open up has a test: chains that raise the die, defeating small Monsters, die-value triggers,
 // damage caps, Extra Roll rules, one-shot (breaking) cards, and moving Monsters around the Mine and their ladders.
 const test = require('node:test');
@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path');
 const { Dig, Engine, DDB } = require('./load.js');
 const read = f => Engine.cards(Engine.parseCSV(fs.readFileSync(path.join(__dirname, f), 'utf8')), DDB.columns);
-const base = read('cards-full.csv'), fresh = read('../NEW-BOOSTERS.csv'), cards = base.concat(fresh);
+const base = read('cards-rules.csv'), fresh = read('new-cards-rules.csv'), cards = base.concat(fresh);          // (frozen snapshots: the tests are about the rules, so a rebalanced number cannot break them)
 const by = id => { const c = cards.find(x => x.id === id); assert.ok(c, 'card ' + id); return c; };
 let n = 1;
 function game({ mine, dice = [], start = {}, ongoing = [], power = [], setCount } = {}) {
@@ -156,4 +156,29 @@ test('random play with the new cards in the Kit and the Mine: no crash, tracks s
     }
     assert.ok(st.over, 'seed ' + seed + ' ended');
   }
+});
+
+// ---- the rebalanced texts as they are now (the live fixture and the proposed cards), and the rules added while rebalancing ----
+const live = read('cards-full.csv'), proposed = read('../NEW-BOOSTERS.csv');
+const mk = (text, o = {}) => ({ id: 'XX-' + n++, name: 'Test card', type: 'Ongoing', number: null, deck: 'Booster', count: 1, text, ...o });
+const only = (st, extra) => { for (const c of extra) st.ongoing.push({ ...c, uid: 70000 + n++ }); return st; };
+
+test('the live sheet copy and the proposed cards: every Booster card but the Grit ones is understood, and no id or name is used twice', () => {
+  const all = live.concat(proposed), bad = all.filter(c => c.deck === 'Booster' && !/grit/i.test(c.text) && !['ON-25', 'IM-18', 'IM-34'].includes(c.id) && !Dig.supported(c)).map(c => c.id);          // (Pet Whistle, Pet Treat and Wrench Rat wait for the owner: see QUESTIONS.md)
+  assert.deepEqual(bad, [], 'cards the game cannot play');
+  assert.equal(new Set(all.map(c => c.id)).size, all.length, 'ids'); assert.equal(new Set(all.filter(c => c.deck === 'Booster').map(c => c.name)).size, all.filter(c => c.deck === 'Booster').length, 'names');
+});
+
+test('Sneak Attack digs up to 2 cards and defeats any Monster among them; "Whenever you gain an Extra Roll"; Loaded Dice that also makes the first Extra Roll free', () => {
+  const sneak = mk('Dig 2 cards. Defeat any Monster you dig', { type: 'Immediate' }); assert.ok(Dig.supported(sneak));
+  const st = game({ mine: ['TR-01', 'MO-01', 'TR-01'] }); st.mine.unshift({ ...sneak, uid: 70500 }); Dig.dig(st);
+  assert.equal(st.defeated, 1, 'the Monster was among the two'); assert.equal(st.fight, null); assert.equal(st.geodeGems, 1); assert.equal(st.mine.length, 1, 'two cards dug, no more');
+  const none = game({ mine: ['TR-01', 'TR-01', 'MO-01'] }); none.mine.unshift({ ...sneak, uid: 70501 }); Dig.dig(none); assert.equal(none.geodeGems, 2); assert.equal(none.mine.length, 1, 'the Monster is the third card: not dug');
+  const valve = mk('Whenever you gain an Extra Roll, +1 {heart}'); assert.ok(Dig.supported(valve));
+  const v = only(game({ mine: ['IM-11'], start: { heart: 5, reroll: 4 } }), [valve]); Dig.dig(v); assert.equal(v.heart, 5, 'with no room nothing is gained, so nothing happens (like Health at 10)');
+  const v3 = only(game({ mine: ['IM-11'], start: { heart: 5, reroll: 3 } }), [valve]); Dig.dig(v3); assert.equal(v3.heart, 6, 'one of the two fits: one gain');
+  
+  const v2 = only(game({ mine: ['IM-11'], start: { heart: 5, reroll: 0 } }), [valve]); Dig.dig(v2); assert.equal(v2.heart, 6);
+  const ld = mk('Your Extra Rolls keep the higher die, and the first one each Dig costs nothing'); assert.ok(Dig.supported(ld));
+  const l = only(game({ mine: ['MO-01'], dice: [8, 3], start: { reroll: 0 } }), [ld]); fight(l); assert.ok(Dig.can(l).reroll, 'with none in hand the first is free'); Dig.reroll(l); assert.equal(l.fight.die, 8, 'and the higher die is kept'); assert.equal(l.reroll, 0);
 });

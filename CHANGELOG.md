@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Dig Dig BOOM! — a measured, damped rebalance of the Booster cards** (`tools/rebalance.js`; method and every change in `NEW-BOOSTERS.md`): the strongest cards were nerfed a little each round and the weakest buffed, never past the middle of the pack. Sheet changes: Nurse Newt triggers on 2, Picnic Ant on 9, Moss Sloth on 7, Snack Raccoon +3 Health, Nervous Mouse 5 Health or less, Falcon Finisher 6 or more, Applause Meter and Crumple Zone +2 Rerolls, Disco Ball +2 Health, Floor Jack below 6 becomes 6, Nurse Bot gain 2 more, Duct Tape +2 per Ongoing card, Sneak Attack digs 2 cards. New rules text understood: "Dig 2 cards. Defeat any Monster you dig", "Whenever you gain an Extra Roll". The rules tests now use a frozen snapshot (`tests/cards-rules.csv`) so a rebalanced number cannot break them.
+
 - **Dig Dig BOOM! — 4 rounds again, and the Starter Kit is always 2 cards** (every round, including the first; each empty place is a gem on top of your Mine). A game saved under another run length is not continued.
 
 - **Dig Dig BOOM! — the winner of the final round wears the Crown on the Leaderboard replay:** the piece that finishes in the lead (it does not bank, so it has no gem) now has a gold crown over it, where a banked piece would show its gems.

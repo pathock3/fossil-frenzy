@@ -4,7 +4,8 @@
 const fs = require('fs'), path = require('path');
 const G = require('../tests/load.js');
 const { Dig, Run, Match, Engine, DDB } = G;
-const cards = Engine.cards(Engine.parseCSV(fs.readFileSync(path.join(__dirname, '..', 'tests', 'cards-full.csv'), 'utf8')), DDB.columns);
+const cards = Engine.cards(Engine.parseCSV(fs.readFileSync(process.env.CV_BASE || path.join(__dirname, '..', 'tests', 'cards-full.csv'), 'utf8')), DDB.columns)
+  .concat((process.env.CV_EXTRA ? process.env.CV_EXTRA.split(',') : []).flatMap(f => Engine.cards(Engine.parseCSV(fs.readFileSync(f, 'utf8')), DDB.columns)));          // (CV_EXTRA: candidate cards mixed into the Booster Deck, CV_BASE: another copy of the sheet's cards)
 
 // One match. brains = { me, ai }. Returns { winner: 'me'|'ai'|null, rounds: [{ me, ai }] } (the history of each seat).
 function playMatch(brains, seed, rounds, onRound) {

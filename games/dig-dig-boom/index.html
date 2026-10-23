@@ -1183,7 +1183,7 @@ const DDB = {
       ['stink',   "^Look at the top (\\d+) cards of your Mine\\. Move any Monsters to the bottom$"],
       ['oldmap',  "^Look at the top card of your Mine\\. If it's a Monster, move it to the bottom$"],
       ['cave',    "^Keep digging until you dig a Monster\\. Put it back on top of your Mine, face up$"],
-      ['sneak',   "^Dig a card\\. If it's a Monster, defeat it$"],
+      ['sneak',   "^Dig (?:a card\\. If it's a Monster, defeat it|(\\d+) cards\\. Defeat any Monster you dig)$"],
       ['reveal',  "^Reveal cards from your Mine until you find (?:a|an) (Power or Ongoing|Immediate) card\\. (?:Play it and|Do it, then) shuffle the rest back$"],
       ['clone',   "^Place under one of your Power(?: or Ongoing)? cards\\. That card triggers twice$"],
     ],
@@ -1253,6 +1253,7 @@ const DDB = {
       ['ignoreSmall', "^Monsters with (\\d+) or less \\{damage\\} deal no \\{damage\\}$"],
       ['everyNth',   "^Every (\\d+)(?:st|nd|rd|th) Monster you dig deals no \\{damage\\}$"],
       ['keepHigher', "^Your Extra Rolls keep the higher die$"],
+      ['keepHigherFree', "^Your Extra Rolls keep the higher die, and the first one each Dig costs nothing$"],
       ['firstFree',  "^The first Extra Roll you take each Dig costs nothing$"],
       ['phoenix',    "^The first time a Monster would make you BOOM, set your \\{heart\\} to (\\d+) instead, then this card breaks$"],
       ['modPerReroll', "^\\+(\\d+) to your rolls for each Extra Roll you have, up to \\+(\\d+)$"],
@@ -1268,6 +1269,7 @@ const DDB = {
       ['triggers',    "^(\\d+)\\+ cards trigger on one roll$"],
       ['rollExact',   "^you roll an? (\\d+)$"],
       ['overflow',    "^you gain an Extra Roll you have no room for$"],
+      ['gainReroll',  "^you gain an Extra Roll$"],
       ['faceLow',     "^you face a Monster with a result of (\\d+) or less$"],
       ['faceHigh',    "^you face a Monster with a result of (\\d+) or more$"],
     ],
@@ -1454,6 +1456,7 @@ const Dig = (() => {
       case 'ignoreSmall': o.flags.ignoreSmall = n(1); break;
       case 'everyNth': o.flags.everyNth = n(1); break;
       case 'keepHigher': o.flags.keepHigher = true; break;
+      case 'keepHigherFree': o.flags.keepHigher = true; o.flags.firstFree = true; break;
       case 'firstFree': o.flags.firstFree = true; break;
       case 'phoenix': o.flags.phoenix = n(1); break;
       case 'modPerReroll': o.mods.push({ plus: n(1), perReroll: true, cap: n(2) }); break;
@@ -1524,6 +1527,7 @@ const Dig = (() => {
     const before = st[res], cap = R.caps[res]; st[res] = Math.min(cap, before + want); const got = st[res] - before;
     log(st, 'effect', `${src}: +${n}${bonus ? ' (+' + bonus + ' more)' : ''} {${res}}${got < want ? ' (the track is full at ' + cap + ')' : ''}`);
     if ((got > 0 || RL.gainAtCapFires) && depth < R.maxChain && res === 'heart') fire(st, 'gainHeart', { n: got }, depth + 1);
+    if (got > 0 && depth < R.maxChain && res === 'reroll') fire(st, 'gainReroll', {}, depth + 1);
     if (got < want && depth < R.maxChain && res === 'reroll') fire(st, 'overflow', {}, depth + 1);          // an Extra Roll with no room for it
   }
   function lose(st, n, src) {
@@ -1669,9 +1673,12 @@ const Dig = (() => {
         log(st, 'effect', `${src}: dug ${n} cards and found no Monster`); break;
       }
       case 'sneak': {
-        const c = st.mine.shift(); st.known = Math.max(0, st.known - 1);
-        if (!c) { log(st, 'effect', `${src}: your Mine is empty`); break; }
-        log(st, 'dig', `${src}: digs ${c.name}`); resolveDug(st, c, depth + 1, { autoDefeat: true }); break;
+        for (let k = 0; k < (e.a || 1) && !over(st) && !st.pending; k++) {
+          const c = st.mine.shift(); st.known = Math.max(0, st.known - 1);
+          if (!c) { log(st, 'effect', `${src}: your Mine is empty`); break; }
+          log(st, 'dig', `${src}: digs ${c.name}`); resolveDug(st, c, depth + 1, { autoDefeat: true });
+        }
+        break;
       }
       case 'nextHalve': st.flags.nextHalve = true; log(st, 'effect', `${src}: your next Monster deals half {damage}`); break;
       case 'nextNone': st.flags.nextNone = true; log(st, 'effect', `${src}: your next Monster deals no {damage}`); break;
