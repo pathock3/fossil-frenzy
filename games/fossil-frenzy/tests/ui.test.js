@@ -31,7 +31,7 @@ async function open({ viewport = { width: 1024, height: 768 }, query = '', anima
     await page.evaluate(() => {
       try {
         localStorage.setItem('tabletop-library-fossil-frenzy-tips', JSON.stringify(['match', 'gem', 'gemTwo']));
-        localStorage.setItem('tabletop-library-fossil-frenzy-passplay', JSON.stringify({ n: 2, reminders: false }));
+        localStorage.setItem('tabletop-library-fossil-frenzy-passplay', JSON.stringify({ n: 2, size: 'large', reminders: false }));          // (the 31-tile board, as most tests were written for; sizes have their own test)
       } catch (e) { /* no storage */ }
     });
     await page.reload();
@@ -992,14 +992,14 @@ test('end of game: the choices are plain buttons — play again (or the next lev
   try {
     await passAndPlay(page, 2);
     await forceFinish(page, [4, 2]);
-    assert.deepEqual(await page.locator('.sheet > button').allInnerTexts(), ['Play again', 'Main menu']);
+    assert.deepEqual(await page.locator('.over-buttons button').allInnerTexts(), ['Play again', 'Main menu']);
     assert.ok(await page.evaluate(() => { const b = document.querySelector('[data-act=home]').getBoundingClientRect(); return b.height >= 48 && b.width >= 200; }), 'Main menu is a full-size button');
     assert.doesNotMatch(await page.locator('.sheet').innerText(), /Levels|Change players/);
     await page.tap('[data-act=home]');
     assert.equal(await screenOf(page), 'home');
     await campaign(page, 0);
     await forceFinish(page, [30, 10]);
-    assert.deepEqual((await page.locator('.sheet > button').allInnerTexts()).map(t => t.replace(/:.*/, '')), ['Next', 'Main menu'], 'after a win: on to the next level, or the main menu — no replay');
+    assert.deepEqual((await page.locator('.over-buttons button').allInnerTexts()).map(t => t.replace(/:.*/, '')), ['Next', 'Play Beginner again', 'Main menu'], 'after a win: on to the next level, the same level again, or the main menu');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -1226,7 +1226,7 @@ test('held sets are shown highest to lowest, and a tap still banks the set you t
   } finally { await browser.close(); }
 });
 
-test('end screen: a win says what happened once (the headline), the unlock is a quiet non-button line; no replay button; a loss offers Try again', SKIP, async () => {
+test('end screen: a win says what happened once (the headline), the unlock is a quiet non-button line; a win offers the next level, the same level again and the menu; a loss the same level again', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     await campaign(page, 0);
@@ -1235,11 +1235,11 @@ test('end screen: a win says what happened once (the headline), the unlock is a 
     assert.ok(await page.evaluate(() => document.querySelector('.unlock').getBoundingClientRect().top < innerHeight / 2), 'in the top half of the screen, not tucked away');
     assert.ok(await page.evaluate(() => { const h = document.querySelector('h1'), u = document.querySelector('.unlock'); return parseFloat(getComputedStyle(h).fontSize) > parseFloat(getComputedStyle(u).fontSize); }), 'the headline outranks the unlock line');
     assert.equal(await page.evaluate(() => { const st = getComputedStyle(document.querySelector('.unlock')); return [st.backgroundImage, st.boxShadow, document.querySelector('.unlock').tagName]; }).then(r => r.join()), 'none,none,P', 'it does not look like a button');
-    assert.equal(await page.locator('[data-act=again]').count(), 0, 'no "play the same level again" after a win');
+    assert.deepEqual(await page.locator('.over-buttons button').allInnerTexts(), ['Next: Novice', 'Play Beginner again', 'Main menu'], 'a win: on, the same level again, or the menu');
     assert.ok(await page.locator('.confetti').count());
     await page.tap('[data-act=home]'); await page.tap('[data-act=mode][data-v=campaign]'); await page.tap('[data-act=level][data-i="0"]'); await page.tap('[data-act=begin]');
     await forceFinish(page, [5, 20]);
-    assert.deepEqual(await page.locator('.sheet > button').allInnerTexts(), ['Try again', 'Main menu']);
+    assert.deepEqual(await page.locator('.over-buttons button').allInnerTexts(), ['Play Beginner again', 'Main menu']);
     assert.equal(await page.locator('.unlock, .confetti').count(), 0);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -1612,4 +1612,101 @@ test('campaign screen: a full-width card per opponent with its board and its siz
       assert.deepEqual(errors, []);
     } finally { await browser.close(); }
   }
+});
+
+test('end screen: the results sit in the middle of the page, not hung from the top; Play <level> again deals the same level afresh', SKIP, async () => {
+  for (const [w, h] of [[820, 1180], [402, 874]]) {
+    const { browser, page, errors } = await open({ viewport: { width: w, height: h } });
+    try {
+      await campaign(page, 0);
+      await forceFinish(page, [5, 20]);
+      const box = await page.locator('.over-sheet').boundingBox();
+      const above = box.y, below = h - (box.y + box.height);
+      assert.ok(above > 20 && Math.abs(above - below) < Math.max(60, h * 0.1), `centred vertically (${w}): ${above} above, ${below} below`);
+      assert.ok(Math.abs((box.x + box.width / 2) - w / 2) < 4, 'centred across');
+      await page.tap('[data-act=again]');
+      assert.equal(await screenOf(page), 'play');
+      assert.equal(await page.evaluate(() => [window.FossilFrenzyUI.ui.mode, window.FossilFrenzyUI.ui.levelIdx, window.FossilFrenzyUI.ui.st.over].join()), 'campaign,0,false', 'the same level, a fresh game');
+      assert.deepEqual(errors, []);
+    } finally { await browser.close(); }
+  }
+});
+
+test('puzzle pieces: a tile that is flipped but not matched has no torn side; once matched, the two are torn and face each other; a match is not put back on the board', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await passAndPlay(page, 2);
+    const [a, b] = await missOf(page);
+    await page.tap(a); await page.tap(b);
+    const cells = await page.locator('.tile.up .parch').evaluateAll(els => els.map(e => e.getAttribute('d')));
+    assert.ok(cells.length >= 1 && cells.every(d => (d.match(/L/g) || []).length === 6), 'flipped, not matched: plain hexagons');
+    await page.tap('[data-act=end]'); await page.tap('[data-act=begin]');
+    const [c, d] = await pairOf(page);
+    await page.tap(c); await page.tap(d);
+    const matched = await page.locator('.tile.up .parch').evaluateAll(els => els.map(e => (e.getAttribute('d').match(/L/g) || []).length));
+    assert.equal(matched.filter(n => n > 6).length, 2, 'the two matched tiles are torn: ' + matched);
+    assert.equal(await page.locator('.gone').count(), 0, 'no film (reduced motion): they stay face up');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('an opponent\'s match: its maps fly to it and are not put back on the board — an empty, dashed space marks where they were', SKIP, async () => {
+  const { browser, page, errors } = await open({ animated: true });
+  try {
+    await campaign(page, 0);
+    await page.evaluate(() => {          // make the opponent\'s next turn a certain match: it will peek one tile of a pair and flip the other
+      const { ui } = window.FossilFrenzyUI; ui.st.rng = () => 0.5;
+    });
+    let found = false;
+    for (let g = 0; g < 40 && !found; g++) {
+      await idle(page);
+      const info = await page.evaluate(() => { const u = window.FossilFrenzyUI.ui, st = u.st; return { bw: u.botWaiting, cur: st.current, matched: st.turn.matched, over: st.over }; });
+      if (info.over) break;
+      if (info.bw && info.matched && info.cur === 1) {
+        found = true;
+        const cells = await page.evaluate(() => window.FossilFrenzyUI.ui.st.turn.matched.map(i => window.FossilFrenzyUI.ui.st.tokens[i].cell));
+        for (const c of cells) {
+          assert.equal(await page.locator(`[data-id="${c}"] .tile`).count(), 0, 'no tile put back');
+          assert.equal(await page.locator(`[data-id="${c}"] .gone`).count(), 1, 'a dashed space where it was');
+        }
+        assert.equal(await page.locator('.chip[data-p="1"] .setbtn').count() >= 1, true, 'the map is with the opponent');
+        break;
+      }
+      await takeATurn(page);
+    }
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('Pass & Play board sizes: five to choose from; the size is picked from the number of players until you choose; it is kept for the game, a replay and a save', SKIP, async () => {
+  const { browser, page, errors } = await open({ tips: true });
+  try {
+    await page.tap('[data-act=mode][data-v=pass]');
+    assert.equal(await page.locator('[data-act=size]').count(), 5);
+    assert.deepEqual(await page.locator('[data-act=size]').allInnerTexts().then(a => a.map(t => t.replace(/\s+/g, ' '))), ['Tiny 18 tiles', 'Small 21 tiles', 'Medium 25 tiles', 'Large 31 tiles', 'Huge 37 tiles']);
+    const on = () => page.locator('[data-act=size].on').getAttribute('data-v');
+    for (const [n, size] of [[2, 'medium'], [3, 'large'], [4, 'huge']]) {
+      await page.tap(`[data-act=n][data-v="${n}"]`);
+      assert.equal(await on(), size, n + ' players');
+      assert.match(await page.locator('.sheet').innerText(), new RegExp('Picked for ' + n + ' players'));
+    }
+    await page.tap('[data-act=size][data-v=tiny]');
+    assert.match(await page.locator('.sheet').innerText(), /The size you chose/);
+    await page.tap('[data-act=n][data-v="2"]');
+    assert.equal(await on(), 'tiny', 'a size you chose stays when the number of players changes');
+    await page.reload(); await page.tap('[data-act=mode][data-v=pass]');
+    assert.equal(await on(), 'tiny', 'remembered');
+    await page.tap('[data-act=deal]'); await page.tap('[data-act=begin]');
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.tokens.length), 18);
+    assert.equal(await page.locator('svg.board .cell').count(), 18);
+    await page.reload();
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.tokens.length), 18, 'the saved game keeps its board');
+    await forceFinish(page, [4, 2]);
+    await page.tap('[data-act=again]');
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.tokens.length), 18, 'play again: the same size');
+    await quitToStart(page);
+    await page.tap('[data-act=mode][data-v=pass]'); await page.tap('[data-act=size][data-v=huge]'); await page.tap('[data-act=deal]');
+    assert.equal(await page.evaluate(() => [window.FossilFrenzyUI.ui.st.tokens.length, window.FossilFrenzyUI.ui.st.tokens.filter(t => t.gem).length].join()), '37,3');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
 });

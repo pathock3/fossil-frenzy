@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Torn Treasure — Pass & Play board sizes:** the setup screen offers five sizes (Tiny 18, Small 21, Medium 25, Large 31, Huge 37 tiles — the five campaign boards, with their gem maps from Small up). The size is picked from the number of players (2: Medium, 3: Large, 4: Huge) until you choose one; your choice is remembered, kept for a replay and in a saved game.
+
+- **Torn Treasure — puzzle pieces:** a flipped tile is a plain tile; only when it is part of a match is it torn, along the side that faces its partner, so the pieces fit together. **An opponent's match is not put back on the board** after its maps fly off: a dashed empty space in its colour shows where they were.
+- **Torn Treasure — every screen is centred on the page**, not hung from the top (settings, help, the tiles list, the campaign and Pass & Play screens, the end screen). The **end screen** is built around the middle of the page and has **Play <level> again** (the same level, a fresh deal) as well as Next level / Main menu.
+
 - **Fossil Frenzy is now Torn Treasure — a treasure-map look (rules, scoring and numbers unchanged):**
   - **Face down, a tile is a tile of sand; face up, it is one torn half of a treasure map:** parchment with one torn edge, a faint coastline, dotted path and half an X behind the number (which is big, bold and high-contrast). The colour follows the number: 2–3 plain weathered parchment with brown ink; 5–7 aged parchment, deep-blue ink and a little compass rose; 9 and up gold-edged parchment, red ink and an ornate border; **gems are a special map torn into three pieces** (dark parchment, a jewel, each piece a different torn section, the worth underneath).
   - **A match puts a map back together:** both tiles lift off the board, slide until their torn edges meet, become one square map with an X and its worth, and fly to the player's maps — by themselves (no Continue, no tap); the turn then ends. Gems: three pieces fly together into a bigger, more ornate map. A tap skips the film; with "reduce motion" there is no film and a tap ends the turn as before. The opponent's matches play the same film.

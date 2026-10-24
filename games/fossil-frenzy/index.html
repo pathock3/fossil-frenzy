@@ -80,6 +80,7 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 #fx { position: fixed; inset: 0; z-index: 20; pointer-events: none; overflow: hidden; }
 #fx > div { position: absolute; will-change: transform, opacity; }
 #fx .flyer { filter: drop-shadow(0 7px 5px rgba(0,0,0,.45)); }
+#fx .flyer svg { position: absolute; inset: 0; }
 #fx .flysq { display: block; filter: drop-shadow(0 8px 6px rgba(0,0,0,.5)); opacity: 0; }
 #fx .shock { border-radius: 50%; border: 6px solid #fff; opacity: 0; }
 #fx .chest { filter: drop-shadow(0 8px 8px rgba(0,0,0,.5)); }
@@ -114,6 +115,7 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 .tile.peek .parch { filter: none; stroke-dasharray: none; }
 .tile .num { font-weight: 900; font-size: 29px; text-anchor: middle; dominant-baseline: central; pointer-events: none; paint-order: stroke; stroke-width: 3.5px; stroke-linejoin: round; }
 .tile .num.plain { fill: #3b2410; stroke: rgba(238,222,178,.75); } .tile .num.aged { fill: #12306b; stroke: rgba(240,226,184,.75); } .tile .num.gold { fill: #a3151b; stroke: rgba(250,232,170,.8); }
+.gone { fill: none; stroke-width: 2.5; stroke-dasharray: 6 7; opacity: .55; pointer-events: none; }
 .tile .gemnum { fill: #f6e7b8; font-weight: 900; font-size: 15px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }   /* what a gem map is worth, under the jewel */
 .tile .num.gem { fill: #f6e7b8; font-size: 15px; stroke: none; }
 .ring { fill: none; stroke-width: 4.5; pointer-events: none; }
@@ -188,6 +190,9 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 
 .screen { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 22px 18px 30px; background: radial-gradient(ellipse at 50% 0%, #3a2616, var(--bg) 70%); }
 .sheet { max-width: 640px; margin: 0 auto; }
+/* every screen but the front one sits in the middle of the page, not hung from the top (a tall one scrolls from its top) */
+.screen:not(.home) { display: flex; padding-top: 22px; padding-bottom: 22px; }
+.screen:not(.home) > .sheet { margin: auto; width: 100%; }
 h1 { margin: 0 0 4px; font-size: 38px; letter-spacing: .5px; }
 h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--dim); }
 .sub { color: var(--dim); margin: 0 0 14px; }
@@ -195,6 +200,9 @@ h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spac
 .seg { display: inline-flex; background: var(--panel); border-radius: 12px; padding: 3px; gap: 3px; flex-wrap: wrap; }
 .seg button { padding: 10px 16px; border-radius: 9px; font-weight: 700; color: var(--dim); }
 .seg button.on { background: var(--accent); color: #2b1b10; }
+.seg.sizes { display: flex; flex-wrap: nowrap; width: 100%; max-width: 560px; }
+.seg.sizes button { display: flex; flex: 1 1 0; min-width: 0; flex-direction: column; align-items: center; gap: 1px; padding: 8px 4px; }
+.seg.sizes small { font-size: 12px; font-weight: 600; opacity: .8; }
 .seatrow { display: flex; gap: 10px; align-items: center; margin: 8px 0; flex-wrap: wrap; }
 .seatrow .dot { width: 18px; height: 18px; border-radius: 50%; flex: none; }
 .seatrow input { flex: 1 1 130px; min-width: 0; font-size: 16px; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--panel); color: var(--text); user-select: text; -webkit-user-select: text; }
@@ -227,6 +235,13 @@ h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spac
 .lvl.locked:active { transform: none; }
 .lockmsg { display: inline-block; max-width: 9.5em; color: var(--dim); font-size: 15px; font-weight: 700; line-height: 1.25; }
 .sheet.wide { max-width: 720px; }
+/* the end screen sits in the middle of the page (and scrolls, if it ever has to, from its top) */
+.screen.over { display: flex; padding-top: 14px; padding-bottom: 14px; }
+.over-sheet { margin: auto; width: 100%; max-width: 720px; text-align: center; }
+.over-sheet h1 { font-size: clamp(34px, 7vw, 52px); margin-bottom: 14px; }
+.over-sheet .results { text-align: left; justify-content: center; }
+.over-sheet .place { align-items: stretch; }
+.over-buttons { display: flex; flex-direction: column; gap: 0; width: min(480px, 100%); margin: 0 auto; }
 .sub.progress { display: flex; align-items: center; gap: 12px; font-size: 17px; }
 .pips { display: inline-flex; gap: 7px; }
 .pips i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--dim); }
@@ -304,6 +319,11 @@ const GAME_DATA = {
 
   // Pass & Play: 2-4 people on one device.
   players: { min: 2, max: 4 },
+  // Pass & Play offers the same five boards as the campaign levels (board, fossils and gems of that level); the setup screen picks one by itself from the number of players
+  // (more people, a bigger board, so everyone gets turns) until somebody chooses.
+  passBoards: [{ id: 'tiny', name: 'Tiny', level: 'beginner' }, { id: 'small', name: 'Small', level: 'novice' }, { id: 'medium', name: 'Medium', level: 'normal' },
+               { id: 'large', name: 'Large', level: 'challenging' }, { id: 'huge', name: 'Huge', level: 'master' }],
+  passBoardByPlayers: { 2: 'medium', 3: 'large', 4: 'huge' },
   die: { sides: 6 },            // who goes first (highest roll)
 
   // ---- BOARD ---------------------------------------------------------
@@ -1335,9 +1355,10 @@ const Campaign = (() => {
   LEGACY_KEYS.forEach(pref.del);                       // data stored under the app's earlier name is discarded
 
   function loadPass() {
-    const cfg = { n: D.players.min, reminders: true, names: Array.from({ length: D.players.max }, (_, i) => 'Player ' + (i + 1)) };     // rules reminders are on unless the players switch them off
+    const cfg = { n: D.players.min, size: null, reminders: true, names: Array.from({ length: D.players.max }, (_, i) => 'Player ' + (i + 1)) };     // rules reminders are on unless the players switch them off
     const s = pref.json(PASS_KEY);
     if (s && s.reminders === false) cfg.reminders = false;
+    if (s && D.passBoards.some(b => b.id === s.size)) cfg.size = s.size;          // a size somebody chose; null = picked from the number of players
     if (s && s.n >= D.players.min && s.n <= D.players.max) {
       cfg.n = s.n;
       (s.names || []).forEach((x, i) => { if (i < D.players.max && x) cfg.names[i] = String(x).slice(0, 14); });
@@ -1354,7 +1375,7 @@ const Campaign = (() => {
                help: false, menu: null, prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '',
                countedOver: false, outcome: null, turnCard: false, lastEvent: '', say: '',
                steps: null, stage: 0, base: null, animTimer: null, liftKey: '', prevPts: null,
-               tip: null, tipsSeen: new Set(), fx: null, recall: [] };
+               tip: null, tipsSeen: new Set(), fx: null, recall: [], filmedTurn: -1, boardLevel: 0 };
   ui.settings = null;                                   // null | 'open' | 'unlock' (the warning before unlocking everything) | 'reset'
   ui.sound = pref.get(SOUND_KEY) !== 'off';             // sound effects: on unless switched off (Menu or Settings), remembered on this device
   ui.endSounded = false;
@@ -1369,6 +1390,8 @@ const Campaign = (() => {
   // Prompts above the board: shown until this device has finished one game, then quiet. Help panel: Auto / On / Off.
   const hintsVisible = () => ui.hints === 'on' || (ui.hints === 'auto' && !(+pref.get(DONE_KEY) > 0));
   const seatName = i => ui.names[i] || 'Player ' + (i + 1);
+  const passBoard = () => D.passBoards.find(b => b.id === (ui.pass.size || D.passBoardByPlayers[ui.pass.n])) || D.passBoards[0];
+  const levelIndexOf = id => LV.findIndex(l => l.id === id);
   const isBot = i => !!ui.bots[i];
   const unlocked = i => UNLOCK_ALL || ui.unlockAll || Campaign.isUnlocked(i, ui.beaten);
 
@@ -1405,7 +1428,8 @@ const Campaign = (() => {
     clearAnim();
     const seed = Math.floor(Math.random() * 2147483647), campaign = ui.mode === 'campaign';
     const n = campaign ? 2 : ui.pass.n;
-    ui.st = Engine.createGame({ players: n, seed, data: campaign ? Campaign.gameData(LV[ui.levelIdx]) : undefined });          // a campaign level has its own board and fossils
+    ui.boardLevel = campaign ? ui.levelIdx : levelIndexOf(passBoard().level);          // the level whose board and fossils are on the table (Pass & Play: the chosen size)
+    ui.st = Engine.createGame({ players: n, seed, data: Campaign.gameData(LV[ui.boardLevel]) });
     ui.bots = Bots.attach(ui.st, campaign ? [null, Campaign.botSpec(LV[ui.levelIdx])] : Array(n).fill(null), seed);
     ui.names = campaign ? ['You', LV[ui.levelIdx].name] : ui.pass.names.slice(0, n);
     pref.del(SAVE_KEY);                                                  // a new game replaces the one that was saved
@@ -1514,7 +1538,7 @@ const Campaign = (() => {
     try {
       if (!ui.st || ui.st.over) { pref.del(SAVE_KEY); return; }
       localStorage.setItem(SAVE_KEY, JSON.stringify({           // (leaving a game keeps it: `left` says the player went back to the menus, so a reload does not drop them into it)
-        schema: 2, build: BUILD, screen: 'play', left: ui.screen !== 'play', turnCard: ui.turnCard, botWaiting: ui.botWaiting, mode: ui.mode, levelIdx: ui.levelIdx, names: ui.names,
+        schema: 2, build: BUILD, screen: 'play', left: ui.screen !== 'play', turnCard: ui.turnCard, botWaiting: ui.botWaiting, mode: ui.mode, levelIdx: ui.levelIdx, boardLevel: ui.boardLevel, names: ui.names,
         recall: ui.recall, tipsSeen: [...ui.tipsSeen],
         game: Engine.serialize(ui.st), bots: ui.bots.map(b => (b ? b.save() : null)),
       }));
@@ -1525,7 +1549,10 @@ const Campaign = (() => {
     if (!sv) { if (pref.get(SAVE_KEY) !== null) { pref.del(SAVE_KEY); ui.notice = 'Your saved game could not be resumed, so it was cleared.'; } return; }
     try {
       if (sv.mode === 'campaign' && !LV[sv.levelIdx]) throw new Error('unknown level');
-      const st = Engine.restore(sv.game, { data: sv.mode === 'campaign' ? Campaign.gameData(LV[sv.levelIdx]) : undefined });
+      const bl = sv.mode === 'campaign' ? sv.levelIdx : (Number.isInteger(sv.boardLevel) ? sv.boardLevel : levelIndexOf('challenging'));          // (a Pass & Play game saved before sizes was on the 31-tile board)
+      if (!LV[bl]) throw new Error('unknown level');
+      const st = Engine.restore(sv.game, { data: Campaign.gameData(LV[bl]) });
+      ui.boardLevel = bl;
       ui.st = st; ui.bots = Bots.restore(st, sv.bots); ui.names = sv.names; ui.mode = sv.mode === 'campaign' ? 'campaign' : 'pass'; ui.levelIdx = sv.levelIdx | 0;
       Object.assign(ui, { screen: sv.left ? 'home' : 'play', turnCard: !!sv.turnCard || sv.screen === 'roll', botWaiting: !!sv.botWaiting, tip: null, fx: null,
                           recall: Array.isArray(sv.recall) ? sv.recall : [], tipsSeen: new Set(sv.tipsSeen || []),
@@ -1568,6 +1595,7 @@ const Campaign = (() => {
   // Gems: the three pieces fly together into a bigger, more ornate map.
   function startMatchFx(tids, player, o = {}) {
     const st = ui.st, A = D.anim.match;
+    ui.filmedTurn = st.turnNo;                                       // the maps leave the board for good: they are not drawn back afterwards
     ui.fx = { kind: 'match', player, hideSet: true, anims: [], timers: [], then: o.then || null, sound: o.sound || '', soundDone: false };
     render();
     const cells = tids.map(t => root.querySelector(`.cell[data-id="${st.tokens[t].cell}"]`)), target = root.querySelector('.setbtn.landing');
@@ -1582,7 +1610,10 @@ const Campaign = (() => {
       let side, sign = 1, dest;
       if (!gem) { side = pos === 0 ? 0 : 3; sign = pos === 0 ? 1 : -1; dest = { x: M.x + (pos === 0 ? -1 : 1) * (hexW * lift) / 2, y: M.y }; }
       else { const ang = Math.atan2(M.y - r.y, M.x - r.x) * 180 / Math.PI; side = ((Math.round(ang / 60) % 6) + 6) % 6; const d = Math.hypot(M.x - r.x, M.y - r.y) || 1; dest = { x: M.x + (r.x - M.x) / d * hexW * 0.5, y: M.y + (r.y - M.y) / d * hexW * 0.5 }; }
-      const el = fxEl('flyer', r, H, H, `<svg viewBox="${-BOARD_S} ${-BOARD_S} ${2 * BOARD_S} ${2 * BOARD_S}" width="100%" height="100%"><g class="tile">${mapFaceArt(0, 0, BOARD_S, st.tokens[tid], tid, { side, sign, seed: tids[0] })}</g></svg>`);
+      const vb = `viewBox="${-BOARD_S} ${-BOARD_S} ${2 * BOARD_S} ${2 * BOARD_S}" width="100%" height="100%"`;
+      const el = fxEl('flyer', r, H, H, `<svg class="fl-plain" ${vb}><g class="tile">${mapFaceArt(0, 0, BOARD_S, st.tokens[tid], tid)}</g></svg><svg class="fl-torn" ${vb}><g class="tile">${mapFaceArt(0, 0, BOARD_S, st.tokens[tid], tid, { side, sign, seed: tids[0] })}</g></svg>`);
+      go(fx, el.querySelector('.fl-plain'), [{ opacity: 1 }, { opacity: 0 }], { delay: A.hold, duration: A.lift });          // the tile is torn along its edge as it lifts
+      go(fx, el.querySelector('.fl-torn'), [{ opacity: 0 }, { opacity: 1 }], { delay: A.hold, duration: A.lift });
       const dx = dest.x - r.x, dy = dest.y - r.y;
       go(fx, el, [{ transform: 'none' }, { transform: `translateY(-8px) scale(${lift})` }], { delay: A.hold, duration: A.lift, easing: EASE.out });
       go(fx, el, [{ transform: `translateY(-8px) scale(${lift})` }, { transform: `translate(${dx}px,${dy - 8}px) scale(${lift})` }], { delay: A.hold + A.lift, duration: A.slide, easing: EASE.in });
@@ -1733,7 +1764,8 @@ const Campaign = (() => {
       case 'mode': ui.screen = d.v; break;          // (ui.mode belongs to the game on the table, which may still be a saved one)
       case 'continue': ui.screen = 'play'; ui.menu = null; if (ui.mode === 'pass' && !ui.botWaiting && !st.over && !animating()) ui.turnCard = true; break;          // pick up the saved game
       case 'home': ui.screen = 'home'; break;
-      case 'n': ui.pass.n = +d.v; pref.set(PASS_KEY, JSON.stringify(ui.pass)); break;
+      case 'n': ui.pass.n = +d.v; pref.set(PASS_KEY, JSON.stringify(ui.pass)); break;          // (the board size follows the number of players until one is chosen)
+      case 'size': ui.pass.size = d.v; pref.set(PASS_KEY, JSON.stringify(ui.pass)); break;
       case 'deal': ui.mode = 'pass'; startGame(); break;
       case 'level': if (unlocked(+d.i)) { ui.mode = 'campaign'; ui.levelIdx = +d.i; startGame(); } break;
       case 'next': ui.levelIdx = Math.min(ui.levelIdx + 1, LV.length - 1); startGame(); break;
@@ -1822,10 +1854,10 @@ const Campaign = (() => {
     return `<polygon points="${P([[-.5, -.18], [-.3, -.5], [.3, -.5], [.5, -.18], [0, .55]])}" fill="url(#gJewel)" stroke="#e9fffb" stroke-width="1.6" stroke-linejoin="round"/>
       <path d="M${P([[-.5, -.18]])} L${P([[.5, -.18]])} M${P([[-.3, -.5]])} L${P([[-.14, -.18]])} L${P([[0, .55]])} M${P([[.3, -.5]])} L${P([[.14, -.18]])} L${P([[0, .55]])}" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="1.1"/>`; };
   // Face up: half of a treasure map. The number is the biggest thing on it; the faint coastline, dotted path and half an X sit behind it.
-  // o = { side, sign, seed } chooses which side is torn (the match animation turns the torn edges toward each other).
+  // o = { side, sign, seed } chooses which side is torn: none, unless the tile is part of a match (then its torn edge faces its partner, so the two fit together like puzzle pieces).
   function mapFaceArt(x, y, S, t, tid, o = {}) {
     const r = S * 0.8, tier = tierOf(t), piece = t.gem ? gemPiece(tid) : 0;
-    const side = o.side !== undefined ? o.side : t.gem ? [0, 2, 4][piece] : (tid * 5 + 1) % 6, seed = o.seed !== undefined ? o.seed : tid;
+    const side = o.side !== undefined ? o.side : -1, seed = o.seed !== undefined ? o.seed : tid;
     const rot = t.gem ? piece * 40 : (tid * 47) % 360;
     const X = (a, b) => `${f1(x + r * a)},${f1(y + r * b)}`;
     let g = `<path class="parch ${tier}" d="${tornHex(x, y, r, side, o.sign || 1, seed)}"/>`;
@@ -1874,18 +1906,28 @@ const Campaign = (() => {
     const recall = ui.mode === 'pass' && human && !ui.turnCard && !st.over ? recallFor(st.current) : new Map();     // pass & play: what the others flipped since my last turn
     const nowUp = new Set([...revealed, ...recall.keys(), ...(peekShown ? [peekTid] : [])]);
     const flipped = tid => nowUp.has(tid) !== ui.prevUp.has(tid);
+    // a tile that is part of this turn's match is torn on the side that faces the rest of its set, so the pieces fit together
+    const tearOf = tid => {
+      const m = st.turn.matched || [];
+      if (!m.includes(tid)) return {};
+      const me = pos(st.cells[st.tokens[tid].cell]), others = m.filter(i => i !== tid).map(i => pos(st.cells[st.tokens[i].cell]));
+      const ox = others.reduce((a, q) => a + q.x, 0) / others.length, oy = others.reduce((a, q) => a + q.y, 0) / others.length;
+      const ang = Math.atan2(oy - me.y, ox - me.x) * 180 / Math.PI;
+      return { side: ((Math.round(ang / 60) % 6) + 6) % 6, sign: m.length === 2 && tid === Math.max(...m) ? -1 : 1, seed: m[0] };
+    };
     let out = '';
     for (const c of st.cells) {
       const { x, y } = pos(c);
       let tid = st.tokenAt[c.id];
-      if (tid < 0 && !ui.fx && !(ui.tip && ui.tip.endsTurn)) { const m = (st.turn.matched || []).find(i => st.tokens[i].cell === c.id); if (m !== undefined) tid = m; }   // a match stays face up until the turn ends (or until the maps fly off)
+      if (tid < 0 && !ui.fx && !(ui.tip && ui.tip.endsTurn) && ui.filmedTurn !== st.turnNo) { const m = (st.turn.matched || []).find(i => st.tokens[i].cell === c.id); if (m !== undefined) tid = m; }   // a match stays face up until the turn ends — unless its film has played: then the maps have gone and an empty space marks where they were
       let g = `<g class="cell" data-act="cell" data-id="${c.id}"><polygon class="bg" points="${hexPts(x, y, S)}"/>`;
+      if (tid < 0 && (st.turn.matched || []).some(i => st.tokens[i].cell === c.id)) g += `<polygon class="gone" style="stroke:${color}" points="${hexPts(x, y, S * 0.8)}"/>`;          // where a map was found this turn
       if (tid >= 0) {
         const t = st.tokens[tid], up = revealed.has(tid), peeking = peekShown && tid === peekTid, seenBy = recall.get(tid);
         const shown = up || peeking || seenBy !== undefined;
         const lifting = lift && tid === peekTid;
         g += `<g class="tile${up || seenBy !== undefined ? ' up' : ''}${seenBy !== undefined ? ' seen' : ''}${peeking ? ' peek' : ''}${flipped(tid) ? ' flipin' : ''}${lifting ? ' lift' : ''}">`;
-        g += shown ? mapFaceArt(x, y, S, t, tid) : sandArt(x, y, S, tid);
+        g += shown ? mapFaceArt(x, y, S, t, tid, tearOf(tid)) : sandArt(x, y, S, tid);
         g += '</g>';
         if (up) g += `<polygon class="ring" style="stroke:${color}" points="${hexPts(x, y, S * 0.9)}"/>`;
         else if (seenBy !== undefined) g += `<polygon class="ring" style="stroke:${COLORS[seenBy]}" points="${hexPts(x, y, S * 0.9)}"/>`;
@@ -1977,7 +2019,7 @@ const Campaign = (() => {
     return `<div class="game">
       <div class="bar"><div class="chips n${st.n}">${chipsHTML()}</div></div>
       <div class="legend">${ui.lastEvent && !ui.turnCard ? `<span class="event">${esc(ui.lastEvent)}</span>` : ''}<span class="hint">${esc(hintsVisible() ? hint() : '')}</span></div>
-      <div class="main"><div class="boardwrap">${boardSVG()}</div>${bankBannerHTML()}${endButtonHTML()}${ui.turnCard && !st.over ? turnCardHTML() : ''}<button class="q" data-act="menu" aria-label="Menu">☰</button></div>
+      <div class="main"><div class="boardwrap">${boardSVG()}</div>${bankBannerHTML()}${endButtonHTML()}${ui.turnCard && !st.over ? turnCardHTML() : ''}${st.over && !animating() ? '' : '<button class="q" data-act="menu" aria-label="Menu">☰</button>'}</div>
     </div>${st.over && !animating() ? overHTML() : ''}${ui.menu ? menuHTML() : ''}${ui.alert && !st.over ? alertHTML() : ''}${ui.tip && !st.over ? tipHTML() : ''}`;
   }
 
@@ -2028,7 +2070,7 @@ const Campaign = (() => {
       const { x, y } = pos(c), v = vals[k], fl = flippers.has(k);
       out += `<g class="h-cell" style="--i:${k}"><polygon class="bg" points="${hexPts(x, y, S)}"/>
         <g class="h-back${fl ? ' h-flipper' : ''}"${fl ? ` style="--d:-${flippers.get(k)}s"` : ''}>${sandArt(x, y, S, k)}</g>`;
-      if (fl) out += `<g class="h-front tile" style="--d:-${flippers.get(k)}s">${mapFaceArt(x, y, S, v, k, v.gem ? { side: [0, 2, 4][k % 3] } : {})}<polygon class="ring" style="stroke:#f5a524" points="${hexPts(x, y, S * 0.9)}"/></g>`;
+      if (fl) out += `<g class="h-front tile" style="--d:-${flippers.get(k)}s">${mapFaceArt(x, y, S, v, k)}<polygon class="ring" style="stroke:#f5a524" points="${hexPts(x, y, S * 0.9)}"/></g>`;
       out += '</g>';
     });
     const pad = 6;
@@ -2070,6 +2112,8 @@ const Campaign = (() => {
       ${sv && !sv.campaign ? resumeBtn() + '<h2>Or start a new game</h2>' : ''}
       <h2>Players</h2><span class="seg">${Array.from({ length: D.players.max - D.players.min + 1 }, (_, k) => k + D.players.min).map(n => `<button class="${p.n === n ? 'on' : ''}" data-act="n" data-v="${n}">${n}</button>`).join('')}</span>
       ${seats}
+      <h2>Board size</h2><span class="seg sizes">${D.passBoards.map(b => { const lv = LV[levelIndexOf(b.level)], n = lv.tokens.reduce((a, t) => a + t.count, 0); return `<button class="${passBoard().id === b.id ? 'on' : ''}" data-act="size" data-v="${b.id}"><b>${esc(b.name)}</b><small>${n} tiles</small></button>`; }).join('')}</span>
+      <p class="dim">${p.size ? 'The size you chose.' : `Picked for ${p.n} players: more people, a bigger board.`} Bigger boards have more tiles to remember${LV[levelIndexOf(passBoard().level)].tokens.some(t => t.gem) ? ', and gem maps' : ' (and no gem maps)'}.</p>
       <h2>Rules reminders</h2><span class="seg">${[['on', 'On'], ['off', 'Off']].map(([v, t]) => `<button class="${(p.reminders ? 'on' : 'off') === v ? 'on' : ''}" data-act="reminders" data-v="${v}">${t}</button>`).join('')}</span>
       <p class="dim">A short note the first time a match or a gem comes up. Turn it off once everyone knows the rules.</p>
       <button class="big" data-act="deal">${sv && !sv.campaign ? 'Start a new game' : 'Deal the tiles'}</button>
@@ -2132,11 +2176,12 @@ const Campaign = (() => {
     // The choices: after a win, on to the next level; after a loss (or a pass & play game), play again — and always the main menu.
     const nextBtn = campaign && o && o.won && ui.levelIdx + 1 < LV.length && unlocked(ui.levelIdx + 1);
     const won = campaign && o && o.won;
-    const main = nextBtn ? `<button class="big" data-act="next">Next: ${esc(LV[ui.levelIdx + 1].name)}</button>`
-               : won ? '' : `<button class="big" data-act="again">${campaign ? 'Try again' : 'Play again'}</button>`;
-    return `<div class="screen"><div class="sheet"><h1>${title}</h1>
+    const againText = campaign ? `Play ${esc(LV[ui.levelIdx].name)} again` : 'Play again';          // the same level (or the same players), a fresh deal
+    const main = nextBtn ? `<button class="big" data-act="next">Next: ${esc(LV[ui.levelIdx + 1].name)}</button>` : '';
+    const again = `<button class="big${main ? ' alt' : ''}" data-act="again">${againText}</button>`;
+    return `<div class="screen over"><div class="sheet over-sheet"><h1>${title}</h1>
       ${[why, extra].filter(Boolean).length ? `<p class="sub">${[why, extra].filter(Boolean).join(' ')}</p>` : ''}${celebrate}<div class="results">${places}</div>
-      ${main}<button class="big${main ? ' alt' : ''}" data-act="home">Main menu</button></div></div>`;
+      <div class="over-buttons">${main}${again}<button class="big alt" data-act="home">Main menu</button></div></div></div>`;
   }
 
   // A burst of confetti for a campaign win: pieces fall from the top and fade. Decoration only; never blocks a tap.

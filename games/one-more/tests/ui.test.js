@@ -259,7 +259,7 @@ test('boom: the boom stays on the table until a tap passes the turn; the lost ge
     let s = await state(page);
     assert.equal(s.phase, 'boomed');
     assert.match(await page.locator('#banner').innerText(), /BOOM/);
-    assert.match(await page.locator('#banner').innerText(), /loses 2 gems/);
+    assert.match(await page.locator('#banner').innerText(), /loses? 2 gems/);
     assert.ok(await page.locator('.card.boom.up').count() >= 1);
     assert.equal(await page.locator('.card.lost').count(), 2, 'the two lost gems are greyed beside the boom');
     assert.equal(s.cur, first, 'still the same player');

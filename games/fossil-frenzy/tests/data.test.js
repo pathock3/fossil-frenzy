@@ -123,3 +123,13 @@ test('Torn Treasure: the theme tiers cover every number in every level, in order
   for (const k of ['rise', 'open', 'rain', 'count', 'end']) assert.ok(GAME_DATA.anim.dig[k] > 0, 'dig ' + k);
   assert.ok(Object.values(GAME_DATA.anim.match).reduce((a, b) => a + b, 0) < 2500, 'a match film is quick');
 });
+
+test('Pass & Play board sizes: five sizes, each one of the campaign boards; a default for every player count, bigger for more people', () => {
+  const ids = Campaign.levels().map(l => l.id), size = id => Campaign.levels().find(l => l.id === GAME_DATA.passBoards.find(b => b.id === id).level).tokens.reduce((n, t) => n + t.count, 0);
+  assert.deepEqual(GAME_DATA.passBoards.map(b => b.id), ['tiny', 'small', 'medium', 'large', 'huge']);
+  for (const b of GAME_DATA.passBoards) assert.ok(ids.includes(b.level), b.id + ' is a campaign level\'s board');
+  assert.deepEqual(GAME_DATA.passBoards.map(b => size(b.id)), [18, 21, 25, 31, 37]);
+  for (let n = GAME_DATA.players.min; n <= GAME_DATA.players.max; n++) assert.ok(GAME_DATA.passBoards.some(b => b.id === GAME_DATA.passBoardByPlayers[n]), n + ' players has a default size');
+  const by = n => size(GAME_DATA.passBoardByPlayers[n]);
+  assert.ok(by(2) < by(3) && by(3) < by(4), 'more people, a bigger board');
+});
