@@ -31,5 +31,5 @@ test('naming: the game stores everything under tabletop-library-fossil-frenzy-â€
 test('naming: the library is titled Patrick\'s Tabletop Library; the game keeps its own title', () => {
   assert.match(read('index.html'), /<title>Patrick's Tabletop Library<\/title>/);
   assert.match(read('index.html'), /apple-mobile-web-app-title" content="Patrick's Tabletop Library"/);
-  assert.match(read('games/fossil-frenzy/index.html'), /<title>Fossil Frenzy<\/title>/);
+  assert.match(read('games/fossil-frenzy/index.html'), /<title>Torn Treasure<\/title>/);
 });

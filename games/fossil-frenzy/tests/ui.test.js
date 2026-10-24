@@ -17,7 +17,8 @@ const SKIP = { skip: !chromium && 'Playwright/Chromium not available', timeout: 
 const LEVELS = ['Beginner', 'Novice', 'Normal', 'Challenging', 'Master'];
 
 // Most tests ask for reduced motion, which shows an opponent's whole turn at once; the animation tests turn that off.
-async function open({ viewport = { width: 1024, height: 768 }, query = '', animated = false } = {}) {
+// The rules reminders (a note the first time a match or a gem comes up) are switched off in most tests, so they do not sit in the way of the taps; the tests of the reminders turn them on (`tips: true`).
+async function open({ viewport = { width: 1024, height: 768 }, query = '', animated = false, tips = false } = {}) {
   const browser = await chromium.launch(exe ? { executablePath: exe } : {});
   const ctx = await browser.newContext({ viewport, hasTouch: true, isMobile: true, reducedMotion: animated ? 'no-preference' : 'reduce' });
   const page = await ctx.newPage();
@@ -26,6 +27,15 @@ async function open({ viewport = { width: 1024, height: 768 }, query = '', anima
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('dialog', d => d.accept());
   await page.goto(FILE + query);
+  if (!tips) {                                                         // (set once, then reload: an init script that touches storage on every load made reloads flaky)
+    await page.evaluate(() => {
+      try {
+        localStorage.setItem('tabletop-library-fossil-frenzy-tips', JSON.stringify(['match', 'gem', 'gemTwo']));
+        localStorage.setItem('tabletop-library-fossil-frenzy-passplay', JSON.stringify({ n: 2, reminders: false }));
+      } catch (e) { /* no storage */ }
+    });
+    await page.reload();
+  }
   return { browser, page, errors };
 }
 
@@ -55,8 +65,15 @@ const otherFree = page => page.evaluate(() => { const st = window.FossilFrenzyUI
 const openSettings = async page => { if (await page.locator('[data-act=menu]').count()) await page.tap('[data-act=menu]'); await page.tap('[data-act=settings]'); };
 const openRules = async page => { if (await page.locator('[data-act=menu]').count()) await page.tap('[data-act=menu]'); await page.tap('[data-act=help]'); };
 const quitToStart = async page => { await page.tap('[data-act=menu]'); await page.tap('[data-act=menu-ask][data-v=quit]'); await page.tap('[data-act=quit]'); };
-const idle = page => page.waitForFunction(() => { const u = window.FossilFrenzyUI.ui; return !u.steps || u.stage >= u.steps.length; });   // an opponent's turn has finished being shown
-const takeATurn = async page => { await idle(page); if (await page.locator('.bankcard').count()) await page.tap('.bankcard'); await page.tap(await firstFree(page)); await page.tap(await otherFree(page)); await page.tap('[data-act=end]'); };
+const idle = page => page.waitForFunction(() => { const u = window.FossilFrenzyUI.ui; return (!u.steps || u.stage >= u.steps.length) && !u.fx; });   // an opponent's turn has finished being shown (and its film, if it found or dug up a map)
+// (a match ends the turn by itself once its film has played; otherwise there is the End turn button)
+const takeATurn = async page => {
+  await idle(page); if (await page.locator('.bankcard').count()) await page.tap('.bankcard');
+  const turn = await page.evaluate(() => window.FossilFrenzyUI.ui.st.turnNo);
+  await page.tap(await firstFree(page)); await page.tap(await otherFree(page));
+  await page.waitForFunction(t => { const u = window.FossilFrenzyUI.ui; return u.st.over || u.st.turnNo !== t || (!u.fx && !!document.querySelector('[data-act=end]')); }, turn, { timeout: 15000 });
+  if (await page.locator('[data-act=end]').count()) await page.tap('[data-act=end]');
+};
 
 // Make specific fossils particular values by swapping with another fossil that has it (keeps the set intact).
 const rig = (page, wanted) => page.evaluate(w => {
@@ -82,7 +99,7 @@ const forceFinish = (page, points) => page.evaluate(pts => {
 
 const fingerprint = () => {
   const st = window.FossilFrenzyUI.ui.st;
-  return JSON.stringify([window.FossilFrenzyUI.ui.turnCard, st.phase, st.turnNo, st.matchedCount, st.turn.revealed, st.players.map(p => [p.sets.length, p.points])]);
+  return JSON.stringify([window.FossilFrenzyUI.ui.turnCard, !!window.FossilFrenzyUI.ui.tip, st.phase, st.turnNo, st.matchedCount, st.turn.revealed, st.players.map(p => [p.sets.length, p.points])]);
 };
 
 // Plays a whole game with taps only. A hidden helper bot (perfect memory) chooses what a human would tap.
@@ -95,6 +112,7 @@ async function playByTaps(page, humanSeats) {
     const plan = await page.evaluate(() => {
       const { ui } = window.FossilFrenzyUI, real = ui.st;
       if (real.over) return { done: true };
+      if (ui.tip) return { sel: '[data-act=tip-ok]' };
       if (ui.turnCard) return { sel: '[data-act=begin]' };
       if (document.querySelector('.bankcard')) return { sel: '.bankcard' };      // the opponent banked: its banner sits over the board; tap it to go on
       // while an opponent's finished turn is on the board, my first tap ends it and starts mine: plan from there
@@ -291,7 +309,7 @@ test('Campaign: level 2 opens with an alert that introduces the gems (and says w
     for (let i = 0; i < 5; i++) {
       await page.tap('[data-act=mode][data-v=campaign]'); await page.tap(`[data-act=level][data-i="${i}"]`);
       assert.equal(await page.locator('[data-act=alert-ok]').count(), i === 1 ? 1 : 0, 'the alert is only at the start of level 2');
-      if (i === 1) { const t = await page.locator('.alert').innerText(); assert.match(t, /gems/i); assert.match(t, /worth 10/); assert.match(t, /set of three/); await page.tap('[data-act=alert-ok]'); assert.equal(await page.locator('.alert').count(), 0, 'one tap puts it away'); }
+      if (i === 1) { const t = await page.locator('.alert').innerText(); assert.match(t, /gem maps/i); assert.match(t, /worth 10/); assert.match(t, /three pieces/); await page.tap('[data-act=alert-ok]'); assert.equal(await page.locator('.alert').count(), 0, 'one tap puts it away'); }
       assert.deepEqual(await board(), want[i], 'level ' + (i + 1));
       assert.equal(await page.locator('svg.board .cell').count(), want[i][0], 'the board on screen has that many spaces');
       await page.tap('[data-act=menu]'); await page.tap('[data-act=menu-ask][data-v=quit]'); await page.tap('[data-act=quit]');
@@ -448,7 +466,7 @@ test('you bank ONE set, by tapping it, for the number on its fossil', SKIP, asyn
     await page.tap('[data-act=set][data-i="1"]');                          // bank the 3, not the 7 — and the turn ends by itself
     const r = await page.evaluate(b => { const st = window.FossilFrenzyUI.ui.st, p = st.players[b]; return [p.points, p.sets.map(x => x.value), st.current !== b, st.turnNo]; }, banker);
     assert.deepEqual(r, [3, [7], true, 1]);
-    assert.match(await page.locator('.turncard').innerText(), /banked a 3: \+3/i, 'the next player is told what was banked');
+    assert.match(await page.locator('.turncard').innerText(), /dug up a 3 map: \+3/i, 'the next player is told what was banked');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -541,17 +559,50 @@ test('save: a campaign game resumes against the same opponent, with its turn sti
   } finally { await browser.close(); }
 });
 
-test('save: starting over clears the save, and a finished game is not resumed', SKIP, async () => {
+test('save: leaving a game keeps it (Continue on the Main Menu, also after a reload); a finished game is not kept', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await passAndPlay(page, 2);
+    await page.tap(await firstFree(page)); await page.tap(await otherFree(page));         // a turn in progress: flipped, not yet ended
+    const before = await gameState(page);
+    await quitToStart(page);
+    assert.equal(await screenOf(page), 'home');
+    assert.equal(await page.locator('[data-act=continue]').count(), 1, 'the Main Menu offers to continue it');
+    await page.reload();
+    assert.equal(await screenOf(page), 'home', 'a reload does not throw you back into a game you left');
+    assert.equal(await page.locator('.hero-menu [data-act=continue]').count(), 1);
+    await page.tap('[data-act=continue]');
+    assert.equal(await screenOf(page), 'play');
+    assert.equal(await gameState(page), before, 'exactly the game that was left');
+    await forceFinish(page, [4, 2]);
+    await page.reload();
+    assert.equal(await screenOf(page), 'home');
+    assert.equal(await page.locator('[data-act=continue]').count(), 0, 'a finished game is not offered');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('save: Campaign and Pass & Play each offer the saved game — continue it, or start a new one (which replaces it)', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     await passAndPlay(page, 2);
     await quitToStart(page);
-    await page.reload();
-    assert.equal(await screenOf(page), 'home');
-    await passAndPlay(page, 2);
-    await forceFinish(page, [4, 2]);
-    await page.reload();
-    assert.equal(await screenOf(page), 'home');
+    await page.tap('[data-act=mode][data-v=campaign]');
+    assert.equal(await page.locator('[data-act=continue]').count(), 0, 'a saved Pass & Play game is not offered on the Campaign screen');
+    await page.tap('[data-act=home]');
+    await page.tap('[data-act=mode][data-v=pass]');
+    assert.match(await page.locator('[data-act=continue]').innerText(), /Continue[\s\S]*Pass & Play/);
+    assert.match(await page.locator('[data-act=deal]').innerText(), /new game/i);
+    await page.tap('[data-act=continue]');
+    assert.equal(await screenOf(page), 'play');
+    await quitToStart(page);
+    await page.tap('[data-act=mode][data-v=campaign]');                                       // playing the campaign now replaces the saved game
+    await page.tap('[data-act=level][data-i="0"]');
+    await quitToStart(page);
+    assert.equal(await page.locator('[data-act=continue]').count(), 1);
+    assert.match(await page.locator('[data-act=continue]').innerText(), /Campaign[\s\S]*Beginner/);
+    await page.tap('[data-act=mode][data-v=pass]');
+    assert.equal(await page.locator('[data-act=continue]').count(), 0, 'the old Pass & Play game is gone');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
@@ -669,7 +720,7 @@ test('an opponent\'s turn is animated: its peek (number hidden) shows at once, t
     await campaign(page, 0);
     let seen = false;
     for (let g = 0; g < 20 && !seen; g++) {
-      await page.waitForFunction(() => { const u = window.FossilFrenzyUI.ui; return !u.steps || u.stage >= u.steps.length; }, null, { timeout: 5000 });
+      await page.waitForFunction(() => { const u = window.FossilFrenzyUI.ui; return (!u.steps || u.stage >= u.steps.length) && !u.fx; }, null, { timeout: 5000 });
       await takeATurn(page);
       const info = await page.evaluate(() => { const { ui } = window.FossilFrenzyUI; return { n: ui.steps ? ui.steps.length : 0, first: ui.steps && ui.steps[0] ? ui.steps[0].a.type : null, stage: ui.stage }; });
       if (info.n >= 2 && info.first === 'peek' && info.stage === 1) {
@@ -725,7 +776,7 @@ test('menu: a ☰ button opens rules, retry and back-to-start; retry and leaving
     assert.equal(await page.locator('[data-act=menu]').count(), 1);
     assert.equal(await page.locator('.q').count(), 1, 'one small system button, nothing else competing for attention');
     await page.tap('[data-act=menu]');
-    assert.deepEqual(await page.locator('.menu button').allInnerTexts(), ['Retry', 'How to play', 'Fossils', 'Settings', 'Main Menu']);
+    assert.deepEqual(await page.locator('.menu button').allInnerTexts(), ['Retry', 'How to play', 'Tiles', 'Settings', 'Main Menu']);
     await page.tap('.backdrop[data-act=menu-close]', { force: true });      // tap away to close
     assert.equal(await page.locator('.menu').count(), 0);
     await page.tap('[data-act=menu]'); await page.tap('[data-act=help]');   // rules from the menu
@@ -848,7 +899,7 @@ test('sets are shown in one place only — the scoreboard — and tapping them t
     assert.equal(await page.locator('.chip.cur .setbtn[data-act=set]').count(), 2, 'the current player\'s sets are the tappable ones');
     assert.equal(await page.locator('.chip:not(.cur) [data-act=set]').count(), 0);
     assert.deepEqual(await page.locator('.chip.cur .setbtn').allInnerTexts(), ['💎\n12', '7']);
-    assert.match(await page.locator('.bankcap').innerText(), /tap to bank/i, 'the sets say they can be tapped');
+    assert.match(await page.locator('.bankcap').innerText(), /tap to dig up/i, 'the sets say they can be tapped');
     const box = await page.locator('.chip.cur .setbtn').first().boundingBox();
     assert.ok(box.width >= 48 && box.height >= 48, 'big enough to be a button: ' + JSON.stringify(box));
     await page.tap('.chip.cur .setbtn[data-i="1"]');                       // bank the gem, up there
@@ -888,7 +939,7 @@ test('the opponent banks: a clear banner says what it banked, what it scored and
       else await takeATurn(page);
     }
     const txt = await page.locator('.bankcard').innerText();
-    assert.match(txt, /Beginner banked/);
+    assert.match(txt, /Beginner dug up a map/);
     assert.match(txt, /\+7/);
     assert.doesNotMatch(txt, /Score now/, 'the score is up in the bar already');
     assert.equal(await page.locator('.chip.cur .pts').innerText(), '7');
@@ -908,7 +959,7 @@ test('after I bank, the turn is over at once and the opponent starts — what I 
     await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI; ui.st.players[0].sets = [{ value: 6, gem: false, size: 2, ids: [] }]; ui.st.rng = () => 0.01; render(); });
     await page.tap('[data-act=set]');                                      // my set, up in the scoreboard (also works while the opponent's finished turn is still showing)
     assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.current), 1);
-    assert.match(await page.locator('.event').innerText(), /You banked a 6: \+6/);
+    assert.match(await page.locator('.event').innerText(), /You dug up a 6 map: \+6/);
     assert.equal(await page.locator('.chip .pts').first().innerText(), '6');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -1053,7 +1104,7 @@ test('fossils panel: the menu shows how many of each number are in THIS game (fr
     const rows = await page.locator('.fossils .frow').evaluateAll(els => els.map(e => [e.querySelector('.mini').textContent, e.querySelector('b').textContent.replace(/\s+/g, ' ')]));
     const expect = await page.evaluate(() => window.FossilFrenzyUI.ui.st.data.tokens.slice().sort((a, b) => (a.gem ? 1 : 0) - (b.gem ? 1 : 0) || a.value - b.value).map(t => [t.gem ? '💎' : String(t.value), '× ' + t.count]));
     assert.deepEqual(rows, expect);
-    assert.match(await page.locator('.fossils .total').innerText(), /31 fossils/);
+    assert.match(await page.locator('.fossils .total').innerText(), /31 tiles/);
     const text = await page.locator('.fossils').innerText();
     assert.doesNotMatch(text, /\bleft\b|remain/i, 'it does not say what remains');
     // it follows the game's own data: a different game, different counts
@@ -1072,8 +1123,8 @@ test('a gem always shows what it is worth: on its fossil, on the set you hold, a
     await passAndPlay(page, 2);
     const gemCell = await page.evaluate(() => { const st = window.FossilFrenzyUI.ui.st; return st.tokens.find(t => t.gem && !t.matched).cell; });
     await page.tap(`[data-act=cell][data-id="${gemCell}"]`);                // peek a gem: my own number shows
-    assert.equal(await page.locator(`[data-id="${gemCell}"] .gemnum`).textContent(), '12', 'the worth is under the gem on the fossil');
-    assert.equal(await page.locator(`[data-id="${gemCell}"] .gem`).textContent(), '💎');
+    assert.equal(await page.locator(`[data-id="${gemCell}"] .num.gem`).textContent(), '12', 'the worth is under the jewel on the tile');
+    assert.equal(await page.locator(`[data-id="${gemCell}"] .parch.gem`).count(), 1, 'a gem piece is a dark map piece');
     await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI; ui.st.players[ui.st.current].sets = [{ value: 12, gem: true, size: 3, ids: [] }]; render(); });
     assert.equal(await page.locator('.chip.cur .setbtn').first().innerText(), '💎\n12', 'and under the gem in the set you hold');
     await page.tap('[data-act=menu]'); await page.tap('[data-act=settings]');
@@ -1205,7 +1256,7 @@ test('end screen: each player\'s fossils are two labelled rows — Banked, and M
     });
     await forceFinish(page, [11, 0]);
     const first = page.locator('.place').first();
-    assert.deepEqual(await first.locator('.rowlab').evaluateAll(els => els.map(e => e.textContent)), ['Banked', 'Matched, not banked']);
+    assert.deepEqual(await first.locator('.rowlab').evaluateAll(els => els.map(e => e.textContent)), ['Dug up', 'Found, not dug up']);
     assert.deepEqual(await first.locator('.tiles:not(.lostrow) .mini').allInnerTexts(), ['7', '3']);
     assert.deepEqual(await first.locator('.tiles.lostrow .mini').allInnerTexts(), ['💎\n12', '5']);
     assert.doesNotMatch(await page.locator('.results').innerText(), /\+/);
@@ -1289,4 +1340,276 @@ test('a visible tell: when an opponent slips (taps the wrong spot, or plays a ra
     assert.equal(await page.locator('.say').count(), 0);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
+});
+
+// ---------- Torn Treasure: the look, the films, the reminders, what the others flipped ----------
+const pairOf = page => page.evaluate(() => {
+  const st = window.FossilFrenzyUI.ui.st, by = {};
+  for (const t of st.tokens) if (!t.gem && !t.matched) (by[t.value] = by[t.value] || []).push(t);
+  const v = Object.values(by).find(a => a.length >= 2);
+  return v.slice(0, 2).map(t => `[data-act=cell][data-id="${t.cell}"]`);
+});
+const missOf = page => page.evaluate(() => {          // two fossils that do not match (neither a gem)
+  const st = window.FossilFrenzyUI.ui.st, free = st.tokens.filter(t => !t.matched && !t.gem && !window.FossilFrenzyUI.ui.recall.some(e => e.tid === t.id));
+  const a = free[0], b = free.find(t => t.value !== a.value);
+  return [a, b].map(t => `[data-act=cell][data-id="${t.cell}"]`);
+});
+const filmOver = page => page.waitForFunction(() => !window.FossilFrenzyUI.ui.fx, null, { timeout: 15000 });
+
+test('theme: face down a tile is sand, face up half of a torn treasure map in its tier\'s colours, with the number biggest; the title says Torn Treasure', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    assert.equal(await page.title(), 'Torn Treasure');
+    assert.match(await page.locator('h1.logo').innerText(), /Torn\s+Treasure/);
+    await passAndPlay(page, 2);
+    assert.ok(await page.locator('svg.board .tile .sand').count() >= 30, 'face down: sand');
+    const tiers = await page.evaluate(() => {
+      const { ui, render } = window.FossilFrenzyUI, st = ui.st, seen = {};
+      st.tokens.forEach(t => { st.turn.revealed.push(t.id); });          // show everything, to look at the art
+      render();
+      const out = {};
+      st.tokens.forEach(t => { const el = document.querySelector(`[data-id="${t.cell}"] .parch`); if (el) out[t.gem ? 'gem' : t.value] = el.getAttribute('class'); });
+      return out;
+    });
+    const want = { 2: 'plain', 3: 'plain', 5: 'aged', 6: 'aged', 7: 'aged', 9: 'gold', 10: 'gold', 12: 'gem' };
+    for (const [v, tier] of Object.entries(want)) if (tiers[v] || tiers[v] === '') assert.match(tiers[v], new RegExp('parch ' + tier), v + ' is ' + tier);
+    assert.ok(await page.locator('.parch.gem').count() >= 3, 'gem pieces are dark map pieces');
+    const sizes = await page.evaluate(() => [...document.querySelectorAll('.tile .num:not(.gem)')].map(n => parseFloat(getComputedStyle(n).fontSize)));
+    assert.ok(sizes.length && Math.min(...sizes) >= 25, 'the number is large on every tile: ' + Math.min(...sizes));
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('a match: the film plays (tiles lift and slide together, become one square map, fly to the player\'s maps), then the turn ends by itself', SKIP, async () => {
+  const { browser, page, errors } = await open({ animated: true });
+  try {
+    await passAndPlay(page, 2);
+    const who = await page.evaluate(() => window.FossilFrenzyUI.ui.st.current), turn = await page.evaluate(() => window.FossilFrenzyUI.ui.st.turnNo);
+    const [a, b] = await pairOf(page);
+    await page.tap(a); await page.tap(b);
+    await page.waitForFunction(() => window.FossilFrenzyUI.ui.fx && document.querySelectorAll('#fx .flyer').length === 2);
+    assert.equal(await page.locator('#fx .flysq').count(), 1, 'the square map is ready to appear');
+    assert.equal(await page.locator('#fx').evaluate(e => getComputedStyle(e).pointerEvents), 'none', 'the film never takes a tap');
+    assert.equal(await page.locator(`.chip[data-p="${who}"] .setbtn.landing`).count(), 1, 'the map\'s place in the player\'s maps is waiting');
+    await page.waitForFunction(t => window.FossilFrenzyUI.ui.st.turnNo > t, turn, { timeout: 15000 });
+    assert.equal(await page.locator('#fx > *').count(), 0, 'the layer is cleared');
+    assert.equal(await page.evaluate(w => window.FossilFrenzyUI.ui.st.players[w].sets.length, who), 1);
+    assert.equal(await page.locator(`.chip[data-p="${who}"] .setbtn`).count(), 1, 'the found map sits with its player');
+    assert.equal(await page.evaluate(w => window.FossilFrenzyUI.ui.st.players[w].points, who), 0, 'found, not scored');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('a match: a tap skips the film and the turn still ends; with reduced motion there is no film and a tap ends the turn as before', SKIP, async () => {
+  const { browser, page, errors } = await open({ animated: true });
+  try {
+    await passAndPlay(page, 2);
+    const turn = await page.evaluate(() => window.FossilFrenzyUI.ui.st.turnNo);
+    const [a, b] = await pairOf(page);
+    await page.tap(a); await page.tap(b);
+    await page.waitForFunction(() => !!window.FossilFrenzyUI.ui.fx);
+    await page.tap('.boardwrap');
+    assert.equal(await page.evaluate(() => !!window.FossilFrenzyUI.ui.fx), false);
+    assert.equal(await page.evaluate(t => window.FossilFrenzyUI.ui.st.turnNo, turn), turn + 1, 'the turn ended');
+  } finally { await browser.close(); }
+  const r = await open();
+  try {
+    await passAndPlay(r.page, 2);
+    const [a, b] = await pairOf(r.page);
+    await r.page.tap(a); await r.page.tap(b);
+    assert.equal(await r.page.evaluate(() => !!window.FossilFrenzyUI.ui.fx), false, 'no film');
+    assert.equal(await r.page.evaluate(() => window.FossilFrenzyUI.ui.st.phase), 'resolved', 'waiting for the tap');
+    assert.equal(await r.page.locator('[data-act=end]').count(), 1);
+    assert.deepEqual(r.errors, []);
+  } finally { await r.browser.close(); }
+});
+
+test('digging a map up: the film plays (the map becomes an open chest, the points count up), then the turn ends; the score is right', SKIP, async () => {
+  const { browser, page, errors } = await open({ animated: true });
+  try {
+    await passAndPlay(page, 2);
+    const who = await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI; ui.st.players[ui.st.current].sets = [{ value: 7, gem: false, size: 2, ids: [] }]; render(); return ui.st.current; });
+    await page.tap('.chip.cur .setbtn[data-i="0"]');
+    await page.waitForFunction(() => window.FossilFrenzyUI.ui.fx && window.FossilFrenzyUI.ui.fx.kind === 'dig');
+    assert.equal(await page.locator('#fx .chest').count(), 1, 'the chest');
+    assert.equal(await page.locator('#fx .plus').innerText(), '+7');
+    await page.waitForFunction(() => !window.FossilFrenzyUI.ui.fx, null, { timeout: 15000 });
+    assert.equal(await page.evaluate(w => window.FossilFrenzyUI.ui.st.players[w].points, who), 7);
+    assert.equal(await page.locator(`.chip[data-p="${who}"] .pts`).innerText(), '7', 'the count ends on the score');
+    assert.notEqual(await page.evaluate(w => window.FossilFrenzyUI.ui.st.current, who), who, 'the turn ended');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('reminder: the first match on the easiest level says the map is not scored yet and how to score it; once per device; never on other levels', SKIP, async () => {
+  const { browser, page, errors } = await open({ tips: true });
+  try {
+    await campaign(page, 0);
+    const turn = () => page.evaluate(() => window.FossilFrenzyUI.ui.st.turnNo);
+    const [a, b] = await pairOf(page);
+    await page.tap(a);
+    if (await page.evaluate(() => window.FossilFrenzyUI.ui.st.current) === 0) { await page.tap(b); }
+    else { await page.tap(await pairOf(page).then(p => p[1])); }
+    const t0 = await turn();
+    assert.equal(await page.locator('.tip').count(), 1, 'a reminder appears');
+    const text = await page.locator('.tip').innerText();
+    assert.match(text, /not scored/i); assert.match(text, /tap it/i); assert.match(text, /turn/i);
+    assert.equal(await page.locator('.chip.cur .setbtn.spot').count() + await page.locator('.setbtn.spot').count() >= 1, true, 'the map in question is lit');
+    assert.equal(await turn(), t0, 'play waits for the tap');
+    await page.tap('[data-act=tip-ok]');
+    assert.equal(await page.locator('.tip').count(), 0);
+    assert.deepEqual(errors, []);
+    // not again on this device
+    const seen = await page.evaluate(() => JSON.parse(localStorage.getItem('tabletop-library-fossil-frenzy-tips')));
+    assert.ok(seen.includes('match'));
+  } finally { await browser.close(); }
+});
+
+test('reminder (Pass & Play): a gem peeked shows how gems work; two gems explain the third tap; Rules reminders Off silences both', SKIP, async () => {
+  const { browser, page, errors } = await open({ tips: true });
+  try {
+    await page.tap('[data-act=mode][data-v=pass]');
+    assert.equal(await page.locator('[data-act=reminders][data-v=on].on').count(), 1, 'reminders are on by default for Pass & Play');
+    await page.tap('[data-act=deal]'); await page.tap('[data-act=begin]');
+    const gems = await page.evaluate(() => window.FossilFrenzyUI.ui.st.tokens.filter(t => t.gem).map(t => `[data-act=cell][data-id="${t.cell}"]`));
+    await page.tap(gems[0]);
+    assert.match(await page.locator('.tip').innerText(), /three/i);
+    assert.equal(await page.locator('.tip h2').innerText().then(t => /gem/i.test(t)), true);
+    await page.dispatchEvent(gems[1], 'click');              // (blocked: the reminder is waiting for its tap)
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.phase), 'peeked');
+    await page.tap('[data-act=tip-ok]');
+    await page.tap(gems[1]);
+    assert.match(await page.locator('.tip').innerText(), /third/i, 'two gems: tap a third tile');
+    await page.tap('[data-act=tip-ok]');
+    assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.phase), 'flipped');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+  const off = await open({ tips: true });
+  try {
+    const { page: p } = off;
+    await p.tap('[data-act=mode][data-v=pass]');
+    await p.tap('[data-act=reminders][data-v=off]');
+    assert.equal(await p.locator('[data-act=reminders][data-v=off].on').count(), 1);
+    await p.reload(); await p.tap('[data-act=mode][data-v=pass]');
+    assert.equal(await p.locator('[data-act=reminders][data-v=off].on').count(), 1, 'remembered');
+    await p.tap('[data-act=deal]'); await p.tap('[data-act=begin]');
+    const gems = await p.evaluate(() => window.FossilFrenzyUI.ui.st.tokens.filter(t => t.gem).map(t => `[data-act=cell][data-id="${t.cell}"]`));
+    await p.tap(gems[0]); await p.tap(gems[1]);
+    assert.equal(await p.locator('.tip').count(), 0, 'no reminders');
+    assert.equal(await p.evaluate(() => window.FossilFrenzyUI.ui.st.phase), 'flipped');
+    assert.deepEqual(off.errors, []);
+  } finally { await off.browser.close(); }
+});
+
+test('Pass & Play: the next player sees the one fossil the last player flipped second (never the one they only peeked), ringed in that player\'s colour', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await passAndPlay(page, 2);
+    const first = await page.evaluate(() => window.FossilFrenzyUI.ui.st.current);
+    const [a, b] = await missOf(page);
+    const ids = await page.evaluate(([x, y]) => [x, y].map(sel => { const c = +sel.match(/data-id="(\d+)"/)[1]; return window.FossilFrenzyUI.ui.st.tokens.find(t => t.cell === c).id; }), [a, b]);
+    await page.tap(a); await page.tap(b);
+    assert.equal(await page.locator('.tile.seen').count(), 0, 'my own flips are not "seen" tiles: they are my turn');
+    await page.tap('[data-act=end]');
+    assert.equal(await page.locator('.tile.seen').count(), 0, 'behind the turn card nothing is shown');
+    await page.tap('[data-act=begin]');
+    assert.equal(await page.locator('.tile.seen').count(), 1, 'exactly one tile: the one that was flipped second');
+    const cellB = await page.evaluate(id => window.FossilFrenzyUI.ui.st.tokens[id].cell, ids[1]), cellA = await page.evaluate(id => window.FossilFrenzyUI.ui.st.tokens[id].cell, ids[0]);
+    assert.equal(await page.locator(`[data-id="${cellB}"] .tile.seen`).count(), 1);
+    assert.equal(await page.locator(`[data-id="${cellA}"] .tile.up, [data-id="${cellA}"] .tile.peek`).count(), 0, 'the private peek stays private');
+    const ring = await page.locator(`[data-id="${cellB}"] .ring`).evaluate(e => e.style.stroke);
+    assert.ok(ring.length > 0, 'a ring in the flipper\'s colour: ' + ring);
+    assert.match(await page.locator('.hint').innerText(), /ringed/i);
+    assert.notEqual(first, await page.evaluate(() => window.FossilFrenzyUI.ui.st.current));
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('Pass & Play (3 players): you see every fossil flipped since the end of your last turn, from each player, and only those', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await passAndPlay(page, 3);
+    const seenCount = () => page.locator('.tile.seen').count();
+    const flipped = [];
+    for (let turn = 0; turn < 4; turn++) {
+      const [a, b] = await missOf(page);
+      const tid = await page.evaluate(sel => { const c = +sel.match(/data-id="(\d+)"/)[1]; return window.FossilFrenzyUI.ui.st.tokens.find(t => t.cell === c).id; }, b);
+      // this player sees what the others flipped since their last turn: 0, 1, 2, then (turn 3: the first player again) the two others'
+      const expected = turn === 0 ? 0 : turn === 1 ? 1 : turn === 2 ? 2 : 2;
+      assert.equal(await seenCount(), expected, 'turn ' + turn);
+      await page.tap(a); await page.tap(b);
+      flipped.push(tid);
+      await page.tap('[data-act=end]'); await page.tap('[data-act=begin]');
+    }
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('Pass & Play: a flipped fossil that has since been matched is not shown any more; the Campaign never shows the opponent\'s flips this way', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await passAndPlay(page, 2);
+    const [a, b] = await missOf(page);
+    await page.tap(a); await page.tap(b);
+    await page.tap('[data-act=end]'); await page.tap('[data-act=begin]');
+    assert.equal(await page.locator('.tile.seen').count(), 1);
+    await page.evaluate(() => { const { ui, render } = window.FossilFrenzyUI, e = ui.recall[0]; ui.st.tokens[e.tid].matched = true; ui.st.tokenAt[ui.st.tokens[e.tid].cell] = -1; render(); });
+    assert.equal(await page.locator('.tile.seen').count(), 0, 'matched: gone from the board, gone from the ringed ones');
+    await quitToStart(page);
+    await campaign(page, 0);
+    assert.equal(await page.locator('.tile.seen').count(), 0);
+    assert.deepEqual(await page.evaluate(() => window.FossilFrenzyUI.ui.recall), [], 'nothing is remembered in the Campaign');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('layout, portrait first: iPad portrait (820 x 1180) and iPhone 17 portrait (402 x 874) — the board, the scoreboard and every button fit and are big enough to tap', SKIP, async () => {
+  for (const [w, h, minMenu, minEnd] of [[820, 1180, 72, 64], [402, 874, 56, 52]]) {
+    const { browser, page, errors } = await open({ viewport: { width: w, height: h } });
+    try {
+      await passAndPlay(page, 4);
+      const box = sel => page.locator(sel).first().boundingBox();
+      const menu = await box('.q');
+      assert.ok(menu.width >= minMenu && menu.height >= minMenu, `the menu button is at least ${minMenu}px (${w}): ${JSON.stringify(menu)}`);
+      const overflow = await page.evaluate(() => [document.documentElement.scrollWidth > innerWidth, document.documentElement.scrollHeight > innerHeight]);
+      assert.deepEqual(overflow, [false, false], 'nothing scrolls');
+      const bar = await box('.chips'), board = await box('svg.board');
+      assert.ok(bar.x >= 0 && bar.x + bar.width <= w + 0.5, 'the scoreboard fits the width');
+      assert.ok(board.width >= w * 0.9, `the board uses the width in portrait: ${board.width} of ${w}`);
+      await page.tap(await firstFree(page)); await page.tap(await otherFree(page));
+      const end = await box('[data-act=end]');
+      assert.ok(end.height >= minEnd, `End turn is easy to tap (${w}): ${JSON.stringify(end)}`);
+      await page.tap('[data-act=end]');
+      const start = await box('.tc-tap');
+      assert.ok(start.height >= minEnd + 8, `"Tap to start your turn" is big (${w}): ${JSON.stringify(start)}`);
+      assert.deepEqual(errors, []);
+    } finally { await browser.close(); }
+  }
+});
+
+test('campaign screen: a full-width card per opponent with its board and its size, Next up / Play / Beaten / Beat X to unlock; big back button; progress line', SKIP, async () => {
+  for (const [w, h] of [[820, 1180], [402, 874]]) {
+    const { browser, page, errors } = await open({ viewport: { width: w, height: h } });
+    try {
+      await page.evaluate(() => localStorage.setItem('tabletop-library-fossil-frenzy-campaign', JSON.stringify({ beaten: ['beginner'] }))); await page.reload();
+      await page.tap('[data-act=mode][data-v=campaign]');
+      const rows = page.locator('.lvl');
+      assert.equal(await rows.count(), 5);
+      assert.match(await page.locator('.progress').innerText(), /1 of 5 opponents beaten/);
+      assert.match(await rows.nth(0).innerText(), /Beginner[\s\S]*18 tiles[\s\S]*Beaten/);
+      assert.match(await rows.nth(1).innerText(), /Novice[\s\S]*21 tiles[\s\S]*gem map worth 10[\s\S]*Next up/);
+      assert.match(await rows.nth(2).innerText(), /Normal[\s\S]*Beat Novice to unlock/);
+      assert.equal(await page.locator('.lvl.next').count(), 1);
+      assert.equal(await page.locator('.lvl .mini-board').count(), 5, 'each card shows its board');
+      const first = await rows.nth(0).boundingBox(), back = await page.locator('.back').boundingBox();
+      assert.ok(first.height >= 80, 'cards are big: ' + first.height);
+      assert.ok(first.width >= w * 0.8, 'and wide: ' + first.width);
+      assert.ok(back.height >= 44 && back.width >= 44, 'the back button is at least 44pt');
+      const sizes = await rows.evaluateAll(els => els.map(e => e.getBoundingClientRect().height));
+      assert.ok(Math.min(...sizes) >= 80);
+      await rows.nth(3).tap({ force: true });                             // a locked level does nothing
+      assert.equal(await screenOf(page), 'campaign');
+      assert.deepEqual(errors, []);
+    } finally { await browser.close(); }
+  }
 });

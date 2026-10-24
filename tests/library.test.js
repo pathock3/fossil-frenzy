@@ -96,7 +96,7 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     const ids = await page.locator('a.box .art svg').evaluateAll(els => els.map(e => e.innerHTML));
     assert.equal(new Set(ids).size, ids.length, 'each game is visually distinct');
     const ff = 'a.box[data-id="fossil-frenzy"]';
-    assert.match(await page.locator(ff).getAttribute('aria-label'), /Fossil Frenzy/);
+    assert.match(await page.locator(ff).getAttribute('aria-label'), /Torn Treasure/);
     // a box is a picture first: cover art (an SVG) only, not a paragraph of text
     const box = await page.locator(ff).boundingBox();
     assert.ok(box.width >= 240 && box.height >= box.width * 1.2, 'a box is a big, upright rectangle: ' + JSON.stringify(box));
@@ -125,7 +125,7 @@ test('library (browser): the shelf shows the listed games; tapping a box opens t
     await page.goto(base + '/index.html');
     await page.tap(ff);
     await page.waitForURL(/games\/fossil-frenzy\/index\.html\?from=library/);
-    assert.match(await page.locator('h1').first().innerText(), /Fossil\s+Frenzy/);
+    assert.match(await page.locator('h1').first().innerText(), /Torn\s+Treasure/);
     const back = await page.locator('a.back').boundingBox();
     assert.ok(back.x < 40 && back.y < 40, 'the way back is in the very top-left corner: ' + JSON.stringify(back));
     assert.ok(back.height >= 44, 'and big enough to tap: ' + JSON.stringify(back));
