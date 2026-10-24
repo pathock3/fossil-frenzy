@@ -1715,7 +1715,7 @@ test('Pass & Play board sizes: five to choose from; the size is picked from the 
 });
 
 test('reminder: gems are explained when a gem is first revealed (not at the start of the level) — mine, and an opponent\'s; the opponent\'s turn waits for the tap', SKIP, async () => {
-  const { browser, page, errors } = await open({ tips: true, animated: true });
+  const { browser, page, errors } = await open({ tips: true, animated: true, viewport: { width: 820, height: 1180 } });
   try {
     await page.evaluate(() => localStorage.setItem('tabletop-library-fossil-frenzy-campaign', JSON.stringify({ beaten: ['beginner'] }))); await page.reload();
     await page.tap('[data-act=mode][data-v=campaign]'); await page.tap('[data-act=level][data-i="1"]');

@@ -2279,8 +2279,12 @@ const Campaign = (() => {
     if (!back) return;
     const found = ui.tip.focus.map(f => ({ f, t: ui.st.tokens[f.tid], el: root.querySelector(`.cell[data-id="${ui.st.tokens[f.tid].cell}"]`) })).filter(x => x.el);
     if (!found.length) return;
-    const ys = found.map(x => rectOf(x.el).y), low = ys.reduce((a, y) => a + y, 0) / ys.length > innerHeight / 2;
-    if (low) { back.classList.add('top'); back.style.paddingTop = ((main ? main.getBoundingClientRect().top : 0) + 8) + 'px'; }
+    const tip = back.querySelector('.tip'), hit = () => { const c = tip.getBoundingClientRect(); return found.reduce((n, x) => { const g = x.el.getBoundingClientRect(); return n + (g.right < c.left || g.left > c.right || g.bottom < c.top || g.top > c.bottom ? 0 : 1); }, 0); };
+    if (hit()) {                                                                          // the card at the bottom covers a gem: put it at the top instead (below the scoreboard)
+      const before = hit();
+      back.classList.add('top'); back.style.paddingTop = ((main ? main.getBoundingClientRect().top : 0) + 8) + 'px';
+      if (hit() > before) { back.classList.remove('top'); back.style.paddingTop = ''; }       // (worse there: stay at the bottom; the gem is drawn above the card anyway)
+    }
     for (const { f, t, el } of found) {
       const r = rectOf(el), ring = `<polygon class="ring" style="stroke:${f.color};${f.dash ? dashStyle(BOARD_S * 0.9) : ''}" points="${hexPts(0, 0, BOARD_S * 0.9)}"/>`;
       fxEl('spotclone', r, r.h, r.h, `<svg viewBox="${-BOARD_S} ${-BOARD_S} ${2 * BOARD_S} ${2 * BOARD_S}" width="100%" height="100%"><g class="tile">${mapFaceArt(0, 0, BOARD_S, t, t.id)}</g>${ring}</svg>`);
