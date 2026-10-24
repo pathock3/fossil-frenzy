@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Torn Treasure — opens on the Main Menu**, never in the game you last played (a game in progress is one tap away: **Continue**).
+- **Torn Treasure — no gem note at the start of Novice.** The gems are explained the first time one is turned up — yours (peeked or flipped), or the opponent's, or one the last player showed in Pass & Play — once per device (once per game in Pass & Play). One explanation only (it covers the third tap too; two gems do not explain again). **The note never covers the gem:** it moves to the other half of the page and the gem is drawn above the dimmed page, ringed. The opponent's turn waits while the note is up.
+
 - **Torn Treasure — Pass & Play board sizes:** the setup screen offers five sizes (Tiny 18, Small 21, Medium 25, Large 31, Huge 37 tiles — the five campaign boards, with their gem maps from Small up). The size is picked from the number of players (2: Medium, 3: Large, 4: Huge) until you choose one; your choice is remembered, kept for a replay and in a saved game.
 
 - **Torn Treasure — puzzle pieces:** a flipped tile is a plain tile; only when it is part of a match is it torn, along the side that faces its partner, so the pieces fit together. **An opponent's match is not put back on the board** after its maps fly off: a dashed empty space in its colour shows where they were.

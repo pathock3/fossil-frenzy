@@ -116,7 +116,7 @@ test('Torn Treasure: the theme tiers cover every number in every level, in order
   const tierOf = v => tiers.find(t => v <= t.upTo).id;
   assert.deepEqual([2, 3, 5, 6, 7, 9, 10, 11, 12, 15].map(tierOf), ['plain', 'plain', 'aged', 'aged', 'aged', 'gold', 'gold', 'gold', 'gold', 'gold']);
   for (const lv of Campaign.levels()) for (const t of lv.tokens) assert.ok(tiers.some(x => t.value <= x.upTo), lv.id + ' ' + t.value);
-  for (const id of ['match', 'gem', 'gemTwo']) { const c = GAME_DATA.coach[id]; assert.ok(c && c.title && c.body.length > 40, id + ' reminder'); }
+  for (const id of ['match', 'gem']) { const c = GAME_DATA.coach[id]; assert.ok(c && c.title && c.body.length > 40, id + ' reminder'); }
   assert.deepEqual(GAME_DATA.coach.match.levels, ['beginner'], 'the first-match note is for the easiest level');
   assert.doesNotMatch(JSON.stringify(GAME_DATA.coach), /fossil|bank/i, 'in the theme\'s words');
   for (const k of ['hold', 'lift', 'slide', 'morph', 'pause', 'fly', 'settle']) assert.ok(GAME_DATA.anim.match[k] > 0, 'match ' + k);

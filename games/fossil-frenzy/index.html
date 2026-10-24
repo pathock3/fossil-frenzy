@@ -88,10 +88,6 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 #fx .plus { display: grid; place-items: center; font-weight: 900; font-size: 44px; color: #ffe27a; text-shadow: 0 3px 0 #7a4a08, 0 0 14px rgba(255,200,60,.9); }
 /* menu (system chrome: small and quiet) */
 .backdrop { position: absolute; inset: 0; z-index: 4; background: rgba(0,0,0,.45); }
-.alertback { position: absolute; inset: 0; z-index: 8; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(10,6,3,.7); }
-.alert { width: min(520px, 100%); padding: 24px 26px 22px; border-radius: 20px; background: var(--panel2); border: 3px solid var(--accent); text-align: center; box-shadow: 0 18px 50px rgba(0,0,0,.6); }
-.alert h2 { margin: 0 0 10px; font-size: 30px; color: var(--accent); }
-.alert p { margin: 0 0 6px; font-size: 20px; line-height: 1.4; }
 .menu { position: absolute; z-index: 5; bottom: calc(env(safe-area-inset-bottom) + 100px); left: max(12px, env(safe-area-inset-left)); width: min(300px, calc(100% - 24px)); background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 10px;
   display: flex; flex-direction: column; gap: 6px; box-shadow: 0 12px 30px rgba(0,0,0,.55); }
 .menu button { padding: 14px 16px; border-radius: 12px; background: var(--panel2); text-align: left; font-weight: 700; font-size: 17px; }
@@ -248,7 +244,8 @@ h2 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spac
 .pips i.on { background: var(--good); border-color: var(--good); }
 .mode.resume { background: var(--panel2); border-color: var(--good); box-shadow: 0 5px 0 rgba(0,0,0,.35), 0 0 0 3px rgba(62,207,142,.22); margin-top: 8px; }
 .mode.resume b { color: var(--good); }
-.tipback { position: absolute; inset: 0; z-index: 8; display: flex; align-items: flex-end; justify-content: center; padding: 0 16px calc(env(safe-area-inset-bottom) + 18px); background: rgba(10,6,3,.45); }
+.tipback { position: absolute; inset: 0; z-index: 8; display: flex; align-items: flex-end; justify-content: center; padding: 0 16px calc(env(safe-area-inset-bottom) + 18px); background: rgba(10,6,3,.4); }
+.tipback.top { align-items: flex-start; }
 .tip { width: min(560px, 100%); padding: 20px 22px 18px; border-radius: 20px; background: var(--panel2); border: 3px solid var(--accent); box-shadow: 0 18px 50px rgba(0,0,0,.6); animation: bankin2 .3s ease-out; }
 .tip h2 { margin: 0 0 8px; font-size: 26px; color: var(--accent); text-transform: none; letter-spacing: 0; }
 .tip p { margin: 0 0 4px; font-size: 19px; line-height: 1.4; }
@@ -368,12 +365,11 @@ const GAME_DATA = {
   // harder, change its numbers: memory first, then the skills.
   campaign: {
     // Each level has its own board (`shape`, see `shapes` above) and its own fossils (value x copies; a `gem` is matched as a set of three and is worth its value).
-    // The number of fossils must equal the number of spaces. Level 2 is the first with gems: its `alert` is shown when it starts ({value} is the gem's worth).
+    // The number of fossils must equal the number of spaces. Level 2 is the first with gems: the first gem a player sees is explained by a reminder (`coach.gem`), not by a note at the start of the level.
     levels: [
       { id: 'beginner',    name: 'Beginner',    shape: 'donut',    tokens: [{ value: 2, count: 4 }, { value: 3, count: 4 }, { value: 5, count: 4 }, { value: 6, count: 4 }, { value: 9, count: 2 }],
         ai: { memory: 5.2, selfAwareness: 0, valueSense: 0, leadSense: 0, endSense: 0, setsSense: 0, gemSense: 0 } },
       { id: 'novice',      name: 'Novice',      shape: 'triangle', tokens: [{ value: 2, count: 4 }, { value: 3, count: 4 }, { value: 5, count: 4 }, { value: 6, count: 4 }, { value: 9, count: 2 }, { value: 10, count: 3, gem: true }],
-        alert: { title: 'Gem maps!', body: 'This level has gem maps. A gem map is torn in three pieces and is worth {value}: peek one piece, flip another, then tap a third tile to go for the set. Dig it up for {value} points.' },
         ai: { memory: 7.0, selfAwareness: 3, valueSense: 3, leadSense: 3, endSense: 3, setsSense: 3, gemSense: 3 } },
       { id: 'normal',      name: 'Normal',      shape: 'sun',      tokens: [{ value: 2, count: 6 }, { value: 3, count: 4 }, { value: 5, count: 4 }, { value: 6, count: 4 }, { value: 9, count: 2 }, { value: 10, count: 2 }, { value: 11, count: 3, gem: true }],
         ai: { memory: 8.5, selfAwareness: 5, valueSense: 5, leadSense: 5, endSense: 5, setsSense: 5, gemSense: 5 } },
@@ -389,8 +385,7 @@ const GAME_DATA = {
   // in Pass & Play they appear once per game, unless the players switch "Rules reminders" off on the setup screen.
   coach: {
     match: { levels: ['beginner'], title: 'Map found!', body: 'This map is found but not dug up yet, so it is not scored. To score it, tap it up here on one of your turns instead of peeking: that digs it up, uses your turn and adds its number to your score. Maps you never dig up are worth nothing.' },
-    gem: { title: '💎 Gem maps come in threes', body: 'A gem map is torn in three pieces, so it takes three tiles to put it back together. Peek a gem piece, flip a second one, then tap a third tile: if all three are gem pieces, the map is yours. Otherwise they flip back.' },
-    gemTwo: { title: 'Two gem pieces!', body: 'Tap a third tile to go for the gem map: that also shows the piece you peeked. Or tap anywhere else to stop here.' },
+    gem: { title: '💎 Gem maps come in threes', body: 'A gem map is torn in three pieces, so it takes three tiles to put it back together, and it is worth {value}. Peek a gem piece, flip a second one, then tap a third tile (that also shows the piece you peeked): if all three are gem pieces, the map is yours. Otherwise they flip back. Tap anywhere else instead to stop after two.' },
   },
 
   // ---- THEME ----------------------------------------------------------------
@@ -1398,7 +1393,7 @@ const Campaign = (() => {
   // ---------------- rules reminders ----------------
   // A short note the first time something comes up (see `coach` in the data). Campaign: once per device, only on the levels the note names.
   // Pass & Play: once per game, unless the players switched reminders off. The note waits for a tap on "Got it" before play goes on.
-  function showTip(id, endsTurn = false) {
+  function showTip(id, endsTurn = false, focus = []) {          // focus: the tiles the note is about, [{ tid, color, dash }]: they stay in view above it
     const c = D.coach[id];
     if (!c || ui.tip || !ui.st) return false;
     if (ui.mode === 'campaign') {
@@ -1410,7 +1405,7 @@ const Campaign = (() => {
       if (!ui.pass.reminders || ui.tipsSeen.has(id)) return false;
       ui.tipsSeen.add(id);
     }
-    ui.tip = { id, endsTurn };
+    ui.tip = { id, endsTurn, focus };
     return true;
   }
   // Pass & Play: the public flips of the other players since my last turn, so I can see them as if I had been watching.
@@ -1434,14 +1429,13 @@ const Campaign = (() => {
     ui.names = campaign ? ['You', LV[ui.levelIdx].name] : ui.pass.names.slice(0, n);
     pref.del(SAVE_KEY);                                                  // a new game replaces the one that was saved
     Object.assign(ui, { screen: 'play', prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '', countedOver: false, outcome: null, tip: null, tipsSeen: new Set(), recall: [],
-                        menu: null, help: false, fossils: false, lastEvent: '', prevPts: null, liftKey: '', endSounded: false,
-                        alert: campaign && LV[ui.levelIdx].alert ? LV[ui.levelIdx].alert : null });          // a level that brings something new (the gems) says so first
+                        menu: null, help: false, fossils: false, lastEvent: '', prevPts: null, liftKey: '', endSounded: false });
     nextTurnStarts(true);
   }
   function beginTurn() {
     ui.turnCard = false; ui.lastEvent = '';
     if (animating()) startAnim();
-    else if (ui.mode === 'pass') for (const tid of recallFor(ui.st.current).keys()) if (ui.st.tokens[tid].gem) { showTip('gem'); break; }          // someone showed a gem: say how gems work
+    else if (ui.mode === 'pass') for (const [tid, by] of recallFor(ui.st.current)) if (ui.st.tokens[tid].gem) { showTip('gem', false, [{ tid, color: COLORS[by] }]); break; }          // someone showed a gem: say how gems work
   }
 
   // Is an opponent's turn still being shown one move at a time?
@@ -1467,9 +1461,19 @@ const Campaign = (() => {
     return !A.gem && !B.gem && A.value === B.value ? 'match' : 'miss';
   }
   function stepMs(a) { const P = D.pace; return a.type === 'peek' ? P.peek : a.type === 'bank' ? P.bank : P.flip; }
+  // Does the move now shown (steps[k-1]) turn a gem face up for everyone? (the first time any gem shows, a reminder says how gems work)
+  function stepRevealsGem(k) {
+    const a = ui.steps[k - 1].a;
+    if (a.type === 'flipOther' || a.type === 'flipSecond') return ui.st.tokens[a.tid].gem ? a.tid : null;
+    if (a.type !== 'flipOwn') return null;
+    let T = null; for (let j = 0; j < k; j++) if (ui.steps[j].a.type === 'peek') T = ui.steps[j].a.tid;
+    return T !== null && ui.st.tokens[T].gem ? T : null;
+  }
+  const gemTip = tid => showTip('gem', false, [{ tid, color: COLORS[ui.st.current] }]);
   function startAnim() {
     clearAnim();
     if (!animating()) return;
+    if (ui.tip) { ui.animTimer = setTimeout(startAnim, 250); return; }          // a reminder is waiting for its tap: the opponent's turn waits too
     if (reducedMotion()) { finishAnim(false); return; }
     if (ui.stage === 0) { ui.stage = 1; playStep(1); }         // its peek shows at once
     if (!animating()) return;
@@ -1477,6 +1481,7 @@ const Campaign = (() => {
       ui.animTimer = null;
       const next = ui.steps[ui.stage], prev = ui.stage > 0 ? ui.steps[ui.stage - 1].snap : ui.base, digRect = next && next.a.type === 'bank' ? tileRect(`.chip.cur .setbtn[data-i="${next.a.set}"]`) : null;
       ui.stage++; if (animating()) playStep(ui.stage); else if (ui.say) sfx('slip', 150);
+      { const g = stepRevealsGem(ui.stage); if (g !== null) gemTip(g); }
       render(); startAnim();
       if (digRect && canFx()) { const to = ui.steps[ui.stage - 1].snap, set = prev.sets[next.a.set]; if (set) startDigFx(ui.st.current, { value: set.value, gem: set.gem }, prev.points, to.points, digRect, null); }
       else if (!animating()) botMatchFx();
@@ -1489,7 +1494,11 @@ const Campaign = (() => {
     if (!canFx() || !last || st.over || !st.turn.matched || !['flipOwn', 'flipSecond'].includes(last.a.type)) return;
     startMatchFx(st.turn.matched.slice(), st.current);
   }
-  function finishAnim(redraw = true) { clearAnim(); if (ui.steps) ui.stage = ui.steps.length; if (redraw) render(); }
+  function finishAnim(redraw = true) {
+    clearAnim();
+    if (ui.steps) { const from = ui.stage; ui.stage = ui.steps.length; for (let k = from + 1; k <= ui.steps.length; k++) { const g = stepRevealsGem(k); if (g !== null) { gemTip(g); break; } } }
+    if (redraw) render();
+  }
 
   // Called whenever a turn begins. An opponent decides its whole turn at once, but it is SHOWN one move at a time
   // (peek, then flip, ...), and then waits for a tap.
@@ -1554,7 +1563,7 @@ const Campaign = (() => {
       const st = Engine.restore(sv.game, { data: Campaign.gameData(LV[bl]) });
       ui.boardLevel = bl;
       ui.st = st; ui.bots = Bots.restore(st, sv.bots); ui.names = sv.names; ui.mode = sv.mode === 'campaign' ? 'campaign' : 'pass'; ui.levelIdx = sv.levelIdx | 0;
-      Object.assign(ui, { screen: sv.left ? 'home' : 'play', turnCard: !!sv.turnCard || sv.screen === 'roll', botWaiting: !!sv.botWaiting, tip: null, fx: null,
+      Object.assign(ui, { screen: 'home', turnCard: !!sv.turnCard || sv.screen === 'roll', botWaiting: !!sv.botWaiting, tip: null, fx: null,
                           recall: Array.isArray(sv.recall) ? sv.recall : [], tipsSeen: new Set(sv.tipsSeen || []),
                           prevUp: new Set(), popTurn: st.turn.matched ? st.turnNo : -1, steps: null, stage: 0, base: null, lastEvent: '', menu: null });
     } catch (e) {
@@ -1711,13 +1720,12 @@ const Campaign = (() => {
     } catch (e) { console.warn(e.message); }
     const matchedNow = st.phase === 'resolved' && phase0 !== 'resolved' && !!st.turn.matched && !st.over, film = matchedNow && canFx();
     let chime = '';
-    if (phase0 === 'action' && st.phase === 'peeked') { sfx('peek'); if (st.tokens[st.turn.T].gem) showTip('gem'); }
+    if (phase0 === 'action' && st.phase === 'peeked') { sfx('peek'); if (st.tokens[st.turn.T].gem) showTip('gem', false, [{ tid: st.turn.T, color: COLORS[st.current], dash: true }]); }
     else if (st.phase !== phase0 && phase0 !== 'action') {                        // a public flip happened
       sfx('flip');
       const popped = st.matchedCount > pop0, gems = st.turn.T !== null && st.tokens[st.turn.T].gem && st.tokens[st.turn.F].gem;
       if (popped || !gems) { chime = popped ? (gems ? 'gem' : 'match') : 'miss'; if (!film) sfx(chime, 110); }          // (two gems without the third stay silent: see flipOutcome)
-      if (!popped && st.tokens[st.turn.F].gem) showTip('gem');
-      if (st.phase === 'flipped' && gems) showTip('gemTwo');
+      if (!popped && st.tokens[st.turn.F].gem) showTip('gem', false, [{ tid: st.turn.F, color: COLORS[st.current] }]);
     }
     if (matchedNow) {
       // A match ends the turn by itself once the maps have flown to their player's area (with "reduce motion": after a tap, as before).
@@ -1770,7 +1778,6 @@ const Campaign = (() => {
       case 'level': if (unlocked(+d.i)) { ui.mode = 'campaign'; ui.levelIdx = +d.i; startGame(); } break;
       case 'next': ui.levelIdx = Math.min(ui.levelIdx + 1, LV.length - 1); startGame(); break;
       case 'begin': beginTurn(); break;
-      case 'alert-ok': ui.alert = null; break;
       case 'tip-ok': { const t = ui.tip; ui.tip = null; if (t && t.endsTurn && !st.over && !isBot(st.current) && !ui.botWaiting) endTurn(); break; }
       case 'reminders': ui.pass.reminders = d.v === 'on'; pref.set(PASS_KEY, JSON.stringify(ui.pass)); break;
       case 'dismissbank': takeOverFromOpponent(); break;
@@ -2020,7 +2027,7 @@ const Campaign = (() => {
       <div class="bar"><div class="chips n${st.n}">${chipsHTML()}</div></div>
       <div class="legend">${ui.lastEvent && !ui.turnCard ? `<span class="event">${esc(ui.lastEvent)}</span>` : ''}<span class="hint">${esc(hintsVisible() ? hint() : '')}</span></div>
       <div class="main"><div class="boardwrap">${boardSVG()}</div>${bankBannerHTML()}${endButtonHTML()}${ui.turnCard && !st.over ? turnCardHTML() : ''}${st.over && !animating() ? '' : '<button class="q" data-act="menu" aria-label="Menu">☰</button>'}</div>
-    </div>${st.over && !animating() ? overHTML() : ''}${ui.menu ? menuHTML() : ''}${ui.alert && !st.over ? alertHTML() : ''}${ui.tip && !st.over ? tipHTML() : ''}`;
+    </div>${st.over && !animating() ? overHTML() : ''}${ui.menu ? menuHTML() : ''}${ui.tip && !st.over ? tipHTML() : ''}`;
   }
 
   // Whose turn it is, said before they start tapping. (In pass & play it also stands in for handing the device over.)
@@ -2031,15 +2038,10 @@ const Campaign = (() => {
       ${ui.lastEvent ? `<span class="tc-last">${esc(ui.lastEvent)}</span>` : ''}<span class="tc-tap">${isBot(i) ? 'Tap to watch' : 'Tap to start your turn'}</span></button>`;
   }
 
-  // A note that has to be read first (the start of the level that brings the gems): one button, no timer.
-  function alertHTML() {
-    const gem = (ui.st.data.tokens.find(t => t.gem) || {}).value, text = ui.alert.body.replace(/\{value\}/g, gem);
-    return `<div class="alertback"><div class="alert" role="alertdialog" aria-label="${esc(ui.alert.title)}"><h2>💎 ${esc(ui.alert.title)}</h2><p>${esc(text)}</p><button class="big" data-act="alert-ok">Got it</button></div></div>`;
-  }
   // A rules reminder: a card at the top of the table (the board stays in view under it), one button, no timer.
   function tipHTML() {
-    const c = D.coach[ui.tip.id];
-    return `<div class="tipback"><div class="tip" role="alertdialog" aria-label="${esc(c.title)}"><h2>${esc(c.title)}</h2><p>${esc(c.body)}</p><button class="big" data-act="tip-ok">Got it</button></div></div>`;
+    const c = D.coach[ui.tip.id], body = c.body.replace(/\{value\}/g, gemValue());
+    return `<div class="tipback"><div class="tip" role="alertdialog" aria-label="${esc(c.title)}"><h2>${esc(c.title)}</h2><p>${esc(body)}</p><button class="big" data-act="tip-ok">Got it</button></div></div>`;
   }
 
   function menuHTML() {
@@ -2268,6 +2270,23 @@ const Campaign = (() => {
       ${ui.settings === 'unlock' || ui.settings === 'reset' ? '' : '<button class="big" data-act="closesettings">Done</button>'}</div></div>`;
   }
 
+  // A reminder about tiles on the table must never hide them: the card moves to the half of the page the tile is not in, and the tile itself is drawn again above the dimmed page.
+  function syncTip() {
+    const L = fxLayer();
+    if (L) L.querySelectorAll('.spotclone').forEach(e => e.remove());
+    if (!ui.tip || !ui.tip.focus || !ui.tip.focus.length || !L || !ui.st) return;
+    const back = root.querySelector('.tipback'), main = root.querySelector('.main');
+    if (!back) return;
+    const found = ui.tip.focus.map(f => ({ f, t: ui.st.tokens[f.tid], el: root.querySelector(`.cell[data-id="${ui.st.tokens[f.tid].cell}"]`) })).filter(x => x.el);
+    if (!found.length) return;
+    const ys = found.map(x => rectOf(x.el).y), low = ys.reduce((a, y) => a + y, 0) / ys.length > innerHeight / 2;
+    if (low) { back.classList.add('top'); back.style.paddingTop = ((main ? main.getBoundingClientRect().top : 0) + 8) + 'px'; }
+    for (const { f, t, el } of found) {
+      const r = rectOf(el), ring = `<polygon class="ring" style="stroke:${f.color};${f.dash ? dashStyle(BOARD_S * 0.9) : ''}" points="${hexPts(0, 0, BOARD_S * 0.9)}"/>`;
+      fxEl('spotclone', r, r.h, r.h, `<svg viewBox="${-BOARD_S} ${-BOARD_S} ${2 * BOARD_S} ${2 * BOARD_S}" width="100%" height="100%"><g class="tile">${mapFaceArt(0, 0, BOARD_S, t, t.id)}</g>${ring}</svg>`);
+    }
+  }
+
   function render() {
     if (ui.st && ui.st.over && !ui.countedOver) gameFinished();     // count the game (and record a campaign result) before drawing the end screen
     if (ui.screen === 'play' && ui.st && ui.st.over && !animating() && !ui.endSounded) {      // the end screen appears now: its sound goes with it
@@ -2277,10 +2296,11 @@ const Campaign = (() => {
     }
     const html = { home: homeHTML, pass: passHTML, campaign: campaignHTML, play: gameHTML }[ui.screen]();
     root.innerHTML = html + (ui.help ? helpHTML() : '') + (ui.fossils && ui.st ? fossilsHTML() : '') + (ui.settings ? settingsHTML() : '');
+    syncTip();
     saveGame();
   }
 
-  window.FossilFrenzyUI = { ui, render, onClick, audio };
+  window.FossilFrenzyUI = { ui, render, onClick, audio, startAnim };
   resumeGame();
   render();
 })();

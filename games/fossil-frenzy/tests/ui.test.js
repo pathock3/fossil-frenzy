@@ -30,7 +30,7 @@ async function open({ viewport = { width: 1024, height: 768 }, query = '', anima
   if (!tips) {                                                         // (set once, then reload: an init script that touches storage on every load made reloads flaky)
     await page.evaluate(() => {
       try {
-        localStorage.setItem('tabletop-library-fossil-frenzy-tips', JSON.stringify(['match', 'gem', 'gemTwo']));
+        localStorage.setItem('tabletop-library-fossil-frenzy-tips', JSON.stringify(['match', 'gem']));
         localStorage.setItem('tabletop-library-fossil-frenzy-passplay', JSON.stringify({ n: 2, size: 'large', reminders: false }));          // (the 31-tile board, as most tests were written for; sizes have their own test)
       } catch (e) { /* no storage */ }
     });
@@ -49,7 +49,6 @@ const passAndPlay = async (page, n) => {
 const campaign = async (page, level = 0) => {
   await page.tap('[data-act=mode][data-v=campaign]');
   await page.tap(`[data-act=level][data-i="${level}"]`);
-  if (await page.locator('[data-act=alert-ok]').count()) await page.tap('[data-act=alert-ok]');          // the level that brings the gems says so first
   await page.tap('[data-act=begin]');
 };
 
@@ -291,15 +290,14 @@ test('Campaign: the "next level" button starts that level', SKIP, async () => {
     await campaign(page, 0);
     await forceFinish(page, [30, 10]);
     await page.tap('[data-act=next]');
-    assert.equal(await page.locator('[data-act=alert-ok]').count(), 1, 'Novice is the first level with gems: it says so');
-    await page.tap('[data-act=alert-ok]');
+    assert.equal(await page.locator('.alertback, .tip').count(), 0, 'no note at the start of Novice: the first gem explains itself');
     await page.tap('[data-act=begin]');
     assert.deepEqual(await page.evaluate(() => window.FossilFrenzyUI.ui.names), ['You', 'Novice']);
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
 
-test('Campaign: level 2 opens with an alert that introduces the gems (and says what one is worth); level 1 has no gems and no alert; each level has its own board', SKIP, async () => {
+test('Campaign: no note opens level 2 (a gem explains itself when it is first revealed); level 1 has no gems; each level has its own board', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     await page.evaluate(() => localStorage.setItem('tabletop-library-fossil-frenzy-campaign', JSON.stringify({ beaten: ['beginner', 'novice', 'normal', 'challenging'] })));
@@ -308,8 +306,7 @@ test('Campaign: level 2 opens with an alert that introduces the gems (and says w
     const want = [[18, 0, 0], [21, 3, 10], [25, 3, 11], [31, 3, 12], [37, 3, 15]];
     for (let i = 0; i < 5; i++) {
       await page.tap('[data-act=mode][data-v=campaign]'); await page.tap(`[data-act=level][data-i="${i}"]`);
-      assert.equal(await page.locator('[data-act=alert-ok]').count(), i === 1 ? 1 : 0, 'the alert is only at the start of level 2');
-      if (i === 1) { const t = await page.locator('.alert').innerText(); assert.match(t, /gem maps/i); assert.match(t, /worth 10/); assert.match(t, /three pieces/); await page.tap('[data-act=alert-ok]'); assert.equal(await page.locator('.alert').count(), 0, 'one tap puts it away'); }
+      assert.equal(await page.locator('.alertback, .tip, [data-act=alert-ok]').count(), 0, 'nothing is said before the first gem shows');
       assert.deepEqual(await board(), want[i], 'level ' + (i + 1));
       assert.equal(await page.locator('svg.board .cell').count(), want[i][0], 'the board on screen has that many spaces');
       await page.tap('[data-act=menu]'); await page.tap('[data-act=menu-ask][data-v=quit]'); await page.tap('[data-act=quit]');
@@ -521,7 +518,7 @@ test('prompts: shown to a new player, quiet after the first finished game, switc
 });
 
 // ---------- save / resume ----------
-test('save: reloading the page mid-turn resumes the same game, same phase, and play continues', SKIP, async () => {
+test('save: reloading the page opens the Main Menu; Continue resumes the same game, same phase, and play continues', SKIP, async () => {
   const { browser, page, errors } = await open();
   try {
     await passAndPlay(page, 2);
@@ -530,6 +527,9 @@ test('save: reloading the page mid-turn resumes the same game, same phase, and p
     await page.tap(await cellOf(page, 1));                                // flip a miss
     const before = await gameState(page);
     await page.reload();
+    assert.equal(await screenOf(page), 'home', 'the game opens on the Main Menu, not in the game you were playing');
+    await page.tap('[data-act=continue]');                                // …and Continue picks it up (a Pass & Play game says whose turn it is first)
+    await page.tap('[data-act=begin]');
     assert.equal(await screenOf(page), 'play');
     assert.equal(await gameState(page), before, 'identical game state after the reload');
     assert.equal(await page.locator('.ring.peekring').count(), 1, 'the peeked space is still marked');
@@ -551,6 +551,8 @@ test('save: a campaign game resumes against the same opponent, with its turn sti
     assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.botWaiting), true);
     const before = await gameState(page);
     await page.reload();
+    assert.equal(await screenOf(page), 'home');
+    await page.tap('[data-act=continue]');
     assert.deepEqual(await page.evaluate(() => [window.FossilFrenzyUI.ui.mode, window.FossilFrenzyUI.ui.levelIdx, window.FossilFrenzyUI.ui.names, window.FossilFrenzyUI.ui.botWaiting]), ['campaign', 0, ['You', 'Beginner'], true]);
     assert.equal(await gameState(page), before);
     await page.tap(await firstFree(page));                                 // my first tap ends its turn and is my peek
@@ -1465,7 +1467,7 @@ test('reminder: the first match on the easiest level says the map is not scored 
   } finally { await browser.close(); }
 });
 
-test('reminder (Pass & Play): a gem peeked shows how gems work; two gems explain the third tap; Rules reminders Off silences both', SKIP, async () => {
+test('reminder (Pass & Play): a gem peeked shows how gems work, once (two gems do not explain again); Rules reminders Off silences it', SKIP, async () => {
   const { browser, page, errors } = await open({ tips: true });
   try {
     await page.tap('[data-act=mode][data-v=pass]');
@@ -1474,13 +1476,13 @@ test('reminder (Pass & Play): a gem peeked shows how gems work; two gems explain
     const gems = await page.evaluate(() => window.FossilFrenzyUI.ui.st.tokens.filter(t => t.gem).map(t => `[data-act=cell][data-id="${t.cell}"]`));
     await page.tap(gems[0]);
     assert.match(await page.locator('.tip').innerText(), /three/i);
+    assert.match(await page.locator('.tip').innerText(), /third tile/i, 'the one explanation covers the third tap');
     assert.equal(await page.locator('.tip h2').innerText().then(t => /gem/i.test(t)), true);
     await page.dispatchEvent(gems[1], 'click');              // (blocked: the reminder is waiting for its tap)
     assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.phase), 'peeked');
     await page.tap('[data-act=tip-ok]');
     await page.tap(gems[1]);
-    assert.match(await page.locator('.tip').innerText(), /third/i, 'two gems: tap a third tile');
-    await page.tap('[data-act=tip-ok]');
+    assert.equal(await page.locator('.tip').count(), 0, 'a second gem is not explained again');
     assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.phase), 'flipped');
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
@@ -1700,6 +1702,7 @@ test('Pass & Play board sizes: five to choose from; the size is picked from the 
     assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.tokens.length), 18);
     assert.equal(await page.locator('svg.board .cell').count(), 18);
     await page.reload();
+    await page.tap('[data-act=continue]'); await page.tap('[data-act=begin]');
     assert.equal(await page.evaluate(() => window.FossilFrenzyUI.ui.st.tokens.length), 18, 'the saved game keeps its board');
     await forceFinish(page, [4, 2]);
     await page.tap('[data-act=again]');
@@ -1707,6 +1710,40 @@ test('Pass & Play board sizes: five to choose from; the size is picked from the 
     await quitToStart(page);
     await page.tap('[data-act=mode][data-v=pass]'); await page.tap('[data-act=size][data-v=huge]'); await page.tap('[data-act=deal]');
     assert.equal(await page.evaluate(() => [window.FossilFrenzyUI.ui.st.tokens.length, window.FossilFrenzyUI.ui.st.tokens.filter(t => t.gem).length].join()), '37,3');
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('reminder: gems are explained when a gem is first revealed (not at the start of the level) — mine, and an opponent\'s; the opponent\'s turn waits for the tap', SKIP, async () => {
+  const { browser, page, errors } = await open({ tips: true, animated: true });
+  try {
+    await page.evaluate(() => localStorage.setItem('tabletop-library-fossil-frenzy-campaign', JSON.stringify({ beaten: ['beginner'] }))); await page.reload();
+    await page.tap('[data-act=mode][data-v=campaign]'); await page.tap('[data-act=level][data-i="1"]');
+    assert.equal(await page.locator('.tip').count(), 0, 'nothing at the start of the level');
+    // an opponent turns a gem face up: make the opponent\'s next turn do exactly that (rig the shown steps)
+    await page.evaluate(() => {
+      const { ui, render } = window.FossilFrenzyUI, st = ui.st, gem = st.tokens.find(t => t.gem), other = st.tokens.find(t => !t.gem);
+      ui.turnCard = false; ui.botWaiting = true; st.current = 1;
+      ui.base = { points: 0, sets: [] };
+      ui.steps = [{ a: { type: 'peek', tid: other.id }, snap: { points: 0, sets: [] } }, { a: { type: 'flipOther', tid: gem.id }, snap: { points: 0, sets: [] } }];
+      ui.stage = 1; render(); window.FossilFrenzyUI.startAnim();
+    });
+    await page.waitForSelector('.tip', { timeout: 5000 });
+    assert.match(await page.locator('.tip').innerText(), /three/i);
+    assert.match(await page.locator('.tip').innerText(), /worth 10/, 'what a gem map is worth');
+    const cover = await page.evaluate(() => {          // the gem that was just turned up is in view: not under the card (and drawn again above the dimmed page)
+      const u = window.FossilFrenzyUI.ui, st = u.st, cell = st.tokens[u.tip.focus[0].tid].cell, c = document.querySelector(`.cell[data-id="${cell}"]`).getBoundingClientRect(), t = document.querySelector('.tip').getBoundingClientRect();
+      return { overlap: !(c.right < t.left || c.left > t.right || c.bottom < t.top || c.top > t.bottom), spot: document.querySelectorAll('#fx .spotclone').length };
+    });
+    assert.deepEqual(cover, { overlap: false, spot: 1 }, 'the card does not cover the gem');
+    assert.equal(await page.evaluate(() => { const u = window.FossilFrenzyUI.ui; return u.stage; }), 2, 'it came as the gem turned up');
+    await page.tap('[data-act=tip-ok]');
+    assert.equal(await page.locator('.tip').count(), 0);
+    await page.tap('[data-act=menu]'); await page.tap('[data-act=menu-ask][data-v=quit]'); await page.tap('[data-act=quit]');
+    await page.tap('[data-act=continue]');
+    // now my own: peek a gem on my turn (not shown again: once per device)
+    const seen = await page.evaluate(() => JSON.parse(localStorage.getItem('tabletop-library-fossil-frenzy-tips')));
+    assert.ok(seen.includes('gem'));
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });
