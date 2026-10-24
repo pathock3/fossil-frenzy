@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Fossil Frenzy — five levels, five boards:** Beginner is a donut of 18 fossils (no gems), Novice a triangle of 21 (gems worth 10), Normal a sun of 25 (gems 11), Challenging the flower of 31 (gems 12), Master the giant hexagon of 37 (gems 15), with the fossil numbers you gave. Novice opens with an alert that introduces the gems. Pass & Play is unchanged (the flower). Nothing else about the game changed.
+
 - **Tabletop Library — each game can be shared on its own:** a game's address (`/games/<id>/index.html`) opens just that game, with no link to the library and no mention of it; the way back to the library shows only when you came from the shelf (the shelf's boxes link with `?from=library`). Link previews carry each game's title and tagline.
 
 - **Dig Dig BOOM! — a batch from your notes:**

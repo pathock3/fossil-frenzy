@@ -39,6 +39,7 @@ const passAndPlay = async (page, n) => {
 const campaign = async (page, level = 0) => {
   await page.tap('[data-act=mode][data-v=campaign]');
   await page.tap(`[data-act=level][data-i="${level}"]`);
+  if (await page.locator('[data-act=alert-ok]').count()) await page.tap('[data-act=alert-ok]');          // the level that brings the gems says so first
   await page.tap('[data-act=begin]');
 };
 
@@ -98,14 +99,14 @@ async function playByTaps(page, humanSeats) {
       if (document.querySelector('.bankcard')) return { sel: '.bankcard' };      // the opponent banked: its banner sits over the board; tap it to go on
       // while an opponent's finished turn is on the board, my first tap ends it and starts mine: plan from there
       let st = real;
-      if (ui.botWaiting) { st = Engine.restore(Engine.serialize(real)); Engine.endTurn(st); }
+      if (ui.botWaiting) { st = Engine.restore(Engine.serialize(real), { data: real.data }); Engine.endTurn(st); }
       const b = window.__helpers.find(h => h.seat === st.current);
       const a = b.decide(Engine.publicView(st, st.current));
       const cell = tid => `[data-act=cell][data-id="${st.tokens[tid].cell}"]`;
       switch (a.type) {
         case 'peek': case 'flipOther': case 'flipSecond': return { sel: cell(a.tid) };
         case 'flipOwn': {                                            // two gems: tapping any third fossil is the consent
-          const ahead = Engine.restore(Engine.serialize(st));        // look one move ahead on a copy to see which third fossil the helper wants
+          const ahead = Engine.restore(Engine.serialize(st), { data: st.data });        // look one move ahead on a copy to see which third fossil the helper wants
           Engine.flipOwn(ahead);
           const a2 = b.decide(Engine.publicView(ahead, ahead.current));
           const third = a2.type === 'flipSecond' ? a2.tid : st.tokens.find(t => !t.matched && t.id !== st.turn.T && t.id !== st.turn.F).id;
@@ -272,8 +273,29 @@ test('Campaign: the "next level" button starts that level', SKIP, async () => {
     await campaign(page, 0);
     await forceFinish(page, [30, 10]);
     await page.tap('[data-act=next]');
+    assert.equal(await page.locator('[data-act=alert-ok]').count(), 1, 'Novice is the first level with gems: it says so');
+    await page.tap('[data-act=alert-ok]');
     await page.tap('[data-act=begin]');
     assert.deepEqual(await page.evaluate(() => window.FossilFrenzyUI.ui.names), ['You', 'Novice']);
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
+test('Campaign: level 2 opens with an alert that introduces the gems (and says what one is worth); level 1 has no gems and no alert; each level has its own board', SKIP, async () => {
+  const { browser, page, errors } = await open();
+  try {
+    await page.evaluate(() => localStorage.setItem('tabletop-library-fossil-frenzy-campaign', JSON.stringify({ beaten: ['beginner', 'novice', 'normal', 'challenging'] })));
+    await page.reload();
+    const board = () => page.evaluate(() => { const s = window.FossilFrenzyUI.ui.st; return [s.cells.length, s.tokens.filter(t => t.gem).length, (s.data.tokens.find(t => t.gem) || {}).value || 0]; });
+    const want = [[18, 0, 0], [21, 3, 10], [25, 3, 11], [31, 3, 12], [37, 3, 15]];
+    for (let i = 0; i < 5; i++) {
+      await page.tap('[data-act=mode][data-v=campaign]'); await page.tap(`[data-act=level][data-i="${i}"]`);
+      assert.equal(await page.locator('[data-act=alert-ok]').count(), i === 1 ? 1 : 0, 'the alert is only at the start of level 2');
+      if (i === 1) { const t = await page.locator('.alert').innerText(); assert.match(t, /gems/i); assert.match(t, /worth 10/); assert.match(t, /set of three/); await page.tap('[data-act=alert-ok]'); assert.equal(await page.locator('.alert').count(), 0, 'one tap puts it away'); }
+      assert.deepEqual(await board(), want[i], 'level ' + (i + 1));
+      assert.equal(await page.locator('svg.board .cell').count(), want[i][0], 'the board on screen has that many spaces');
+      await page.tap('[data-act=menu]'); await page.tap('[data-act=menu-ask][data-v=quit]'); await page.tap('[data-act=quit]');
+    }
     assert.deepEqual(errors, []);
   } finally { await browser.close(); }
 });

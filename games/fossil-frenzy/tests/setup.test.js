@@ -16,7 +16,8 @@ test('fossils: 31 — six 2s, six 3s, four 5s/6s/7s, two 9s/10s, three gems wort
 test('board: a hexagon of 31 spaces — the six corners are not part of the game', () => {
   const s = game();
   assert.equal(s.cells.length, 31);
-  for (const [q, r] of GAME_DATA.board.removed) assert.ok(!s.cells.some(c => c.q === q && c.r === r), `corner ${q},${r} must be absent`);
+  assert.equal(GAME_DATA.board.shape, 'flower', 'Pass & Play is played on the flower');
+  for (const [x, , z] of GAME_DATA.shapes.flower.remove) assert.ok(!s.cells.some(c => c.q === x && c.r === z), `corner ${x},${z} must be absent`);
   assert.ok(s.cells.every(c => Math.max(Math.abs(c.q), Math.abs(c.r), Math.abs(c.q + c.r)) <= 3));
 });
 

@@ -8,7 +8,8 @@ const { rolls } = require('./helpers');
 // A different board, fossil set and point values — nothing in the engine, bots or campaign may assume the stock numbers.
 const small = () => ({
   ...JSON.parse(JSON.stringify(GAME_DATA)),
-  board: { shape: 'hex', radius: 2, removed: [[0, -2], [2, -2], [2, 0], [0, 2], [-2, 2], [-2, 0]] },
+  shapes: { ...GAME_DATA.shapes, small: { radius: 2, remove: [[2, -2, 0], [2, 0, -2], [0, 2, -2], [-2, 2, 0], [-2, 0, 2], [0, -2, 2]] } },
+  board: { shape: 'small' },
   tokens: [{ value: 1, count: 4 }, { value: 4, count: 6 }, { value: 20, count: 3, gem: true }],
 });
 
@@ -58,5 +59,52 @@ test('data block: the rule numbers are not hard-coded in the engine, bots or cam
   for (const id of ['engine', 'bots', 'campaign']) {
     const code = html.match(new RegExp('<script id="' + id + '">([\\s\\S]*?)</script>'))[1];
     for (const re of [/\b31\b/, /\b37\b/, /\b16\b/, /\bsides\s*[:=]\s*6\b/, /Beginner|Master/]) assert.ok(!re.test(code), `${id} mentions ${re}`);
+  }
+});
+
+// ---- the five campaign levels: each has its own board and its own fossils ----
+const cubeKey = c => [c.q, -c.q - c.r, c.r].join(',');
+const LEVELS = [
+  { id: 'beginner', shape: 'donut', cells: 18, tokens: '2x4 3x4 5x4 6x4 9x2', gem: null },
+  { id: 'novice', shape: 'triangle', cells: 21, tokens: '2x4 3x4 5x4 6x4 9x2', gem: 10 },
+  { id: 'normal', shape: 'sun', cells: 25, tokens: '2x6 3x4 5x4 6x4 9x2 10x2', gem: 11 },
+  { id: 'challenging', shape: 'flower', cells: 31, tokens: '2x6 3x6 5x4 6x4 7x4 9x2 10x2', gem: 12 },
+  { id: 'master', shape: 'giant', cells: 37, tokens: '2x8 3x8 5x4 6x4 7x4 9x2 10x2 11x2', gem: 15 },
+];
+test('campaign levels: each level\'s board shape, fossils and gem value are the ones in the design', () => {
+  assert.deepEqual(Campaign.levels().map(l => l.id), LEVELS.map(l => l.id));
+  for (const L of LEVELS) {
+    const lv = Campaign.levels().find(l => l.id === L.id), d = Campaign.gameData(lv);
+    assert.equal(lv.shape, L.shape, L.id);
+    const s = Engine.createGame({ players: 2, seed: 4, data: d });
+    assert.equal(s.cells.length, L.cells, L.id + ' spaces'); assert.equal(s.tokens.length, L.cells, L.id + ' fossils: one on every space');
+    const have = d.tokens.filter(t => !t.gem).map(t => `${t.value}x${t.count}`).join(' ');
+    assert.equal(have, L.tokens, L.id + ' numbers');
+    const gems = d.tokens.filter(t => t.gem);
+    if (L.gem === null) assert.equal(gems.length, 0, L.id + ' has no gems');
+    else { assert.equal(gems.length, 1); assert.equal(gems[0].count, 3, L.id + ': three gems'); assert.equal(gems[0].value, L.gem, L.id + ' gem value'); }
+  }
+});
+
+test('board shapes (cube coordinates, x + y + z = 0): donut, triangle, sun, flower, giant hexagon', () => {
+  const cells = shape => Engine.buildBoard({ shapes: GAME_DATA.shapes, board: { shape } });
+  const keys = shape => new Set(cells(shape).map(cubeKey));
+  const ring = r => c => Math.max(Math.abs(c[0]), Math.abs(c[1]), Math.abs(c[2])) <= r;
+  const all = r => { const out = []; for (let x = -r; x <= r; x++) for (let z = -r; z <= r; z++) { const y = -x - z; if (ring(r)([x, y, z])) out.push([x, y, z]); } return out; };
+  const donut = keys('donut'); assert.equal(donut.size, 18); assert.ok(!donut.has('0,0,0'), 'no centre'); for (const c of all(2)) if (c.join() !== '0,0,0') assert.ok(donut.has(c.join()), 'donut ' + c);
+  const tri = cells('triangle'); assert.equal(tri.length, 21);
+  const rows = {}; for (const c of tri) rows[c.r] = (rows[c.r] || 0) + 1; assert.deepEqual(Object.values(rows).sort(), [1, 2, 3, 4, 5, 6].map(String).sort().map(Number).sort((a, b) => a - b), 'rows of 1 to 6'); assert.equal(Object.keys(rows).length, 6);
+  const sun = keys('sun'); assert.equal(sun.size, 25); for (const c of all(2)) assert.ok(sun.has(c.join()), 'sun core ' + c);
+  for (const c of [[3, -3, 0], [3, 0, -3], [0, 3, -3], [-3, 3, 0], [-3, 0, 3], [0, -3, 3]]) assert.ok(sun.has(c.join()), 'sun ray ' + c);
+  const flower = keys('flower'); assert.equal(flower.size, 31); for (const c of all(3)) { const corner = [Math.abs(c[0]), Math.abs(c[1]), Math.abs(c[2])].sort().join() === '0,3,3'; assert.equal(flower.has(c.join()), !corner, 'flower ' + c); }
+  const giant = keys('giant'); assert.equal(giant.size, 37); for (const c of all(3)) assert.ok(giant.has(c.join()));
+  for (const sh of ['donut', 'triangle', 'sun', 'flower', 'giant']) { const cs = cells(sh); assert.ok(cs.every((c, i) => c.id === i), sh + ': ids in order'); assert.ok(cs.every(c => Number.isInteger(c.q) && Number.isInteger(c.r))); }
+});
+
+test('campaign levels: opponents play a whole game on every level (no gems on level 1)', () => {
+  for (const lv of Campaign.levels()) for (const seed of [1, 2]) {
+    const s = Engine.createGame({ players: 2, seed, data: Campaign.gameData(lv) });
+    const bots = Bots.attach(s, [null, Campaign.botSpec(lv)].map(x => x || lv.ai), seed);
+    assert.ok(Bots.playGame(s, bots), lv.id); assert.equal(s.matchedCount, s.tokens.length, lv.id);
   }
 });

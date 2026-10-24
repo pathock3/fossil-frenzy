@@ -68,6 +68,10 @@ svg.board { width: 100%; height: 100%; touch-action: manipulation; }
 
 /* menu (system chrome: small and quiet) */
 .backdrop { position: absolute; inset: 0; z-index: 4; background: rgba(0,0,0,.45); }
+.alertback { position: absolute; inset: 0; z-index: 8; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(10,6,3,.7); }
+.alert { width: min(520px, 100%); padding: 24px 26px 22px; border-radius: 20px; background: var(--panel2); border: 3px solid var(--accent); text-align: center; box-shadow: 0 18px 50px rgba(0,0,0,.6); }
+.alert h2 { margin: 0 0 10px; font-size: 30px; color: var(--accent); }
+.alert p { margin: 0 0 6px; font-size: 20px; line-height: 1.4; }
 .menu { position: absolute; z-index: 5; bottom: calc(env(safe-area-inset-bottom) + 90px); left: max(12px, env(safe-area-inset-left)); width: min(300px, calc(100% - 24px)); background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 10px;
   display: flex; flex-direction: column; gap: 6px; box-shadow: 0 12px 30px rgba(0,0,0,.55); }
 .menu button { padding: 14px 16px; border-radius: 12px; background: var(--panel2); text-align: left; font-weight: 700; font-size: 17px; }
@@ -249,15 +253,20 @@ const GAME_DATA = {
   die: { sides: 6 },            // who goes first (highest roll)
 
   // ---- BOARD ---------------------------------------------------------
-  // A hexagon of hex spaces in axial (q, r) coordinates (radius 3 = 37 spaces) with the six corners removed:
-  // 31 spaces, one fossil on each. No pieces, no movement.
-  board: {
-    shape: 'hex',
-    radius: 3,
-    removed: [[0, -3], [3, -3], [3, 0], [0, 3], [-3, 3], [-3, 0]],
+  // One fossil on every space, no pieces, no movement. The shapes are sets of hex spaces in cube coordinates (x + y + z = 0).
+  // `radius r` means every space with max(|x|, |y|, |z|) <= r; `remove` / `add` take spaces out of / put spaces into that hexagon;
+  // a `triangle` of side n has rows of 1 to n spaces (x >= 0, z >= 0, x + z <= n - 1).
+  // Pass & Play plays on the `flower`; each campaign level has a board of its own (see the levels below).
+  shapes: {
+    donut:    { radius: 2, remove: [[0, 0, 0]] },                                                  // 18: the radius-2 hexagon without its centre
+    triangle: { triangle: 6 },                                                                      // 21: rows of 1 to 6
+    sun:      { radius: 2, add: [[3, -3, 0], [3, 0, -3], [0, 3, -3], [-3, 3, 0], [-3, 0, 3], [0, -3, 3]] },   // 25: the radius-2 hexagon (19) and the six radius-3 corners as rays
+    flower:   { radius: 3, remove: [[3, -3, 0], [3, 0, -3], [0, 3, -3], [-3, 3, 0], [-3, 0, 3], [0, -3, 3]] },     // 31: the radius-3 hexagon without its six corners
+    giant:    { radius: 3 },                                                                        // 37: the whole radius-3 hexagon
   },
+  board: { shape: 'flower' },
 
-  // ---- FOSSILS (31) ----------------------------------------------------
+  // ---- FOSSILS (31, for Pass & Play: the same as the Challenging level) ---------------------
   tokens: [
     { value: 2,  count: 6 },
     { value: 3,  count: 6 },
@@ -284,12 +293,20 @@ const GAME_DATA = {
   // Each level's opponent is an `ai` profile (abilities scored 0-10; see THE OPPONENTS' BRAINS below). To make a level easier or
   // harder, change its numbers: memory first, then the skills.
   campaign: {
+    // Each level has its own board (`shape`, see `shapes` above) and its own fossils (value x copies; a `gem` is matched as a set of three and is worth its value).
+    // The number of fossils must equal the number of spaces. Level 2 is the first with gems: its `alert` is shown when it starts ({value} is the gem's worth).
     levels: [
-      { id: 'beginner',    name: 'Beginner',    ai: { memory: 5.2, selfAwareness: 0, valueSense: 0, leadSense: 0, endSense: 0, setsSense: 0, gemSense: 0 } },
-      { id: 'novice',      name: 'Novice',      ai: { memory: 7.0, selfAwareness: 3, valueSense: 3, leadSense: 3, endSense: 3, setsSense: 3, gemSense: 3 } },
-      { id: 'normal',      name: 'Normal',      ai: { memory: 8.5, selfAwareness: 5, valueSense: 5, leadSense: 5, endSense: 5, setsSense: 5, gemSense: 5 } },
-      { id: 'challenging', name: 'Challenging', ai: { memory: 9.3, selfAwareness: 7, valueSense: 8, leadSense: 8, endSense: 8, setsSense: 8, gemSense: 8 } },
-      { id: 'master',      name: 'Master',      ai: { memory: 9.85, selfAwareness: 9, valueSense: 10, leadSense: 10, endSense: 10, setsSense: 10, gemSense: 10 } },
+      { id: 'beginner',    name: 'Beginner',    shape: 'donut',    tokens: [{ value: 2, count: 4 }, { value: 3, count: 4 }, { value: 5, count: 4 }, { value: 6, count: 4 }, { value: 9, count: 2 }],
+        ai: { memory: 5.2, selfAwareness: 0, valueSense: 0, leadSense: 0, endSense: 0, setsSense: 0, gemSense: 0 } },
+      { id: 'novice',      name: 'Novice',      shape: 'triangle', tokens: [{ value: 2, count: 4 }, { value: 3, count: 4 }, { value: 5, count: 4 }, { value: 6, count: 4 }, { value: 9, count: 2 }, { value: 10, count: 3, gem: true }],
+        alert: { title: 'Gems!', body: 'This level has gems. A gem is worth {value} and matches in a set of three: peek a gem, flip a gem, then tap a third fossil to go for the set. Bank it for {value} points.' },
+        ai: { memory: 7.0, selfAwareness: 3, valueSense: 3, leadSense: 3, endSense: 3, setsSense: 3, gemSense: 3 } },
+      { id: 'normal',      name: 'Normal',      shape: 'sun',      tokens: [{ value: 2, count: 6 }, { value: 3, count: 4 }, { value: 5, count: 4 }, { value: 6, count: 4 }, { value: 9, count: 2 }, { value: 10, count: 2 }, { value: 11, count: 3, gem: true }],
+        ai: { memory: 8.5, selfAwareness: 5, valueSense: 5, leadSense: 5, endSense: 5, setsSense: 5, gemSense: 5 } },
+      { id: 'challenging', name: 'Challenging', shape: 'flower',   tokens: [{ value: 2, count: 6 }, { value: 3, count: 6 }, { value: 5, count: 4 }, { value: 6, count: 4 }, { value: 7, count: 4 }, { value: 9, count: 2 }, { value: 10, count: 2 }, { value: 12, count: 3, gem: true }],
+        ai: { memory: 9.3, selfAwareness: 7, valueSense: 8, leadSense: 8, endSense: 8, setsSense: 8, gemSense: 8 } },
+      { id: 'master',      name: 'Master',      shape: 'giant',    tokens: [{ value: 2, count: 8 }, { value: 3, count: 8 }, { value: 5, count: 4 }, { value: 6, count: 4 }, { value: 7, count: 4 }, { value: 9, count: 2 }, { value: 10, count: 2 }, { value: 11, count: 2 }, { value: 15, count: 3, gem: true }],
+        ai: { memory: 9.85, selfAwareness: 9, valueSense: 10, leadSense: 10, endSense: 10, setsSense: 10, gemSense: 10 } },
     ],
   },
 
@@ -395,15 +412,21 @@ const Engine = (() => {
   const emit = (s, ev) => { for (const o of s.observers) o.onEvent(ev, s); };
 
   // ---------------- board ----------------
+  // The spaces of a board, in reading order (row by row), each as axial (q, r) with q = x and r = z of its cube coordinates.
   function buildBoard(data) {
-    const R = data.board.radius, removed = new Set(data.board.removed.map(c => c.join(',')));
-    const cells = [];
-    for (let r = -R; r <= R; r++) {
-      for (let q = -R; q <= R; q++) {
-        if (Math.abs(q + r) > R || removed.has(q + ',' + r)) continue;
-        cells.push({ id: cells.length, q, r });
-      }
+    const sh = data.shapes[data.board.shape];
+    if (!sh) fail('unknown board shape ' + data.board.shape);
+    const keep = new Set(), key = (x, y, z) => x + ',' + y + ',' + z;
+    if (sh.triangle) { for (let x = 0; x < sh.triangle; x++) for (let z = 0; x + z < sh.triangle; z++) keep.add(key(x, -x - z, z)); }
+    else {
+      const R = sh.radius;
+      for (let x = -R; x <= R; x++) for (let z = -R; z <= R; z++) { const y = -x - z; if (Math.abs(y) <= R) keep.add(key(x, y, z)); }
+      for (const c of sh.remove || []) keep.delete(key(...c));
+      for (const c of sh.add || []) keep.add(key(...c));
     }
+    const cells = [...keep].map(k => k.split(',').map(Number)).map(([x, y, z]) => ({ q: x, r: z }));
+    cells.sort((a, b) => a.r - b.r || a.q - b.q);
+    cells.forEach((c, i) => { c.id = i; });
     return cells;
   }
 
@@ -575,7 +598,7 @@ const Engine = (() => {
   const SAVE_SCHEMA = 2;
   // Identifies the rules a save was made under; a save from different rules (an updated data block) is not resumed.
   function fingerprint(s) {
-    const str = JSON.stringify([s.data.board, s.data.tokens, s.data.matching, s.data.die, s.rules]);
+    const str = JSON.stringify([s.data.board, s.data.shapes[s.data.board.shape], s.data.tokens, s.data.matching, s.data.die, s.rules]);
     let h = 5381;
     for (let i = 0; i < str.length; i++) h = ((h * 33) ^ str.charCodeAt(i)) >>> 0;
     return h.toString(36);
@@ -1195,6 +1218,9 @@ const Campaign = (() => {
   // The bot spec for a level (see Bots.attach).
   const botSpec = level => level.ai;
 
+  // The rules of a game at this level: the same game, on the level's board and with the level's fossils.
+  const gameData = level => { const d = JSON.parse(JSON.stringify(GAME_DATA)); d.board = { shape: level.shape }; d.tokens = JSON.parse(JSON.stringify(level.tokens)); return d; };
+
   // After a finished game at level i: the new list of beaten levels, and what changed.
   function recordResult(beaten, i, won) {
     const lv = levels();
@@ -1203,7 +1229,7 @@ const Campaign = (() => {
     return { beaten: next, won, newlyUnlocked: unlocked, completed: next.length === lv.length && beaten.length < lv.length };
   }
 
-  return { levels, isUnlocked, isBeaten, humanWon, botSpec, recordResult };
+  return { levels, isUnlocked, isBeaten, humanWon, botSpec, gameData, recordResult };
 })();
 </script>
 
@@ -1279,11 +1305,12 @@ const Campaign = (() => {
     clearAnim();
     const seed = Math.floor(Math.random() * 2147483647), campaign = ui.mode === 'campaign';
     const n = campaign ? 2 : ui.pass.n;
-    ui.st = Engine.createGame({ players: n, seed });
+    ui.st = Engine.createGame({ players: n, seed, data: campaign ? Campaign.gameData(LV[ui.levelIdx]) : undefined });          // a campaign level has its own board and fossils
     ui.bots = Bots.attach(ui.st, campaign ? [null, Campaign.botSpec(LV[ui.levelIdx])] : Array(n).fill(null), seed);
     ui.names = campaign ? ['You', LV[ui.levelIdx].name] : ui.pass.names.slice(0, n);
     Object.assign(ui, { screen: 'play', prevUp: new Set(), popTurn: -1, botWaiting: false, notice: '', countedOver: false, outcome: null,
-                        menu: null, help: false, fossils: false, lastEvent: '', prevPts: null, liftKey: '', endSounded: false });
+                        menu: null, help: false, fossils: false, lastEvent: '', prevPts: null, liftKey: '', endSounded: false,
+                        alert: campaign && LV[ui.levelIdx].alert ? LV[ui.levelIdx].alert : null });          // a level that brings something new (the gems) says so first
     nextTurnStarts(true);
   }
   function beginTurn() {
@@ -1382,8 +1409,8 @@ const Campaign = (() => {
     const sv = pref.json(SAVE_KEY);
     if (!sv) { if (pref.get(SAVE_KEY) !== null) { pref.del(SAVE_KEY); ui.notice = 'Your saved game could not be resumed, so it was cleared.'; } return; }
     try {
-      const st = Engine.restore(sv.game);
       if (sv.mode === 'campaign' && !LV[sv.levelIdx]) throw new Error('unknown level');
+      const st = Engine.restore(sv.game, { data: sv.mode === 'campaign' ? Campaign.gameData(LV[sv.levelIdx]) : undefined });
       ui.st = st; ui.bots = Bots.restore(st, sv.bots); ui.names = sv.names; ui.mode = sv.mode === 'campaign' ? 'campaign' : 'pass'; ui.levelIdx = sv.levelIdx | 0;
       Object.assign(ui, { screen: 'play', turnCard: !!sv.turnCard || sv.screen === 'roll', botWaiting: !!sv.botWaiting,
                           prevUp: new Set(), popTurn: st.turn.matched ? st.turnNo : -1, steps: null, stage: 0, base: null, lastEvent: '', menu: null });
@@ -1475,6 +1502,7 @@ const Campaign = (() => {
       case 'level': if (unlocked(+d.i)) { ui.mode = 'campaign'; ui.levelIdx = +d.i; startGame(); } break;
       case 'next': ui.levelIdx = Math.min(ui.levelIdx + 1, LV.length - 1); startGame(); break;
       case 'begin': beginTurn(); break;
+      case 'alert-ok': ui.alert = null; break;
       case 'dismissbank': takeOverFromOpponent(); break;
       case 'cell': return cellTap(+d.id);
       case 'set': return setTap(+d.i);
@@ -1644,7 +1672,7 @@ const Campaign = (() => {
       <div class="bar"><div class="chips">${chipsHTML()}</div></div>
       <div class="legend">${ui.lastEvent && !ui.turnCard ? `<span class="event">${esc(ui.lastEvent)}</span>` : ''}<span class="hint">${esc(hintsVisible() ? hint() : '')}</span></div>
       <div class="main"><div class="boardwrap">${boardSVG()}</div>${bankBannerHTML()}${endButtonHTML()}${ui.turnCard && !st.over ? turnCardHTML() : ''}<button class="q" data-act="menu" aria-label="Menu">☰</button></div>
-    </div>${st.over && !animating() ? overHTML() : ''}${ui.menu ? menuHTML() : ''}`;
+    </div>${st.over && !animating() ? overHTML() : ''}${ui.menu ? menuHTML() : ''}${ui.alert && !st.over ? alertHTML() : ''}`;
   }
 
   // Whose turn it is, said before they start tapping. (In pass & play it also stands in for handing the device over.)
@@ -1653,6 +1681,12 @@ const Campaign = (() => {
     const title = st.turnNo === 0 ? `${name} ${you ? 'go' : 'goes'} first` : you ? 'Your turn' : `${name}'s turn`;
     return `<button class="turncard" data-act="begin" style="--c:${COLORS[i]}"><span class="tc-who">${esc(title)}</span>
       ${ui.lastEvent ? `<span class="tc-last">${esc(ui.lastEvent)}</span>` : ''}<span class="tc-tap">${isBot(i) ? 'Tap to watch' : 'Tap to start'}</span></button>`;
+  }
+
+  // A note that has to be read first (the start of the level that brings the gems): one button, no timer.
+  function alertHTML() {
+    const gem = (ui.st.data.tokens.find(t => t.gem) || {}).value, text = ui.alert.body.replace(/\{value\}/g, gem);
+    return `<div class="alertback"><div class="alert" role="alertdialog" aria-label="${esc(ui.alert.title)}"><h2>💎 ${esc(ui.alert.title)}</h2><p>${esc(text)}</p><button class="big" data-act="alert-ok">Got it</button></div></div>`;
   }
 
   function menuHTML() {
@@ -1774,13 +1808,14 @@ const Campaign = (() => {
     return `<div class="confetti" aria-hidden="true">${Array.from({ length: 36 }, (_, i) => `<i style="left:${(i * 37) % 100}%;background:${cols[i % cols.length]};animation-delay:${((i * 53) % 90) / 100}s;animation-duration:${2.2 + (i % 5) * 0.35}s;--dx:${((i * 29) % 80) - 40}px"></i>`).join('')}</div>`;
   }
 
-  const GEM_VALUE = (D.tokens.find(t => t.gem) || {}).value;     // shown in the help text; the number itself lives in the data block
-  const JUDGMENTS = [
-    'The board is a hexagon of 31 spaces, one fossil on each. There are no pieces and no movement: you can peek at any fossil.',
+  const gameData = () => (ui.st ? ui.st.data : D);          // the rules of the game on the table (a campaign level has its own board and fossils)
+  const gemValue = () => (gameData().tokens.find(t => t.gem) || {}).value;     // shown in the help text; the number itself lives in the data block
+  const judgments = () => [
+    `The board has ${gameData().tokens.reduce((n, t) => n + t.count, 0)} spaces, one fossil on each. There are no pieces and no movement: you can peek at any fossil.`,
     'Your first tap is a private peek (the board shows you the number — hold the device toward yourself); your second tap is a public flip. Fossils that do not match flip back at the end of your turn.',
     'After a peek you must flip another fossil: you cannot bank once you have peeked.',
-    'Matches are pairs (a set of three for the gems). Only the fossil you peeked can be matched, against the one you flipped.',
-    `Banking takes one set of your choice, worth the number on its fossil (a gem is ${GEM_VALUE}). Sets you never bank are worth nothing.`,
+    `Matches are pairs${gemValue() ? ' (a set of three for the gems)' : ''}. Only the fossil you peeked can be matched, against the one you flipped.`,
+    `Banking takes one set of your choice, worth the number on its fossil${gemValue() ? ` (a gem is ${gemValue()})` : ''}. Sets you never bank are worth nothing.`,
     'Banking is your whole turn, so it ends the moment you tap the set — there is no End turn tap afterwards.',
     'Who goes first is decided at random, without a screen for it; a card names whose turn it is before they tap (in Pass & Play, every turn).',
     'After you peek a gem and flip a gem, tapping a third fossil is your consent to reveal your peeked gem too.',
@@ -1821,10 +1856,10 @@ const Campaign = (() => {
         ${card('3 · Match', howTile(52, 48, { text: '7', ring: B }) + `<text x="100" y="49" text-anchor="middle" dominant-baseline="central" font-size="34" font-weight="800" fill="#3ecf8e">=</text>` + howTile(148, 48, { text: '7', ring: B }), 'Same number? They’re yours. If not, they flip back — remember them!')}
         ${card('Or bank', bankChip + howArrow(100) + `<text x="152" y="46" text-anchor="middle" dominant-baseline="central" font-size="40" font-weight="900" fill="#f5a524">+7</text>`, 'Instead of peeking, tap one of your sets to score its number.')}
       </div>
-      <p class="hline"><b>💎 Gems</b> match in threes and are worth ${GEM_VALUE}.</p>
+      ${gemValue() ? `<p class="hline"><b>💎 Gems</b> match in threes and are worth ${gemValue()}.</p>` : ''}
       <p class="hline"><b>🏆 Most points wins</b> once every fossil is matched. Sets you never bank score nothing.</p>
       ${ui.st ? '<button class="ghost" data-act="fossils">How many fossils of each number?</button>' : ''}
-      <details class="fine"><summary>The fine print</summary><ul>${JUDGMENTS.map(j => `<li>${esc(j)}</li>`).join('')}</ul>
+      <details class="fine"><summary>The fine print</summary><ul>${judgments().filter(j => gemValue() || !/^After you peek a gem/.test(j)).map(j => `<li>${esc(j)}</li>`).join('')}</ul>
         <p class="dim">The full list is in DECISIONS.md. Version ${esc(BUILD)}.</p></details>
       <button class="big" data-act="closehelp">Close</button></div></div>`;
   }
